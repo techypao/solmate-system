@@ -25,4 +25,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return response()->json($request->user());
     });
+
+    
+});
+
+Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin-only', function () {
+    return response()->json(['message' => 'Welcome Admin']);
+});
+
+Route::middleware(['auth:sanctum', 'role:customer'])->get('/customer-only', function () {
+    return response()->json(['message' => 'Welcome Customer']);
+});
+
+Route::middleware(['auth:sanctum', 'role:technician'])->get('/technician-only', function () {
+    return response()->json(['message' => 'Welcome Technician']);
 });
