@@ -1,5 +1,7 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, {useState} from 'react';
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,7 +23,7 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  const handleRegister = () => {
+const handleRegister = async () => {
   if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
     setErrorMessage('Please fill in all fields.');
     return;
@@ -41,7 +43,41 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
     password_confirmation: confirmPassword,
   };
 
-  console.log('Register payload:', registerData);
+  try {
+    const response = await fetch('http://10.0.2.2:8000/api/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(registerData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      if (data.errors) {
+        const firstError = Object.values(data.errors).flat()[0] as string;
+        setErrorMessage(firstError || 'Registration failed.');
+      } else {
+        setErrorMessage(data.message || 'Registration failed.');
+      }
+      return;
+    }
+
+    console.log('Register success:', data);
+
+await AsyncStorage.setItem('userToken', data.token);
+await AsyncStorage.setItem('userData', JSON.stringify(data.user));
+
+const savedToken = await AsyncStorage.getItem('userToken');
+console.log('Saved token:', savedToken);
+
+Alert.alert('Registration successful');
+  } catch (error) {
+    console.log('Register error:', error);
+    setErrorMessage('Could not connect to server.');
+  }
 };
 
   const handleLoginPress = () => {

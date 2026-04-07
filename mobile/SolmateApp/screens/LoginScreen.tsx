@@ -1,5 +1,6 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, {useState} from 'react';
-import {StyleSheet, Text, TextInput, TouchableOpacity, View} from 'react-native';
+import {Alert, StyleSheet, Text, TextInput, TouchableOpacity, View} from 'react-native';
 
 type LoginScreenProps = {
   navigation?: {
@@ -12,21 +13,49 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  const handleLogin = () => {
-    if (!email.trim() || !password.trim()) {
-      setErrorMessage('Please enter both email and password.');
+const handleLogin = async () => {
+  if (!email.trim() || !password.trim()) {
+    setErrorMessage('Please enter both email and password.');
+    return;
+  }
+
+  setErrorMessage('');
+
+  const loginData = {
+    email: email.trim(),
+    password: password,
+  };
+
+  try {
+    const response = await fetch('http://10.0.2.2:8000/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(loginData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setErrorMessage(data.message || 'Login failed.');
       return;
     }
 
-    setErrorMessage('');
+    console.log('Login success:', data);
+await AsyncStorage.setItem('userToken', data.token);
+await AsyncStorage.setItem('userData', JSON.stringify(data.user));
 
-    const loginData = {
-      email: email.trim(),
-      password: password,
-    };
+const savedToken = await AsyncStorage.getItem('userToken');
+console.log('Saved token:', savedToken);
 
-    console.log('Login payload:', loginData);
-  };
+Alert.alert('Login successful');
+  } catch (error) {
+    console.log('Login error:', error);
+    setErrorMessage('Could not connect to server.');
+  }
+};
 
   const handleRegisterPress = () => {
     navigation?.navigate?.('Register');
