@@ -1,13 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\ServiceRequestController;
 use App\Http\Controllers\TestimonyController;
 
-Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/quotations', [QuotationController::class, 'index']);
 Route::post('/quotations', [QuotationController::class, 'store']);
@@ -17,3 +18,11 @@ Route::post('/requests', [ServiceRequestController::class, 'store']);
 
 Route::get('/testimonies', [TestimonyController::class, 'index']);
 Route::post('/testimonies', [TestimonyController::class, 'store']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+
+    Route::get('/user', function (Request $request) {
+        return response()->json($request->user());
+    });
+});
