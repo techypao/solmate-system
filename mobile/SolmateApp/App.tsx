@@ -1,25 +1,50 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React, {useContext, useEffect} from 'react';
+import {ActivityIndicator, Alert, View} from 'react-native';
+import {NavigationContainer} from '@react-navigation/native';
 
-import LoginScreen from './screens/LoginScreen';
-import RegisterScreen from './screens/RegisterScreen';
-import HomeScreen from './screens/HomeScreen';
-import QuotationsScreen from './screens/QuotationsScreen';
-import RequestsScreen from './screens/RequestsScreen';
+import {AuthProvider, AuthContext} from './src/context/AuthContext';
 
-const Stack = createNativeStackNavigator();
+import AuthStack from './src/navigation/AuthStack';
+import CustomerStack from './src/navigation/CustomerStack';
+import TechnicianStack from './src/navigation/TechnicianStack';
+
+function AppNavigator() {
+  const {user, loading, logout} = useContext(AuthContext);
+
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      Alert.alert('Access Denied', 'Admin access is available on web only.');
+      logout();
+    }
+  }, [user, logout]);
+
+  if (loading) {
+    return (
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      {!user ? (
+        <AuthStack />
+      ) : user.role === 'customer' ? (
+        <CustomerStack />
+      ) : user.role === 'technician' ? (
+        <TechnicianStack />
+      ) : (
+        <AuthStack />
+      )}
+    </NavigationContainer>
+  );
+}
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login">
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Quotations" component={QuotationsScreen} />
-        <Stack.Screen name="Requests" component={RequestsScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <AuthProvider>
+      <AppNavigator />
+    </AuthProvider>
   );
 }

@@ -1,5 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import {
   Alert,
   ScrollView,
@@ -9,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import {AuthContext} from '../src/context/AuthContext';
 
 type RegisterScreenProps = {
   navigation?: {
@@ -17,68 +17,71 @@ type RegisterScreenProps = {
 };
 
 export default function RegisterScreen({navigation}: RegisterScreenProps) {
+  const {login} = useContext(AuthContext);
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-const handleRegister = async () => {
-  if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
-    setErrorMessage('Please fill in all fields.');
-    return;
-  }
-
-  if (password !== confirmPassword) {
-    setErrorMessage('Passwords do not match.');
-    return;
-  }
-
-  setErrorMessage('');
-
-  const registerData = {
-    name: name.trim(),
-    email: email.trim(),
-    password: password,
-    password_confirmation: confirmPassword,
-  };
-
-  try {
-    const response = await fetch('http://10.0.2.2:8000/api/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify(registerData),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      if (data.errors) {
-        const firstError = Object.values(data.errors).flat()[0] as string;
-        setErrorMessage(firstError || 'Registration failed.');
-      } else {
-        setErrorMessage(data.message || 'Registration failed.');
-      }
+  const handleRegister = async () => {
+    if (
+      !name.trim() ||
+      !email.trim() ||
+      !password.trim() ||
+      !confirmPassword.trim()
+    ) {
+      setErrorMessage('Please fill in all fields.');
       return;
     }
 
-    console.log('Register success:', data);
+    if (password !== confirmPassword) {
+      setErrorMessage('Passwords do not match.');
+      return;
+    }
 
-await AsyncStorage.setItem('userToken', data.token);
-await AsyncStorage.setItem('userData', JSON.stringify(data.user));
+    setErrorMessage('');
 
-const savedToken = await AsyncStorage.getItem('userToken');
-console.log('Saved token:', savedToken);
+    const registerData = {
+      name: name.trim(),
+      email: email.trim(),
+      password: password,
+      password_confirmation: confirmPassword,
+    };
 
-Alert.alert('Registration successful');
-  } catch (error) {
-    console.log('Register error:', error);
-    setErrorMessage('Could not connect to server.');
-  }
-};
+    try {
+      const response = await fetch('http://10.0.2.2:8000/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(registerData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.errors) {
+          const firstError = Object.values(data.errors).flat()[0] as string;
+          setErrorMessage(firstError || 'Registration failed.');
+        } else {
+          setErrorMessage(data.message || 'Registration failed.');
+        }
+        return;
+      }
+
+      console.log('Register success:', data);
+
+      await login(data.token);
+
+      Alert.alert('Registration successful');
+    } catch (error) {
+      console.log('Register error:', error);
+      setErrorMessage('Could not connect to server.');
+    }
+  };
 
   const handleLoginPress = () => {
     navigation?.navigate?.('Login');
@@ -92,7 +95,9 @@ Alert.alert('Registration successful');
       <View style={styles.card}>
         <Text style={styles.title}>Create Account</Text>
 
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? (
+          <Text style={styles.errorText}>{errorMessage}</Text>
+        ) : null}
 
         <TextInput
           onChangeText={setName}
@@ -130,11 +135,17 @@ Alert.alert('Registration successful');
           value={confirmPassword}
         />
 
-        <TouchableOpacity activeOpacity={0.85} onPress={handleRegister} style={styles.registerButton}>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={handleRegister}
+          style={styles.registerButton}>
           <Text style={styles.registerButtonText}>Register</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity activeOpacity={0.75} onPress={handleLoginPress} style={styles.loginButton}>
+        <TouchableOpacity
+          activeOpacity={0.75}
+          onPress={handleLoginPress}
+          style={styles.loginButton}>
           <Text style={styles.loginText}>Already have an account? Login</Text>
         </TouchableOpacity>
       </View>

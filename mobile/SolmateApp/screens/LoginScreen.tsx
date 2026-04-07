@@ -1,6 +1,13 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, {useState} from 'react';
-import {Alert, StyleSheet, Text, TextInput, TouchableOpacity, View} from 'react-native';
+import React, {useContext, useState} from 'react';
+import {
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import {AuthContext} from '../src/context/AuthContext';
 
 type LoginScreenProps = {
   navigation?: {
@@ -9,53 +16,52 @@ type LoginScreenProps = {
 };
 
 export default function LoginScreen({navigation}: LoginScreenProps) {
+  const {login} = useContext(AuthContext);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-const handleLogin = async () => {
-  if (!email.trim() || !password.trim()) {
-    setErrorMessage('Please enter both email and password.');
-    return;
-  }
-
-  setErrorMessage('');
-
-  const loginData = {
-    email: email.trim(),
-    password: password,
-  };
-
-  try {
-    const response = await fetch('http://10.0.2.2:8000/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify(loginData),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      setErrorMessage(data.message || 'Login failed.');
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      setErrorMessage('Please enter both email and password.');
       return;
     }
 
-    console.log('Login success:', data);
-await AsyncStorage.setItem('userToken', data.token);
-await AsyncStorage.setItem('userData', JSON.stringify(data.user));
+    setErrorMessage('');
 
-const savedToken = await AsyncStorage.getItem('userToken');
-console.log('Saved token:', savedToken);
+    const loginData = {
+      email: email.trim(),
+      password: password,
+    };
 
-Alert.alert('Login successful');
-  } catch (error) {
-    console.log('Login error:', error);
-    setErrorMessage('Could not connect to server.');
-  }
-};
+    try {
+      const response = await fetch('http://10.0.2.2:8000/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(loginData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrorMessage(data.message || 'Login failed.');
+        return;
+      }
+
+      console.log('Login success:', data);
+
+      await login(data.token);
+
+      Alert.alert('Login successful');
+    } catch (error) {
+      console.log('Login error:', error);
+      setErrorMessage('Could not connect to server.');
+    }
+  };
 
   const handleRegisterPress = () => {
     navigation?.navigate?.('Register');
@@ -66,7 +72,9 @@ Alert.alert('Login successful');
       <View style={styles.card}>
         <Text style={styles.title}>Login</Text>
 
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? (
+          <Text style={styles.errorText}>{errorMessage}</Text>
+        ) : null}
 
         <TextInput
           autoCapitalize="none"
@@ -87,11 +95,17 @@ Alert.alert('Login successful');
           value={password}
         />
 
-        <TouchableOpacity activeOpacity={0.85} onPress={handleLogin} style={styles.loginButton}>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={handleLogin}
+          style={styles.loginButton}>
           <Text style={styles.loginButtonText}>Login</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity activeOpacity={0.75} onPress={handleRegisterPress} style={styles.registerButton}>
+        <TouchableOpacity
+          activeOpacity={0.75}
+          onPress={handleRegisterPress}
+          style={styles.registerButton}>
           <Text style={styles.registerText}>Don't have an account? Register</Text>
         </TouchableOpacity>
       </View>
