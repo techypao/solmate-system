@@ -13,12 +13,6 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 // APRIL 10 API STRUCTURE
-Route::get('/quotations', [QuotationController::class, 'index']);
-Route::post('/quotations', [QuotationController::class, 'store']);
-Route::get('/quotations/{id}', [QuotationController::class, 'show']);
-Route::put('/quotations/{id}', [QuotationController::class, 'update']);
-Route::delete('/quotations/{id}', [QuotationController::class, 'destroy']);
-
 Route::get('/inspection-requests', [InspectionRequestController::class, 'index']);
 Route::post('/inspection-requests', [InspectionRequestController::class, 'store']);
 Route::get('/inspection-requests/{id}', [InspectionRequestController::class, 'show']);
@@ -49,6 +43,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return response()->json($request->user());
     });
+
+    Route::get('/quotations', [QuotationController::class, 'index']);
+    Route::post('/quotations', [QuotationController::class, 'store']);
 });
 
 Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin-only', function () {

@@ -57,7 +57,7 @@ return new class extends Migration
         $table->decimal('project_cost', 12, 2)->nullable();
 
         // Status & notes
-        $table->string('status')->default('draft');
+        $table->string('status')->default('pending');
         $table->text('remarks')->nullable();
 
         $table->timestamps();
