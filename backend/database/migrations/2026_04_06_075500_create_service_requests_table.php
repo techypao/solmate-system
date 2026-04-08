@@ -12,13 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('service_requests', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('user_id')->constrained()->onDelete('cascade');
-        $table->string('request_type');
-        $table->text('details');
-        $table->date('date_needed')->nullable();
-        $table->string('status')->default('pending');
-        $table->timestamps();
+            $table->id();
+
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('quotation_id')->constrained()->cascadeOnDelete();
+
+            $table->string('request_type')->nullable();
+            $table->text('details')->nullable();
+            $table->date('date_needed')->nullable();
+            $table->string('status')->default('pending');
+
+            $table->timestamps();
         });
     }
 
