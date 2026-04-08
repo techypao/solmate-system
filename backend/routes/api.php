@@ -48,14 +48,23 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/quotations', [QuotationController::class, 'store']);
 });
 
-Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin-only', function () {
-    return response()->json(['message' => 'Welcome Admin']);
+// ADMIN ROUTES
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    Route::get('/admin-only', function () {
+        return response()->json(['message' => 'Welcome Admin']);
+    });
 });
 
-Route::middleware(['auth:sanctum', 'role:customer'])->get('/customer-only', function () {
-    return response()->json(['message' => 'Welcome Customer']);
+// TECHNICIAN ROUTES
+Route::middleware(['auth:sanctum', 'role:technician'])->group(function () {
+    Route::get('/technician-only', function () {
+        return response()->json(['message' => 'Welcome Technician']);
+    });
 });
 
-Route::middleware(['auth:sanctum', 'role:technician'])->get('/technician-only', function () {
-    return response()->json(['message' => 'Welcome Technician']);
+// CUSTOMER ROUTES
+Route::middleware(['auth:sanctum', 'role:customer'])->group(function () {
+    Route::get('/customer-only', function () {
+        return response()->json(['message' => 'Welcome Customer']);
+    });
 });
