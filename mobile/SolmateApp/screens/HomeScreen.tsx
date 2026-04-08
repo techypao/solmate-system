@@ -27,9 +27,15 @@ function QuickActionCard({
   return (
     <Pressable onPress={onPress} style={({pressed}) => [pressed && styles.pressed]}>
       <View style={styles.quickActionCard}>
-        <View style={[styles.quickActionAccent, {backgroundColor: accentColor}]} />
+        <View style={styles.quickActionHeader}>
+          <View style={[styles.quickActionAccent, {backgroundColor: accentColor}]} />
+          <Text style={styles.quickActionBadge}>Open</Text>
+        </View>
         <Text style={styles.quickActionTitle}>{title}</Text>
         <Text style={styles.quickActionSubtitle}>{subtitle}</Text>
+        <View style={styles.quickActionFooter}>
+          <Text style={styles.quickActionFooterText}>Tap to continue</Text>
+        </View>
       </View>
     </Pressable>
   );
@@ -66,12 +72,30 @@ export default function HomeScreen({navigation}: any) {
             Jump into the tasks customers use most often.
           </Text>
 
+          <View style={styles.highlightStrip}>
+            <View>
+              <Text style={styles.highlightTitle}>Quotation tools</Text>
+              <Text style={styles.highlightText}>
+                Create a fresh quotation or review the ones already on your
+                account.
+              </Text>
+            </View>
+          </View>
+
           <View style={styles.quickActionGrid}>
             <QuickActionCard
-              title="Go to Quotations"
-              subtitle="Review estimates and compare your options."
+              title="Create Quotation"
+              subtitle="Start a new quotation request for your account."
               accentColor="#93c5fd"
+              // Use the stack navigator to open the quotation form screen.
               onPress={() => navigation.navigate('Quotations')}
+            />
+            <QuickActionCard
+              title="My Quotations"
+              subtitle="View the quotations already submitted on your account."
+              accentColor="#fdba74"
+              // Open the list screen that shows all quotations for this user.
+              onPress={() => navigation.navigate('QuotationList')}
             />
             <QuickActionCard
               title="Go to Requests"
@@ -82,14 +106,21 @@ export default function HomeScreen({navigation}: any) {
           </View>
 
           <View style={styles.buttonStack}>
+            {/* These buttons mirror the same navigation actions as the cards. */}
             <AppButton
-              title="Go to Quotations"
+              title="Create Quotation"
               onPress={() => navigation.navigate('Quotations')}
             />
             <AppButton
               style={styles.buttonSpacing}
-              title="Go to Requests"
+              title="My Quotations"
               variant="secondary"
+              onPress={() => navigation.navigate('QuotationList')}
+            />
+            <AppButton
+              style={styles.buttonSpacing}
+              title="Go to Requests"
+              variant="outline"
               onPress={() => navigation.navigate('Requests')}
             />
           </View>
@@ -247,11 +278,27 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     padding: 16,
   },
+  quickActionHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
   quickActionAccent: {
     borderRadius: 999,
     height: 10,
-    marginBottom: 14,
     width: 56,
+  },
+  quickActionBadge: {
+    backgroundColor: '#ffffff',
+    borderRadius: 999,
+    color: '#64748b',
+    fontSize: 11,
+    fontWeight: '700',
+    overflow: 'hidden',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    textTransform: 'uppercase',
   },
   quickActionTitle: {
     color: '#0f172a',
@@ -264,11 +311,39 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
+  quickActionFooter: {
+    borderTopColor: '#e2e8f0',
+    borderTopWidth: 1,
+    marginTop: 14,
+    paddingTop: 12,
+  },
+  quickActionFooterText: {
+    color: '#2563eb',
+    fontSize: 13,
+    fontWeight: '700',
+  },
   buttonStack: {
     marginTop: 2,
   },
   buttonSpacing: {
     marginTop: 12,
+  },
+  highlightStrip: {
+    backgroundColor: '#eff6ff',
+    borderRadius: 18,
+    marginBottom: 16,
+    padding: 16,
+  },
+  highlightTitle: {
+    color: '#1d4ed8',
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  highlightText: {
+    color: '#334155',
+    fontSize: 14,
+    lineHeight: 20,
   },
   summaryGrid: {
     gap: 12,

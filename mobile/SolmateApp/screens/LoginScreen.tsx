@@ -8,11 +8,16 @@ import {
   View,
 } from 'react-native';
 import {AuthContext} from '../src/context/AuthContext';
+import {ApiError, apiPost} from '../src/services/api';
 
 type LoginScreenProps = {
   navigation?: {
     navigate?: (screen: string) => void;
   };
+};
+
+type LoginResponse = {
+  token: string;
 };
 
 export default function LoginScreen({navigation}: LoginScreenProps) {
@@ -36,21 +41,7 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
     };
 
     try {
-      const response = await fetch('http://10.0.2.2:8000/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify(loginData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setErrorMessage(data.message || 'Login failed.');
-        return;
-      }
+      const data = await apiPost<LoginResponse>('/login', loginData, false);
 
       console.log('Login success:', data);
 
@@ -59,7 +50,12 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
       Alert.alert('Login successful');
     } catch (error) {
       console.log('Login error:', error);
-      setErrorMessage('Could not connect to server.');
+      if (error instanceof ApiError) {
+        setErrorMessage(error.message);
+        return;
+      }
+
+      setErrorMessage('Login failed.');
     }
   };
 

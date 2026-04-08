@@ -23,6 +23,14 @@ const buttonVariantStyles: Record<AppButtonVariant, ViewStyle> = {
   primary: {
     backgroundColor: '#2563eb',
     borderColor: '#2563eb',
+    shadowColor: '#1d4ed8',
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 4,
   },
   secondary: {
     backgroundColor: '#e5e7eb',
@@ -76,16 +84,16 @@ export default function AppButton({
 const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
-    borderRadius: 12,
+    borderRadius: 16,
     borderWidth: 1,
-    minHeight: 48,
+    minHeight: 54,
     justifyContent: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   disabled: {
     opacity: 0.6,

@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import {AuthContext} from '../src/context/AuthContext';
+import {ApiError, apiPost} from '../src/services/api';
 
 type RegisterScreenProps = {
   navigation?: {
@@ -51,26 +52,11 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
     };
 
     try {
-      const response = await fetch('http://10.0.2.2:8000/api/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify(registerData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.errors) {
-          const firstError = Object.values(data.errors).flat()[0] as string;
-          setErrorMessage(firstError || 'Registration failed.');
-        } else {
-          setErrorMessage(data.message || 'Registration failed.');
-        }
-        return;
-      }
+      const data = await apiPost<{token: string}>(
+        '/register',
+        registerData,
+        false,
+      );
 
       console.log('Register success:', data);
 
@@ -79,7 +65,12 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
       Alert.alert('Registration successful');
     } catch (error) {
       console.log('Register error:', error);
-      setErrorMessage('Could not connect to server.');
+      if (error instanceof ApiError) {
+        setErrorMessage(error.message);
+        return;
+      }
+
+      setErrorMessage('Registration failed.');
     }
   };
 
