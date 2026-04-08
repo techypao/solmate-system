@@ -16,7 +16,8 @@ class QuotationController extends Controller
     }
 
     public function store(Request $request)
-    {
+{
+    try {
         $validated = $request->validate([
             'quotation_type' => 'required|in:initial,final',
             'monthly_electric_bill' => 'nullable|numeric|min:0',
@@ -33,6 +34,22 @@ class QuotationController extends Controller
             'battery_capacity_ah' => 'nullable|numeric|min:0',
             'panel_watts' => 'nullable|numeric|min:1',
             'remarks' => 'nullable|string',
+        ], [
+            'quotation_type.required' => 'Quotation type is required.',
+            'quotation_type.in' => 'Quotation type must be either initial or final.',
+            'monthly_electric_bill.numeric' => 'Monthly electric bill must be a valid number.',
+            'rate_per_kwh.numeric' => 'Rate per kWh must be a valid number.',
+            'days_in_month.integer' => 'Days in month must be a whole number.',
+            'days_in_month.min' => 'Days in month must be at least 1.',
+            'sun_hours.numeric' => 'Sun hours must be a valid number.',
+            'pv_safety_factor.numeric' => 'PV safety factor must be a valid number.',
+            'battery_factor.numeric' => 'Battery factor must be a valid number.',
+            'battery_voltage.numeric' => 'Battery voltage must be a valid number.',
+            'pv_system_type.in' => 'PV system type must be hybrid, on-grid, or off-grid.',
+            'with_battery.boolean' => 'With battery must be true or false.',
+            'battery_capacity_ah.numeric' => 'Battery capacity Ah must be a valid number.',
+            'panel_watts.numeric' => 'Panel watts must be a valid number.',
+            'panel_watts.min' => 'Panel watts must be at least 1.',
         ]);
 
         $monthlyElectricBill = $validated['monthly_electric_bill'] ?? 0;
@@ -54,14 +71,6 @@ class QuotationController extends Controller
 
         $batteryRequiredKwh = $withBattery ? ($dailyKwh * $batteryFactor) : 0;
         $batteryRequiredAh = $batteryVoltage > 0 ? (($batteryRequiredKwh * 1000) / $batteryVoltage) : 0;
-
-        $panelCost = null;
-        $inverterCost = null;
-        $batteryCost = null;
-        $bosCost = null;
-        $materialsSubtotal = null;
-        $laborCost = null;
-        $projectCost = null;
 
         $quotation = Quotation::create([
             'user_id' => Auth::id(),
@@ -87,13 +96,13 @@ class QuotationController extends Controller
             'system_kw' => round($systemKw, 2),
             'battery_required_kwh' => round($batteryRequiredKwh, 2),
             'battery_required_ah' => round($batteryRequiredAh, 2),
-            'panel_cost' => $panelCost,
-            'inverter_cost' => $inverterCost,
-            'battery_cost' => $batteryCost,
-            'bos_cost' => $bosCost,
-            'materials_subtotal' => $materialsSubtotal,
-            'labor_cost' => $laborCost,
-            'project_cost' => $projectCost,
+            'panel_cost' => null,
+            'inverter_cost' => null,
+            'battery_cost' => null,
+            'bos_cost' => null,
+            'materials_subtotal' => null,
+            'labor_cost' => null,
+            'project_cost' => null,
             'status' => 'pending',
             'remarks' => $validated['remarks'] ?? null,
         ]);
@@ -102,5 +111,12 @@ class QuotationController extends Controller
             'message' => 'Quotation created successfully',
             'data' => $quotation,
         ], 201);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'message' => 'Validation failed',
+            'errors' => $e->errors(),
+        ], 422);
     }
+}
 }
