@@ -1,6 +1,6 @@
 // src/navigation/CustomerStack.js
 import React from 'react';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import HomeScreen from '../../screens/HomeScreen';
 import InspectionRequestListScreen from '../../screens/InspectionRequestListScreen';
@@ -8,6 +8,8 @@ import InspectionRequestScreen from '../../screens/InspectionRequestScreen';
 import QuotationDetailScreen from '../../screens/QuotationDetailScreen';
 import QuotationListScreen from '../../screens/QuotationListScreen';
 import QuotationScreen from '../../screens/QuotationScreen';
+import ServiceRequestListScreen from '../../screens/ServiceRequestListScreen';
+import ServiceRequestScreen from '../../screens/ServiceRequestScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -19,45 +21,58 @@ export default function CustomerStack() {
       initialRouteName="Home"
       screenOptions={{
         headerBackTitle: 'Back',
-      }}>
+      }}
+    >
       {/* Main customer entry screen */}
       <Stack.Screen
         name="Home"
         component={HomeScreen}
-        options={{title: 'Customer Dashboard'}}
+        options={{ title: 'Customer Dashboard' }}
       />
 
       {/* Quotation creation form */}
       <Stack.Screen
         name="Quotations"
         component={QuotationScreen}
-        options={{title: 'Create Quotation'}}
+        options={{ title: 'Create Quotation' }}
       />
 
       {/* Customer's list of submitted quotations */}
       <Stack.Screen
         name="QuotationList"
         component={QuotationListScreen}
-        options={{title: 'My Quotations'}}
+        options={{ title: 'My Quotations' }}
       />
 
       <Stack.Screen
         name="InspectionRequest"
         component={InspectionRequestScreen}
-        options={{title: 'Request Inspection'}}
+        options={{ title: 'Request Inspection' }}
       />
 
       <Stack.Screen
         name="InspectionRequestList"
         component={InspectionRequestListScreen}
-        options={{title: 'My Inspection Requests'}}
+        options={{ title: 'My Inspection Requests' }}
+      />
+
+      <Stack.Screen
+        name="ServiceRequest"
+        component={ServiceRequestScreen}
+        options={{ title: 'Request Service' }}
+      />
+
+      <Stack.Screen
+        name="ServiceRequestList"
+        component={ServiceRequestListScreen}
+        options={{ title: 'My Service Requests' }}
       />
 
       {/* Single quotation detail page */}
       <Stack.Screen
         name="QuotationDetail"
         component={QuotationDetailScreen}
-        options={{title: 'Quotation Details'}}
+        options={{ title: 'Quotation Details' }}
       />
     </Stack.Navigator>
   );

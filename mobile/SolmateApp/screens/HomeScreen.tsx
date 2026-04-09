@@ -1,4 +1,4 @@
-import React, {useContext} from 'react';
+import React, { useContext } from 'react';
 import {
   Pressable,
   SafeAreaView,
@@ -8,8 +8,8 @@ import {
   View,
 } from 'react-native';
 
-import {AppButton, AppCard} from '../components';
-import {AuthContext} from '../src/context/AuthContext';
+import { AppButton, AppCard } from '../components';
+import { AuthContext } from '../src/context/AuthContext';
 
 type QuickActionProps = {
   title: string;
@@ -25,10 +25,15 @@ function QuickActionCard({
   onPress,
 }: QuickActionProps) {
   return (
-    <Pressable onPress={onPress} style={({pressed}) => [pressed && styles.pressed]}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [pressed && styles.pressed]}
+    >
       <View style={styles.quickActionCard}>
         <View style={styles.quickActionHeader}>
-          <View style={[styles.quickActionAccent, {backgroundColor: accentColor}]} />
+          <View
+            style={[styles.quickActionAccent, { backgroundColor: accentColor }]}
+          />
           <Text style={styles.quickActionBadge}>Open</Text>
         </View>
         <Text style={styles.quickActionTitle}>{title}</Text>
@@ -41,22 +46,23 @@ function QuickActionCard({
   );
 }
 
-export default function HomeScreen({navigation}: any) {
-  const {logout, user} = useContext(AuthContext);
+export default function HomeScreen({ navigation }: any) {
+  const { logout, user } = useContext(AuthContext);
   const customerName = user?.name || 'Customer';
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
         contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.heroCard}>
           <View style={styles.heroTextWrap}>
             <Text style={styles.eyebrow}>Customer dashboard</Text>
             <Text style={styles.heroTitle}>Welcome back, {customerName}</Text>
             <Text style={styles.heroSubtitle}>
-              Manage your quotations, request inspections, and stay updated in
-              one place.
+              Manage quotations, request inspections, submit service requests,
+              and stay updated in one place.
             </Text>
           </View>
 
@@ -76,8 +82,8 @@ export default function HomeScreen({navigation}: any) {
             <View>
               <Text style={styles.highlightTitle}>Customer tools</Text>
               <Text style={styles.highlightText}>
-                Create quotations, submit inspection requests, and review
-                everything tied to your account.
+                Create quotations, submit inspection and service requests, and
+                review everything tied to your account.
               </Text>
             </View>
           </View>
@@ -109,6 +115,18 @@ export default function HomeScreen({navigation}: any) {
               accentColor="#4ade80"
               onPress={() => navigation.navigate('InspectionRequestList')}
             />
+            <QuickActionCard
+              title="Request Service"
+              subtitle="Send a support or maintenance request for your system."
+              accentColor="#fbbf24"
+              onPress={() => navigation.navigate('ServiceRequest')}
+            />
+            <QuickActionCard
+              title="My Service Requests"
+              subtitle="Track service requests and check their latest status."
+              accentColor="#fb923c"
+              onPress={() => navigation.navigate('ServiceRequestList')}
+            />
           </View>
 
           <View style={styles.buttonStack}>
@@ -134,6 +152,18 @@ export default function HomeScreen({navigation}: any) {
               title="My Inspection Requests"
               variant="secondary"
               onPress={() => navigation.navigate('InspectionRequestList')}
+            />
+            <AppButton
+              style={styles.buttonSpacing}
+              title="Request Service"
+              variant="outline"
+              onPress={() => navigation.navigate('ServiceRequest')}
+            />
+            <AppButton
+              style={styles.buttonSpacing}
+              title="View My Service Requests"
+              variant="secondary"
+              onPress={() => navigation.navigate('ServiceRequestList')}
             />
           </View>
         </AppCard>
@@ -161,6 +191,14 @@ export default function HomeScreen({navigation}: any) {
               </Text>
             </View>
 
+            <View style={[styles.summaryCard, styles.summaryCardAmber]}>
+              <Text style={styles.summaryLabel}>Service requests</Text>
+              <Text style={styles.summaryValue}>Maintenance made simple</Text>
+              <Text style={styles.summaryNote}>
+                Book battery checks, inverter support, and system servicing.
+              </Text>
+            </View>
+
             <View style={[styles.summaryCard, styles.summaryCardCream]}>
               <Text style={styles.summaryLabel}>Support</Text>
               <Text style={styles.summaryValue}>Customer account active</Text>
@@ -174,15 +212,15 @@ export default function HomeScreen({navigation}: any) {
         <AppCard style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Recent activity</Text>
           <Text style={styles.sectionSubtitle}>
-            Activity will appear here as you submit requests and receive
-            quotations.
+            Activity will appear here as you submit service requests, book
+            inspections, and receive quotations.
           </Text>
 
           <View style={styles.activityPlaceholder}>
             <Text style={styles.activityTitle}>No recent activity yet</Text>
             <Text style={styles.activityText}>
-              Start by submitting an inspection request or checking your
-              quotations to build your dashboard history.
+              Start by submitting a service request, booking an inspection, or
+              checking your quotations to build your dashboard history.
             </Text>
           </View>
         </AppCard>
@@ -369,6 +407,9 @@ const styles = StyleSheet.create({
   },
   summaryCardGreen: {
     backgroundColor: '#f0fdf4',
+  },
+  summaryCardAmber: {
+    backgroundColor: '#fff7ed',
   },
   summaryCardCream: {
     backgroundColor: '#fff7ed',
