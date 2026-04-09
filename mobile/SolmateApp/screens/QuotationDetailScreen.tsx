@@ -29,6 +29,9 @@ type QuotationDetail = {
   materials_subtotal?: number | null;
   labor_cost?: number | null;
   project_cost?: number | null;
+  estimated_monthly_savings?: number | null;
+  estimated_annual_savings?: number | null;
+  roi_years?: number | null;
   remarks?: string | null;
   created_at?: string | null;
 };
@@ -39,6 +42,22 @@ function formatValue(value?: string | number | null) {
   }
 
   return String(value);
+}
+
+function formatCurrency(value?: number | null) {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return 'N/A';
+  }
+
+  return `₱${value.toFixed(2)}`;
+}
+
+function formatYears(value?: number | null) {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return 'N/A';
+  }
+
+  return `${value.toFixed(2)} years`;
 }
 
 function formatDate(value?: string | null) {
@@ -223,23 +242,62 @@ export default function QuotationDetailScreen({route}: any) {
         <View style={styles.summaryStripCard}>
           <Text style={styles.summaryStripLabel}>Monthly Bill</Text>
           <Text style={styles.summaryStripValue}>
-            {formatValue(quotation.monthly_electric_bill)}
+            {formatCurrency(quotation.monthly_electric_bill)}
           </Text>
         </View>
         <View style={styles.summaryStripCard}>
           <Text style={styles.summaryStripLabel}>Project Cost</Text>
           <Text style={styles.summaryStripValue}>
-            {formatValue(quotation.project_cost)}
+            {formatCurrency(quotation.project_cost)}
           </Text>
         </View>
       </View>
+
+      <SectionCard
+        title="Return on investment"
+        subtitle="Estimated savings and payback period based on the latest quotation values.">
+        <View style={styles.roiCard}>
+          {quotation.roi_years !== null && quotation.roi_years !== undefined ? (
+            <>
+              <View style={styles.roiHeader}>
+                <Text style={styles.roiTitle}>ROI Overview</Text>
+                <Text style={styles.roiValue}>
+                  {formatYears(quotation.roi_years)}
+                </Text>
+              </View>
+
+              <View style={styles.roiMetricsRow}>
+                <View style={styles.roiMetricCard}>
+                  <Text style={styles.roiMetricLabel}>
+                    Estimated Monthly Savings
+                  </Text>
+                  <Text style={styles.roiMetricValue}>
+                    {formatCurrency(quotation.estimated_monthly_savings)}
+                  </Text>
+                </View>
+
+                <View style={styles.roiMetricCard}>
+                  <Text style={styles.roiMetricLabel}>
+                    Estimated Annual Savings
+                  </Text>
+                  <Text style={styles.roiMetricValue}>
+                    {formatCurrency(quotation.estimated_annual_savings)}
+                  </Text>
+                </View>
+              </View>
+            </>
+          ) : (
+            <Text style={styles.roiUnavailableText}>ROI not available yet</Text>
+          )}
+        </View>
+      </SectionCard>
 
       <SectionCard
         title="Overview"
         subtitle="High-level request information and customer usage input.">
         <DetailRow
           label="Monthly electric bill"
-          value={formatValue(quotation.monthly_electric_bill)}
+          value={formatCurrency(quotation.monthly_electric_bill)}
         />
         <DetailRow label="Monthly kWh" value={formatValue(quotation.monthly_kwh)} />
         <DetailRow label="Daily kWh" value={formatValue(quotation.daily_kwh)} />
@@ -293,7 +351,9 @@ export default function QuotationDetailScreen({route}: any) {
 
         <View style={styles.totalCard}>
           <Text style={styles.totalLabel}>Project cost</Text>
-          <Text style={styles.totalValue}>{formatValue(quotation.project_cost)}</Text>
+          <Text style={styles.totalValue}>
+            {formatCurrency(quotation.project_cost)}
+          </Text>
         </View>
       </SectionCard>
 
@@ -397,6 +457,54 @@ const styles = StyleSheet.create({
     color: '#0f172a',
     fontSize: 20,
     fontWeight: '800',
+  },
+  roiCard: {
+    backgroundColor: '#eff6ff',
+    borderRadius: 20,
+    padding: 18,
+  },
+  roiHeader: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  roiTitle: {
+    color: '#1e3a8a',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  roiValue: {
+    color: '#0f172a',
+    fontSize: 18,
+    fontWeight: '800',
+    textAlign: 'right',
+  },
+  roiMetricsRow: {
+    gap: 12,
+  },
+  roiMetricCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 14,
+  },
+  roiMetricLabel: {
+    color: '#64748b',
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 6,
+    textTransform: 'uppercase',
+  },
+  roiMetricValue: {
+    color: '#0f172a',
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  roiUnavailableText: {
+    color: '#475569',
+    fontSize: 16,
+    fontWeight: '600',
+    lineHeight: 22,
   },
   sectionCard: {
     backgroundColor: '#ffffff',
