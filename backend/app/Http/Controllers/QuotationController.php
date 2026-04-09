@@ -89,6 +89,9 @@ class QuotationController extends Controller
                 'materials_subtotal' => null,
                 'labor_cost' => null,
                 'project_cost' => null,
+                'estimated_monthly_savings' => null,
+'estimated_annual_savings' => null,
+'roi_years' => null,
                 'status' => 'pending',
                 'remarks' => $validated['remarks'] ?? null,
             ]);
@@ -104,6 +107,7 @@ class QuotationController extends Controller
                 'errors' => $e->errors(),
             ], 422);
         }
+        
     }
 
     public function show($id)
@@ -200,6 +204,21 @@ class QuotationController extends Controller
         $batteryRequiredKwh = $withBattery ? ($dailyKwh * $batteryFactor) : 0;
         $batteryRequiredAh = $batteryVoltage > 0 ? (($batteryRequiredKwh * 1000) / $batteryVoltage) : 0;
 
+        $projectCost = $validated['project_cost'] ?? $quotation->project_cost;
+$estimatedMonthlySavings = null;
+$estimatedAnnualSavings = null;
+$roiYears = null;
+
+// Compute ROI only when final quotation has a valid project cost
+if (!is_null($projectCost) && $projectCost > 0 && $monthlyElectricBill > 0) {
+    $estimatedMonthlySavings = $monthlyElectricBill * 0.3; // temporary assumption
+    $estimatedAnnualSavings = $estimatedMonthlySavings * 12;
+
+    if ($estimatedAnnualSavings > 0) {
+        $roiYears = round($projectCost / $estimatedAnnualSavings, 2);
+    }
+}
+
         $quotation->update(array_merge($validated, [
             'monthly_kwh' => round($monthlyKwh, 2),
             'daily_kwh' => round($dailyKwh, 2),
@@ -209,6 +228,11 @@ class QuotationController extends Controller
             'system_kw' => round($systemKw, 2),
             'battery_required_kwh' => round($batteryRequiredKwh, 2),
             'battery_required_ah' => round($batteryRequiredAh, 2),
+
+            'estimated_monthly_savings' => $estimatedMonthlySavings,
+    'estimated_annual_savings' => $estimatedAnnualSavings,
+    'roi_years' => $roiYears,
+            
         ]));
 
         return response()->json([

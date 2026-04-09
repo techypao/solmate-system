@@ -40,6 +40,11 @@ class Quotation extends Model
         'materials_subtotal',
         'labor_cost',
         'project_cost',
+
+        'estimated_monthly_savings',
+    'estimated_annual_savings',
+    'roi_years',
+    
         'status',
         'remarks',
     ];
