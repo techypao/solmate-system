@@ -3,31 +3,38 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\ServiceRequest;
 
 class ServiceRequestController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(['message' => 'List of service requests']);
+        $serviceRequests = ServiceRequest::where('user_id', $request->user()->id)
+            ->latest()
+            ->get();
+
+        return response()->json($serviceRequests, 200);
     }
 
     public function store(Request $request)
     {
-        return response()->json(['message' => 'Service request created']);
-    }
+        $validated = $request->validate([
+            'request_type' => 'required|string|max:255',
+            'details' => 'required|string',
+            'date_needed' => 'nullable|date',
+        ]);
 
-    public function show($id)
-    {
-        return response()->json(['message' => 'Show service request', 'id' => $id]);
-    }
+        $serviceRequest = ServiceRequest::create([
+            'user_id' => $request->user()->id,
+            'request_type' => $validated['request_type'],
+            'details' => $validated['details'],
+            'date_needed' => $validated['date_needed'] ?? null,
+            'status' => 'pending',
+        ]);
 
-    public function update(Request $request, $id)
-    {
-        return response()->json(['message' => 'Service request updated', 'id' => $id]);
-    }
-
-    public function destroy($id)
-    {
-        return response()->json(['message' => 'Service request deleted', 'id' => $id]);
+        return response()->json([
+            'message' => 'Service request submitted successfully.',
+            'data' => $serviceRequest
+        ], 201);
     }
 }

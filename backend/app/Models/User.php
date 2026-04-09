@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\InspectionRequest;
+use App\Models\ServiceRequest;
 
 class User extends Authenticatable
 {
@@ -64,5 +65,10 @@ class User extends Authenticatable
     public function inspectionRequests()
 {
     return $this->hasMany(InspectionRequest::class);
+}
+
+public function serviceRequests()
+{
+    return $this->hasMany(ServiceRequest::class);
 }
 }

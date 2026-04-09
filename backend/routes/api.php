@@ -48,4 +48,7 @@ Route::middleware(['auth:sanctum', 'role:customer'])->group(function () {
 
     Route::get('/inspection-requests', [InspectionRequestController::class, 'index']);
     Route::post('/inspection-requests', [InspectionRequestController::class, 'store']);
+
+    Route::post('/service-requests', [ServiceRequestController::class, 'store']);
+    Route::get('/service-requests', [ServiceRequestController::class, 'index']);
 });
