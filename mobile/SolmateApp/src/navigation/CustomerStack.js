@@ -3,10 +3,11 @@ import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
 import HomeScreen from '../../screens/HomeScreen';
+import InspectionRequestListScreen from '../../screens/InspectionRequestListScreen';
+import InspectionRequestScreen from '../../screens/InspectionRequestScreen';
 import QuotationDetailScreen from '../../screens/QuotationDetailScreen';
 import QuotationListScreen from '../../screens/QuotationListScreen';
 import QuotationScreen from '../../screens/QuotationScreen';
-import RequestsScreen from '../../screens/RequestsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -40,14 +41,24 @@ export default function CustomerStack() {
         options={{title: 'My Quotations'}}
       />
 
+      <Stack.Screen
+        name="InspectionRequest"
+        component={InspectionRequestScreen}
+        options={{title: 'Request Inspection'}}
+      />
+
+      <Stack.Screen
+        name="InspectionRequestList"
+        component={InspectionRequestListScreen}
+        options={{title: 'My Inspection Requests'}}
+      />
+
       {/* Single quotation detail page */}
       <Stack.Screen
         name="QuotationDetail"
         component={QuotationDetailScreen}
         options={{title: 'Quotation Details'}}
       />
-
-      <Stack.Screen name="Requests" component={RequestsScreen} />
     </Stack.Navigator>
   );
 }

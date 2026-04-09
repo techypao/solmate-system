@@ -3,31 +3,36 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\InspectionRequest;
 
 class InspectionRequestController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(['message' => 'List of inspection requests']);
+        $inspectionRequests = InspectionRequest::where('user_id', $request->user()->id)
+            ->latest()
+            ->get();
+
+        return response()->json($inspectionRequests, 200);
     }
 
     public function store(Request $request)
     {
-        return response()->json(['message' => 'Inspection request created']);
-    }
+        $validated = $request->validate([
+            'details' => 'required|string',
+            'date_needed' => 'nullable|date',
+        ]);
 
-    public function show($id)
-    {
-        return response()->json(['message' => 'Show inspection request', 'id' => $id]);
-    }
+        $inspectionRequest = InspectionRequest::create([
+            'user_id' => $request->user()->id,
+            'details' => $validated['details'],
+            'date_needed' => $validated['date_needed'] ?? null,
+            'status' => 'pending',
+        ]);
 
-    public function update(Request $request, $id)
-    {
-        return response()->json(['message' => 'Inspection request updated', 'id' => $id]);
-    }
-
-    public function destroy($id)
-    {
-        return response()->json(['message' => 'Inspection request deleted', 'id' => $id]);
+        return response()->json([
+            'message' => 'Inspection request submitted successfully.',
+            'data' => $inspectionRequest,
+        ], 201);
     }
 }

@@ -13,15 +13,11 @@ return new class extends Migration
 {
     Schema::create('inspection_requests', function (Blueprint $table) {
         $table->id();
-
-        // Link to INITIAL quotation
-        $table->foreignId('quotation_id')->constrained()->cascadeOnDelete();
-
-        $table->date('scheduled_date')->nullable();
-        $table->text('notes')->nullable();
-        $table->string('status')->default('pending');
-
-        $table->timestamps();
+    $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+    $table->text('details');
+    $table->date('date_needed')->nullable();
+    $table->string('status')->default('pending');
+    $table->timestamps();
     });
 }
 

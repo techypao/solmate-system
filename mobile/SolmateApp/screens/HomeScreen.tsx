@@ -55,7 +55,7 @@ export default function HomeScreen({navigation}: any) {
             <Text style={styles.eyebrow}>Customer dashboard</Text>
             <Text style={styles.heroTitle}>Welcome back, {customerName}</Text>
             <Text style={styles.heroSubtitle}>
-              Manage your quotations, track service requests, and stay updated in
+              Manage your quotations, request inspections, and stay updated in
               one place.
             </Text>
           </View>
@@ -74,10 +74,10 @@ export default function HomeScreen({navigation}: any) {
 
           <View style={styles.highlightStrip}>
             <View>
-              <Text style={styles.highlightTitle}>Quotation tools</Text>
+              <Text style={styles.highlightTitle}>Customer tools</Text>
               <Text style={styles.highlightText}>
-                Create a fresh quotation or review the ones already on your
-                account.
+                Create quotations, submit inspection requests, and review
+                everything tied to your account.
               </Text>
             </View>
           </View>
@@ -98,10 +98,16 @@ export default function HomeScreen({navigation}: any) {
               onPress={() => navigation.navigate('QuotationList')}
             />
             <QuickActionCard
-              title="Go to Requests"
-              subtitle="Open and monitor your service requests."
+              title="Request Inspection"
+              subtitle="Submit a new inspection request for your property."
               accentColor="#86efac"
-              onPress={() => navigation.navigate('Requests')}
+              onPress={() => navigation.navigate('InspectionRequest')}
+            />
+            <QuickActionCard
+              title="My Inspection Requests"
+              subtitle="Review the inspection requests already on your account."
+              accentColor="#4ade80"
+              onPress={() => navigation.navigate('InspectionRequestList')}
             />
           </View>
 
@@ -119,9 +125,15 @@ export default function HomeScreen({navigation}: any) {
             />
             <AppButton
               style={styles.buttonSpacing}
-              title="Go to Requests"
+              title="Request Inspection"
               variant="outline"
-              onPress={() => navigation.navigate('Requests')}
+              onPress={() => navigation.navigate('InspectionRequest')}
+            />
+            <AppButton
+              style={styles.buttonSpacing}
+              title="My Inspection Requests"
+              variant="secondary"
+              onPress={() => navigation.navigate('InspectionRequestList')}
             />
           </View>
         </AppCard>
@@ -142,10 +154,10 @@ export default function HomeScreen({navigation}: any) {
             </View>
 
             <View style={[styles.summaryCard, styles.summaryCardGreen]}>
-              <Text style={styles.summaryLabel}>Requests</Text>
-              <Text style={styles.summaryValue}>Easy to track</Text>
+              <Text style={styles.summaryLabel}>Inspections</Text>
+              <Text style={styles.summaryValue}>Ready to request</Text>
               <Text style={styles.summaryNote}>
-                Keep tabs on new and ongoing service needs.
+                Submit site inspections and follow their current status.
               </Text>
             </View>
 
@@ -169,8 +181,8 @@ export default function HomeScreen({navigation}: any) {
           <View style={styles.activityPlaceholder}>
             <Text style={styles.activityTitle}>No recent activity yet</Text>
             <Text style={styles.activityText}>
-              Start by opening a request or checking your quotations to build
-              your dashboard history.
+              Start by submitting an inspection request or checking your
+              quotations to build your dashboard history.
             </Text>
           </View>
         </AppCard>
