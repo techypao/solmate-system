@@ -16,7 +16,7 @@ import {
   ServiceRequest,
 } from '../src/services/serviceRequestApi';
 
-function formatDate(value?: string | null, fallback = 'Flexible') {
+function formatDate(value?: string | null, fallback = 'Not specified') {
   if (!value) {
     return fallback;
   }
@@ -45,9 +45,17 @@ function formatDateTime(value?: string) {
 }
 
 function formatStatusLabel(status?: string | null) {
-  const normalizedStatus = (status || 'pending').replace(/_/g, ' ');
-
-  return normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1);
+  switch ((status || 'pending').toLowerCase()) {
+    case 'assigned':
+      return 'Assigned';
+    case 'in_progress':
+      return 'In Progress';
+    case 'completed':
+      return 'Completed';
+    case 'pending':
+    default:
+      return 'Pending';
+  }
 }
 
 function getFriendlyErrorMessage(error: unknown) {
@@ -64,27 +72,35 @@ function getFriendlyErrorMessage(error: unknown) {
 
 function getStatusBadgeStyle(status?: string | null) {
   switch ((status || 'pending').toLowerCase()) {
-    case 'completed':
+    case 'assigned':
+      return {
+        backgroundColor: '#fef3c7',
+        textColor: '#b45309',
+      };
+    case 'in_progress':
       return {
         backgroundColor: '#dbeafe',
         textColor: '#1d4ed8',
       };
-    case 'approved':
+    case 'completed':
       return {
         backgroundColor: '#dcfce7',
         textColor: '#166534',
       };
-    case 'rejected':
-      return {
-        backgroundColor: '#fee2e2',
-        textColor: '#b91c1c',
-      };
+    case 'pending':
     default:
       return {
-        backgroundColor: '#fef3c7',
-        textColor: '#92400e',
+        backgroundColor: '#e2e8f0',
+        textColor: '#475569',
       };
   }
+}
+
+function normalizeServiceRequest(item: ServiceRequest): ServiceRequest {
+  return {
+    ...item,
+    status: item.status || 'pending',
+  };
 }
 
 export default function ServiceRequestListScreen({ navigation }: any) {
@@ -101,7 +117,9 @@ export default function ServiceRequestListScreen({ navigation }: any) {
 
       setErrorMessage('');
       const data = await getServiceRequests();
-      setServiceRequests(Array.isArray(data) ? data : []);
+      setServiceRequests(
+        Array.isArray(data) ? data.map(normalizeServiceRequest) : [],
+      );
     } catch (error) {
       setServiceRequests([]);
       setErrorMessage(getFriendlyErrorMessage(error));
@@ -135,17 +153,23 @@ export default function ServiceRequestListScreen({ navigation }: any) {
             <Text style={styles.cardTitle}>{item.request_type}</Text>
           </View>
 
-          <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: statusStyle.backgroundColor },
-            ]}
-          >
-            <Text
-              style={[styles.statusBadgeText, { color: statusStyle.textColor }]}
+          <View style={styles.statusWrap}>
+            <Text style={styles.statusLabel}>Status</Text>
+            <View
+              style={[
+                styles.statusBadge,
+                { backgroundColor: statusStyle.backgroundColor },
+              ]}
             >
-              {formatStatusLabel(item.status)}
-            </Text>
+              <Text
+                style={[
+                  styles.statusBadgeText,
+                  { color: statusStyle.textColor },
+                ]}
+              >
+                {formatStatusLabel(item.status)}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -158,7 +182,7 @@ export default function ServiceRequestListScreen({ navigation }: any) {
           <View style={styles.metaCard}>
             <Text style={styles.metaLabel}>Date needed</Text>
             <Text style={styles.metaValue}>
-              {formatDate(item.date_needed, 'Flexible')}
+              {formatDate(item.date_needed, 'Not specified')}
             </Text>
           </View>
 
@@ -220,7 +244,7 @@ export default function ServiceRequestListScreen({ navigation }: any) {
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <View style={styles.emptyIcon} />
-              <Text style={styles.emptyTitle}>No service requests yet</Text>
+              <Text style={styles.emptyTitle}>No service requests yet.</Text>
               <Text style={styles.emptyText}>
                 Submit your first request from the customer dashboard and it
                 will appear here.
@@ -360,7 +384,7 @@ const styles = StyleSheet.create({
   },
   cardTitleWrap: {
     flex: 1,
-    paddingRight: 12,
+    paddingRight: 16,
   },
   cardEyebrow: {
     color: '#94a3b8',
@@ -376,20 +400,35 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     lineHeight: 24,
   },
-  statusBadge: {
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+  statusWrap: {
+    alignItems: 'flex-end',
+    flexShrink: 0,
   },
-  statusBadgeText: {
+  statusLabel: {
+    color: '#94a3b8',
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.4,
+    marginBottom: 6,
     textTransform: 'uppercase',
+  },
+  statusBadge: {
+    borderRadius: 999,
+    minWidth: 96,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  statusBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+    textAlign: 'center',
   },
   detailsCard: {
     backgroundColor: '#fffaf0',
+    borderColor: '#ffedd5',
     borderRadius: 16,
+    borderWidth: 1,
     marginBottom: 14,
     padding: 14,
   },

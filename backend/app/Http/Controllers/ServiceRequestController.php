@@ -36,5 +36,12 @@ class ServiceRequestController extends Controller
             'message' => 'Service request submitted successfully.',
             'data' => $serviceRequest
         ], 201);
-    }
+
+        
+    $serviceRequests = ServiceRequest::where('user_id', $request->user()->id)
+        ->latest()
+        ->get();
+
+    return response()->json($serviceRequests);
 }
+    }

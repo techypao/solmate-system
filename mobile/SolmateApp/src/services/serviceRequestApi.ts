@@ -7,7 +7,7 @@ export type ServiceRequest = {
   request_type: string;
   details: string;
   date_needed?: string | null;
-  status?: string | null;
+  status: string;
   created_at?: string;
   updated_at?: string;
 };
