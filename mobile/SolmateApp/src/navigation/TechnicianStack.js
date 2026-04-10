@@ -2,22 +2,39 @@
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
-import TechnicianDashboard from '../../screens/TechnicianDashboard';
-import TechnicianQuotationScreen from '../../screens/TechnicianQuotationScreen';
+import AssignedTasksScreen from '../../screens/AssignedTasksScreen';
+import FinalQuotationScreen from '../../screens/FinalQuotationScreen';
+import RequestDetailsScreen from '../../screens/RequestDetailsScreen';
+import TechnicianDashboardScreen from '../../screens/TechnicianDashboardScreen';
 
 const Stack = createNativeStackNavigator();
 
 export default function TechnicianStack() {
   return (
-    <Stack.Navigator initialRouteName="TechnicianDashboard">
+    <Stack.Navigator
+      initialRouteName="TechnicianDashboard"
+      screenOptions={{
+        headerBackTitle: 'Back',
+      }}>
       <Stack.Screen
         name="TechnicianDashboard"
-        component={TechnicianDashboard}
+        component={TechnicianDashboardScreen}
+        options={{title: 'Technician Dashboard'}}
       />
       <Stack.Screen
-        name="TechnicianQuotation"
-        component={TechnicianQuotationScreen}
-        options={{title: 'Finalize Quotation'}}
+        name="AssignedTasks"
+        component={AssignedTasksScreen}
+        options={{title: 'Assigned Tasks'}}
+      />
+      <Stack.Screen
+        name="RequestDetails"
+        component={RequestDetailsScreen}
+        options={{title: 'Request Details'}}
+      />
+      <Stack.Screen
+        name="FinalQuotation"
+        component={FinalQuotationScreen}
+        options={{title: 'Final Quotation'}}
       />
     </Stack.Navigator>
   );
