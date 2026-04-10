@@ -71,6 +71,60 @@ class ServiceRequestController extends Controller
         'data' => $serviceRequest
     ], 200);
 }
+public function assignedRequests(Request $request)
+{
+    $technician = $request->user();
+
+    $serviceRequests = ServiceRequest::with(['customer', 'technician'])
+        ->where('technician_id', $technician->id)
+        ->latest()
+        ->get();
+
+    return response()->json([
+        'message' => 'Assigned service requests retrieved successfully.',
+        'data' => $serviceRequests
+    ], 200);
+}
+
+public function updateStatus(Request $request, $id)
+{
+    $request->validate([
+        'status' => 'required|in:assigned,in_progress,completed',
+    ]);
+
+    $technician = $request->user();
+
+    $serviceRequest = ServiceRequest::with(['customer', 'technician'])->findOrFail($id);
+
+    if ($serviceRequest->technician_id !== $technician->id) {
+        return response()->json([
+            'message' => 'You are not allowed to update this service request.'
+        ], 403);
+    }
+
+    $allowedTransitions = [
+        'assigned' => ['in_progress'],
+        'in_progress' => ['completed'],
+        'completed' => [],
+    ];
+
+    $currentStatus = $serviceRequest->status;
+    $newStatus = $request->status;
+
+    if (!in_array($newStatus, $allowedTransitions[$currentStatus] ?? [])) {
+        return response()->json([
+            'message' => "Invalid status transition from {$currentStatus} to {$newStatus}."
+        ], 422);
+    }
+
+    $serviceRequest->status = $newStatus;
+    $serviceRequest->save();
+
+    return response()->json([
+        'message' => 'Service request status updated successfully.',
+        'data' => $serviceRequest
+    ], 200);
+}
 }
 
     

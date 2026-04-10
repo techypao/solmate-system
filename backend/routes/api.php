@@ -40,6 +40,9 @@ Route::middleware(['auth:sanctum', 'role:technician'])->group(function () {
     Route::get('/technician-only', function () {
         return response()->json(['message' => 'Welcome Technician']);
     });
+
+    Route::get('/technician/service-requests', [ServiceRequestController::class, 'assignedRequests']);
+    Route::put('/technician/service-requests/{id}/status', [ServiceRequestController::class, 'updateStatus']);
 });
 
 // CUSTOMER ROUTES
