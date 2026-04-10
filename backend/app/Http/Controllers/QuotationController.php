@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Quotation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use App\Models\ServiceRequest;
 
 class QuotationController extends Controller
 {
@@ -240,4 +241,75 @@ if (!is_null($projectCost) && $projectCost > 0 && $monthlyElectricBill > 0) {
             'data' => $quotation,
         ]);
     }
+public function storeFinalQuotation(Request $request)
+{
+    $request->validate([
+        'service_request_id' => 'required|exists:service_requests,id',
+        'preferred_system' => 'required|string|max:255',
+        'remarks' => 'nullable|string',
+    ]);
+
+    $technician = $request->user();
+
+    $serviceRequest = ServiceRequest::with('customer')->findOrFail($request->service_request_id);
+
+    if ($serviceRequest->technician_id !== $technician->id) {
+        return response()->json([
+            'message' => 'You are not allowed to create a final quotation for this service request.'
+        ], 403);
+    }
+
+    if ($serviceRequest->status !== 'completed') {
+        return response()->json([
+            'message' => 'Final quotation can only be created when the service request is completed.'
+        ], 422);
+    }
+
+    $existingFinalQuotation = Quotation::where('service_request_id', $serviceRequest->id)
+        ->where('quotation_type', 'final')
+        ->first();
+
+    if ($existingFinalQuotation) {
+        return response()->json([
+            'message' => 'A final quotation already exists for this service request.'
+        ], 422);
+    }
+
+    $quotation = Quotation::create([
+        'user_id' => $serviceRequest->user_id,
+        'service_request_id' => $serviceRequest->id,
+        'technician_id' => $technician->id,
+        'quotation_type' => 'final',
+        'preferred_system' => $request->preferred_system,
+        'remarks' => $request->remarks,
+    ]);
+
+    $quotation->load(['customer', 'technician', 'serviceRequest']);
+
+    return response()->json([
+        'message' => 'Final quotation created successfully.',
+        'data' => $quotation
+    ], 201);
+}
+public function getCustomerFinalQuotation(Request $request, $service_request_id)
+{
+    $customer = $request->user();
+
+    $quotation = Quotation::with(['customer', 'technician', 'serviceRequest'])
+        ->where('service_request_id', $service_request_id)
+        ->where('user_id', $customer->id)
+        ->where('quotation_type', 'final')
+        ->first();
+
+    if (!$quotation) {
+        return response()->json([
+            'message' => 'Final quotation not found.'
+        ], 404);
+    }
+
+    return response()->json([
+        'message' => 'Final quotation retrieved successfully.',
+        'data' => $quotation
+    ], 200);
+}
 }

@@ -43,6 +43,8 @@ Route::middleware(['auth:sanctum', 'role:technician'])->group(function () {
 
     Route::get('/technician/service-requests', [ServiceRequestController::class, 'assignedRequests']);
     Route::put('/technician/service-requests/{id}/status', [ServiceRequestController::class, 'updateStatus']);
+
+    Route::post('/technician/final-quotations', [QuotationController::class, 'storeFinalQuotation']);
 });
 
 // CUSTOMER ROUTES
@@ -56,4 +58,6 @@ Route::middleware(['auth:sanctum', 'role:customer'])->group(function () {
 
     Route::post('/service-requests', [ServiceRequestController::class, 'store']);
     Route::get('/service-requests', [ServiceRequestController::class, 'index']);
+
+    Route::get('/customer/final-quotations/{service_request_id}', [QuotationController::class, 'getCustomerFinalQuotation']);
 });
