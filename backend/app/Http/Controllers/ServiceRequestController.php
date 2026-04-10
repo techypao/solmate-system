@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ServiceRequest;
+use App\Models\User;
 
 class ServiceRequestController extends Controller
 {
@@ -44,4 +45,32 @@ class ServiceRequestController extends Controller
 
     return response()->json($serviceRequests);
 }
+    public function assignTechnician(Request $request, $id)
+{
+    $request->validate([
+        'technician_id' => 'required|exists:users,id',
+    ]);
+
+    $serviceRequest = ServiceRequest::findOrFail($id);
+    $technician = User::findOrFail($request->technician_id);
+
+    if ($technician->role !== 'technician') {
+        return response()->json([
+            'message' => 'Selected user is not a technician.'
+        ], 422);
     }
+
+    $serviceRequest->technician_id = $technician->id;
+    $serviceRequest->status = 'assigned';
+    $serviceRequest->save();
+
+    $serviceRequest->load(['customer', 'technician']);
+
+    return response()->json([
+        'message' => 'Technician assigned successfully.',
+        'data' => $serviceRequest
+    ], 200);
+}
+}
+
+    

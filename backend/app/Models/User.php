@@ -69,6 +69,11 @@ class User extends Authenticatable
 
 public function serviceRequests()
 {
-    return $this->hasMany(ServiceRequest::class);
+    return $this->hasMany(ServiceRequest::class, 'user_id');
+}
+
+public function assignedServiceRequests()
+{
+    return $this->hasMany(ServiceRequest::class, 'technician_id');
 }
 }
