@@ -1,7 +1,7 @@
 import React from 'react';
 import {Pressable, StyleSheet, Text, View} from 'react-native';
 
-import {TechnicianServiceRequest} from '../src/services/technicianApi';
+import {TechnicianInspectionRequest} from '../src/services/technicianApi';
 import {
   formatDate,
   formatDateTime,
@@ -10,12 +10,12 @@ import {
 import StatusBadge from './StatusBadge';
 
 type TechnicianTaskCardProps = {
-  serviceRequest: TechnicianServiceRequest;
+  inspectionRequest: TechnicianInspectionRequest;
   onPress?: () => void;
 };
 
 export default function TechnicianTaskCard({
-  serviceRequest,
+  inspectionRequest,
   onPress,
 }: TechnicianTaskCardProps) {
   return (
@@ -31,31 +31,31 @@ export default function TechnicianTaskCard({
       <View style={styles.headerRow}>
         <View style={styles.titleWrap}>
           <Text style={styles.eyebrow}>
-            {getCustomerName(serviceRequest)}
+            Inspection request #{inspectionRequest.id}
           </Text>
-          <Text style={styles.title}>{serviceRequest.request_type}</Text>
+          <Text style={styles.title}>{getCustomerName(inspectionRequest)}</Text>
         </View>
 
-        <StatusBadge status={serviceRequest.status} />
+        <StatusBadge status={inspectionRequest.status} />
       </View>
 
       <View style={styles.detailsCard}>
         <Text style={styles.detailsLabel}>Request details</Text>
-        <Text style={styles.detailsText}>{serviceRequest.details}</Text>
+        <Text style={styles.detailsText}>{inspectionRequest.details}</Text>
       </View>
 
       <View style={styles.metaRow}>
         <View style={styles.metaCard}>
           <Text style={styles.metaLabel}>Date needed</Text>
           <Text style={styles.metaValue}>
-            {formatDate(serviceRequest.date_needed)}
+            {formatDate(inspectionRequest.date_needed)}
           </Text>
         </View>
 
         <View style={styles.metaCard}>
           <Text style={styles.metaLabel}>Assigned on</Text>
           <Text style={styles.metaValue}>
-            {formatDateTime(serviceRequest.created_at)}
+            {formatDateTime(inspectionRequest.created_at)}
           </Text>
         </View>
       </View>

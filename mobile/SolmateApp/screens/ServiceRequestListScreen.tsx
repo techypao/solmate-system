@@ -13,6 +13,7 @@ import { AppButton } from '../components';
 import { ApiError } from '../src/services/api';
 import {
   getServiceRequests,
+  getTechnicianServiceRequests,
   ServiceRequest,
 } from '../src/services/serviceRequestApi';
 
@@ -103,7 +104,8 @@ function normalizeServiceRequest(item: ServiceRequest): ServiceRequest {
   };
 }
 
-export default function ServiceRequestListScreen({ navigation }: any) {
+export default function ServiceRequestListScreen({ navigation, route }: any) {
+  const mode = route?.params?.mode === 'technician' ? 'technician' : 'customer';
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -116,7 +118,10 @@ export default function ServiceRequestListScreen({ navigation }: any) {
       }
 
       setErrorMessage('');
-      const data = await getServiceRequests();
+      const data =
+        mode === 'technician'
+          ? await getTechnicianServiceRequests()
+          : await getServiceRequests();
       setServiceRequests(
         Array.isArray(data) ? data.map(normalizeServiceRequest) : [],
       );
@@ -127,7 +132,7 @@ export default function ServiceRequestListScreen({ navigation }: any) {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [mode]);
 
   useFocusEffect(
     useCallback(() => {
@@ -142,6 +147,7 @@ export default function ServiceRequestListScreen({ navigation }: any) {
 
   const renderServiceRequest = ({ item }: { item: ServiceRequest }) => {
     const statusStyle = getStatusBadgeStyle(item.status);
+    const customerName = item.customer?.name || 'Customer not available';
 
     return (
       <View style={styles.card}>
@@ -151,6 +157,9 @@ export default function ServiceRequestListScreen({ navigation }: any) {
           <View style={styles.cardTitleWrap}>
             <Text style={styles.cardEyebrow}>Service request #{item.id}</Text>
             <Text style={styles.cardTitle}>{item.request_type}</Text>
+            {mode === 'technician' ? (
+              <Text style={styles.cardSubTitle}>{customerName}</Text>
+            ) : null}
           </View>
 
           <View style={styles.statusWrap}>
@@ -208,10 +217,13 @@ export default function ServiceRequestListScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>My Service Requests</Text>
+      <Text style={styles.title}>
+        {mode === 'technician' ? 'Service Requests' : 'My Service Requests'}
+      </Text>
       <Text style={styles.subtitle}>
-        Review your submitted service requests and pull down to refresh their
-        latest status.
+        {mode === 'technician'
+          ? 'Review service requests assigned to your technician account and pull down to refresh their latest status.'
+          : 'Review your submitted service requests and pull down to refresh their latest status.'}
       </Text>
 
       {errorMessage ? (
@@ -244,17 +256,24 @@ export default function ServiceRequestListScreen({ navigation }: any) {
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <View style={styles.emptyIcon} />
-              <Text style={styles.emptyTitle}>No service requests yet.</Text>
-              <Text style={styles.emptyText}>
-                Submit your first request from the customer dashboard and it
-                will appear here.
+              <Text style={styles.emptyTitle}>
+                {mode === 'technician'
+                  ? 'No assigned service requests yet.'
+                  : 'No service requests yet.'}
               </Text>
-              <AppButton
-                onPress={() => navigation.navigate('ServiceRequest')}
-                style={styles.emptyButton}
-                title="Request service"
-                variant="outline"
-              />
+              <Text style={styles.emptyText}>
+                {mode === 'technician'
+                  ? 'Assigned service requests will appear here once they are linked to your technician account.'
+                  : 'Submit your first request from the customer dashboard and it will appear here.'}
+              </Text>
+              {mode === 'customer' ? (
+                <AppButton
+                  onPress={() => navigation.navigate('ServiceRequest')}
+                  style={styles.emptyButton}
+                  title="Request service"
+                  variant="outline"
+                />
+              ) : null}
             </View>
           }
         />
@@ -399,6 +418,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     lineHeight: 24,
+  },
+  cardSubTitle: {
+    color: '#64748b',
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 18,
+    marginTop: 6,
   },
   statusWrap: {
     alignItems: 'flex-end',

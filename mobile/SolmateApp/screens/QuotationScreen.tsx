@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 
 import {AppButton, AppCard} from '../components';
-import {ApiError, apiPost} from '../src/services/api';
+import {ApiError} from '../src/services/api';
+import {createQuotation} from '../src/services/quotationApi';
 
 function sanitizeNumericInput(value: string) {
   const cleanedValue = value.replace(/[^0-9.]/g, '');
@@ -88,6 +89,7 @@ export default function QuotationScreen() {
 
   const handleSubmit = async () => {
     const validationMessage = validateForm();
+    const parsedMonthlyElectricBill = toNumberOrUndefined(monthlyElectricBill);
 
     if (validationMessage) {
       setBillError(validationMessage);
@@ -98,9 +100,7 @@ export default function QuotationScreen() {
     // Customers only fill in the bill and remarks.
     // The app automatically sends the default backend values below.
     const payload = {
-      quotation_type: 'initial',
-      monthly_electric_bill: toNumberOrUndefined(monthlyElectricBill),
-      pv_system_type: 'hybrid',
+      monthly_electric_bill: parsedMonthlyElectricBill as number,
       remarks: remarks.trim() || undefined,
     };
 
@@ -108,7 +108,7 @@ export default function QuotationScreen() {
       setSubmitting(true);
       console.log('Submitting payload:', payload);
 
-      const response = await apiPost('/quotations', payload);
+      const response = await createQuotation(payload);
       console.log('Quotation response:', response);
 
       Alert.alert(
@@ -138,11 +138,12 @@ export default function QuotationScreen() {
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}>
       <View style={styles.heroCard}>
-        <Text style={styles.eyebrow}>Create quotation</Text>
+        <Text style={styles.eyebrow}>Create initial quotation</Text>
         <Text style={styles.title}>Quick customer quotation</Text>
         <Text style={styles.subtitle}>
-          Enter your monthly electric bill and any optional notes. The system
-          will automatically prepare an initial hybrid quotation request.
+          Enter your monthly electric bill and any optional notes. Customers can
+          only create the initial quotation here. The technician handles the
+          final quotation later in the workflow.
         </Text>
       </View>
 
@@ -209,7 +210,7 @@ export default function QuotationScreen() {
       <View style={styles.infoCard}>
         <Text style={styles.infoTitle}>Auto-filled by the app</Text>
         <Text style={styles.infoText}>quotation_type: initial</Text>
-        <Text style={styles.infoText}>pv_system_type: hybrid</Text>
+        <Text style={styles.infoText}>other technical values: handled by backend</Text>
       </View>
 
       <View style={styles.submitCard}>

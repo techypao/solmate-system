@@ -1,4 +1,4 @@
-import React, {useCallback, useContext, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -7,11 +7,9 @@ import {
   Text,
   View,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import {AuthContext} from '../src/context/AuthContext';
-
-const QUOTATIONS_URL = 'http://10.0.2.2:8000/api/quotations';
+import {ApiError} from '../src/services/api';
+import {getQuotations} from '../src/services/quotationApi';
 
 type Quotation = {
   id: number;
@@ -72,7 +70,6 @@ function getStatusBadgeStyle(status?: string) {
 }
 
 export default function QuotationListScreen({navigation}: any) {
-  const {user} = useContext(AuthContext);
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -86,46 +83,26 @@ export default function QuotationListScreen({navigation}: any) {
         }
 
         setErrorMessage('');
-
-        const token = await AsyncStorage.getItem('token');
-
-        if (!token) {
-          setErrorMessage('No login token found. Please log in again.');
-          setQuotations([]);
-          return;
-        }
-
-        const response = await fetch(QUOTATIONS_URL, {
-          method: 'GET',
-          headers: {
-            Accept: 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          setErrorMessage(data?.message || 'Could not load quotations.');
-          setQuotations([]);
-          return;
-        }
-
-        const customerQuotations = Array.isArray(data)
-          ? data.filter(item => !user?.id || item.user_id === user.id)
+        const data = await getQuotations();
+        const initialQuotations = Array.isArray(data)
+          ? data.filter(item => item.quotation_type === 'initial')
           : [];
 
-        setQuotations(customerQuotations);
+        setQuotations(initialQuotations);
       } catch (error) {
-        console.log('Quotation list error:', error);
-        setErrorMessage('Could not connect to the server.');
+        if (error instanceof ApiError) {
+          setErrorMessage(error.message);
+        } else {
+          console.log('Quotation list error:', error);
+          setErrorMessage('Could not connect to the server.');
+        }
         setQuotations([]);
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [user],
+    [],
   );
 
   useEffect(() => {
@@ -206,7 +183,8 @@ export default function QuotationListScreen({navigation}: any) {
     <View style={styles.container}>
       <Text style={styles.title}>My Quotations</Text>
       <Text style={styles.subtitle}>
-        Review your submitted quotations and pull down to refresh the list.
+        Review the initial quotations you submitted and pull down to refresh the
+        list.
       </Text>
 
       {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}

@@ -5,6 +5,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import AssignedTasksScreen from '../../screens/AssignedTasksScreen';
 import FinalQuotationScreen from '../../screens/FinalQuotationScreen';
 import RequestDetailsScreen from '../../screens/RequestDetailsScreen';
+import ServiceRequestListScreen from '../../screens/ServiceRequestListScreen';
 import TechnicianDashboardScreen from '../../screens/TechnicianDashboardScreen';
 
 const Stack = createNativeStackNavigator();
@@ -22,19 +23,25 @@ export default function TechnicianStack() {
         options={{title: 'Technician Dashboard'}}
       />
       <Stack.Screen
-        name="AssignedTasks"
+        name="AssignedInspectionRequests"
         component={AssignedTasksScreen}
-        options={{title: 'Assigned Tasks'}}
+        options={{title: 'Assigned Inspection Requests'}}
       />
       <Stack.Screen
-        name="RequestDetails"
+        name="TechnicianServiceRequests"
+        component={ServiceRequestListScreen}
+        initialParams={{mode: 'technician'}}
+        options={{title: 'Service Requests'}}
+      />
+      <Stack.Screen
+        name="InspectionDetails"
         component={RequestDetailsScreen}
-        options={{title: 'Request Details'}}
+        options={{title: 'Inspection Details'}}
       />
       <Stack.Screen
-        name="FinalQuotation"
+        name="FinalQuotationForm"
         component={FinalQuotationScreen}
-        options={{title: 'Final Quotation'}}
+        options={{title: 'Final Quotation Form'}}
       />
     </Stack.Navigator>
   );

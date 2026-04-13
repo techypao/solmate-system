@@ -1,4 +1,4 @@
-import {TechnicianServiceRequest} from '../services/technicianApi';
+import {TechnicianInspectionRequest} from '../services/technicianApi';
 
 export function formatDate(value?: string | null, fallback = 'Not specified') {
   if (!value) {
@@ -33,6 +33,8 @@ export function formatDateTime(
 
 export function formatServiceRequestStatus(status?: string | null) {
   switch ((status || '').toLowerCase()) {
+    case 'pending':
+      return 'Pending';
     case 'assigned':
       return 'Assigned';
     case 'in_progress':
@@ -46,10 +48,15 @@ export function formatServiceRequestStatus(status?: string | null) {
 
 export function getServiceRequestStatusColors(status?: string | null) {
   switch ((status || '').toLowerCase()) {
-    case 'assigned':
+    case 'pending':
       return {
         backgroundColor: '#fef3c7',
         textColor: '#92400e',
+      };
+    case 'assigned':
+      return {
+        backgroundColor: '#ede9fe',
+        textColor: '#6d28d9',
       };
     case 'in_progress':
       return {
@@ -69,32 +76,28 @@ export function getServiceRequestStatusColors(status?: string | null) {
   }
 }
 
-export function getCustomerName(serviceRequest?: TechnicianServiceRequest | null) {
-  return serviceRequest?.customer?.name || 'Customer not provided';
+export function getCustomerName(
+  inspectionRequest?: TechnicianInspectionRequest | null,
+) {
+  return inspectionRequest?.customer?.name || 'Customer not provided';
 }
 
-export function getCustomerEmail(serviceRequest?: TechnicianServiceRequest | null) {
-  return serviceRequest?.customer?.email || 'No email available';
+export function getCustomerEmail(
+  inspectionRequest?: TechnicianInspectionRequest | null,
+) {
+  return inspectionRequest?.customer?.email || 'No email available';
 }
 
 export function getTechnicianName(
-  serviceRequest?: TechnicianServiceRequest | null,
+  inspectionRequest?: TechnicianInspectionRequest | null,
 ) {
-  return serviceRequest?.technician?.name || 'Assigned technician';
+  return inspectionRequest?.technician?.name || 'Assigned technician';
 }
 
 export function getTechnicianEmail(
-  serviceRequest?: TechnicianServiceRequest | null,
+  inspectionRequest?: TechnicianInspectionRequest | null,
 ) {
-  return serviceRequest?.technician?.email || 'No email available';
-}
-
-export function canStartServiceRequest(status?: string | null) {
-  return (status || '').toLowerCase() === 'assigned';
-}
-
-export function canCompleteServiceRequest(status?: string | null) {
-  return (status || '').toLowerCase() === 'in_progress';
+  return inspectionRequest?.technician?.email || 'No email available';
 }
 
 export function canCreateFinalQuotation(status?: string | null) {

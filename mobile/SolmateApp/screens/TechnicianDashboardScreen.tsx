@@ -13,7 +13,7 @@ import {useFocusEffect} from '@react-navigation/native';
 import {AppButton, AppCard} from '../components';
 import {AuthContext} from '../src/context/AuthContext';
 import {ApiError} from '../src/services/api';
-import {getAssignedServiceRequests} from '../src/services/technicianApi';
+import {getAssignedInspectionRequests} from '../src/services/technicianApi';
 
 type ActionCardProps = {
   title: string;
@@ -59,7 +59,7 @@ export default function TechnicianDashboardScreen({navigation}: any) {
 
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-  const [taskCounts, setTaskCounts] = useState({
+  const [requestCounts, setRequestCounts] = useState({
     total: 0,
     assigned: 0,
     inProgress: 0,
@@ -71,21 +71,21 @@ export default function TechnicianDashboardScreen({navigation}: any) {
       setLoading(true);
       setErrorMessage('');
 
-      const requests = await getAssignedServiceRequests();
+      const requests = await getAssignedInspectionRequests();
       const assigned = requests.filter(item => item.status === 'assigned').length;
       const inProgress = requests.filter(
         item => item.status === 'in_progress',
       ).length;
       const completed = requests.filter(item => item.status === 'completed').length;
 
-      setTaskCounts({
+      setRequestCounts({
         total: requests.length,
         assigned,
         inProgress,
         completed,
       });
     } catch (error) {
-      setTaskCounts({
+      setRequestCounts({
         total: 0,
         assigned: 0,
         inProgress: 0,
@@ -112,8 +112,8 @@ export default function TechnicianDashboardScreen({navigation}: any) {
           <Text style={styles.eyebrow}>Technician dashboard</Text>
           <Text style={styles.heroTitle}>Welcome back, {technicianName}</Text>
           <Text style={styles.heroSubtitle}>
-            Track assigned field work, move requests through their status flow,
-            and prepare final quotations after completing service visits.
+            Review assigned inspection requests, move them through their status
+            flow, and submit final quotations after site visits are completed.
           </Text>
 
           <View style={styles.heroMetaRow}>
@@ -131,9 +131,9 @@ export default function TechnicianDashboardScreen({navigation}: any) {
         </View>
 
         <AppCard style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Workload snapshot</Text>
+          <Text style={styles.sectionTitle}>Inspection workload snapshot</Text>
           <Text style={styles.sectionSubtitle}>
-            A live summary of the tasks currently assigned to your account.
+            A live summary of the inspection requests assigned to your account.
           </Text>
 
           {loading ? (
@@ -156,35 +156,35 @@ export default function TechnicianDashboardScreen({navigation}: any) {
           ) : null}
 
           <View style={styles.summaryGrid}>
-            <View style={[styles.summaryCard, styles.summaryCardBlue]}>
-              <Text style={styles.summaryLabel}>Assigned tasks</Text>
-              <Text style={styles.summaryValue}>{taskCounts.assigned}</Text>
+            <View style={[styles.summaryCard, styles.summaryCardPurple]}>
+              <Text style={styles.summaryLabel}>Assigned</Text>
+              <Text style={styles.summaryValue}>{requestCounts.assigned}</Text>
               <Text style={styles.summaryNote}>
-                Jobs waiting for the first status update.
+                Ready for technician review and the first status update.
               </Text>
             </View>
 
-            <View style={[styles.summaryCard, styles.summaryCardAmber]}>
+            <View style={[styles.summaryCard, styles.summaryCardBlue]}>
               <Text style={styles.summaryLabel}>In progress</Text>
-              <Text style={styles.summaryValue}>{taskCounts.inProgress}</Text>
+              <Text style={styles.summaryValue}>{requestCounts.inProgress}</Text>
               <Text style={styles.summaryNote}>
-                Work already started and still active.
+                Site visits already started and still being worked on.
               </Text>
             </View>
 
             <View style={[styles.summaryCard, styles.summaryCardGreen]}>
               <Text style={styles.summaryLabel}>Completed</Text>
-              <Text style={styles.summaryValue}>{taskCounts.completed}</Text>
+              <Text style={styles.summaryValue}>{requestCounts.completed}</Text>
               <Text style={styles.summaryNote}>
                 Ready for final quotation submission.
               </Text>
             </View>
 
             <View style={[styles.summaryCard, styles.summaryCardSlate]}>
-              <Text style={styles.summaryLabel}>Total tasks</Text>
-              <Text style={styles.summaryValue}>{taskCounts.total}</Text>
+              <Text style={styles.summaryLabel}>Total assigned</Text>
+              <Text style={styles.summaryValue}>{requestCounts.total}</Text>
               <Text style={styles.summaryNote}>
-                Everything currently assigned to you.
+                Everything currently assigned to your technician account.
               </Text>
             </View>
           </View>
@@ -193,41 +193,41 @@ export default function TechnicianDashboardScreen({navigation}: any) {
         <AppCard style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Quick actions</Text>
           <Text style={styles.sectionSubtitle}>
-            Jump straight to task handling and quotation-ready requests.
+            Jump straight into assigned inspection requests, service requests,
+            and completed jobs ready for quotation.
           </Text>
 
           <ActionCard
-            title="Assigned Tasks"
-            subtitle="Open your full technician task list and review each request."
-            accentColor="#93c5fd"
-            onPress={() => navigation.navigate('AssignedTasks')}
+            title="Assigned Inspection Requests"
+            subtitle="Open your full technician inspection queue and review each request."
+            accentColor="#c4b5fd"
+            onPress={() => navigation.navigate('AssignedInspectionRequests')}
           />
 
           <ActionCard
-            title="Final Quotations"
-            subtitle="Open completed service requests that are ready for quotation."
+            title="Service Requests"
+            subtitle="Open the technician service request list and review assigned service jobs."
+            accentColor="#fdba74"
+            onPress={() => navigation.navigate('TechnicianServiceRequests')}
+          />
+
+          <ActionCard
+            title="Submit Final Quotations"
+            subtitle="Open inspection requests and continue into the final quotation form once completed."
             accentColor="#86efac"
-            onPress={() =>
-              navigation.navigate('AssignedTasks', {
-                statusFilter: 'completed',
-              })
-            }
+            onPress={() => navigation.navigate('AssignedInspectionRequests')}
           />
 
           <View style={styles.buttonStack}>
             <AppButton
-              title="View Assigned Tasks"
-              onPress={() => navigation.navigate('AssignedTasks')}
+              title="View Assigned Inspection Requests"
+              onPress={() => navigation.navigate('AssignedInspectionRequests')}
             />
             <AppButton
-              title="Open Completed Tasks"
+              title="Service Requests"
               variant="secondary"
               style={styles.buttonSpacing}
-              onPress={() =>
-                navigation.navigate('AssignedTasks', {
-                  statusFilter: 'completed',
-                })
-              }
+              onPress={() => navigation.navigate('TechnicianServiceRequests')}
             />
             <AppButton
               title="Logout"
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     color: '#0369a1',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.4,
     marginBottom: 8,
@@ -274,29 +274,30 @@ const styles = StyleSheet.create({
   },
   heroSubtitle: {
     color: '#334155',
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 18,
+    fontSize: 14,
+    lineHeight: 21,
+    marginBottom: 16,
   },
   heroMetaRow: {
-    gap: 10,
+    flexDirection: 'row',
+    gap: 12,
   },
   heroMetaCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.84)',
+    backgroundColor: '#ffffff',
     borderRadius: 18,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    flex: 1,
+    padding: 14,
   },
   heroMetaLabel: {
     color: '#64748b',
     fontSize: 12,
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: 6,
     textTransform: 'uppercase',
   },
   heroMetaValue: {
     color: '#0f172a',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
   },
   sectionCard: {
@@ -316,11 +317,8 @@ const styles = StyleSheet.create({
   },
   loadingCard: {
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
-    borderRadius: 18,
     flexDirection: 'row',
     marginBottom: 16,
-    padding: 14,
   },
   loadingText: {
     color: '#475569',
@@ -353,33 +351,33 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   summaryCard: {
-    borderRadius: 20,
+    borderRadius: 18,
     padding: 16,
+  },
+  summaryCardPurple: {
+    backgroundColor: '#f5f3ff',
   },
   summaryCardBlue: {
     backgroundColor: '#eff6ff',
   },
-  summaryCardAmber: {
-    backgroundColor: '#fff7ed',
-  },
   summaryCardGreen: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#ecfdf5',
   },
   summaryCardSlate: {
     backgroundColor: '#f8fafc',
   },
   summaryLabel: {
-    color: '#64748b',
+    color: '#475569',
     fontSize: 12,
     fontWeight: '700',
-    marginBottom: 8,
+    marginBottom: 6,
     textTransform: 'uppercase',
   },
   summaryValue: {
     color: '#0f172a',
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '800',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   summaryNote: {
     color: '#475569',
@@ -387,18 +385,21 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   actionCard: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#ffffff',
     borderColor: '#e2e8f0',
     borderRadius: 20,
     borderWidth: 1,
-    marginBottom: 12,
-    padding: 16,
+    marginBottom: 14,
+    padding: 18,
+  },
+  pressed: {
+    opacity: 0.88,
   },
   actionHeader: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 14,
+    marginBottom: 12,
   },
   actionAccent: {
     borderRadius: 999,
@@ -406,21 +407,16 @@ const styles = StyleSheet.create({
     width: 56,
   },
   actionPill: {
-    backgroundColor: '#ffffff',
-    borderRadius: 999,
     color: '#64748b',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    overflow: 'hidden',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
     textTransform: 'uppercase',
   },
   actionTitle: {
     color: '#0f172a',
-    fontSize: 17,
-    fontWeight: '700',
-    marginBottom: 6,
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 8,
   },
   actionSubtitle: {
     color: '#475569',
@@ -443,8 +439,5 @@ const styles = StyleSheet.create({
   },
   buttonSpacing: {
     marginTop: 12,
-  },
-  pressed: {
-    opacity: 0.88,
   },
 });

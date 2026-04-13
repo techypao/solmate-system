@@ -90,8 +90,8 @@ export default function HomeScreen({ navigation }: any) {
 
           <View style={styles.quickActionGrid}>
             <QuickActionCard
-              title="Create Quotation"
-              subtitle="Start a new quotation request for your account."
+              title="Create Initial Quotation"
+              subtitle="Start a new customer quotation request for your account."
               accentColor="#93c5fd"
               // Use the stack navigator to open the quotation form screen.
               onPress={() => navigation.navigate('Quotations')}
@@ -111,7 +111,7 @@ export default function HomeScreen({ navigation }: any) {
             />
             <QuickActionCard
               title="My Inspection Requests"
-              subtitle="Review the inspection requests already on your account."
+              subtitle="Review inspection progress and open final quotations when available."
               accentColor="#4ade80"
               onPress={() => navigation.navigate('InspectionRequestList')}
             />
@@ -132,7 +132,7 @@ export default function HomeScreen({ navigation }: any) {
           <View style={styles.buttonStack}>
             {/* These buttons mirror the same navigation actions as the cards. */}
             <AppButton
-              title="Create Quotation"
+              title="Create Initial Quotation"
               onPress={() => navigation.navigate('Quotations')}
             />
             <AppButton

@@ -1,13 +1,30 @@
 import {apiGet, apiPost} from './api';
 
+export type UserSummary = {
+  id: number;
+  name?: string | null;
+  email?: string | null;
+  role?: string | null;
+};
+
+export type InspectionRequestStatus =
+  | 'pending'
+  | 'assigned'
+  | 'in_progress'
+  | 'completed'
+  | string;
+
 export type InspectionRequest = {
   id: number;
   user_id?: number;
+  technician_id?: number | null;
   details: string;
   date_needed?: string | null;
-  status?: string | null;
+  status?: InspectionRequestStatus | null;
   created_at?: string;
   updated_at?: string;
+  customer?: UserSummary | null;
+  technician?: UserSummary | null;
 };
 
 export type CreateInspectionRequestPayload = {

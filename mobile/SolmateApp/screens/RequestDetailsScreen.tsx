@@ -1,7 +1,8 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useContext, useState} from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -12,22 +13,20 @@ import {useFocusEffect} from '@react-navigation/native';
 
 import {AppButton, AppCard} from '../components';
 import StatusBadge from '../components/StatusBadge';
+import {AuthContext} from '../src/context/AuthContext';
 import {ApiError} from '../src/services/api';
 import {
-  getAssignedServiceRequestById,
-  TechnicianServiceRequest,
-  updateTechnicianServiceRequestStatus,
+  getAssignedInspectionRequestById,
+  TechnicianInspectionRequest,
+  TechnicianUpdatableStatus,
+  updateInspectionRequestStatus,
 } from '../src/services/technicianApi';
 import {
-  canCompleteServiceRequest,
   canCreateFinalQuotation,
-  canStartServiceRequest,
   formatDate,
   formatDateTime,
   getCustomerEmail,
   getCustomerName,
-  getTechnicianEmail,
-  getTechnicianName,
 } from '../src/utils/technicianRequests';
 
 function getFriendlyErrorMessage(error: unknown) {
@@ -35,7 +34,7 @@ function getFriendlyErrorMessage(error: unknown) {
     return error.message;
   }
 
-  return 'Could not load the service request details.';
+  return 'Could not load the inspection request details.';
 }
 
 function DetailRow({
@@ -53,75 +52,133 @@ function DetailRow({
   );
 }
 
+function StatusActionButton({
+  label,
+  selected,
+  disabled,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  disabled: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      disabled={disabled}
+      onPress={onPress}
+      style={({pressed}) => [
+        styles.statusButton,
+        selected ? styles.statusButtonSelected : null,
+        pressed && !disabled ? styles.statusButtonPressed : null,
+        disabled ? styles.statusButtonDisabled : null,
+      ]}>
+      <Text
+        style={[
+          styles.statusButtonText,
+          selected ? styles.statusButtonTextSelected : null,
+        ]}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+const STATUS_OPTIONS: Array<{
+  label: string;
+  value: TechnicianUpdatableStatus;
+  successMessage: string;
+}> = [
+  {
+    label: 'Assigned',
+    value: 'assigned',
+    successMessage: 'The inspection request has been moved back to assigned.',
+  },
+  {
+    label: 'In Progress',
+    value: 'in_progress',
+    successMessage: 'The inspection request is now in progress.',
+  },
+  {
+    label: 'Completed',
+    value: 'completed',
+    successMessage: 'The inspection request has been marked as completed.',
+  },
+];
+
 export default function RequestDetailsScreen({navigation, route}: any) {
-  const requestId = route?.params?.requestId;
-  const initialRequest = route?.params?.initialRequest as
-    | TechnicianServiceRequest
+  const {user} = useContext(AuthContext);
+  const inspectionRequestId = route?.params?.inspectionRequestId;
+  const initialInspectionRequest = route?.params?.initialInspectionRequest as
+    | TechnicianInspectionRequest
     | undefined;
 
-  const [serviceRequest, setServiceRequest] = useState<
-    TechnicianServiceRequest | null
-  >(initialRequest || null);
-  const [loading, setLoading] = useState(!initialRequest);
+  const [inspectionRequest, setInspectionRequest] =
+    useState<TechnicianInspectionRequest | null>(initialInspectionRequest || null);
+  const [loading, setLoading] = useState(!initialInspectionRequest);
   const [errorMessage, setErrorMessage] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
-  const loadRequest = useCallback(async (showLoadingState = false) => {
-    if (!requestId) {
-      setServiceRequest(null);
-      setErrorMessage('No service request ID was provided.');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      if (showLoadingState) {
-        setLoading(true);
-      }
-
-      setErrorMessage('');
-      const request = await getAssignedServiceRequestById(requestId);
-
-      if (!request) {
-        setServiceRequest(null);
-        setErrorMessage(
-          'This service request was not found in your assigned task list.',
-        );
+  const loadInspectionRequest = useCallback(
+    async (showLoadingState = false) => {
+      if (!inspectionRequestId) {
+        setInspectionRequest(null);
+        setErrorMessage('No inspection request ID was provided.');
+        setLoading(false);
         return;
       }
 
-      setServiceRequest(request);
-    } catch (error) {
-      setErrorMessage(getFriendlyErrorMessage(error));
-    } finally {
-      setLoading(false);
-    }
-  }, [requestId]);
+      try {
+        if (showLoadingState) {
+          setLoading(true);
+        }
+
+        setErrorMessage('');
+        const request = await getAssignedInspectionRequestById(inspectionRequestId);
+
+        if (!request) {
+          setInspectionRequest(null);
+          setErrorMessage(
+            'This inspection request was not found in your assigned list.',
+          );
+          return;
+        }
+
+        setInspectionRequest(request);
+      } catch (error) {
+        setInspectionRequest(null);
+        setErrorMessage(getFriendlyErrorMessage(error));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [inspectionRequestId],
+  );
 
   useFocusEffect(
     useCallback(() => {
-      loadRequest(!serviceRequest);
-    }, [loadRequest, serviceRequest]),
+      loadInspectionRequest(!inspectionRequest);
+    }, [inspectionRequest, loadInspectionRequest]),
   );
 
   const handleStatusUpdate = async (
-    nextStatus: 'in_progress' | 'completed',
+    nextStatus: TechnicianUpdatableStatus,
     successMessage: string,
   ) => {
-    if (!serviceRequest) {
+    if (!inspectionRequest) {
       return;
     }
 
     try {
       setActionLoading(true);
 
-      const updatedRequest = await updateTechnicianServiceRequestStatus(
-        serviceRequest.id,
+      const updatedRequest = await updateInspectionRequestStatus(
+        inspectionRequest.id,
         nextStatus,
       );
 
-      setServiceRequest(updatedRequest);
-      await loadRequest(false);
+      setInspectionRequest(updatedRequest);
+      await loadInspectionRequest(false);
 
       Alert.alert('Success', successMessage);
     } catch (error) {
@@ -130,7 +187,7 @@ export default function RequestDetailsScreen({navigation, route}: any) {
       } else {
         Alert.alert(
           'Update failed',
-          'Could not update the service request status.',
+          'Could not update the inspection request status.',
         );
       }
     } finally {
@@ -142,20 +199,20 @@ export default function RequestDetailsScreen({navigation, route}: any) {
     return (
       <View style={styles.centeredContainer}>
         <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={styles.loadingText}>Loading request details...</Text>
+        <Text style={styles.loadingText}>Loading inspection details...</Text>
       </View>
     );
   }
 
-  if (errorMessage || !serviceRequest) {
+  if (errorMessage || !inspectionRequest) {
     return (
       <View style={styles.centeredContainer}>
-        <Text style={styles.errorTitle}>Request details unavailable</Text>
+        <Text style={styles.errorTitle}>Inspection details unavailable</Text>
         <Text style={styles.errorText}>
-          {errorMessage || 'No request details were found.'}
+          {errorMessage || 'No inspection request details were found.'}
         </Text>
         <AppButton
-          title="Back to tasks"
+          title="Back to requests"
           onPress={() => navigation.goBack()}
           style={styles.errorButton}
         />
@@ -169,125 +226,130 @@ export default function RequestDetailsScreen({navigation, route}: any) {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}>
         <View style={styles.heroCard}>
-          <Text style={styles.eyebrow}>Service request #{serviceRequest.id}</Text>
-          <Text style={styles.heroTitle}>{serviceRequest.request_type}</Text>
+          <Text style={styles.eyebrow}>
+            Inspection request #{inspectionRequest.id}
+          </Text>
+          <Text style={styles.heroTitle}>{getCustomerName(inspectionRequest)}</Text>
           <Text style={styles.heroSubtitle}>
-            Review customer information, update the task status, and create a
-            final quotation after the request is completed.
+            Review the assigned inspection, update its status, and submit the
+            final quotation after the visit is completed.
           </Text>
 
-          <StatusBadge status={serviceRequest.status} />
+          <StatusBadge status={inspectionRequest.status} />
         </View>
 
         <AppCard style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Customer information</Text>
           <Text style={styles.sectionSubtitle}>
-            The customer assigned to this service request.
+            The customer connected to this assigned inspection request.
           </Text>
 
-          <DetailRow label="Customer name" value={getCustomerName(serviceRequest)} />
+          <DetailRow
+            label="Customer name"
+            value={getCustomerName(inspectionRequest)}
+          />
           <DetailRow
             label="Customer email"
-            value={getCustomerEmail(serviceRequest)}
+            value={getCustomerEmail(inspectionRequest)}
           />
         </AppCard>
 
         <AppCard style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Request details</Text>
+          <Text style={styles.sectionTitle}>Inspection request details</Text>
           <Text style={styles.sectionSubtitle}>
-            Core service request information from the assigned job.
+            Core details captured by the customer for this visit.
           </Text>
 
-          <DetailRow
-            label="Request type"
-            value={serviceRequest.request_type}
-          />
+          <DetailRow label="Inspection request ID" value={`${inspectionRequest.id}`} />
           <DetailRow
             label="Date needed"
-            value={formatDate(serviceRequest.date_needed)}
+            value={formatDate(inspectionRequest.date_needed)}
           />
           <DetailRow
             label="Created"
-            value={formatDateTime(serviceRequest.created_at)}
+            value={formatDateTime(inspectionRequest.created_at)}
           />
 
           <View style={styles.detailsBlock}>
             <Text style={styles.detailLabel}>Details</Text>
-            <Text style={styles.detailsText}>{serviceRequest.details}</Text>
+            <Text style={styles.detailsText}>{inspectionRequest.details}</Text>
           </View>
         </AppCard>
 
         <AppCard style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Technician assignment</Text>
+          <Text style={styles.sectionTitle}>Technician assignment context</Text>
           <Text style={styles.sectionSubtitle}>
-            This request is tied to your technician account.
+            This inspection request is currently assigned to your account.
           </Text>
 
-          <DetailRow
-            label="Technician name"
-            value={getTechnicianName(serviceRequest)}
-          />
+          <DetailRow label="Technician name" value={user?.name || 'Technician'} />
           <DetailRow
             label="Technician email"
-            value={getTechnicianEmail(serviceRequest)}
+            value={user?.email || 'No email available'}
           />
+          <DetailRow label="Technician role" value={user?.role || 'technician'} />
         </AppCard>
 
         <AppCard style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Task actions</Text>
+          <Text style={styles.sectionTitle}>Update status</Text>
           <Text style={styles.sectionSubtitle}>
-            Actions change automatically based on the current service status.
+            Choose the current inspection progress state. Buttons are disabled
+            while the update request is being submitted.
           </Text>
 
-          {canStartServiceRequest(serviceRequest.status) ? (
-            <AppButton
-              title={actionLoading ? 'Starting task...' : 'Start Task'}
-              disabled={actionLoading}
-              onPress={() =>
-                handleStatusUpdate(
-                  'in_progress',
-                  'The service request is now in progress.',
-                )
-              }
-            />
-          ) : null}
-
-          {canCompleteServiceRequest(serviceRequest.status) ? (
-            <AppButton
-              title={actionLoading ? 'Completing task...' : 'Complete Task'}
-              disabled={actionLoading}
-              onPress={() =>
-                handleStatusUpdate(
-                  'completed',
-                  'The service request has been marked as completed.',
-                )
-              }
-            />
-          ) : null}
-
-          {canCreateFinalQuotation(serviceRequest.status) ? (
-            <View style={styles.completedStateCard}>
-              <Text style={styles.completedStateTitle}>Task completed</Text>
-              <Text style={styles.completedStateText}>
-                This request is ready for final quotation submission.
-              </Text>
-            </View>
-          ) : null}
+          <View style={styles.statusButtonRow}>
+            {STATUS_OPTIONS.map(option => (
+              <StatusActionButton
+                key={option.value}
+                label={option.label}
+                selected={inspectionRequest.status === option.value}
+                disabled={
+                  actionLoading || inspectionRequest.status === option.value
+                }
+                onPress={() =>
+                  handleStatusUpdate(option.value, option.successMessage)
+                }
+              />
+            ))}
+          </View>
         </AppCard>
 
         <AppCard style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Final quotation</Text>
           <Text style={styles.sectionSubtitle}>
-            Final quotations can only be created for completed service requests.
+            Only completed inspection requests can proceed to final quotation
+            submission.
           </Text>
 
+          {canCreateFinalQuotation(inspectionRequest.status) ? (
+            <View style={styles.completedStateCard}>
+              <Text style={styles.completedStateTitle}>
+                Ready for final quotation
+              </Text>
+              <Text style={styles.completedStateText}>
+                The inspection is completed and the quotation form is now
+                available.
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.waitingStateCard}>
+              <Text style={styles.waitingStateTitle}>
+                Complete the inspection first
+              </Text>
+              <Text style={styles.waitingStateText}>
+                Mark this request as completed before opening the final
+                quotation form.
+              </Text>
+            </View>
+          )}
+
           <AppButton
-            title="Create Final Quotation"
-            disabled={!canCreateFinalQuotation(serviceRequest.status)}
+            title="Open Final Quotation Form"
+            disabled={!canCreateFinalQuotation(inspectionRequest.status)}
             onPress={() =>
-              navigation.navigate('FinalQuotation', {
-                requestId: serviceRequest.id,
-                serviceRequest,
+              navigation.navigate('FinalQuotationForm', {
+                inspectionRequestId: inspectionRequest.id,
+                inspectionRequest,
               })
             }
           />
@@ -336,13 +398,13 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   heroCard: {
-    backgroundColor: '#dbeafe',
+    backgroundColor: '#e0f2fe',
     borderRadius: 28,
     marginBottom: 18,
     padding: 22,
   },
   eyebrow: {
-    color: '#1d4ed8',
+    color: '#0369a1',
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.4,
@@ -360,7 +422,7 @@ const styles = StyleSheet.create({
     color: '#334155',
     fontSize: 14,
     lineHeight: 21,
-    marginBottom: 18,
+    marginBottom: 16,
   },
   sectionCard: {
     marginBottom: 18,
@@ -396,22 +458,52 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   detailsBlock: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
-    borderRadius: 16,
-    borderWidth: 1,
-    marginTop: 4,
-    padding: 14,
+    borderTopColor: '#e2e8f0',
+    borderTopWidth: 1,
+    paddingTop: 12,
   },
   detailsText: {
-    color: '#334155',
+    color: '#0f172a',
+    fontSize: 15,
+    lineHeight: 23,
+  },
+  statusButtonRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  statusButton: {
+    backgroundColor: '#eff6ff',
+    borderColor: '#bfdbfe',
+    borderRadius: 14,
+    borderWidth: 1,
+    minWidth: 110,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  statusButtonSelected: {
+    backgroundColor: '#2563eb',
+    borderColor: '#2563eb',
+  },
+  statusButtonPressed: {
+    opacity: 0.88,
+  },
+  statusButtonDisabled: {
+    opacity: 0.65,
+  },
+  statusButtonText: {
+    color: '#1d4ed8',
     fontSize: 14,
-    lineHeight: 21,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  statusButtonTextSelected: {
+    color: '#ffffff',
   },
   completedStateCard: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#dcfce7',
     borderRadius: 16,
-    marginTop: 2,
+    marginBottom: 16,
     padding: 16,
   },
   completedStateTitle: {
@@ -422,6 +514,25 @@ const styles = StyleSheet.create({
   },
   completedStateText: {
     color: '#166534',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  waitingStateCard: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 16,
+    padding: 16,
+  },
+  waitingStateTitle: {
+    color: '#0f172a',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  waitingStateText: {
+    color: '#475569',
     fontSize: 14,
     lineHeight: 20,
   },

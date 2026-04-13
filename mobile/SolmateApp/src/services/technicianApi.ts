@@ -1,112 +1,51 @@
-import {apiGet, apiPost, apiPut} from './api';
+import {apiGet, apiPut} from './api';
+import {InspectionRequest} from './inspectionRequestApi';
 
-export type UserSummary = {
-  id: number;
-  name?: string | null;
-  email?: string | null;
-  role?: string | null;
-};
-
-export type ServiceRequestStatus =
+export type TechnicianInspectionRequest = InspectionRequest;
+export type TechnicianUpdatableStatus =
   | 'assigned'
   | 'in_progress'
-  | 'completed'
-  | string;
+  | 'completed';
 
-export type TechnicianServiceRequest = {
-  id: number;
-  user_id?: number;
-  technician_id?: number | null;
-  request_type: string;
-  details: string;
-  date_needed?: string | null;
-  status: ServiceRequestStatus;
-  created_at?: string;
-  updated_at?: string;
-  customer?: UserSummary | null;
-  technician?: UserSummary | null;
+type AssignedInspectionRequestsResponse = {
+  inspection_requests?: TechnicianInspectionRequest[];
 };
 
-export type TechnicianUpdatableStatus = 'in_progress' | 'completed';
-
-export type CreateFinalQuotationPayload = {
-  service_request_id: number;
-  preferred_system: string;
-  remarks?: string;
-};
-
-export type FinalQuotation = {
-  id: number;
-  user_id?: number;
-  service_request_id: number;
-  technician_id?: number | null;
-  quotation_type?: string | null;
-  preferred_system?: string | null;
-  remarks?: string | null;
-  created_at?: string;
-  updated_at?: string;
-  customer?: UserSummary | null;
-  technician?: UserSummary | null;
-  serviceRequest?: TechnicianServiceRequest | null;
-};
-
-type ApiEnvelope<T> = {
+type UpdatedInspectionRequestResponse = {
   message?: string;
-  data?: T;
+  inspection_request?: TechnicianInspectionRequest;
 };
 
-function extractEnvelopeData<T>(response: T | ApiEnvelope<T>, fallback: T): T {
-  if (
-    response &&
-    typeof response === 'object' &&
-    'data' in response &&
-    response.data !== undefined
-  ) {
-    return response.data;
-  }
+export async function getAssignedInspectionRequests() {
+  const response = await apiGet<AssignedInspectionRequestsResponse>(
+    '/technician/inspection-requests',
+  );
 
-  return (response ?? fallback) as T;
+  return Array.isArray(response?.inspection_requests)
+    ? response.inspection_requests
+    : [];
 }
 
-export async function getAssignedServiceRequests() {
-  const response = await apiGet<
-    TechnicianServiceRequest[] | ApiEnvelope<TechnicianServiceRequest[]>
-  >('/technician/service-requests');
-
-  const data = extractEnvelopeData<TechnicianServiceRequest[]>(response, []);
-  return Array.isArray(data) ? data : [];
-}
-
-export async function getAssignedServiceRequestById(serviceRequestId: number) {
-  const requests = await getAssignedServiceRequests();
+export async function getAssignedInspectionRequestById(
+  inspectionRequestId: number,
+) {
+  const requests = await getAssignedInspectionRequests();
 
   return (
-    requests.find(serviceRequest => serviceRequest.id === serviceRequestId) ||
-    null
+    requests.find(
+      inspectionRequest => inspectionRequest.id === inspectionRequestId,
+    ) || null
   );
 }
 
-export async function updateTechnicianServiceRequestStatus(
-  serviceRequestId: number,
+export async function updateInspectionRequestStatus(
+  inspectionRequestId: number,
   status: TechnicianUpdatableStatus,
 ) {
-  const response = await apiPut<
-    TechnicianServiceRequest | ApiEnvelope<TechnicianServiceRequest>
-  >(`/technician/service-requests/${serviceRequestId}/status`, {status});
-
-  return extractEnvelopeData<TechnicianServiceRequest>(
-    response,
-    {} as TechnicianServiceRequest,
-  );
-}
-
-export async function createFinalQuotation(
-  payload: CreateFinalQuotationPayload,
-) {
-  const response = await apiPost<FinalQuotation | ApiEnvelope<FinalQuotation>>(
-    '/technician/final-quotations',
-    payload,
+  const response = await apiPut<UpdatedInspectionRequestResponse>(
+    `/technician/inspection-requests/${inspectionRequestId}/status`,
+    {status},
   );
 
-  return extractEnvelopeData<FinalQuotation>(response, {} as FinalQuotation);
+  return response?.inspection_request ?? ({} as TechnicianInspectionRequest);
 }

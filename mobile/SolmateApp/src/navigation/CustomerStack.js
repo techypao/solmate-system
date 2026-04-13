@@ -3,6 +3,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import HomeScreen from '../../screens/HomeScreen';
+import FinalQuotationViewScreen from '../../screens/FinalQuotationViewScreen';
 import InspectionRequestListScreen from '../../screens/InspectionRequestListScreen';
 import InspectionRequestScreen from '../../screens/InspectionRequestScreen';
 import QuotationDetailScreen from '../../screens/QuotationDetailScreen';
@@ -34,7 +35,7 @@ export default function CustomerStack() {
       <Stack.Screen
         name="Quotations"
         component={QuotationScreen}
-        options={{ title: 'Create Quotation' }}
+        options={{ title: 'Create Initial Quotation' }}
       />
 
       {/* Customer's list of submitted quotations */}
@@ -54,6 +55,12 @@ export default function CustomerStack() {
         name="InspectionRequestList"
         component={InspectionRequestListScreen}
         options={{ title: 'My Inspection Requests' }}
+      />
+
+      <Stack.Screen
+        name="FinalQuotationView"
+        component={FinalQuotationViewScreen}
+        options={{ title: 'Final Quotation' }}
       />
 
       <Stack.Screen

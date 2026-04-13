@@ -44,10 +44,7 @@ export default function QuotationsScreen({navigation}: any) {
       setSubmitting(true);
 
       await createQuotation({
-        quotation_type: 'initial',
         monthly_electric_bill: 3500,
-        pv_system_type: 'hybrid',
-        with_battery: true,
         remarks: 'Created from the React Native quotations screen.',
       });
 

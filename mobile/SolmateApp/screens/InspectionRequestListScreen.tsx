@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 
-import {AppButton} from '../components';
+import {AppButton, StatusBadge} from '../components';
 import {ApiError} from '../src/services/api';
 import {
   getInspectionRequests,
@@ -56,31 +56,6 @@ function getFriendlyErrorMessage(error: unknown) {
   return 'Could not load your inspection requests right now.';
 }
 
-function getStatusBadgeStyle(status?: string | null) {
-  switch (status) {
-    case 'completed':
-      return {
-        backgroundColor: '#dbeafe',
-        textColor: '#1d4ed8',
-      };
-    case 'approved':
-      return {
-        backgroundColor: '#dcfce7',
-        textColor: '#166534',
-      };
-    case 'rejected':
-      return {
-        backgroundColor: '#fee2e2',
-        textColor: '#b91c1c',
-      };
-    default:
-      return {
-        backgroundColor: '#fef3c7',
-        textColor: '#92400e',
-      };
-  }
-}
-
 export default function InspectionRequestListScreen({navigation}: any) {
   const [inspectionRequests, setInspectionRequests] = useState<
     InspectionRequest[]
@@ -122,7 +97,7 @@ export default function InspectionRequestListScreen({navigation}: any) {
   };
 
   const renderInspectionRequest = ({item}: {item: InspectionRequest}) => {
-    const statusStyle = getStatusBadgeStyle(item.status);
+    const canOpenFinalQuotation = item.status === 'completed';
 
     return (
       <View style={styles.card}>
@@ -134,15 +109,7 @@ export default function InspectionRequestListScreen({navigation}: any) {
             <Text style={styles.cardTitle}>{item.details}</Text>
           </View>
 
-          <View
-            style={[
-              styles.statusBadge,
-              {backgroundColor: statusStyle.backgroundColor},
-            ]}>
-            <Text style={[styles.statusBadgeText, {color: statusStyle.textColor}]}>
-              {item.status || 'pending'}
-            </Text>
-          </View>
+          <StatusBadge status={item.status} />
         </View>
 
         <View style={styles.metaGrid}>
@@ -157,6 +124,26 @@ export default function InspectionRequestListScreen({navigation}: any) {
             <Text style={styles.metaLabel}>Submitted</Text>
             <Text style={styles.metaValue}>{formatDateTime(item.created_at)}</Text>
           </View>
+        </View>
+
+        <View style={styles.footerCard}>
+          <Text style={styles.footerTitle}>Final quotation</Text>
+          <Text style={styles.footerText}>
+            {canOpenFinalQuotation
+              ? 'Open the technician-submitted final quotation for this inspection request.'
+              : 'The final quotation becomes viewable here after the inspection is completed.'}
+          </Text>
+          <AppButton
+            title="View Final Quotation"
+            variant={canOpenFinalQuotation ? 'primary' : 'outline'}
+            disabled={!canOpenFinalQuotation}
+            style={styles.footerButton}
+            onPress={() =>
+              navigation.navigate('FinalQuotationView', {
+                inspectionRequestId: item.id,
+              })
+            }
+          />
         </View>
       </View>
     );
@@ -175,8 +162,8 @@ export default function InspectionRequestListScreen({navigation}: any) {
     <View style={styles.container}>
       <Text style={styles.title}>My Inspection Requests</Text>
       <Text style={styles.subtitle}>
-        View your submitted inspection requests and pull down to refresh the
-        latest status.
+        Review inspection request progress and open the final quotation when the
+        technician has completed the visit.
       </Text>
 
       {errorMessage ? (
@@ -335,7 +322,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cardAccent: {
-    backgroundColor: '#bbf7d0',
+    backgroundColor: '#86efac',
     borderRadius: 999,
     height: 8,
     marginBottom: 14,
@@ -349,10 +336,10 @@ const styles = StyleSheet.create({
   },
   cardTitleWrap: {
     flex: 1,
-    paddingRight: 12,
+    paddingRight: 14,
   },
   cardEyebrow: {
-    color: '#94a3b8',
+    color: '#64748b',
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.4,
@@ -361,24 +348,14 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     color: '#0f172a',
-    fontSize: 17,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '800',
     lineHeight: 24,
-  },
-  statusBadge: {
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  statusBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
   },
   metaGrid: {
     flexDirection: 'row',
     gap: 12,
+    marginBottom: 14,
   },
   metaCard: {
     backgroundColor: '#f8fafc',
@@ -395,8 +372,29 @@ const styles = StyleSheet.create({
   },
   metaValue: {
     color: '#0f172a',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
-    lineHeight: 21,
+    lineHeight: 20,
+  },
+  footerCard: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 14,
+  },
+  footerTitle: {
+    color: '#0f172a',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  footerText: {
+    color: '#475569',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  footerButton: {
+    marginTop: 14,
   },
 });

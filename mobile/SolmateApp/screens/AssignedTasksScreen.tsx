@@ -14,8 +14,8 @@ import {AppButton} from '../components';
 import TechnicianTaskCard from '../components/TechnicianTaskCard';
 import {ApiError} from '../src/services/api';
 import {
-  getAssignedServiceRequests,
-  TechnicianServiceRequest,
+  getAssignedInspectionRequests,
+  TechnicianInspectionRequest,
 } from '../src/services/technicianApi';
 
 function getFriendlyErrorMessage(error: unknown) {
@@ -27,28 +27,28 @@ function getFriendlyErrorMessage(error: unknown) {
     return error.message;
   }
 
-  return 'Could not load your assigned service requests right now.';
+  return 'Could not load your assigned inspection requests right now.';
 }
 
-export default function AssignedTasksScreen({navigation, route}: any) {
-  const statusFilter = route?.params?.statusFilter;
-
-  const [tasks, setTasks] = useState<TechnicianServiceRequest[]>([]);
+export default function AssignedTasksScreen({navigation}: any) {
+  const [inspectionRequests, setInspectionRequests] = useState<
+    TechnicianInspectionRequest[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const loadTasks = useCallback(async (showLoadingState = false) => {
+  const loadInspectionRequests = useCallback(async (showLoadingState = false) => {
     try {
       if (showLoadingState) {
         setLoading(true);
       }
 
       setErrorMessage('');
-      const data = await getAssignedServiceRequests();
-      setTasks(Array.isArray(data) ? data : []);
+      const data = await getAssignedInspectionRequests();
+      setInspectionRequests(Array.isArray(data) ? data : []);
     } catch (error) {
-      setTasks([]);
+      setInspectionRequests([]);
       setErrorMessage(getFriendlyErrorMessage(error));
     } finally {
       setLoading(false);
@@ -58,34 +58,28 @@ export default function AssignedTasksScreen({navigation, route}: any) {
 
   useFocusEffect(
     useCallback(() => {
-      loadTasks(true);
-    }, [loadTasks]),
+      loadInspectionRequests(true);
+    }, [loadInspectionRequests]),
   );
-
-  const filteredTasks = statusFilter
-    ? tasks.filter(item => item.status === statusFilter)
-    : tasks;
-
-  const title =
-    statusFilter === 'completed' ? 'Completed Tasks' : 'Assigned Tasks';
-  const subtitle =
-    statusFilter === 'completed'
-      ? 'Completed requests are ready for final quotation submission.'
-      : 'Review your assigned service requests and pull down to refresh.';
 
   if (loading) {
     return (
       <View style={styles.centeredContainer}>
         <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={styles.loadingText}>Loading assigned tasks...</Text>
+        <Text style={styles.loadingText}>
+          Loading assigned inspection requests...
+        </Text>
       </View>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.subtitle}>{subtitle}</Text>
+      <Text style={styles.title}>Assigned Inspection Requests</Text>
+      <Text style={styles.subtitle}>
+        Review only the inspection requests assigned to your technician account.
+        Pull down anytime to refresh the latest status.
+      </Text>
 
       {errorMessage ? (
         <View style={styles.errorCard}>
@@ -93,7 +87,7 @@ export default function AssignedTasksScreen({navigation, route}: any) {
           <Text style={styles.errorText}>{errorMessage}</Text>
           <AppButton
             title="Try again"
-            onPress={() => loadTasks(true)}
+            onPress={() => loadInspectionRequests(true)}
             style={styles.retryButton}
           />
         </View>
@@ -101,17 +95,17 @@ export default function AssignedTasksScreen({navigation, route}: any) {
         <FlatList
           contentContainerStyle={[
             styles.listContent,
-            filteredTasks.length === 0 ? styles.emptyListContent : null,
+            inspectionRequests.length === 0 ? styles.emptyListContent : null,
           ]}
-          data={filteredTasks}
+          data={inspectionRequests}
           keyExtractor={item => item.id.toString()}
           renderItem={({item}) => (
             <TechnicianTaskCard
-              serviceRequest={item}
+              inspectionRequest={item}
               onPress={() =>
-                navigation.navigate('RequestDetails', {
-                  requestId: item.id,
-                  initialRequest: item,
+                navigation.navigate('InspectionDetails', {
+                  inspectionRequestId: item.id,
+                  initialInspectionRequest: item,
                 })
               }
             />
@@ -121,7 +115,7 @@ export default function AssignedTasksScreen({navigation, route}: any) {
               refreshing={refreshing}
               onRefresh={() => {
                 setRefreshing(true);
-                loadTasks(false);
+                loadInspectionRequests(false);
               }}
               tintColor="#2563eb"
             />
@@ -131,14 +125,11 @@ export default function AssignedTasksScreen({navigation, route}: any) {
             <View style={styles.emptyState}>
               <View style={styles.emptyIcon} />
               <Text style={styles.emptyTitle}>
-                {statusFilter === 'completed'
-                  ? 'No completed tasks yet'
-                  : 'No assigned tasks right now'}
+                No assigned inspection requests
               </Text>
               <Text style={styles.emptyText}>
-                {statusFilter === 'completed'
-                  ? 'Complete one of your assigned requests and it will appear here for final quotation submission.'
-                  : 'Assigned service requests will appear here as soon as they are linked to your technician account.'}
+                Inspection requests will appear here after an admin assigns them
+                to your technician account.
               </Text>
             </View>
           }
