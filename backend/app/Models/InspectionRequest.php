@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\User;
 
 class InspectionRequest extends Model
 {
@@ -11,13 +12,19 @@ class InspectionRequest extends Model
 
     protected $fillable = [
         'user_id',
+        'technician_id',
         'details',
         'date_needed',
         'status',
     ];
 
-    public function user()
+    public function customer()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function technician()
+    {
+        return $this->belongsTo(User::class, 'technician_id');
     }
 }

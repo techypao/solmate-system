@@ -33,6 +33,8 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/admin-only', function () {
         return response()->json(['message' => 'Welcome Admin']);
     });
+
+    Route::put('/inspection-requests/{id}/assign-technician', [InspectionRequestController::class, 'assignTechnician']);
 });
 
 // TECHNICIAN ROUTES
@@ -43,6 +45,9 @@ Route::middleware(['auth:sanctum', 'role:technician'])->group(function () {
 
     Route::get('/technician/service-requests', [ServiceRequestController::class, 'assignedRequests']);
     Route::put('/technician/service-requests/{id}/status', [ServiceRequestController::class, 'updateStatus']);
+
+    Route::get('/technician/inspection-requests', [InspectionRequestController::class, 'assignedToTechnician']);
+    Route::put('/technician/inspection-requests/{id}/status', [InspectionRequestController::class, 'updateStatus']);
 
     Route::post('/technician/final-quotations', [QuotationController::class, 'storeFinalQuotation']);
 });
@@ -59,5 +64,5 @@ Route::middleware(['auth:sanctum', 'role:customer'])->group(function () {
     Route::post('/service-requests', [ServiceRequestController::class, 'store']);
     Route::get('/service-requests', [ServiceRequestController::class, 'index']);
 
-    Route::get('/customer/final-quotations/{service_request_id}', [QuotationController::class, 'getCustomerFinalQuotation']);
+    Route::get('/customer/final-quotations/{inspection_request_id}', [QuotationController::class, 'getCustomerFinalQuotation']);
 });

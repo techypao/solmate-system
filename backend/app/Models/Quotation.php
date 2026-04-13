@@ -7,16 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\ServiceRequest;
 
+
 class Quotation extends Model
 {
     use HasFactory;
 
     protected $fillable = [
     'user_id',
-    'service_request_id',
-    'technician_id',
+    'inspection_request_id',
     'quotation_type',
-    'preferred_system',
     'monthly_electric_bill',
     'rate_per_kwh',
     'days_in_month',
@@ -69,5 +68,10 @@ public function technician()
 public function serviceRequest()
 {
     return $this->belongsTo(ServiceRequest::class, 'service_request_id');
+}
+
+public function inspectionRequest()
+{
+    return $this->belongsTo(InspectionRequest::class);
 }
 }

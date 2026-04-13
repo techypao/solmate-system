@@ -62,11 +62,7 @@ class User extends Authenticatable
         return $this->role === $role;
     }
 
-    public function inspectionRequests()
-{
-    return $this->hasMany(InspectionRequest::class);
-}
-
+   
 public function serviceRequests()
 {
     return $this->hasMany(ServiceRequest::class, 'user_id');
@@ -75,5 +71,15 @@ public function serviceRequests()
 public function assignedServiceRequests()
 {
     return $this->hasMany(ServiceRequest::class, 'technician_id');
+}
+
+public function inspectionRequests()
+{
+    return $this->hasMany(InspectionRequest::class, 'user_id');
+}
+
+public function assignedInspectionRequests()
+{
+    return $this->hasMany(InspectionRequest::class, 'technician_id');
 }
 }
