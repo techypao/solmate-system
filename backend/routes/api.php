@@ -49,6 +49,7 @@ Route::middleware(['auth:sanctum', 'role:technician'])->group(function () {
     Route::get('/technician/inspection-requests', [InspectionRequestController::class, 'assignedToTechnician']);
     Route::put('/technician/inspection-requests/{id}/status', [InspectionRequestController::class, 'updateStatus']);
 
+    Route::get('/technician/final-quotation-options', [QuotationController::class, 'getFinalQuotationOptions']);
     Route::post('/technician/final-quotations', [QuotationController::class, 'storeFinalQuotation']);
 });
 

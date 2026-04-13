@@ -6,11 +6,20 @@ use Illuminate\Http\Request;
 use App\Models\Quotation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rule;
 use App\Models\ServiceRequest;
 use App\Models\InspectionRequest;
+use App\Services\QuotationComputationService;
 
 class QuotationController extends Controller
 {
+    private QuotationComputationService $quotationComputationService;
+
+    public function __construct(QuotationComputationService $quotationComputationService)
+    {
+        $this->quotationComputationService = $quotationComputationService;
+    }
+
     public function index()
     {
         $user = Auth::user();
@@ -32,13 +41,10 @@ class QuotationController extends Controller
         try {
             // Customer submissions should stay simple: only accept the bill and remarks.
             // The backend enforces the default initial hybrid quotation setup.
-            $validated = $request->validate([
-                'monthly_electric_bill' => 'required|numeric|min:0',
-                'remarks' => 'nullable|string',
-            ], [
-                'monthly_electric_bill.required' => 'Monthly electric bill is required.',
-                'monthly_electric_bill.numeric' => 'Monthly electric bill must be a valid number.',
-            ]);
+            $validated = $request->validate(
+                $this->storeRules(),
+                $this->storeMessages()
+            );
 
             $monthlyElectricBill = $validated['monthly_electric_bill'];
             $ratePerKwh = 14;
@@ -50,15 +56,17 @@ class QuotationController extends Controller
             $panelWatts = 610;
             $withBattery = true;
 
-            $monthlyKwh = $ratePerKwh > 0 ? $monthlyElectricBill / $ratePerKwh : 0;
-            $dailyKwh = $daysInMonth > 0 ? $monthlyKwh / $daysInMonth : 0;
-            $pvKwRaw = $sunHours > 0 ? $dailyKwh / $sunHours : 0;
-            $pvKwSafe = $pvKwRaw * $pvSafetyFactor;
-            $panelQuantity = $panelWatts > 0 ? ceil(($pvKwSafe * 1000) / $panelWatts) : 0;
-            $systemKw = ($panelQuantity * $panelWatts) / 1000;
-
-            $batteryRequiredKwh = $withBattery ? ($dailyKwh * $batteryFactor) : 0;
-            $batteryRequiredAh = $batteryVoltage > 0 ? (($batteryRequiredKwh * 1000) / $batteryVoltage) : 0;
+            $computedValues = $this->quotationComputationService->computeSizing([
+                'monthly_electric_bill' => $monthlyElectricBill,
+                'rate_per_kwh' => $ratePerKwh,
+                'days_in_month' => $daysInMonth,
+                'sun_hours' => $sunHours,
+                'pv_safety_factor' => $pvSafetyFactor,
+                'battery_factor' => $batteryFactor,
+                'battery_voltage' => $batteryVoltage,
+                'panel_watts' => $panelWatts,
+                'with_battery' => $withBattery,
+            ]);
 
             $quotation = Quotation::create([
                 'user_id' => Auth::id(),
@@ -76,14 +84,14 @@ class QuotationController extends Controller
                 'battery_model' => null,
                 'battery_capacity_ah' => null,
                 'panel_watts' => $panelWatts,
-                'monthly_kwh' => round($monthlyKwh, 2),
-                'daily_kwh' => round($dailyKwh, 2),
-                'pv_kw_raw' => round($pvKwRaw, 2),
-                'pv_kw_safe' => round($pvKwSafe, 2),
-                'panel_quantity' => $panelQuantity,
-                'system_kw' => round($systemKw, 2),
-                'battery_required_kwh' => round($batteryRequiredKwh, 2),
-                'battery_required_ah' => round($batteryRequiredAh, 2),
+                'monthly_kwh' => $computedValues['monthly_kwh'],
+                'daily_kwh' => $computedValues['daily_kwh'],
+                'pv_kw_raw' => $computedValues['pv_kw_raw'],
+                'pv_kw_safe' => $computedValues['pv_kw_safe'],
+                'panel_quantity' => $computedValues['panel_quantity'],
+                'system_kw' => $computedValues['system_kw'],
+                'battery_required_kwh' => $computedValues['battery_required_kwh'],
+                'battery_required_ah' => $computedValues['battery_required_ah'],
                 'panel_cost' => null,
                 'inverter_cost' => null,
                 'battery_cost' => null,
@@ -133,6 +141,14 @@ class QuotationController extends Controller
         return response()->json($quotation);
     }
 
+    public function getFinalQuotationOptions()
+    {
+        return response()->json([
+            'message' => 'Final quotation options retrieved successfully.',
+            'data' => $this->finalQuotationOptions(),
+        ]);
+    }
+
     public function update(Request $request, $id)
     {
         $user = Auth::user();
@@ -151,35 +167,10 @@ class QuotationController extends Controller
             ], 404);
         }
 
-        $validated = $request->validate([
-            'quotation_type' => 'nullable|in:initial,final',
-            'panel_watts' => 'nullable|numeric|min:1',
-            'inverter_type' => 'nullable|string|max:255',
-            'battery_model' => 'nullable|string|max:255',
-            'battery_capacity_ah' => 'nullable|numeric|min:0',
-            'status' => 'nullable|in:pending,approved,rejected,completed',
-            'panel_cost' => 'nullable|numeric|min:0',
-            'inverter_cost' => 'nullable|numeric|min:0',
-            'battery_cost' => 'nullable|numeric|min:0',
-            'bos_cost' => 'nullable|numeric|min:0',
-            'materials_subtotal' => 'nullable|numeric|min:0',
-            'labor_cost' => 'nullable|numeric|min:0',
-            'project_cost' => 'nullable|numeric|min:0',
-            'remarks' => 'nullable|string',
-        ], [
-            'quotation_type.in' => 'Quotation type must be either initial or final.',
-            'panel_watts.numeric' => 'Panel watts must be a valid number.',
-            'panel_watts.min' => 'Panel watts must be at least 1.',
-            'battery_capacity_ah.numeric' => 'Battery capacity Ah must be a valid number.',
-            'status.in' => 'Status must be pending, approved, rejected, or completed.',
-            'panel_cost.numeric' => 'Panel cost must be a valid number.',
-            'inverter_cost.numeric' => 'Inverter cost must be a valid number.',
-            'battery_cost.numeric' => 'Battery cost must be a valid number.',
-            'bos_cost.numeric' => 'BOS cost must be a valid number.',
-            'materials_subtotal.numeric' => 'Materials subtotal must be a valid number.',
-            'labor_cost.numeric' => 'Labor cost must be a valid number.',
-            'project_cost.numeric' => 'Project cost must be a valid number.',
-        ]);
+        $validated = $request->validate(
+            $this->updateRules(),
+            $this->updateMessages()
+        );
 
         // Technician updates always finalize the quotation on the backend,
         // even if the client omits or changes quotation_type.
@@ -197,45 +188,34 @@ class QuotationController extends Controller
         $panelWatts = $validated['panel_watts'] ?? $quotation->panel_watts ?? 610;
         $withBattery = $quotation->with_battery ?? true;
 
-        $monthlyKwh = $ratePerKwh > 0 ? $monthlyElectricBill / $ratePerKwh : 0;
-        $dailyKwh = $daysInMonth > 0 ? $monthlyKwh / $daysInMonth : 0;
-        $pvKwRaw = $sunHours > 0 ? $dailyKwh / $sunHours : 0;
-        $pvKwSafe = $pvKwRaw * $pvSafetyFactor;
-        $panelQuantity = $panelWatts > 0 ? ceil(($pvKwSafe * 1000) / $panelWatts) : 0;
-        $systemKw = ($panelQuantity * $panelWatts) / 1000;
-        $batteryRequiredKwh = $withBattery ? ($dailyKwh * $batteryFactor) : 0;
-        $batteryRequiredAh = $batteryVoltage > 0 ? (($batteryRequiredKwh * 1000) / $batteryVoltage) : 0;
+        $computedValues = $this->quotationComputationService->computeSizing([
+            'monthly_electric_bill' => $monthlyElectricBill,
+            'rate_per_kwh' => $ratePerKwh,
+            'days_in_month' => $daysInMonth,
+            'sun_hours' => $sunHours,
+            'pv_safety_factor' => $pvSafetyFactor,
+            'battery_factor' => $batteryFactor,
+            'battery_voltage' => $batteryVoltage,
+            'panel_watts' => $panelWatts,
+            'with_battery' => $withBattery,
+        ]);
 
         $projectCost = $validated['project_cost'] ?? $quotation->project_cost;
-$estimatedMonthlySavings = null;
-$estimatedAnnualSavings = null;
-$roiYears = null;
-
-// Compute ROI only when final quotation has a valid project cost
-if (!is_null($projectCost) && $projectCost > 0 && $monthlyElectricBill > 0) {
-    $estimatedMonthlySavings = $monthlyElectricBill * 0.3; // temporary assumption
-    $estimatedAnnualSavings = $estimatedMonthlySavings * 12;
-
-    if ($estimatedAnnualSavings > 0) {
-        $roiYears = round($projectCost / $estimatedAnnualSavings, 2);
-    }
-}
+        $roiValues = $this->quotationComputationService->computeRoi(
+            $projectCost,
+            $monthlyElectricBill
+        );
 
         $quotation->update(array_merge($validated, [
-            'monthly_kwh' => round($monthlyKwh, 2),
-            'daily_kwh' => round($dailyKwh, 2),
-            'pv_kw_raw' => round($pvKwRaw, 2),
-            'pv_kw_safe' => round($pvKwSafe, 2),
-            'panel_quantity' => $panelQuantity,
-            'system_kw' => round($systemKw, 2),
-            'battery_required_kwh' => round($batteryRequiredKwh, 2),
-            'battery_required_ah' => round($batteryRequiredAh, 2),
-
-            'estimated_monthly_savings' => $estimatedMonthlySavings,
-    'estimated_annual_savings' => $estimatedAnnualSavings,
-    'roi_years' => $roiYears,
-            
-        ]));
+            'monthly_kwh' => $computedValues['monthly_kwh'],
+            'daily_kwh' => $computedValues['daily_kwh'],
+            'pv_kw_raw' => $computedValues['pv_kw_raw'],
+            'pv_kw_safe' => $computedValues['pv_kw_safe'],
+            'panel_quantity' => $computedValues['panel_quantity'],
+            'system_kw' => $computedValues['system_kw'],
+            'battery_required_kwh' => $computedValues['battery_required_kwh'],
+            'battery_required_ah' => $computedValues['battery_required_ah'],
+        ], $roiValues));
 
         return response()->json([
             'message' => 'Quotation updated successfully',
@@ -244,31 +224,10 @@ if (!is_null($projectCost) && $projectCost > 0 && $monthlyElectricBill > 0) {
     }
 public function storeFinalQuotation(Request $request)
 {
-    $validated = $request->validate([
-        'inspection_request_id' => 'required|exists:inspection_requests,id',
-        'monthly_electric_bill' => 'required|numeric|min:0',
-        'rate_per_kwh' => 'nullable|numeric|min:0',
-        'days_in_month' => 'nullable|integer|min:1',
-        'sun_hours' => 'nullable|numeric|min:0.1',
-        'pv_safety_factor' => 'nullable|numeric|min:0',
-        'battery_factor' => 'nullable|numeric|min:0',
-        'battery_voltage' => 'nullable|numeric|min:0.1',
-        'pv_system_type' => 'required|string|max:255',
-        'with_battery' => 'required|boolean',
-        'inverter_type' => 'nullable|string|max:255',
-        'battery_model' => 'nullable|string|max:255',
-        'battery_capacity_ah' => 'nullable|numeric|min:0',
-        'panel_watts' => 'nullable|numeric|min:1',
-        'panel_cost' => 'nullable|numeric|min:0',
-        'inverter_cost' => 'nullable|numeric|min:0',
-        'battery_cost' => 'nullable|numeric|min:0',
-        'bos_cost' => 'nullable|numeric|min:0',
-        'materials_subtotal' => 'nullable|numeric|min:0',
-        'labor_cost' => 'nullable|numeric|min:0',
-        'project_cost' => 'nullable|numeric|min:0',
-        'status' => 'nullable|in:pending,approved,rejected,completed',
-        'remarks' => 'nullable|string',
-    ]);
+    $validated = $request->validate(
+        $this->storeFinalQuotationRules(),
+        $this->storeFinalQuotationMessages()
+    );
 
     $technician = $request->user();
 
@@ -312,28 +271,23 @@ public function storeFinalQuotation(Request $request)
     $panelWatts = $validated['panel_watts'] ?? 610;
     $withBattery = $validated['with_battery'];
 
-    $monthlyKwh = $ratePerKwh > 0 ? $monthlyElectricBill / $ratePerKwh : 0;
-    $dailyKwh = $daysInMonth > 0 ? $monthlyKwh / $daysInMonth : 0;
-    $pvKwRaw = $sunHours > 0 ? $dailyKwh / $sunHours : 0;
-    $pvKwSafe = $pvKwRaw * $pvSafetyFactor;
-    $panelQuantity = $panelWatts > 0 ? ceil(($pvKwSafe * 1000) / $panelWatts) : 0;
-    $systemKw = ($panelQuantity * $panelWatts) / 1000;
-    $batteryRequiredKwh = $withBattery ? ($dailyKwh * $batteryFactor) : 0;
-    $batteryRequiredAh = $batteryVoltage > 0 ? (($batteryRequiredKwh * 1000) / $batteryVoltage) : 0;
+    $computedValues = $this->quotationComputationService->computeSizing([
+        'monthly_electric_bill' => $monthlyElectricBill,
+        'rate_per_kwh' => $ratePerKwh,
+        'days_in_month' => $daysInMonth,
+        'sun_hours' => $sunHours,
+        'pv_safety_factor' => $pvSafetyFactor,
+        'battery_factor' => $batteryFactor,
+        'battery_voltage' => $batteryVoltage,
+        'panel_watts' => $panelWatts,
+        'with_battery' => $withBattery,
+    ]);
 
     $projectCost = $validated['project_cost'] ?? null;
-    $estimatedMonthlySavings = null;
-    $estimatedAnnualSavings = null;
-    $roiYears = null;
-
-    if (!is_null($projectCost) && $projectCost > 0 && $monthlyElectricBill > 0) {
-        $estimatedMonthlySavings = $monthlyElectricBill * 0.3;
-        $estimatedAnnualSavings = $estimatedMonthlySavings * 12;
-
-        if ($estimatedAnnualSavings > 0) {
-            $roiYears = round($projectCost / $estimatedAnnualSavings, 2);
-        }
-    }
+    $roiValues = $this->quotationComputationService->computeRoi(
+        $projectCost,
+        $monthlyElectricBill
+    );
 
     $quotation = Quotation::create([
         'user_id' => $inspectionRequest->user_id,
@@ -352,14 +306,14 @@ public function storeFinalQuotation(Request $request)
         'battery_model' => $validated['battery_model'] ?? null,
         'battery_capacity_ah' => $validated['battery_capacity_ah'] ?? null,
         'panel_watts' => $panelWatts,
-        'monthly_kwh' => round($monthlyKwh, 2),
-        'daily_kwh' => round($dailyKwh, 2),
-        'pv_kw_raw' => round($pvKwRaw, 2),
-        'pv_kw_safe' => round($pvKwSafe, 2),
-        'panel_quantity' => $panelQuantity,
-        'system_kw' => round($systemKw, 2),
-        'battery_required_kwh' => round($batteryRequiredKwh, 2),
-        'battery_required_ah' => round($batteryRequiredAh, 2),
+        'monthly_kwh' => $computedValues['monthly_kwh'],
+        'daily_kwh' => $computedValues['daily_kwh'],
+        'pv_kw_raw' => $computedValues['pv_kw_raw'],
+        'pv_kw_safe' => $computedValues['pv_kw_safe'],
+        'panel_quantity' => $computedValues['panel_quantity'],
+        'system_kw' => $computedValues['system_kw'],
+        'battery_required_kwh' => $computedValues['battery_required_kwh'],
+        'battery_required_ah' => $computedValues['battery_required_ah'],
         'panel_cost' => $validated['panel_cost'] ?? null,
         'inverter_cost' => $validated['inverter_cost'] ?? null,
         'battery_cost' => $validated['battery_cost'] ?? null,
@@ -367,9 +321,9 @@ public function storeFinalQuotation(Request $request)
         'materials_subtotal' => $validated['materials_subtotal'] ?? null,
         'labor_cost' => $validated['labor_cost'] ?? null,
         'project_cost' => $validated['project_cost'] ?? null,
-        'estimated_monthly_savings' => $estimatedMonthlySavings,
-        'estimated_annual_savings' => $estimatedAnnualSavings,
-        'roi_years' => $roiYears,
+        'estimated_monthly_savings' => $roiValues['estimated_monthly_savings'],
+        'estimated_annual_savings' => $roiValues['estimated_annual_savings'],
+        'roi_years' => $roiValues['roi_years'],
         'status' => $validated['status'] ?? 'pending',
         'remarks' => $validated['remarks'] ?? null,
     ]);
@@ -402,5 +356,169 @@ public function getCustomerFinalQuotation(Request $request, $inspection_request_
         'message' => 'Final quotation retrieved successfully.',
         'data' => $quotation
     ], 200);
+}
+
+private function storeRules(): array
+{
+    return [
+        'monthly_electric_bill' => 'bail|required|numeric|gt:0',
+        'remarks' => 'nullable|string',
+    ];
+}
+
+private function storeMessages(): array
+{
+    return [
+        'monthly_electric_bill.required' => 'Monthly electric bill is required.',
+        'monthly_electric_bill.numeric' => 'Monthly electric bill must be a valid number.',
+        'monthly_electric_bill.gt' => 'Monthly electric bill must be greater than 0.',
+    ];
+}
+
+private function updateRules(): array
+{
+    return [
+        'quotation_type' => 'bail|nullable|in:initial,final',
+        'panel_watts' => 'bail|nullable|numeric|min:1',
+        'inverter_type' => 'bail|nullable|string|max:255',
+        'battery_model' => 'bail|nullable|string|max:255',
+        'battery_capacity_ah' => 'bail|nullable|numeric|min:0',
+        'status' => 'bail|nullable|in:pending,approved,rejected,completed',
+        'panel_cost' => 'bail|nullable|numeric|min:0',
+        'inverter_cost' => 'bail|nullable|numeric|min:0',
+        'battery_cost' => 'bail|nullable|numeric|min:0',
+        'bos_cost' => 'bail|nullable|numeric|min:0',
+        'materials_subtotal' => 'bail|nullable|numeric|min:0',
+        'labor_cost' => 'bail|nullable|numeric|min:0',
+        'project_cost' => 'bail|nullable|numeric|min:0',
+        'remarks' => 'nullable|string',
+    ];
+}
+
+private function updateMessages(): array
+{
+    return [
+        'quotation_type.in' => 'Quotation type must be either initial or final.',
+        'panel_watts.numeric' => 'Panel watts must be a valid number.',
+        'panel_watts.min' => 'Panel watts must be at least 1.',
+        'battery_capacity_ah.numeric' => 'Battery capacity Ah must be a valid number.',
+        'battery_capacity_ah.min' => 'Battery capacity Ah must be at least 0.',
+        'status.in' => 'Status must be pending, approved, rejected, or completed.',
+        'panel_cost.numeric' => 'Panel cost must be a valid number.',
+        'panel_cost.min' => 'Panel cost must be at least 0.',
+        'inverter_cost.numeric' => 'Inverter cost must be a valid number.',
+        'inverter_cost.min' => 'Inverter cost must be at least 0.',
+        'battery_cost.numeric' => 'Battery cost must be a valid number.',
+        'battery_cost.min' => 'Battery cost must be at least 0.',
+        'bos_cost.numeric' => 'BOS cost must be a valid number.',
+        'bos_cost.min' => 'BOS cost must be at least 0.',
+        'materials_subtotal.numeric' => 'Materials subtotal must be a valid number.',
+        'materials_subtotal.min' => 'Materials subtotal must be at least 0.',
+        'labor_cost.numeric' => 'Labor cost must be a valid number.',
+        'labor_cost.min' => 'Labor cost must be at least 0.',
+        'project_cost.numeric' => 'Project cost must be a valid number.',
+        'project_cost.min' => 'Project cost must be at least 0.',
+    ];
+}
+
+private function storeFinalQuotationRules(): array
+{
+    return [
+        'inspection_request_id' => 'bail|required|exists:inspection_requests,id',
+        'monthly_electric_bill' => 'bail|required|numeric|gt:0',
+        'rate_per_kwh' => 'bail|nullable|numeric|min:0',
+        'days_in_month' => 'bail|nullable|integer|min:1',
+        'sun_hours' => 'bail|nullable|numeric|min:0.1',
+        'pv_safety_factor' => 'bail|nullable|numeric|min:0',
+        'battery_factor' => 'bail|nullable|numeric|min:0',
+        'battery_voltage' => 'bail|nullable|numeric|min:0.1',
+        'pv_system_type' => [
+            'bail',
+            'required',
+            'string',
+            'max:255',
+            Rule::in($this->finalQuotationOptionValues('system_types')),
+        ],
+        'with_battery' => 'bail|required|boolean',
+        'inverter_type' => 'bail|nullable|string|max:255',
+        'battery_model' => 'bail|nullable|string|max:255',
+        'battery_capacity_ah' => 'bail|nullable|numeric|min:0',
+        'panel_watts' => 'bail|nullable|numeric|min:1',
+        'panel_cost' => 'bail|nullable|numeric|min:0',
+        'inverter_cost' => 'bail|nullable|numeric|min:0',
+        'battery_cost' => 'bail|nullable|numeric|min:0',
+        'bos_cost' => 'bail|nullable|numeric|min:0',
+        'materials_subtotal' => 'bail|nullable|numeric|min:0',
+        'labor_cost' => 'bail|nullable|numeric|min:0',
+        'project_cost' => 'bail|nullable|numeric|min:0',
+        'status' => 'bail|nullable|in:pending,approved,rejected,completed',
+        'remarks' => 'nullable|string',
+    ];
+}
+
+private function storeFinalQuotationMessages(): array
+{
+    return [
+        'inspection_request_id.required' => 'Inspection request is required.',
+        'inspection_request_id.exists' => 'Selected inspection request does not exist.',
+        'monthly_electric_bill.required' => 'Monthly electric bill is required.',
+        'monthly_electric_bill.numeric' => 'Monthly electric bill must be a valid number.',
+        'monthly_electric_bill.gt' => 'Monthly electric bill must be greater than 0.',
+        'rate_per_kwh.numeric' => 'Rate per kWh must be a valid number.',
+        'rate_per_kwh.min' => 'Rate per kWh must be at least 0.',
+        'days_in_month.integer' => 'Days in month must be a whole number.',
+        'days_in_month.min' => 'Days in month must be at least 1.',
+        'sun_hours.numeric' => 'Sun hours must be a valid number.',
+        'sun_hours.min' => 'Sun hours must be at least 0.1.',
+        'pv_safety_factor.numeric' => 'PV safety factor must be a valid number.',
+        'pv_safety_factor.min' => 'PV safety factor must be at least 0.',
+        'battery_factor.numeric' => 'Battery factor must be a valid number.',
+        'battery_factor.min' => 'Battery factor must be at least 0.',
+        'battery_voltage.numeric' => 'Battery voltage must be a valid number.',
+        'battery_voltage.min' => 'Battery voltage must be at least 0.1.',
+        'pv_system_type.required' => 'PV system type is required.',
+        'pv_system_type.string' => 'PV system type must be a valid string.',
+        'pv_system_type.in' => 'PV system type must be one of the supported system types.',
+        'with_battery.required' => 'Battery selection is required.',
+        'with_battery.boolean' => 'Battery selection must be true or false.',
+        'battery_capacity_ah.numeric' => 'Battery capacity Ah must be a valid number.',
+        'battery_capacity_ah.min' => 'Battery capacity Ah must be at least 0.',
+        'panel_watts.numeric' => 'Panel watts must be a valid number.',
+        'panel_watts.min' => 'Panel watts must be at least 1.',
+        'panel_cost.numeric' => 'Panel cost must be a valid number.',
+        'panel_cost.min' => 'Panel cost must be at least 0.',
+        'inverter_cost.numeric' => 'Inverter cost must be a valid number.',
+        'inverter_cost.min' => 'Inverter cost must be at least 0.',
+        'battery_cost.numeric' => 'Battery cost must be a valid number.',
+        'battery_cost.min' => 'Battery cost must be at least 0.',
+        'bos_cost.numeric' => 'BOS cost must be a valid number.',
+        'bos_cost.min' => 'BOS cost must be at least 0.',
+        'materials_subtotal.numeric' => 'Materials subtotal must be a valid number.',
+        'materials_subtotal.min' => 'Materials subtotal must be at least 0.',
+        'labor_cost.numeric' => 'Labor cost must be a valid number.',
+        'labor_cost.min' => 'Labor cost must be at least 0.',
+        'project_cost.numeric' => 'Project cost must be a valid number.',
+        'project_cost.min' => 'Project cost must be at least 0.',
+        'status.in' => 'Status must be pending, approved, rejected, or completed.',
+    ];
+}
+
+private function finalQuotationOptions(): array
+{
+    return config('quotation_options.final_quotation', []);
+}
+
+private function finalQuotationOptionValues(string $key): array
+{
+    $values = [];
+    $options = $this->finalQuotationOptions();
+
+    foreach ($options[$key] ?? [] as $option) {
+        if (array_key_exists('value', $option)) {
+            $values[] = $option['value'];
+        }
+    }
+
+    return $values;
 }
 }
