@@ -14,7 +14,14 @@ import {useFocusEffect} from '@react-navigation/native';
 
 import {AppButton, AppCard, AppInput} from '../components';
 import {ApiError} from '../src/services/api';
-import {QuotationStatus, submitFinalQuotation} from '../src/services/quotationApi';
+import {
+  FinalQuotationOption,
+  FinalQuotationOptions,
+  PvSystemType,
+  QuotationStatus,
+  getFinalQuotationOptions,
+  submitFinalQuotation,
+} from '../src/services/quotationApi';
 import {
   getAssignedInspectionRequestById,
   TechnicianInspectionRequest,
@@ -26,8 +33,6 @@ import {
   getCustomerName,
 } from '../src/utils/technicianRequests';
 
-type PvSystemType = 'hybrid' | 'on-grid' | 'off-grid';
-
 type FinalQuotationFormState = {
   monthly_electric_bill: string;
   rate_per_kwh: string;
@@ -36,7 +41,7 @@ type FinalQuotationFormState = {
   pv_safety_factor: string;
   battery_factor: string;
   battery_voltage: string;
-  pv_system_type: PvSystemType;
+  pv_system_type: PvSystemType | '';
   with_battery: boolean;
   inverter_type: string;
   battery_model: string;
@@ -53,7 +58,6 @@ type FinalQuotationFormState = {
   remarks: string;
 };
 
-const PV_SYSTEM_OPTIONS: PvSystemType[] = ['hybrid', 'on-grid', 'off-grid'];
 const STATUS_OPTIONS: QuotationStatus[] = [
   'pending',
   'approved',
@@ -158,18 +162,18 @@ function OptionChip({
 function buildInitialFormState(): FinalQuotationFormState {
   return {
     monthly_electric_bill: '',
-    rate_per_kwh: '14',
-    days_in_month: '30',
-    sun_hours: '4.5',
-    pv_safety_factor: '1.8',
-    battery_factor: '1',
-    battery_voltage: '51.2',
-    pv_system_type: 'hybrid',
+    rate_per_kwh: '',
+    days_in_month: '',
+    sun_hours: '',
+    pv_safety_factor: '',
+    battery_factor: '',
+    battery_voltage: '',
+    pv_system_type: '',
     with_battery: true,
     inverter_type: '',
     battery_model: '',
     battery_capacity_ah: '',
-    panel_watts: '610',
+    panel_watts: '',
     panel_cost: '',
     inverter_cost: '',
     battery_cost: '',
@@ -191,8 +195,13 @@ export default function FinalQuotationScreen({navigation, route}: any) {
   const [inspectionRequest, setInspectionRequest] =
     useState<TechnicianInspectionRequest | null>(initialInspectionRequest || null);
   const [loading, setLoading] = useState(!initialInspectionRequest);
+  const [optionsLoading, setOptionsLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [optionsError, setOptionsError] = useState('');
+  const [submitError, setSubmitError] = useState('');
+  const [finalQuotationOptions, setFinalQuotationOptions] =
+    useState<FinalQuotationOptions | null>(null);
   const [form, setForm] = useState<FinalQuotationFormState>(() =>
     buildInitialFormState(),
   );
@@ -233,51 +242,62 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     [inspectionRequestId],
   );
 
+  const loadOptions = useCallback(
+    async (showLoadingState = false) => {
+      try {
+        if (showLoadingState) {
+          setOptionsLoading(true);
+        }
+
+        setOptionsError('');
+        const options = await getFinalQuotationOptions();
+        setFinalQuotationOptions(options);
+        setForm(current => {
+          const availablePvSystemTypes = options.system_types.map(
+            option => option.value,
+          );
+          const nextPvSystemType = availablePvSystemTypes.includes(
+            current.pv_system_type,
+          )
+            ? current.pv_system_type
+            : ((availablePvSystemTypes[0] ?? '') as PvSystemType | '');
+
+          return {
+            ...current,
+            pv_system_type: nextPvSystemType,
+          };
+        });
+      } catch (error) {
+        if (error instanceof ApiError) {
+          setOptionsError(error.message);
+        } else {
+          setOptionsError('Could not load final quotation form options.');
+        }
+      } finally {
+        setOptionsLoading(false);
+      }
+    },
+    [],
+  );
+
   useFocusEffect(
     useCallback(() => {
       loadInspectionRequest(!inspectionRequest);
-    }, [inspectionRequest, loadInspectionRequest]),
+      if (!finalQuotationOptions) {
+        loadOptions(true);
+      }
+    }, [finalQuotationOptions, inspectionRequest, loadInspectionRequest, loadOptions]),
   );
 
   const completed = canCreateFinalQuotation(inspectionRequest?.status);
 
   const validationMessage = useMemo(() => {
-    const requiredFields: Array<[string, string | boolean | undefined]> = [
-      ['Monthly electric bill', form.monthly_electric_bill],
-      ['Rate per kWh', form.rate_per_kwh],
-      ['Days in month', form.days_in_month],
-      ['Sun hours', form.sun_hours],
-      ['PV safety factor', form.pv_safety_factor],
-      ['Battery factor', form.battery_factor],
-      ['Battery voltage', form.battery_voltage],
-      ['Inverter type', form.inverter_type.trim()],
-      ['Panel watts', form.panel_watts],
-      ['Panel cost', form.panel_cost],
-      ['Inverter cost', form.inverter_cost],
-      ['BOS cost', form.bos_cost],
-      ['Materials subtotal', form.materials_subtotal],
-      ['Labor cost', form.labor_cost],
-      ['Project cost', form.project_cost],
-    ];
-
-    for (const [label, value] of requiredFields) {
-      if (!value) {
-        return `${label} is required.`;
-      }
+    if (!form.monthly_electric_bill) {
+      return 'Monthly electric bill is required.';
     }
 
-    if (form.with_battery) {
-      if (!form.battery_model.trim()) {
-        return 'Battery model is required when battery is enabled.';
-      }
-
-      if (!form.battery_capacity_ah) {
-        return 'Battery capacity Ah is required when battery is enabled.';
-      }
-
-      if (!form.battery_cost) {
-        return 'Battery cost is required when battery is enabled.';
-      }
+    if (!form.pv_system_type) {
+      return 'PV system type is required.';
     }
 
     return '';
@@ -291,6 +311,38 @@ export default function FinalQuotationScreen({navigation, route}: any) {
       ...current,
       [key]: value,
     }));
+  };
+
+  const applyBatteryPreset = (
+    option: FinalQuotationOption<string> | null,
+  ) => {
+    if (!option) {
+      setForm(current => ({
+        ...current,
+        battery_model: '',
+        battery_capacity_ah: '',
+        battery_voltage: '',
+      }));
+      return;
+    }
+
+    setForm(current => ({
+      ...current,
+      battery_model: option.value,
+      battery_capacity_ah:
+        option.battery_capacity_ah !== undefined
+          ? String(option.battery_capacity_ah)
+          : current.battery_capacity_ah,
+      battery_voltage:
+        option.battery_voltage !== undefined
+          ? String(option.battery_voltage)
+          : current.battery_voltage,
+    }));
+  };
+
+  const retryLoad = () => {
+    loadInspectionRequest(true);
+    loadOptions(true);
   };
 
   const handleSubmit = async () => {
@@ -318,6 +370,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
 
     try {
       setSubmitting(true);
+      setSubmitError('');
 
       await submitFinalQuotation({
         inspection_request_id: inspectionRequestId,
@@ -330,7 +383,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         pv_safety_factor: toNumberOrUndefined(form.pv_safety_factor),
         battery_factor: toNumberOrUndefined(form.battery_factor),
         battery_voltage: toNumberOrUndefined(form.battery_voltage),
-        pv_system_type: form.pv_system_type,
+        pv_system_type: form.pv_system_type as PvSystemType,
         with_battery: form.with_battery,
         inverter_type: form.inverter_type.trim() || undefined,
         battery_model: form.with_battery
@@ -362,8 +415,10 @@ export default function FinalQuotationScreen({navigation, route}: any) {
       ]);
     } catch (error) {
       if (error instanceof ApiError) {
+        setSubmitError(formatLaravelErrors(error));
         Alert.alert('Submission failed', formatLaravelErrors(error));
       } else {
+        setSubmitError('Could not submit the final quotation.');
         Alert.alert(
           'Submission failed',
           'Could not submit the final quotation.',
@@ -374,26 +429,34 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     }
   };
 
-  if (loading) {
+  if (loading || optionsLoading) {
     return (
       <View style={styles.centeredContainer}>
         <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={styles.loadingText}>Loading completed inspection...</Text>
+        <Text style={styles.loadingText}>Loading final quotation form...</Text>
       </View>
     );
   }
 
-  if (errorMessage || !inspectionRequest) {
+  if (errorMessage || optionsError || !inspectionRequest || !finalQuotationOptions) {
     return (
       <View style={styles.centeredContainer}>
         <Text style={styles.errorTitle}>Final quotation unavailable</Text>
         <Text style={styles.errorText}>
-          {errorMessage || 'No inspection request was found for this form.'}
+          {errorMessage ||
+            optionsError ||
+            'The final quotation form could not be loaded.'}
         </Text>
         <AppButton
-          title="Back"
-          onPress={() => navigation.goBack()}
+          title="Retry"
+          onPress={retryLoad}
           style={styles.errorButton}
+        />
+        <AppButton
+          title="Back"
+          variant="outline"
+          onPress={() => navigation.goBack()}
+          style={styles.secondaryButton}
         />
       </View>
     );
@@ -457,6 +520,21 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           </AppCard>
         ) : null}
 
+        <AppCard style={styles.infoCard}>
+          <Text style={styles.infoTitle}>How defaults work</Text>
+          <Text style={styles.infoText}>
+            Leave optional override fields blank to let the backend use the
+            current admin quotation settings.
+          </Text>
+        </AppCard>
+
+        {submitError ? (
+          <AppCard style={styles.errorCard}>
+            <Text style={styles.errorCardTitle}>Submission error</Text>
+            <Text style={styles.errorCardText}>{submitError}</Text>
+          </AppCard>
+        ) : null}
+
         {validationMessage ? (
           <AppCard style={styles.infoCard}>
             <Text style={styles.infoTitle}>Before you submit</Text>
@@ -466,7 +544,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
 
         <FormSection
           title="Basic inputs"
-          subtitle="Customer energy usage and production assumptions used by the backend calculations.">
+          subtitle="Enter the required customer bill and optional computation overrides.">
           <AppInput
             label="Inspection request ID"
             editable={false}
@@ -484,6 +562,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           />
           <AppInput
             label="Rate per kWh"
+            placeholder="Leave blank to use admin default"
             keyboardType="decimal-pad"
             onChangeText={value =>
               updateField('rate_per_kwh', sanitizeNumericInput(value))
@@ -493,6 +572,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           />
           <AppInput
             label="Days in month"
+            placeholder="Leave blank to use admin default"
             keyboardType="number-pad"
             onChangeText={value =>
               updateField('days_in_month', sanitizeIntegerInput(value))
@@ -502,6 +582,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           />
           <AppInput
             label="Sun hours"
+            placeholder="Leave blank to use admin default"
             keyboardType="decimal-pad"
             onChangeText={value =>
               updateField('sun_hours', sanitizeNumericInput(value))
@@ -511,6 +592,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           />
           <AppInput
             label="PV safety factor"
+            placeholder="Leave blank to use admin default"
             keyboardType="decimal-pad"
             onChangeText={value =>
               updateField('pv_safety_factor', sanitizeNumericInput(value))
@@ -520,6 +602,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           />
           <AppInput
             label="Battery factor"
+            placeholder="Leave blank to use admin default"
             keyboardType="decimal-pad"
             onChangeText={value =>
               updateField('battery_factor', sanitizeNumericInput(value))
@@ -529,6 +612,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           />
           <AppInput
             label="Battery voltage"
+            placeholder="Leave blank to use admin default"
             keyboardType="decimal-pad"
             onChangeText={value =>
               updateField('battery_voltage', sanitizeNumericInput(value))
@@ -539,15 +623,34 @@ export default function FinalQuotationScreen({navigation, route}: any) {
 
         <FormSection
           title="System setup"
-          subtitle="Select the PV system configuration and the hardware planned after inspection.">
+          subtitle="Use backend-provided options where available, or type optional custom values if needed.">
           <Text style={styles.optionLabel}>PV system type</Text>
           <View style={styles.optionRow}>
-            {PV_SYSTEM_OPTIONS.map(option => (
+            {finalQuotationOptions.system_types.map(option => (
               <OptionChip
-                key={option}
-                label={option}
-                selected={form.pv_system_type === option}
-                onPress={() => updateField('pv_system_type', option)}
+                key={option.value}
+                label={option.label}
+                selected={form.pv_system_type === option.value}
+                onPress={() =>
+                  updateField('pv_system_type', option.value as PvSystemType)
+                }
+              />
+            ))}
+          </View>
+
+          <Text style={styles.optionLabel}>Panel watt preset</Text>
+          <View style={styles.optionRow}>
+            <OptionChip
+              label="Use admin default"
+              selected={!form.panel_watts}
+              onPress={() => updateField('panel_watts', '')}
+            />
+            {finalQuotationOptions.panel_options.map(option => (
+              <OptionChip
+                key={option.value}
+                label={option.label}
+                selected={form.panel_watts === String(option.value)}
+                onPress={() => updateField('panel_watts', String(option.value))}
               />
             ))}
           </View>
@@ -568,8 +671,51 @@ export default function FinalQuotationScreen({navigation, route}: any) {
             />
           </View>
 
+          <Text style={styles.optionLabel}>Inverter option</Text>
+          <View style={styles.optionRow}>
+            <OptionChip
+              label="No preset"
+              selected={!form.inverter_type.trim()}
+              onPress={() => updateField('inverter_type', '')}
+            />
+            {finalQuotationOptions.inverter_options.map(option => (
+              <OptionChip
+                key={option.value}
+                label={option.label}
+                selected={form.inverter_type === option.value}
+                onPress={() => updateField('inverter_type', option.value)}
+              />
+            ))}
+          </View>
+
+          {form.with_battery ? (
+            <>
+              <Text style={styles.optionLabel}>Battery preset</Text>
+              <View style={styles.optionRow}>
+                <OptionChip
+                  label="No preset"
+                  selected={
+                    !form.battery_model.trim() &&
+                    !form.battery_capacity_ah &&
+                    !form.battery_voltage
+                  }
+                  onPress={() => applyBatteryPreset(null)}
+                />
+                {finalQuotationOptions.battery_options.map(option => (
+                  <OptionChip
+                    key={option.value}
+                    label={option.label}
+                    selected={form.battery_model === option.value}
+                    onPress={() => applyBatteryPreset(option)}
+                  />
+                ))}
+              </View>
+            </>
+          ) : null}
+
           <AppInput
             label="Inverter type"
+            placeholder="Leave blank or use a preset above"
             onChangeText={value => updateField('inverter_type', value)}
             value={form.inverter_type}
             containerStyle={styles.fieldSpacing}
@@ -577,6 +723,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           <AppInput
             label="Battery model"
             editable={form.with_battery}
+            placeholder="Leave blank or use a preset above"
             onChangeText={value => updateField('battery_model', value)}
             value={form.battery_model}
             containerStyle={styles.fieldSpacing}
@@ -584,6 +731,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           <AppInput
             label="Battery capacity Ah"
             editable={form.with_battery}
+            placeholder="Optional"
             keyboardType="decimal-pad"
             onChangeText={value =>
               updateField('battery_capacity_ah', sanitizeNumericInput(value))
@@ -593,6 +741,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           />
           <AppInput
             label="Panel watts"
+            placeholder="Leave blank to use admin default"
             keyboardType="decimal-pad"
             onChangeText={value =>
               updateField('panel_watts', sanitizeNumericInput(value))
@@ -746,6 +895,10 @@ const styles = StyleSheet.create({
     marginTop: 16,
     width: '100%',
   },
+  secondaryButton: {
+    marginTop: 12,
+    width: '100%',
+  },
   heroCard: {
     backgroundColor: '#dcfce7',
     borderRadius: 28,
@@ -837,6 +990,23 @@ const styles = StyleSheet.create({
     borderColor: '#bfdbfe',
     borderWidth: 1,
     marginBottom: 18,
+  },
+  errorCard: {
+    backgroundColor: '#fef2f2',
+    borderColor: '#fecaca',
+    borderWidth: 1,
+    marginBottom: 18,
+  },
+  errorCardTitle: {
+    color: '#b91c1c',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  errorCardText: {
+    color: '#991b1b',
+    fontSize: 14,
+    lineHeight: 20,
   },
   infoTitle: {
     color: '#1d4ed8',

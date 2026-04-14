@@ -8,6 +8,7 @@ use App\Http\Controllers\InspectionRequestController;
 use App\Http\Controllers\ServiceRequestController;
 use App\Http\Controllers\TechnicianController;
 use App\Http\Controllers\TestimonyController;
+use App\Http\Controllers\Admin\QuotationSettingsController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -35,6 +36,8 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     });
 
     Route::put('/inspection-requests/{id}/assign-technician', [InspectionRequestController::class, 'assignTechnician']);
+    Route::get('/admin/quotation-settings', [QuotationSettingsController::class, 'show']);
+    Route::match(['put', 'patch'], '/admin/quotation-settings', [QuotationSettingsController::class, 'update']);
 });
 
 // TECHNICIAN ROUTES

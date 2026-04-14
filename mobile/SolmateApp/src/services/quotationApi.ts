@@ -102,6 +102,20 @@ export type SubmitFinalQuotationPayload = {
   remarks?: string;
 };
 
+export type FinalQuotationOption<T extends string | number = string | number> = {
+  label: string;
+  value: T;
+  battery_voltage?: number;
+  battery_capacity_ah?: number;
+};
+
+export type FinalQuotationOptions = {
+  system_types: FinalQuotationOption<string>[];
+  panel_options: FinalQuotationOption<number>[];
+  battery_options: FinalQuotationOption<string>[];
+  inverter_options: FinalQuotationOption<string>[];
+};
+
 type QuotationResponse = {
   message: string;
   data: Quotation;
@@ -151,6 +165,19 @@ export async function submitFinalQuotation(payload: SubmitFinalQuotationPayload)
   );
 
   return extractEnvelopeData<Quotation>(response, {} as Quotation);
+}
+
+export async function getFinalQuotationOptions() {
+  const response = await apiGet<
+    FinalQuotationOptions | ApiEnvelope<FinalQuotationOptions>
+  >('/technician/final-quotation-options');
+
+  return extractEnvelopeData<FinalQuotationOptions>(response, {
+    system_types: [],
+    panel_options: [],
+    battery_options: [],
+    inverter_options: [],
+  });
 }
 
 export async function getCustomerFinalQuotation(inspectionRequestId: number) {

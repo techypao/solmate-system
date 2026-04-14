@@ -10,14 +10,20 @@ use Illuminate\Validation\Rule;
 use App\Models\ServiceRequest;
 use App\Models\InspectionRequest;
 use App\Services\QuotationComputationService;
+use App\Services\QuotationSettingsService;
 
 class QuotationController extends Controller
 {
     private QuotationComputationService $quotationComputationService;
+    private QuotationSettingsService $quotationSettingsService;
 
-    public function __construct(QuotationComputationService $quotationComputationService)
+    public function __construct(
+        QuotationComputationService $quotationComputationService,
+        QuotationSettingsService $quotationSettingsService
+    )
     {
         $this->quotationComputationService = $quotationComputationService;
+        $this->quotationSettingsService = $quotationSettingsService;
     }
 
     public function index()
@@ -47,13 +53,14 @@ class QuotationController extends Controller
             );
 
             $monthlyElectricBill = $validated['monthly_electric_bill'];
-            $ratePerKwh = 14;
-            $daysInMonth = 30;
-            $sunHours = 4.5;
-            $pvSafetyFactor = 1.8;
-            $batteryFactor = 1.0;
-            $batteryVoltage = 51.2;
-            $panelWatts = 610;
+            $defaultSettings = $this->quotationSettingsService->current();
+            $ratePerKwh = (float) $defaultSettings['rate_per_kwh'];
+            $daysInMonth = (int) $defaultSettings['days_in_month'];
+            $sunHours = (float) $defaultSettings['sun_hours'];
+            $pvSafetyFactor = (float) $defaultSettings['pv_safety_factor'];
+            $batteryFactor = (float) $defaultSettings['battery_factor'];
+            $batteryVoltage = (float) $defaultSettings['battery_voltage'];
+            $panelWatts = (float) $defaultSettings['default_panel_watts'];
             $withBattery = true;
 
             $computedValues = $this->quotationComputationService->computeSizing([
@@ -262,13 +269,14 @@ public function storeFinalQuotation(Request $request)
     }
 
     $monthlyElectricBill = $validated['monthly_electric_bill'];
-    $ratePerKwh = $validated['rate_per_kwh'] ?? 14;
-    $daysInMonth = $validated['days_in_month'] ?? 30;
-    $sunHours = $validated['sun_hours'] ?? 4.5;
-    $pvSafetyFactor = $validated['pv_safety_factor'] ?? 1.8;
-    $batteryFactor = $validated['battery_factor'] ?? 1.0;
-    $batteryVoltage = $validated['battery_voltage'] ?? 51.2;
-    $panelWatts = $validated['panel_watts'] ?? 610;
+    $defaultSettings = $this->quotationSettingsService->current();
+    $ratePerKwh = (float) ($validated['rate_per_kwh'] ?? $defaultSettings['rate_per_kwh']);
+    $daysInMonth = (int) ($validated['days_in_month'] ?? $defaultSettings['days_in_month']);
+    $sunHours = (float) ($validated['sun_hours'] ?? $defaultSettings['sun_hours']);
+    $pvSafetyFactor = (float) ($validated['pv_safety_factor'] ?? $defaultSettings['pv_safety_factor']);
+    $batteryFactor = (float) ($validated['battery_factor'] ?? $defaultSettings['battery_factor']);
+    $batteryVoltage = (float) ($validated['battery_voltage'] ?? $defaultSettings['battery_voltage']);
+    $panelWatts = (float) ($validated['panel_watts'] ?? $defaultSettings['default_panel_watts']);
     $withBattery = $validated['with_battery'];
 
     $computedValues = $this->quotationComputationService->computeSizing([
