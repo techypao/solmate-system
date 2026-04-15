@@ -25,12 +25,19 @@ function formatValue(value?: string | number | null) {
   return String(value);
 }
 
-function formatCurrency(value?: number | null) {
-  if (value === null || value === undefined || Number.isNaN(value)) {
-    return 'N/A';
+function formatCurrency(value: unknown) {
+  if (value === null || value === undefined || value === '') {
+    return 'PHP 0.00';
   }
 
-  return `PHP ${value.toFixed(2)}`;
+  const numericValue =
+    typeof value === 'number' ? value : Number(String(value).trim());
+
+  if (!Number.isFinite(numericValue)) {
+    return 'PHP 0.00';
+  }
+
+  return `PHP ${numericValue.toFixed(2)}`;
 }
 
 function formatBoolean(value?: boolean | null) {

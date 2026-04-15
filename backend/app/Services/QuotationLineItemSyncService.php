@@ -77,6 +77,7 @@ class QuotationLineItemSyncService
                 'battery_cost' => $batteryCost,
                 'bos_cost' => $bosCost,
                 'materials_subtotal' => $materialsSubtotal,
+                'labor_cost' => $laborCost,
                 'project_cost' => $projectCost,
                 'estimated_monthly_savings' => $roiValues['estimated_monthly_savings'],
                 'estimated_annual_savings' => $roiValues['estimated_annual_savings'],

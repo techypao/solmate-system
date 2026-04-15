@@ -17,9 +17,12 @@ import {ApiError} from '../src/services/api';
 import {
   FinalQuotationOption,
   FinalQuotationOptions,
+  PricingItemSummary,
   PvSystemType,
   QuotationStatus,
   getFinalQuotationOptions,
+  getPricingCatalog,
+  replaceQuotationLineItems,
   submitFinalQuotation,
 } from '../src/services/quotationApi';
 import {
@@ -47,15 +50,32 @@ type FinalQuotationFormState = {
   battery_model: string;
   battery_capacity_ah: string;
   panel_watts: string;
-  panel_cost: string;
-  inverter_cost: string;
-  battery_cost: string;
-  bos_cost: string;
-  materials_subtotal: string;
-  labor_cost: string;
-  project_cost: string;
   status: QuotationStatus;
   remarks: string;
+};
+
+type CatalogQuantityState = Record<number, string>;
+
+type SelectedCatalogLineItem = {
+  pricing_item_id: number;
+  description: string;
+  category: string;
+  qty: number;
+  unit: string;
+  unit_amount: number;
+  total_amount: number;
+  pricing_item: PricingItemSummary;
+};
+
+type ComputedTotals = {
+  panelCost: number;
+  inverterCost: number;
+  batteryCost: number;
+  bosCost: number;
+  materialsSubtotal: number;
+  laborCost: number;
+  projectCost: number;
+  roiYears: number | null;
 };
 
 const STATUS_OPTIONS: QuotationStatus[] = [
@@ -63,6 +83,17 @@ const STATUS_OPTIONS: QuotationStatus[] = [
   'approved',
   'rejected',
   'completed',
+];
+
+const CATEGORY_ORDER = [
+  'panel',
+  'inverter',
+  'battery',
+  'protection',
+  'mounting',
+  'wiring',
+  'grounding',
+  'misc',
 ];
 
 function sanitizeNumericInput(value: string) {
@@ -113,6 +144,41 @@ function getFriendlyErrorMessage(error: unknown) {
   return 'Could not load the completed inspection request for final quotation.';
 }
 
+function formatCurrency(value?: number | null) {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return 'PHP 0.00';
+  }
+
+  return `PHP ${value.toFixed(2)}`;
+}
+
+function formatCategoryLabel(category: string) {
+  return category
+    .split(/[_-]/g)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function buildInitialFormState(): FinalQuotationFormState {
+  return {
+    monthly_electric_bill: '',
+    rate_per_kwh: '',
+    days_in_month: '',
+    sun_hours: '',
+    pv_safety_factor: '',
+    battery_factor: '',
+    battery_voltage: '',
+    pv_system_type: '',
+    with_battery: true,
+    inverter_type: '',
+    battery_model: '',
+    battery_capacity_ah: '',
+    panel_watts: '',
+    status: 'pending',
+    remarks: '',
+  };
+}
+
 function FormSection({
   title,
   subtitle,
@@ -159,33 +225,6 @@ function OptionChip({
   );
 }
 
-function buildInitialFormState(): FinalQuotationFormState {
-  return {
-    monthly_electric_bill: '',
-    rate_per_kwh: '',
-    days_in_month: '',
-    sun_hours: '',
-    pv_safety_factor: '',
-    battery_factor: '',
-    battery_voltage: '',
-    pv_system_type: '',
-    with_battery: true,
-    inverter_type: '',
-    battery_model: '',
-    battery_capacity_ah: '',
-    panel_watts: '',
-    panel_cost: '',
-    inverter_cost: '',
-    battery_cost: '',
-    bos_cost: '',
-    materials_subtotal: '',
-    labor_cost: '',
-    project_cost: '',
-    status: 'pending',
-    remarks: '',
-  };
-}
-
 export default function FinalQuotationScreen({navigation, route}: any) {
   const inspectionRequestId = route?.params?.inspectionRequestId;
   const initialInspectionRequest = route?.params?.inspectionRequest as
@@ -196,12 +235,18 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     useState<TechnicianInspectionRequest | null>(initialInspectionRequest || null);
   const [loading, setLoading] = useState(!initialInspectionRequest);
   const [optionsLoading, setOptionsLoading] = useState(true);
+  const [catalogLoading, setCatalogLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [optionsError, setOptionsError] = useState('');
+  const [catalogError, setCatalogError] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [finalQuotationOptions, setFinalQuotationOptions] =
     useState<FinalQuotationOptions | null>(null);
+  const [pricingCatalog, setPricingCatalog] = useState<PricingItemSummary[]>([]);
+  const [catalogQuantities, setCatalogQuantities] = useState<CatalogQuantityState>(
+    {},
+  );
   const [form, setForm] = useState<FinalQuotationFormState>(() =>
     buildInitialFormState(),
   );
@@ -280,16 +325,144 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     [],
   );
 
+  const loadPricingCatalog = useCallback(
+    async (showLoadingState = false) => {
+      try {
+        if (showLoadingState) {
+          setCatalogLoading(true);
+        }
+
+        setCatalogError('');
+        const items = await getPricingCatalog();
+        setPricingCatalog(items);
+      } catch (error) {
+        if (error instanceof ApiError) {
+          setCatalogError(error.message);
+        } else {
+          setCatalogError('Could not load the pricing catalog.');
+        }
+      } finally {
+        setCatalogLoading(false);
+      }
+    },
+    [],
+  );
+
   useFocusEffect(
     useCallback(() => {
       loadInspectionRequest(!inspectionRequest);
       if (!finalQuotationOptions) {
         loadOptions(true);
       }
-    }, [finalQuotationOptions, inspectionRequest, loadInspectionRequest, loadOptions]),
+      if (pricingCatalog.length === 0) {
+        loadPricingCatalog(true);
+      }
+    }, [
+      finalQuotationOptions,
+      inspectionRequest,
+      loadInspectionRequest,
+      loadOptions,
+      loadPricingCatalog,
+      pricingCatalog.length,
+    ]),
   );
 
   const completed = canCreateFinalQuotation(inspectionRequest?.status);
+
+  const groupedPricingCatalog = useMemo(() => {
+    return CATEGORY_ORDER.map(category => ({
+      category,
+      items: pricingCatalog.filter(item => {
+        if (item.category !== category) {
+          return false;
+        }
+
+        if (category === 'battery' && !form.with_battery) {
+          return false;
+        }
+
+        return true;
+      }),
+    })).filter(group => group.items.length > 0);
+  }, [form.with_battery, pricingCatalog]);
+
+  const selectedLineItems = useMemo<SelectedCatalogLineItem[]>(() => {
+    return pricingCatalog
+      .map(item => {
+        const qty = Number(catalogQuantities[item.id] || '');
+        const unitAmount = Number(item.default_unit_price || 0);
+
+        if (!Number.isFinite(qty) || qty <= 0) {
+          return null;
+        }
+
+        if (!form.with_battery && item.category === 'battery') {
+          return null;
+        }
+
+        return {
+          pricing_item_id: item.id,
+          description: item.name || 'Unnamed item',
+          category: item.category || 'misc',
+          qty: Number(qty.toFixed(2)),
+          unit: item.unit || 'pc',
+          unit_amount: unitAmount,
+          total_amount: Number((qty * unitAmount).toFixed(2)),
+          pricing_item: item,
+        };
+      })
+      .filter((item): item is SelectedCatalogLineItem => item !== null);
+  }, [catalogQuantities, form.with_battery, pricingCatalog]);
+
+  const computedTotals = useMemo<ComputedTotals>(() => {
+    const totals = {
+      panelCost: 0,
+      inverterCost: 0,
+      batteryCost: 0,
+      bosCost: 0,
+      materialsSubtotal: 0,
+      laborCost: 0,
+      projectCost: 0,
+      roiYears: null as number | null,
+    };
+
+    for (const item of selectedLineItems) {
+      totals.materialsSubtotal += item.total_amount;
+
+      switch (item.category) {
+        case 'panel':
+          totals.panelCost += item.total_amount;
+          break;
+        case 'inverter':
+          totals.inverterCost += item.total_amount;
+          break;
+        case 'battery':
+          totals.batteryCost += item.total_amount;
+          break;
+        default:
+          totals.bosCost += item.total_amount;
+          break;
+      }
+    }
+
+    totals.panelCost = Number(totals.panelCost.toFixed(2));
+    totals.inverterCost = Number(totals.inverterCost.toFixed(2));
+    totals.batteryCost = Number(totals.batteryCost.toFixed(2));
+    totals.bosCost = Number(totals.bosCost.toFixed(2));
+    totals.materialsSubtotal = Number(totals.materialsSubtotal.toFixed(2));
+    totals.projectCost = Number(
+      (totals.materialsSubtotal + totals.laborCost).toFixed(2),
+    );
+
+    const monthlyBill = toNumberOrUndefined(form.monthly_electric_bill);
+    if (monthlyBill && monthlyBill > 0 && totals.projectCost > 0) {
+      totals.roiYears = Number(
+        ((totals.projectCost / monthlyBill) / 12).toFixed(2),
+      );
+    }
+
+    return totals;
+  }, [form.monthly_electric_bill, selectedLineItems]);
 
   const validationMessage = useMemo(() => {
     if (!form.monthly_electric_bill) {
@@ -300,8 +473,21 @@ export default function FinalQuotationScreen({navigation, route}: any) {
       return 'PV system type is required.';
     }
 
+    if (pricingCatalog.length === 0) {
+      return 'No active pricing items are available yet. Ask the admin to seed or enable the pricing catalog.';
+    }
+
+    if (selectedLineItems.length === 0) {
+      return 'Add at least one pricing item with a quantity before submitting.';
+    }
+
     return '';
-  }, [form]);
+  }, [
+    form.monthly_electric_bill,
+    form.pv_system_type,
+    pricingCatalog.length,
+    selectedLineItems.length,
+  ]);
 
   const updateField = <K extends keyof FinalQuotationFormState>(
     key: K,
@@ -313,9 +499,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     }));
   };
 
-  const applyBatteryPreset = (
-    option: FinalQuotationOption<string> | null,
-  ) => {
+  const applyBatteryPreset = (option: FinalQuotationOption<string> | null) => {
     if (!option) {
       setForm(current => ({
         ...current,
@@ -340,9 +524,52 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     }));
   };
 
+  const updateCatalogQuantity = (itemId: number, value: string) => {
+    const sanitizedValue = sanitizeNumericInput(value);
+
+    setCatalogQuantities(current => ({
+      ...current,
+      [itemId]: sanitizedValue,
+    }));
+  };
+
+  const clearCatalogItem = (itemId: number) => {
+    setCatalogQuantities(current => ({
+      ...current,
+      [itemId]: '',
+    }));
+  };
+
+  const handleBatteryToggle = (value: boolean) => {
+    updateField('with_battery', value);
+
+    if (!value) {
+      setForm(current => ({
+        ...current,
+        with_battery: false,
+        battery_model: '',
+        battery_capacity_ah: '',
+        battery_voltage: '',
+      }));
+
+      setCatalogQuantities(current => {
+        const nextQuantities = {...current};
+
+        for (const item of pricingCatalog) {
+          if (item.category === 'battery') {
+            nextQuantities[item.id] = '';
+          }
+        }
+
+        return nextQuantities;
+      });
+    }
+  };
+
   const retryLoad = () => {
     loadInspectionRequest(true);
     loadOptions(true);
+    loadPricingCatalog(true);
   };
 
   const handleSubmit = async () => {
@@ -367,6 +594,8 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     if (submitting) {
       return;
     }
+
+    let createdQuotationId: number | null = null;
 
     try {
       setSubmitting(true);
@@ -393,49 +622,68 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           ? toNumberOrUndefined(form.battery_capacity_ah)
           : undefined,
         panel_watts: toNumberOrUndefined(form.panel_watts),
-        panel_cost: toNumberOrUndefined(form.panel_cost),
-        inverter_cost: toNumberOrUndefined(form.inverter_cost),
-        battery_cost:
-          form.with_battery && form.battery_cost
-            ? toNumberOrUndefined(form.battery_cost)
-            : undefined,
-        bos_cost: toNumberOrUndefined(form.bos_cost),
-        materials_subtotal: toNumberOrUndefined(form.materials_subtotal),
-        labor_cost: toNumberOrUndefined(form.labor_cost),
-        project_cost: toNumberOrUndefined(form.project_cost),
         status: form.status,
         remarks: form.remarks.trim() || undefined,
       });
 
-      if (createdQuotation?.id) {
-        navigation.replace('TechnicianQuotationDetail', {
-          quotationId: createdQuotation.id,
-          initialQuotation: createdQuotation,
-        });
+      if (!createdQuotation?.id) {
+        Alert.alert(
+          'Submission saved',
+          'The final quotation was created, but the detail screen could not be opened automatically.',
+        );
         return;
       }
 
-      Alert.alert(
-        'Submission saved',
-        'The final quotation was created, but the detail screen could not be opened automatically.',
-      );
+      createdQuotationId = createdQuotation.id;
+
+      const syncedQuotation = await replaceQuotationLineItems(createdQuotation.id, {
+        line_items: selectedLineItems.map(item => ({
+          pricing_item_id: item.pricing_item_id,
+          description: item.description,
+          category: item.category,
+          qty: item.qty,
+          unit: item.unit,
+          unit_amount: item.unit_amount,
+        })),
+      });
+
+      navigation.replace('TechnicianQuotationDetail', {
+        quotationId: syncedQuotation.id || createdQuotation.id,
+        initialQuotation: syncedQuotation.id ? syncedQuotation : createdQuotation,
+      });
     } catch (error) {
-      if (error instanceof ApiError) {
-        setSubmitError(formatLaravelErrors(error));
-        Alert.alert('Submission failed', formatLaravelErrors(error));
+      if (createdQuotationId) {
+        const syncErrorMessage =
+          error instanceof ApiError
+            ? formatLaravelErrors(error)
+            : 'The line items could not be saved automatically.';
+
+        setSubmitError(
+          `Final quotation #${createdQuotationId} was created, but the itemized pricing sync did not complete. ${syncErrorMessage}`,
+        );
+
+        Alert.alert(
+          'Quotation created with sync issue',
+          `Final quotation #${createdQuotationId} was created, but the itemized pricing sync did not complete.\n\n${syncErrorMessage}`,
+        );
+
+        navigation.replace('TechnicianQuotationDetail', {
+          quotationId: createdQuotationId,
+        });
+      } else if (error instanceof ApiError) {
+        const message = formatLaravelErrors(error);
+        setSubmitError(message);
+        Alert.alert('Submission failed', message);
       } else {
         setSubmitError('Could not submit the final quotation.');
-        Alert.alert(
-          'Submission failed',
-          'Could not submit the final quotation.',
-        );
+        Alert.alert('Submission failed', 'Could not submit the final quotation.');
       }
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading || optionsLoading) {
+  if (loading || optionsLoading || catalogLoading) {
     return (
       <View style={styles.centeredContainer}>
         <ActivityIndicator size="large" color="#2563eb" />
@@ -444,13 +692,20 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     );
   }
 
-  if (errorMessage || optionsError || !inspectionRequest || !finalQuotationOptions) {
+  if (
+    errorMessage ||
+    optionsError ||
+    catalogError ||
+    !inspectionRequest ||
+    !finalQuotationOptions
+  ) {
     return (
       <View style={styles.centeredContainer}>
         <Text style={styles.errorTitle}>Final quotation unavailable</Text>
         <Text style={styles.errorText}>
           {errorMessage ||
             optionsError ||
+            catalogError ||
             'The final quotation form could not be loaded.'}
         </Text>
         <AppButton
@@ -527,10 +782,11 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         ) : null}
 
         <AppCard style={styles.infoCard}>
-          <Text style={styles.infoTitle}>How defaults work</Text>
+          <Text style={styles.infoTitle}>How this final pricing works now</Text>
           <Text style={styles.infoText}>
-            Leave optional override fields blank to let the backend use the
-            current admin quotation settings.
+            Pricing is now itemized from the admin-managed catalog. Enter
+            quantities below and the app will preview the totals before saving
+            them through the existing quotation line-item backend.
           </Text>
         </AppCard>
 
@@ -673,7 +929,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
               trackColor={{false: '#cbd5e1', true: '#93c5fd'}}
               thumbColor={form.with_battery ? '#2563eb' : '#f8fafc'}
               value={form.with_battery}
-              onValueChange={value => updateField('with_battery', value)}
+              onValueChange={handleBatteryToggle}
             />
           </View>
 
@@ -757,71 +1013,144 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         </FormSection>
 
         <FormSection
-          title="Costing"
-          subtitle="Enter the final pricing inputs that the technician is submitting to the backend.">
-          <AppInput
-            label="Panel cost"
-            keyboardType="decimal-pad"
-            onChangeText={value =>
-              updateField('panel_cost', sanitizeNumericInput(value))
-            }
-            value={form.panel_cost}
-            containerStyle={styles.fieldSpacing}
-          />
-          <AppInput
-            label="Inverter cost"
-            keyboardType="decimal-pad"
-            onChangeText={value =>
-              updateField('inverter_cost', sanitizeNumericInput(value))
-            }
-            value={form.inverter_cost}
-            containerStyle={styles.fieldSpacing}
-          />
-          <AppInput
-            label="Battery cost"
-            editable={form.with_battery}
-            keyboardType="decimal-pad"
-            onChangeText={value =>
-              updateField('battery_cost', sanitizeNumericInput(value))
-            }
-            value={form.battery_cost}
-            containerStyle={styles.fieldSpacing}
-          />
-          <AppInput
-            label="BOS cost"
-            keyboardType="decimal-pad"
-            onChangeText={value =>
-              updateField('bos_cost', sanitizeNumericInput(value))
-            }
-            value={form.bos_cost}
-            containerStyle={styles.fieldSpacing}
-          />
-          <AppInput
-            label="Materials subtotal"
-            keyboardType="decimal-pad"
-            onChangeText={value =>
-              updateField('materials_subtotal', sanitizeNumericInput(value))
-            }
-            value={form.materials_subtotal}
-            containerStyle={styles.fieldSpacing}
-          />
-          <AppInput
-            label="Labor cost"
-            keyboardType="decimal-pad"
-            onChangeText={value =>
-              updateField('labor_cost', sanitizeNumericInput(value))
-            }
-            value={form.labor_cost}
-            containerStyle={styles.fieldSpacing}
-          />
-          <AppInput
-            label="Project cost"
-            keyboardType="decimal-pad"
-            onChangeText={value =>
-              updateField('project_cost', sanitizeNumericInput(value))
-            }
-            value={form.project_cost}
-          />
+          title="Selected line items"
+          subtitle="Anything with a quantity greater than zero will be saved as an itemized final quotation line item.">
+          {selectedLineItems.length > 0 ? (
+            selectedLineItems.map(item => (
+              <View key={item.pricing_item_id} style={styles.selectedItemCard}>
+                <View style={styles.selectedItemHeader}>
+                  <View style={styles.selectedItemTextWrap}>
+                    <Text style={styles.selectedItemName}>{item.description}</Text>
+                    <Text style={styles.selectedItemMeta}>
+                      {formatCategoryLabel(item.category)} • {item.unit} •{' '}
+                      {formatCurrency(item.unit_amount)} each
+                    </Text>
+                  </View>
+                  <AppButton
+                    title="Remove"
+                    variant="outline"
+                    onPress={() => clearCatalogItem(item.pricing_item_id)}
+                    style={styles.removeButton}
+                    textStyle={styles.removeButtonText}
+                  />
+                </View>
+
+                <View style={styles.selectedItemTotalsRow}>
+                  <Text style={styles.selectedItemTotalsLabel}>
+                    Qty {item.qty.toFixed(2).replace(/\.00$/, '')}
+                  </Text>
+                  <Text style={styles.selectedItemTotalsValue}>
+                    {formatCurrency(item.total_amount)}
+                  </Text>
+                </View>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.emptyCatalogText}>
+              No pricing items selected yet. Add quantities from the catalog
+              below.
+            </Text>
+          )}
+        </FormSection>
+
+        <FormSection
+          title="Pricing catalog"
+          subtitle="Use the admin-managed catalog to add itemized components and materials.">
+          {groupedPricingCatalog.map(group => (
+            <View key={group.category} style={styles.catalogGroup}>
+              <Text style={styles.catalogGroupTitle}>
+                {formatCategoryLabel(group.category)}
+              </Text>
+
+              {group.items.map(item => (
+                <View key={item.id} style={styles.catalogItemCard}>
+                  <View style={styles.catalogItemInfo}>
+                    <Text style={styles.catalogItemName}>
+                      {item.name || 'Unnamed item'}
+                    </Text>
+                    <Text style={styles.catalogItemMeta}>
+                      {item.unit || 'pc'} • {formatCurrency(Number(item.default_unit_price || 0))}
+                    </Text>
+                  </View>
+
+                  <View style={styles.catalogItemActions}>
+                    <AppInput
+                      label="Qty"
+                      keyboardType="decimal-pad"
+                      onChangeText={value => updateCatalogQuantity(item.id, value)}
+                      value={catalogQuantities[item.id] || ''}
+                      containerStyle={styles.quantityInputContainer}
+                    />
+                    {(catalogQuantities[item.id] || '').trim() ? (
+                      <AppButton
+                        title="Clear"
+                        variant="outline"
+                        onPress={() => clearCatalogItem(item.id)}
+                        style={styles.clearButton}
+                        textStyle={styles.clearButtonText}
+                      />
+                    ) : null}
+                  </View>
+                </View>
+              ))}
+            </View>
+          ))}
+        </FormSection>
+
+        <FormSection
+          title="Computed totals"
+          subtitle="These totals are previewed from the selected catalog items and will be recomputed by the backend after save.">
+          <View style={styles.totalsGrid}>
+            <View style={styles.totalCard}>
+              <Text style={styles.totalLabel}>Panel cost</Text>
+              <Text style={styles.totalValue}>
+                {formatCurrency(computedTotals.panelCost)}
+              </Text>
+            </View>
+            <View style={styles.totalCard}>
+              <Text style={styles.totalLabel}>Inverter cost</Text>
+              <Text style={styles.totalValue}>
+                {formatCurrency(computedTotals.inverterCost)}
+              </Text>
+            </View>
+            <View style={styles.totalCard}>
+              <Text style={styles.totalLabel}>Battery cost</Text>
+              <Text style={styles.totalValue}>
+                {formatCurrency(computedTotals.batteryCost)}
+              </Text>
+            </View>
+            <View style={styles.totalCard}>
+              <Text style={styles.totalLabel}>BOS cost</Text>
+              <Text style={styles.totalValue}>
+                {formatCurrency(computedTotals.bosCost)}
+              </Text>
+            </View>
+            <View style={styles.totalCard}>
+              <Text style={styles.totalLabel}>Materials subtotal</Text>
+              <Text style={styles.totalValue}>
+                {formatCurrency(computedTotals.materialsSubtotal)}
+              </Text>
+            </View>
+            <View style={styles.totalCard}>
+              <Text style={styles.totalLabel}>Labor cost</Text>
+              <Text style={styles.totalValue}>
+                {formatCurrency(computedTotals.laborCost)}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.projectTotalCard}>
+            <Text style={styles.projectTotalLabel}>Estimated project cost</Text>
+            <Text style={styles.projectTotalValue}>
+              {formatCurrency(computedTotals.projectCost)}
+            </Text>
+            <Text style={styles.projectTotalHint}>
+              ROI preview:{' '}
+              {computedTotals.roiYears !== null
+                ? `${computedTotals.roiYears.toFixed(2)} years`
+                : 'available after bill + items are entered'}
+            </Text>
+          </View>
         </FormSection>
 
         <FormSection
@@ -947,22 +1276,25 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   summaryRow: {
+    alignItems: 'center',
     borderTopColor: '#e2e8f0',
     borderTopWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingVertical: 12,
   },
   summaryLabel: {
     color: '#64748b',
     fontSize: 12,
     fontWeight: '700',
-    marginBottom: 4,
     textTransform: 'uppercase',
   },
   summaryValue: {
     color: '#0f172a',
     fontSize: 15,
     fontWeight: '600',
-    lineHeight: 22,
+    maxWidth: '55%',
+    textAlign: 'right',
   },
   summaryDetails: {
     borderTopColor: '#e2e8f0',
@@ -972,12 +1304,12 @@ const styles = StyleSheet.create({
   summaryDetailsText: {
     color: '#0f172a',
     fontSize: 15,
-    lineHeight: 23,
+    lineHeight: 22,
+    marginTop: 6,
   },
   warningCard: {
     backgroundColor: '#fff7ed',
     borderColor: '#fdba74',
-    borderWidth: 1,
     marginBottom: 18,
   },
   warningTitle: {
@@ -989,18 +1321,27 @@ const styles = StyleSheet.create({
   warningText: {
     color: '#9a3412',
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 21,
   },
   infoCard: {
     backgroundColor: '#eff6ff',
     borderColor: '#bfdbfe',
-    borderWidth: 1,
     marginBottom: 18,
+  },
+  infoTitle: {
+    color: '#1d4ed8',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  infoText: {
+    color: '#1e3a8a',
+    fontSize: 14,
+    lineHeight: 21,
   },
   errorCard: {
     backgroundColor: '#fef2f2',
     borderColor: '#fecaca',
-    borderWidth: 1,
     marginBottom: 18,
   },
   errorCardTitle: {
@@ -1012,27 +1353,17 @@ const styles = StyleSheet.create({
   errorCardText: {
     color: '#991b1b',
     fontSize: 14,
-    lineHeight: 20,
-  },
-  infoTitle: {
-    color: '#1d4ed8',
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  infoText: {
-    color: '#1e3a8a',
-    fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 21,
   },
   fieldSpacing: {
     marginBottom: 14,
   },
   optionLabel: {
-    color: '#374151',
-    fontSize: 14,
-    fontWeight: '600',
+    color: '#475569',
+    fontSize: 12,
+    fontWeight: '700',
     marginBottom: 10,
+    textTransform: 'uppercase',
   },
   optionRow: {
     flexDirection: 'row',
@@ -1041,42 +1372,42 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   optionChip: {
-    backgroundColor: '#eff6ff',
-    borderColor: '#bfdbfe',
-    borderRadius: 14,
+    backgroundColor: '#ffffff',
+    borderColor: '#cbd5e1',
+    borderRadius: 999,
     borderWidth: 1,
     paddingHorizontal: 14,
-    paddingVertical: 11,
+    paddingVertical: 10,
   },
   optionChipSelected: {
-    backgroundColor: '#2563eb',
+    backgroundColor: '#dbeafe',
     borderColor: '#2563eb',
   },
   optionChipPressed: {
-    opacity: 0.88,
+    opacity: 0.85,
   },
   optionChipText: {
-    color: '#1d4ed8',
+    color: '#334155',
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   optionChipTextSelected: {
-    color: '#ffffff',
+    color: '#1d4ed8',
   },
   switchRow: {
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
     borderColor: '#e2e8f0',
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 16,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
   switchTextWrap: {
     flex: 1,
-    paddingRight: 16,
+    paddingRight: 14,
   },
   switchLabel: {
     color: '#0f172a',
@@ -1088,6 +1419,166 @@ const styles = StyleSheet.create({
     color: '#64748b',
     fontSize: 13,
     lineHeight: 19,
+  },
+  selectedItemCard: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+    borderRadius: 18,
+    borderWidth: 1,
+    marginBottom: 12,
+    padding: 14,
+  },
+  selectedItemHeader: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  selectedItemTextWrap: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  selectedItemName: {
+    color: '#0f172a',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  selectedItemMeta: {
+    color: '#64748b',
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  selectedItemTotalsRow: {
+    alignItems: 'center',
+    borderTopColor: '#e2e8f0',
+    borderTopWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 12,
+  },
+  selectedItemTotalsLabel: {
+    color: '#475569',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  selectedItemTotalsValue: {
+    color: '#0f172a',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  removeButton: {
+    minHeight: 42,
+    minWidth: 92,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  removeButtonText: {
+    fontSize: 13,
+  },
+  emptyCatalogText: {
+    color: '#64748b',
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  catalogGroup: {
+    marginBottom: 18,
+  },
+  catalogGroupTitle: {
+    color: '#0f172a',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+  catalogItemCard: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+    borderRadius: 18,
+    borderWidth: 1,
+    marginBottom: 10,
+    padding: 14,
+  },
+  catalogItemInfo: {
+    marginBottom: 10,
+  },
+  catalogItemName: {
+    color: '#0f172a',
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  catalogItemMeta: {
+    color: '#64748b',
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  catalogItemActions: {
+    alignItems: 'flex-end',
+    flexDirection: 'row',
+    gap: 10,
+  },
+  quantityInputContainer: {
+    flex: 1,
+  },
+  clearButton: {
+    minHeight: 48,
+    minWidth: 84,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  clearButtonText: {
+    fontSize: 13,
+  },
+  totalsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  totalCard: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+    borderRadius: 18,
+    borderWidth: 1,
+    minWidth: '47%',
+    padding: 14,
+  },
+  totalLabel: {
+    color: '#64748b',
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 6,
+    textTransform: 'uppercase',
+  },
+  totalValue: {
+    color: '#0f172a',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  projectTotalCard: {
+    backgroundColor: '#dcfce7',
+    borderColor: '#86efac',
+    borderRadius: 22,
+    borderWidth: 1,
+    marginTop: 16,
+    padding: 18,
+  },
+  projectTotalLabel: {
+    color: '#166534',
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 6,
+    textTransform: 'uppercase',
+  },
+  projectTotalValue: {
+    color: '#14532d',
+    fontSize: 28,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+  projectTotalHint: {
+    color: '#166534',
+    fontSize: 14,
+    lineHeight: 20,
   },
   textArea: {
     minHeight: 120,

@@ -134,6 +134,18 @@ export type FinalQuotationOption<T extends string | number = string | number> = 
   battery_capacity_ah?: number;
 };
 
+export type ReplaceQuotationLineItemsPayload = {
+  line_items: Array<{
+    pricing_item_id?: number | null;
+    description: string;
+    category: string;
+    qty: number;
+    unit: string;
+    unit_amount: number;
+    total_amount?: number;
+  }>;
+};
+
 export type FinalQuotationOptions = {
   system_types: FinalQuotationOption<string>[];
   panel_options: FinalQuotationOption<number>[];
@@ -205,9 +217,29 @@ export async function getFinalQuotationOptions() {
   });
 }
 
+export async function getPricingCatalog() {
+  const response = await apiGet<PricingItemSummary[] | ApiEnvelope<PricingItemSummary[]>>(
+    '/pricing-items',
+  );
+
+  return extractEnvelopeData<PricingItemSummary[]>(response, []);
+}
+
 export async function getCustomerFinalQuotation(inspectionRequestId: number) {
   const response = await apiGet<Quotation | ApiEnvelope<Quotation>>(
     `/customer/final-quotations/${inspectionRequestId}`,
+  );
+
+  return extractEnvelopeData<Quotation>(response, {} as Quotation);
+}
+
+export async function replaceQuotationLineItems(
+  quotationId: number,
+  payload: ReplaceQuotationLineItemsPayload,
+) {
+  const response = await apiPut<Quotation | ApiEnvelope<Quotation>>(
+    `/quotations/${quotationId}/line-items`,
+    payload,
   );
 
   return extractEnvelopeData<Quotation>(response, {} as Quotation);
