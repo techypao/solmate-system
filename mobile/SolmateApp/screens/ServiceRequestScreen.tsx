@@ -188,6 +188,10 @@ export default function ServiceRequestScreen({ navigation }: any) {
   };
 
   const handleSubmit = async () => {
+    if (submitting) {
+      return;
+    }
+
     if (!validateForm()) {
       return;
     }
@@ -202,6 +206,18 @@ export default function ServiceRequestScreen({ navigation }: any) {
         details: details.trim(),
         ...(dateNeeded ? { date_needed: dateNeeded } : {}),
       });
+
+      const createdServiceRequest = response?.data;
+
+      if (createdServiceRequest?.id) {
+        resetForm();
+        navigation.replace('ServiceRequestDetail', {
+          serviceRequestId: createdServiceRequest.id,
+          initialServiceRequest: createdServiceRequest,
+          mode: 'customer',
+        });
+        return;
+      }
 
       resetForm();
       setSuccessMessage(
@@ -381,8 +397,8 @@ export default function ServiceRequestScreen({ navigation }: any) {
       <View style={styles.submitCard}>
         <Text style={styles.submitTitle}>Ready to send your request?</Text>
         <Text style={styles.submitSubtitle}>
-          After submission, your request will appear in your service request
-          history with its current status.
+          After submission, you will be taken straight to the request details
+          screen with its current status.
         </Text>
 
         <AppButton

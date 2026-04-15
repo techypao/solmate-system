@@ -149,9 +149,14 @@ function CostCard({
 
 export default function QuotationDetailScreen({route}: any) {
   const {quotationId} = route.params;
+  const initialQuotation = route?.params?.initialQuotation as
+    | QuotationDetail
+    | undefined;
 
-  const [quotation, setQuotation] = useState<QuotationDetail | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [quotation, setQuotation] = useState<QuotationDetail | null>(
+    initialQuotation || null,
+  );
+  const [loading, setLoading] = useState(!initialQuotation);
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {

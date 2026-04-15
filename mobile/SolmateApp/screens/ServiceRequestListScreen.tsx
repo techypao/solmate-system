@@ -202,6 +202,28 @@ export default function ServiceRequestListScreen({ navigation, route }: any) {
             </Text>
           </View>
         </View>
+
+        <AppButton
+          title={
+            mode === 'technician'
+              ? 'Open service request'
+              : 'View request details'
+          }
+          variant="outline"
+          style={styles.cardButton}
+          onPress={() =>
+            navigation.navigate(
+              mode === 'technician'
+                ? 'TechnicianServiceRequestDetail'
+                : 'ServiceRequestDetail',
+              {
+                serviceRequestId: item.id,
+                initialServiceRequest: item,
+                mode,
+              },
+            )
+          }
+        />
       </View>
     );
   };
@@ -492,5 +514,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     lineHeight: 21,
+  },
+  cardButton: {
+    marginTop: 14,
   },
 });

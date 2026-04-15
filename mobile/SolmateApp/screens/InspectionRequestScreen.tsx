@@ -116,6 +116,10 @@ export default function InspectionRequestScreen({navigation}: any) {
   };
 
   const handleSubmit = async () => {
+    if (submitting) {
+      return;
+    }
+
     const trimmedDetails = details.trim();
     const trimmedDateNeeded = dateNeeded.trim();
 
@@ -134,6 +138,17 @@ export default function InspectionRequestScreen({navigation}: any) {
         details: trimmedDetails,
         ...(trimmedDateNeeded ? {date_needed: trimmedDateNeeded} : {}),
       });
+
+      const createdInspectionRequest = response?.data;
+
+      if (createdInspectionRequest?.id) {
+        resetForm();
+        navigation.replace('InspectionRequestDetail', {
+          inspectionRequestId: createdInspectionRequest.id,
+          initialInspectionRequest: createdInspectionRequest,
+        });
+        return;
+      }
 
       resetForm();
       setSuccessMessage(
@@ -239,8 +254,8 @@ export default function InspectionRequestScreen({navigation}: any) {
       <View style={styles.submitCard}>
         <Text style={styles.submitTitle}>Ready to send your request?</Text>
         <Text style={styles.submitSubtitle}>
-          After submission, you can head to your inspection request list to
-          review its status.
+          After submission, you will be taken straight to the request details
+          screen so you can review its status.
         </Text>
 
         <AppButton

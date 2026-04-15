@@ -40,9 +40,16 @@ export const AuthProvider = ({children}) => {
     }
   }, [fetchUser]);
 
-  const login = async newToken => {
+  const login = async (newToken, options = {}) => {
+    const {rememberSession = true} = options;
+
     try {
-      await saveStoredToken(newToken);
+      if (rememberSession) {
+        await saveStoredToken(newToken);
+      } else {
+        await removeStoredToken();
+      }
+
       await fetchUser(newToken);
     } catch (error) {
       console.log('Login context error:', error);

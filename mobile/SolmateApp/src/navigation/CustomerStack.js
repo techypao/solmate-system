@@ -4,11 +4,13 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import HomeScreen from '../../screens/HomeScreen';
 import FinalQuotationViewScreen from '../../screens/FinalQuotationViewScreen';
+import InspectionRequestDetailScreen from '../../screens/InspectionRequestDetailScreen';
 import InspectionRequestListScreen from '../../screens/InspectionRequestListScreen';
 import InspectionRequestScreen from '../../screens/InspectionRequestScreen';
 import QuotationDetailScreen from '../../screens/QuotationDetailScreen';
 import QuotationListScreen from '../../screens/QuotationListScreen';
 import QuotationScreen from '../../screens/QuotationScreen';
+import ServiceRequestDetailScreen from '../../screens/ServiceRequestDetailScreen';
 import ServiceRequestListScreen from '../../screens/ServiceRequestListScreen';
 import ServiceRequestScreen from '../../screens/ServiceRequestScreen';
 
@@ -58,6 +60,12 @@ export default function CustomerStack() {
       />
 
       <Stack.Screen
+        name="InspectionRequestDetail"
+        component={InspectionRequestDetailScreen}
+        options={{ title: 'Inspection Request Details' }}
+      />
+
+      <Stack.Screen
         name="FinalQuotationView"
         component={FinalQuotationViewScreen}
         options={{ title: 'Final Quotation' }}
@@ -73,6 +81,13 @@ export default function CustomerStack() {
         name="ServiceRequestList"
         component={ServiceRequestListScreen}
         options={{ title: 'My Service Requests' }}
+      />
+
+      <Stack.Screen
+        name="ServiceRequestDetail"
+        component={ServiceRequestDetailScreen}
+        initialParams={{ mode: 'customer' }}
+        options={{ title: 'Service Request Details' }}
       />
 
       {/* Single quotation detail page */}

@@ -127,6 +127,17 @@ export default function InspectionRequestListScreen({navigation}: any) {
         </View>
 
         <View style={styles.footerCard}>
+          <AppButton
+            title="View Request Details"
+            variant="outline"
+            style={styles.detailButton}
+            onPress={() =>
+              navigation.navigate('InspectionRequestDetail', {
+                inspectionRequestId: item.id,
+                initialInspectionRequest: item,
+              })
+            }
+          />
           <Text style={styles.footerTitle}>Final quotation</Text>
           <Text style={styles.footerText}>
             {canOpenFinalQuotation
@@ -382,6 +393,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     padding: 14,
+  },
+  detailButton: {
+    marginBottom: 14,
   },
   footerTitle: {
     color: '#0f172a',

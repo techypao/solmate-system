@@ -41,6 +41,15 @@ export function getInspectionRequests() {
   return apiGet<InspectionRequest[]>('/inspection-requests');
 }
 
+export async function getInspectionRequestById(id: number) {
+  const inspectionRequests = await getInspectionRequests();
+
+  return (
+    inspectionRequests.find(inspectionRequest => inspectionRequest.id === id) ||
+    null
+  );
+}
+
 export function createInspectionRequest(
   payload: CreateInspectionRequestPayload,
 ) {

@@ -372,7 +372,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
       setSubmitting(true);
       setSubmitError('');
 
-      await submitFinalQuotation({
+      const createdQuotation = await submitFinalQuotation({
         inspection_request_id: inspectionRequestId,
         monthly_electric_bill: toNumberOrUndefined(
           form.monthly_electric_bill,
@@ -407,12 +407,18 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         remarks: form.remarks.trim() || undefined,
       });
 
-      Alert.alert('Success', 'Final quotation submitted successfully.', [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ]);
+      if (createdQuotation?.id) {
+        navigation.replace('TechnicianQuotationDetail', {
+          quotationId: createdQuotation.id,
+          initialQuotation: createdQuotation,
+        });
+        return;
+      }
+
+      Alert.alert(
+        'Submission saved',
+        'The final quotation was created, but the detail screen could not be opened automatically.',
+      );
     } catch (error) {
       if (error instanceof ApiError) {
         setSubmitError(formatLaravelErrors(error));

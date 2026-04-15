@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from './api';
+import { apiGet, apiPost, apiPut } from './api';
 
 export type UserSummary = {
   id: number;
@@ -28,6 +28,11 @@ export type CreateServiceRequestPayload = {
   date_needed?: string;
 };
 
+export type TechnicianServiceRequestStatus =
+  | 'assigned'
+  | 'in_progress'
+  | 'completed';
+
 type CreateServiceRequestResponse = {
   message: string;
   data: ServiceRequest;
@@ -50,6 +55,34 @@ export async function getTechnicianServiceRequests() {
   return Array.isArray(response?.data) ? response.data : [];
 }
 
+export async function getServiceRequestById(id: number) {
+  const serviceRequests = await getServiceRequests();
+
+  return (
+    serviceRequests.find(serviceRequest => serviceRequest.id === id) || null
+  );
+}
+
+export async function getTechnicianServiceRequestById(id: number) {
+  const serviceRequests = await getTechnicianServiceRequests();
+
+  return (
+    serviceRequests.find(serviceRequest => serviceRequest.id === id) || null
+  );
+}
+
 export function createServiceRequest(payload: CreateServiceRequestPayload) {
   return apiPost<CreateServiceRequestResponse>('/service-requests', payload);
+}
+
+export async function updateTechnicianServiceRequestStatus(
+  id: number,
+  status: TechnicianServiceRequestStatus,
+) {
+  const response = await apiPut<{message?: string; data?: ServiceRequest}>(
+    `/technician/service-requests/${id}/status`,
+    {status},
+  );
+
+  return response?.data ?? ({} as ServiceRequest);
 }

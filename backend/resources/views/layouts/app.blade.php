@@ -148,6 +148,45 @@
             border-color: #0f5f9c;
         }
 
+        .password-field {
+            position: relative;
+        }
+
+        .password-field input {
+            padding-right: 92px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            top: 37px;
+            right: 12px;
+            border: 0;
+            background: transparent;
+            color: #0f5f9c;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 0;
+        }
+
+        .remember-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .checkbox-inline input {
+            width: auto;
+            margin: 0;
+        }
+
         .field-error {
             margin-top: 6px;
             font-size: 13px;

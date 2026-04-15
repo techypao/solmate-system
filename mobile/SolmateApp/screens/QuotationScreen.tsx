@@ -53,7 +53,7 @@ function formatLaravelErrors(error: ApiError) {
   return messages.join('\n');
 }
 
-export default function QuotationScreen() {
+export default function QuotationScreen({navigation}: any) {
   const [monthlyElectricBill, setMonthlyElectricBill] = useState('');
   const [remarks, setRemarks] = useState('');
   const [billError, setBillError] = useState('');
@@ -88,6 +88,10 @@ export default function QuotationScreen() {
   };
 
   const handleSubmit = async () => {
+    if (submitting) {
+      return;
+    }
+
     const validationMessage = validateForm();
     const parsedMonthlyElectricBill = toNumberOrUndefined(monthlyElectricBill);
 
@@ -111,9 +115,20 @@ export default function QuotationScreen() {
       const response = await createQuotation(payload);
       console.log('Quotation response:', response);
 
+      const createdQuotation = response?.data;
+
+      if (createdQuotation?.id) {
+        resetForm();
+        navigation.replace('QuotationDetail', {
+          quotationId: createdQuotation.id,
+          initialQuotation: createdQuotation,
+        });
+        return;
+      }
+
       Alert.alert(
-        'Success',
-        'Your quotation request has been submitted successfully.',
+        'Submission saved',
+        'The quotation was created, but the detail screen could not be opened automatically.',
       );
       resetForm();
     } catch (error) {
