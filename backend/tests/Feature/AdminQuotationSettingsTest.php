@@ -24,7 +24,8 @@ class AdminQuotationSettingsTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('data.rate_per_kwh', '14.00')
             ->assertJsonPath('data.days_in_month', 30)
-            ->assertJsonPath('data.default_panel_watts', '610.00');
+            ->assertJsonPath('data.default_panel_watts', '610.00')
+            ->assertJsonPath('data.initial_price_per_kw', '50000.00');
 
         $this->assertDatabaseCount('quotation_settings', 1);
     }
@@ -40,6 +41,7 @@ class AdminQuotationSettingsTest extends TestCase
             'sun_hours' => 5.2,
             'labor_percentage' => 12.5,
             'default_bos_cost' => 25000,
+            'initial_price_per_kw' => 52000,
         ]);
 
         $response->assertOk()
@@ -47,6 +49,7 @@ class AdminQuotationSettingsTest extends TestCase
             ->assertJsonPath('data.sun_hours', '5.20')
             ->assertJsonPath('data.labor_percentage', '12.50')
             ->assertJsonPath('data.default_bos_cost', '25000.00')
+            ->assertJsonPath('data.initial_price_per_kw', '52000.00')
             ->assertJsonPath('data.days_in_month', 30);
 
         $this->assertDatabaseHas('quotation_settings', [
@@ -54,6 +57,7 @@ class AdminQuotationSettingsTest extends TestCase
             'sun_hours' => 5.20,
             'labor_percentage' => 12.50,
             'default_bos_cost' => 25000.00,
+            'initial_price_per_kw' => 52000.00,
             'days_in_month' => 30,
         ]);
     }
@@ -87,6 +91,7 @@ class AdminQuotationSettingsTest extends TestCase
             'default_bos_cost' => 0.00,
             'default_misc_cost' => 0.00,
             'default_panel_watts' => 610.00,
+            'initial_price_per_kw' => 50000.00,
         ]);
 
         Sanctum::actingAs($admin);
@@ -95,6 +100,7 @@ class AdminQuotationSettingsTest extends TestCase
             'days_in_month' => 0,
             'sun_hours' => 0,
             'default_panel_watts' => 0,
+            'initial_price_per_kw' => -1,
         ]);
 
         $response->assertStatus(422)
@@ -102,6 +108,7 @@ class AdminQuotationSettingsTest extends TestCase
                 'days_in_month',
                 'sun_hours',
                 'default_panel_watts',
+                'initial_price_per_kw',
             ]);
     }
 

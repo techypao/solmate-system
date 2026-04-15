@@ -249,8 +249,12 @@
                 </div>
                 <div class="nav-links">
                     <a href="{{ route('dashboard') }}">Dashboard</a>
+                    @if (in_array(auth()->user()->role, [\App\Models\User::ROLE_ADMIN, \App\Models\User::ROLE_TECHNICIAN], true))
+                        <a href="{{ route('quotations.item-builder') }}">Quotation Item Builder</a>
+                    @endif
                     @if (auth()->user()->role === \App\Models\User::ROLE_ADMIN)
                         <a href="{{ route('admin.quotation-settings') }}">Quotation Settings</a>
+                        <a href="{{ route('admin.pricing-catalog') }}">Pricing Catalog</a>
                         <a href="{{ route('admin.request-assignments') }}">Request Assignments</a>
                     @endif
                     <form method="POST" action="{{ route('logout') }}">

@@ -62,6 +62,9 @@ class QuotationController extends Controller
             $batteryVoltage = (float) $defaultSettings['battery_voltage'];
             $panelWatts = (float) $defaultSettings['default_panel_watts'];
             $withBattery = true;
+            $defaultSystemType = (string) config('quotation_options.initial_quotation.default_system_type', 'hybrid');
+            $pricePerKw = (float) ($defaultSettings['initial_price_per_kw']
+                ?? config('quotation_settings.defaults.initial_price_per_kw', 50000));
 
             $computedValues = $this->quotationComputationService->computeSizing([
                 'monthly_electric_bill' => $monthlyElectricBill,
@@ -74,6 +77,14 @@ class QuotationController extends Controller
                 'panel_watts' => $panelWatts,
                 'with_battery' => $withBattery,
             ]);
+            $estimatedProjectCost = $this->quotationComputationService->estimatePackageProjectCost(
+                $computedValues['system_kw'],
+                $pricePerKw
+            );
+            $roiValues = $this->quotationComputationService->computeRoi(
+                $estimatedProjectCost,
+                $monthlyElectricBill
+            );
 
             $quotation = Quotation::create([
                 'user_id' => Auth::id(),
@@ -85,7 +96,7 @@ class QuotationController extends Controller
                 'pv_safety_factor' => $pvSafetyFactor,
                 'battery_factor' => $batteryFactor,
                 'battery_voltage' => $batteryVoltage,
-                'pv_system_type' => 'hybrid',
+                'pv_system_type' => $defaultSystemType,
                 'with_battery' => $withBattery,
                 'inverter_type' => null,
                 'battery_model' => null,
@@ -105,10 +116,10 @@ class QuotationController extends Controller
                 'bos_cost' => null,
                 'materials_subtotal' => null,
                 'labor_cost' => null,
-                'project_cost' => null,
-                'estimated_monthly_savings' => null,
-'estimated_annual_savings' => null,
-'roi_years' => null,
+                'project_cost' => $estimatedProjectCost,
+                'estimated_monthly_savings' => $roiValues['estimated_monthly_savings'],
+                'estimated_annual_savings' => $roiValues['estimated_annual_savings'],
+                'roi_years' => $roiValues['roi_years'],
                 'status' => 'pending',
                 'remarks' => $validated['remarks'] ?? null,
             ]);
@@ -144,6 +155,8 @@ class QuotationController extends Controller
                 'message' => 'Forbidden'
             ], 403);
         }
+
+        $this->loadLineItemsForFinalQuotation($quotation);
 
         return response()->json($quotation);
     }
@@ -360,10 +373,21 @@ public function getCustomerFinalQuotation(Request $request, $inspection_request_
         ], 404);
     }
 
+    $this->loadLineItemsForFinalQuotation($quotation);
+
     return response()->json([
         'message' => 'Final quotation retrieved successfully.',
         'data' => $quotation
     ], 200);
+}
+
+private function loadLineItemsForFinalQuotation(Quotation $quotation): void
+{
+    if ($quotation->quotation_type !== 'final') {
+        return;
+    }
+
+    $quotation->loadMissing(['lineItems.pricingItem']);
 }
 
 private function storeRules(): array

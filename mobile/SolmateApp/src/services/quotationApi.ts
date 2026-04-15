@@ -10,6 +10,30 @@ export type QuotationStatus =
   | 'completed'
   | string;
 
+export type PricingItemSummary = {
+  id: number;
+  name?: string | null;
+  category?: string | null;
+  unit?: string | null;
+  default_unit_price?: number | null;
+  brand?: string | null;
+  model?: string | null;
+  specification?: string | null;
+  is_active?: boolean | null;
+};
+
+export type QuotationLineItem = {
+  id: number;
+  pricing_item_id?: number | null;
+  description?: string | null;
+  category?: string | null;
+  qty?: number | null;
+  unit?: string | null;
+  unit_amount?: number | null;
+  total_amount?: number | null;
+  pricing_item?: PricingItemSummary | null;
+};
+
 export type Quotation = {
   id: number;
   user_id?: number;
@@ -52,6 +76,7 @@ export type Quotation = {
   updated_at?: string;
   customer?: UserSummary | null;
   inspectionRequest?: InspectionRequest | null;
+  line_items?: QuotationLineItem[];
 };
 
 export type CreateQuotationPayload = {

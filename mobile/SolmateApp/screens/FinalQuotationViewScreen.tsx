@@ -11,7 +11,11 @@ import {useFocusEffect} from '@react-navigation/native';
 
 import {AppButton, AppCard} from '../components';
 import {ApiError} from '../src/services/api';
-import {getCustomerFinalQuotation, Quotation} from '../src/services/quotationApi';
+import {
+  getCustomerFinalQuotation,
+  Quotation,
+  QuotationLineItem,
+} from '../src/services/quotationApi';
 
 function formatValue(value?: string | number | null) {
   if (value === null || value === undefined || value === '') {
@@ -49,6 +53,20 @@ function formatDate(value?: string | null) {
   }
 
   return date.toLocaleString();
+}
+
+function formatLineItemMeta(item: QuotationLineItem) {
+  const parts = [
+    item.category ? String(item.category).toUpperCase() : null,
+    item.pricing_item?.brand || null,
+    item.pricing_item?.model || null,
+  ].filter(Boolean);
+
+  if (parts.length === 0) {
+    return 'Custom item';
+  }
+
+  return parts.join(' • ');
 }
 
 function getFriendlyErrorMessage(error: unknown) {
@@ -317,6 +335,37 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
         </SectionCard>
 
         <SectionCard
+          title="Itemized line items"
+          subtitle="These are the detailed components and pricing entries attached to the final quotation.">
+          {quotation.line_items && quotation.line_items.length > 0 ? (
+            quotation.line_items.map(item => (
+              <View key={item.id} style={styles.lineItemCard}>
+                <Text style={styles.lineItemTitle}>
+                  {formatValue(item.description)}
+                </Text>
+                <Text style={styles.lineItemMeta}>{formatLineItemMeta(item)}</Text>
+                <DetailRow
+                  label="Quantity"
+                  value={`${formatValue(item.qty)} ${formatValue(item.unit)}`}
+                />
+                <DetailRow
+                  label="Unit amount"
+                  value={formatCurrency(item.unit_amount)}
+                />
+                <DetailRow
+                  label="Total amount"
+                  value={formatCurrency(item.total_amount)}
+                />
+              </View>
+            ))
+          ) : (
+            <Text style={styles.emptyLineItemsText}>
+              No itemized line items have been attached to this final quotation yet.
+            </Text>
+          )}
+        </SectionCard>
+
+        <SectionCard
           title="Savings and ROI"
           subtitle="Projected savings and estimated payback returned by the backend.">
           <DetailRow
@@ -436,5 +485,32 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     lineHeight: 22,
+  },
+  lineItemCard: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+    borderRadius: 18,
+    borderWidth: 1,
+    marginBottom: 12,
+    overflow: 'hidden',
+    paddingHorizontal: 14,
+    paddingTop: 14,
+  },
+  lineItemTitle: {
+    color: '#0f172a',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  lineItemMeta: {
+    color: '#475569',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  emptyLineItemsText: {
+    color: '#64748b',
+    fontSize: 14,
+    lineHeight: 21,
   },
 });

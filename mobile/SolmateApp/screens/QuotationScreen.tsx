@@ -162,6 +162,15 @@ export default function QuotationScreen({navigation}: any) {
         </Text>
       </View>
 
+      <View style={styles.noticeCard}>
+        <Text style={styles.noticeTitle}>Estimate only</Text>
+        <Text style={styles.noticeText}>
+          This initial quotation is a simplified hybrid estimate based on your
+          monthly bill. Final pricing and exact component selection are still
+          subject to site inspection and technician confirmation.
+        </Text>
+      </View>
+
       <AppCard style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Customer details</Text>
         <Text style={styles.sectionSubtitle}>
@@ -256,6 +265,25 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     marginBottom: 18,
     padding: 22,
+  },
+  noticeCard: {
+    backgroundColor: '#fff7ed',
+    borderColor: '#fed7aa',
+    borderRadius: 20,
+    borderWidth: 1,
+    marginBottom: 18,
+    padding: 18,
+  },
+  noticeTitle: {
+    color: '#9a3412',
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+  noticeText: {
+    color: '#7c2d12',
+    fontSize: 14,
+    lineHeight: 21,
   },
   eyebrow: {
     color: '#1d4ed8',

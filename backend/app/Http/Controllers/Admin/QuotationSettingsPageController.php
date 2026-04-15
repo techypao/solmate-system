@@ -24,6 +24,7 @@ class QuotationSettingsPageController extends Controller
                 'default_bos_cost' => 'Default BOS cost',
                 'default_misc_cost' => 'Default misc cost',
                 'default_panel_watts' => 'Default panel watts',
+                'initial_price_per_kw' => 'Initial quotation price per kW',
             ],
         ]);
     }

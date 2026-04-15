@@ -25,6 +25,7 @@ class InitialQuotationDefaultsTest extends TestCase
             'battery_factor' => 1.20,
             'battery_voltage' => 50.00,
             'default_panel_watts' => 500.00,
+            'initial_price_per_kw' => 55000.00,
         ]);
 
         Sanctum::actingAs($customer);
@@ -49,13 +50,18 @@ class InitialQuotationDefaultsTest extends TestCase
             ->assertJsonPath('data.pv_kw_safe', 2.67)
             ->assertJsonPath('data.panel_quantity', 6)
             ->assertJsonPath('data.system_kw', 3)
-            ->assertJsonPath('data.battery_required_kwh', 8);
+            ->assertJsonPath('data.battery_required_kwh', 8)
+            ->assertJsonPath('data.project_cost', 165000)
+            ->assertJsonPath('data.estimated_monthly_savings', 3000)
+            ->assertJsonPath('data.estimated_annual_savings', 36000)
+            ->assertJsonPath('data.roi_years', 4.58);
 
         $this->assertEqualsWithDelta(160.08, $response->json('data.battery_required_ah'), 0.1);
 
         $this->assertDatabaseHas('quotations', [
             'user_id' => $customer->id,
             'quotation_type' => 'initial',
+            'pv_system_type' => 'hybrid',
             'rate_per_kwh' => 15.00,
             'days_in_month' => 30,
             'sun_hours' => 5.00,
@@ -63,6 +69,10 @@ class InitialQuotationDefaultsTest extends TestCase
             'battery_factor' => 1.20,
             'battery_voltage' => 50.00,
             'panel_watts' => 500.00,
+            'project_cost' => 165000.00,
+            'estimated_monthly_savings' => 3000.00,
+            'estimated_annual_savings' => 36000.00,
+            'roi_years' => 4.58,
         ]);
     }
 
@@ -94,13 +104,18 @@ class InitialQuotationDefaultsTest extends TestCase
             ->assertJsonPath('data.pv_kw_safe', 1.33)
             ->assertJsonPath('data.panel_quantity', 3)
             ->assertJsonPath('data.system_kw', 1.83)
-            ->assertJsonPath('data.battery_required_kwh', 3.33);
+            ->assertJsonPath('data.battery_required_kwh', 3.33)
+            ->assertJsonPath('data.project_cost', 91500)
+            ->assertJsonPath('data.estimated_monthly_savings', 1400)
+            ->assertJsonPath('data.estimated_annual_savings', 16800)
+            ->assertJsonPath('data.roi_years', 5.45);
 
         $this->assertEqualsWithDelta(65.04, $response->json('data.battery_required_ah'), 0.1);
 
         $this->assertDatabaseHas('quotations', [
             'user_id' => $customer->id,
             'quotation_type' => 'initial',
+            'pv_system_type' => 'hybrid',
             'rate_per_kwh' => 14.00,
             'days_in_month' => 30,
             'sun_hours' => 4.50,
@@ -108,6 +123,10 @@ class InitialQuotationDefaultsTest extends TestCase
             'battery_factor' => 1.00,
             'battery_voltage' => 51.20,
             'panel_watts' => 610.00,
+            'project_cost' => 91500.00,
+            'estimated_monthly_savings' => 1400.00,
+            'estimated_annual_savings' => 16800.00,
+            'roi_years' => 5.45,
         ]);
     }
 

@@ -4,6 +4,15 @@ namespace App\Services;
 
 class QuotationComputationService
 {
+    public function estimatePackageProjectCost($systemKw, $pricePerKw): ?float
+    {
+        if ($systemKw <= 0 || $pricePerKw <= 0) {
+            return null;
+        }
+
+        return round($systemKw * $pricePerKw, 2);
+    }
+
     public function computeSizing(array $inputs): array
     {
         $monthlyElectricBill = $inputs['monthly_electric_bill'] ?? 0;
@@ -43,14 +52,15 @@ class QuotationComputationService
         $estimatedAnnualSavings = null;
         $roiYears = null;
 
-        // Keep the current temporary assumption unchanged for compatibility.
         if (!is_null($projectCost) && $projectCost > 0 && $monthlyElectricBill > 0) {
-            $estimatedMonthlySavings = $monthlyElectricBill * 0.3;
-            $estimatedAnnualSavings = $estimatedMonthlySavings * 12;
+            // Client-approved ROI method:
+            // ROI_months = project_cost / monthly_bill
+            // ROI_years = ROI_months / 12
+            $estimatedMonthlySavings = round((float) $monthlyElectricBill, 2);
+            $estimatedAnnualSavings = round($estimatedMonthlySavings * 12, 2);
 
-            if ($estimatedAnnualSavings > 0) {
-                $roiYears = round($projectCost / $estimatedAnnualSavings, 2);
-            }
+            $roiMonths = $projectCost / $monthlyElectricBill;
+            $roiYears = round($roiMonths / 12, 2);
         }
 
         return [

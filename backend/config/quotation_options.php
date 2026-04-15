@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'initial_quotation' => [
+        'default_system_type' => 'hybrid',
+        'price_per_kw' => 50000.00,
+    ],
     'final_quotation' => [
         'system_types' => [
             [

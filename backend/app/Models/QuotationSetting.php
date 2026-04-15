@@ -17,6 +17,7 @@ class QuotationSetting extends Model
         'default_bos_cost',
         'default_misc_cost',
         'default_panel_watts',
+        'initial_price_per_kw',
     ];
 
     protected function casts(): array
@@ -32,6 +33,7 @@ class QuotationSetting extends Model
             'default_bos_cost' => 'decimal:2',
             'default_misc_cost' => 'decimal:2',
             'default_panel_watts' => 'decimal:2',
+            'initial_price_per_kw' => 'decimal:2',
         ];
     }
 }

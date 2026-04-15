@@ -14,6 +14,7 @@ type QuotationDetail = {
   quotation_type?: string | null;
   status?: string | null;
   monthly_electric_bill?: number | null;
+  pv_system_type?: string | null;
   monthly_kwh?: number | null;
   daily_kwh?: number | null;
   pv_kw_raw?: number | null;
@@ -58,6 +59,20 @@ function formatYears(value?: number | null) {
   }
 
   return `${value.toFixed(2)} years`;
+}
+
+function formatSystemSummary(quotation: QuotationDetail) {
+  const systemType = (quotation.pv_system_type || 'hybrid').toUpperCase();
+  const systemKw =
+    quotation.system_kw !== null && quotation.system_kw !== undefined
+      ? `${quotation.system_kw} kW`
+      : 'N/A';
+  const panelQuantity =
+    quotation.panel_quantity !== null && quotation.panel_quantity !== undefined
+      ? `${quotation.panel_quantity} panels`
+      : 'panel count pending';
+
+  return `${systemType} • ${systemKw} • ${panelQuantity}`;
 }
 
 function formatDate(value?: string | null) {
@@ -213,6 +228,7 @@ export default function QuotationDetailScreen({route}: any) {
   }
 
   const statusStyle = getStatusBadgeStyle(quotation.status);
+  const isInitialQuotation = quotation.quotation_type === 'initial';
 
   return (
     <ScrollView
@@ -251,7 +267,9 @@ export default function QuotationDetailScreen({route}: any) {
           </Text>
         </View>
         <View style={styles.summaryStripCard}>
-          <Text style={styles.summaryStripLabel}>Project Cost</Text>
+          <Text style={styles.summaryStripLabel}>
+            {isInitialQuotation ? 'Estimated Total' : 'Project Cost'}
+          </Text>
           <Text style={styles.summaryStripValue}>
             {formatCurrency(quotation.project_cost)}
           </Text>
@@ -260,7 +278,11 @@ export default function QuotationDetailScreen({route}: any) {
 
       <SectionCard
         title="Return on investment"
-        subtitle="Estimated savings and payback period based on the latest quotation values.">
+        subtitle={
+          isInitialQuotation
+            ? 'Estimated payback for the initial hybrid recommendation.'
+            : 'Estimated savings and payback period based on the latest quotation values.'
+        }>
         <View style={styles.roiCard}>
           {quotation.roi_years !== null && quotation.roi_years !== undefined ? (
             <>
@@ -271,25 +293,27 @@ export default function QuotationDetailScreen({route}: any) {
                 </Text>
               </View>
 
-              <View style={styles.roiMetricsRow}>
-                <View style={styles.roiMetricCard}>
-                  <Text style={styles.roiMetricLabel}>
-                    Estimated Monthly Savings
-                  </Text>
-                  <Text style={styles.roiMetricValue}>
-                    {formatCurrency(quotation.estimated_monthly_savings)}
-                  </Text>
-                </View>
+              {!isInitialQuotation ? (
+                <View style={styles.roiMetricsRow}>
+                  <View style={styles.roiMetricCard}>
+                    <Text style={styles.roiMetricLabel}>
+                      Estimated Monthly Savings
+                    </Text>
+                    <Text style={styles.roiMetricValue}>
+                      {formatCurrency(quotation.estimated_monthly_savings)}
+                    </Text>
+                  </View>
 
-                <View style={styles.roiMetricCard}>
-                  <Text style={styles.roiMetricLabel}>
-                    Estimated Annual Savings
-                  </Text>
-                  <Text style={styles.roiMetricValue}>
-                    {formatCurrency(quotation.estimated_annual_savings)}
-                  </Text>
+                  <View style={styles.roiMetricCard}>
+                    <Text style={styles.roiMetricLabel}>
+                      Estimated Annual Savings
+                    </Text>
+                    <Text style={styles.roiMetricValue}>
+                      {formatCurrency(quotation.estimated_annual_savings)}
+                    </Text>
+                  </View>
                 </View>
-              </View>
+              ) : null}
             </>
           ) : (
             <Text style={styles.roiUnavailableText}>ROI not available yet</Text>
@@ -297,70 +321,101 @@ export default function QuotationDetailScreen({route}: any) {
         </View>
       </SectionCard>
 
-      <SectionCard
-        title="Overview"
-        subtitle="High-level request information and customer usage input.">
-        <DetailRow
-          label="Monthly electric bill"
-          value={formatCurrency(quotation.monthly_electric_bill)}
-        />
-        <DetailRow label="Monthly kWh" value={formatValue(quotation.monthly_kwh)} />
-        <DetailRow label="Daily kWh" value={formatValue(quotation.daily_kwh)} />
-      </SectionCard>
+      {isInitialQuotation ? (
+        <>
+          <SectionCard
+            title="Recommended system summary"
+            subtitle="This initial quotation keeps the recommendation high-level and package-based.">
+            <DetailRow
+              label="Recommended setup"
+              value={formatSystemSummary(quotation)}
+            />
+            <DetailRow
+              label="Monthly electric bill"
+              value={formatCurrency(quotation.monthly_electric_bill)}
+            />
+          </SectionCard>
 
-      <SectionCard
-        title="Solar sizing"
-        subtitle="Calculated production and system sizing details.">
-        <DetailRow label="PV kW raw" value={formatValue(quotation.pv_kw_raw)} />
-        <DetailRow label="PV kW safe" value={formatValue(quotation.pv_kw_safe)} />
-        <DetailRow
-          label="Panel quantity"
-          value={formatValue(quotation.panel_quantity)}
-        />
-        <DetailRow label="System kW" value={formatValue(quotation.system_kw)} />
-      </SectionCard>
+          <SectionCard
+            title="Estimate notice"
+            subtitle="What this initial quotation means for the customer.">
+            <Text style={styles.noticeTitle}>Estimate only</Text>
+            <Text style={styles.noticeText}>
+              This initial quotation is a simplified estimate based on your
+              monthly bill and the default hybrid recommendation. Final pricing,
+              component selection, and installation scope are still subject to
+              site inspection and technician confirmation.
+            </Text>
+          </SectionCard>
+        </>
+      ) : (
+        <>
+          <SectionCard
+            title="Overview"
+            subtitle="High-level request information and customer usage input.">
+            <DetailRow
+              label="Monthly electric bill"
+              value={formatCurrency(quotation.monthly_electric_bill)}
+            />
+            <DetailRow label="Monthly kWh" value={formatValue(quotation.monthly_kwh)} />
+            <DetailRow label="Daily kWh" value={formatValue(quotation.daily_kwh)} />
+          </SectionCard>
 
-      <SectionCard
-        title="Battery summary"
-        subtitle="Battery sizing values returned by the backend.">
-        <DetailRow
-          label="Battery required kWh"
-          value={formatValue(quotation.battery_required_kwh)}
-        />
-        <DetailRow
-          label="Battery required Ah"
-          value={formatValue(quotation.battery_required_ah)}
-        />
-      </SectionCard>
+          <SectionCard
+            title="Solar sizing"
+            subtitle="Calculated production and system sizing details.">
+            <DetailRow label="PV kW raw" value={formatValue(quotation.pv_kw_raw)} />
+            <DetailRow label="PV kW safe" value={formatValue(quotation.pv_kw_safe)} />
+            <DetailRow
+              label="Panel quantity"
+              value={formatValue(quotation.panel_quantity)}
+            />
+            <DetailRow label="System kW" value={formatValue(quotation.system_kw)} />
+          </SectionCard>
 
-      <SectionCard
-        title="Cost summary"
-        subtitle="All cost values are shown exactly as returned by the backend.">
-        <View style={styles.costGrid}>
-          <CostCard label="Panel cost" value={formatValue(quotation.panel_cost)} />
-          <CostCard
-            label="Inverter cost"
-            value={formatValue(quotation.inverter_cost)}
-          />
-          <CostCard
-            label="Battery cost"
-            value={formatValue(quotation.battery_cost)}
-          />
-          <CostCard label="BOS cost" value={formatValue(quotation.bos_cost)} />
-          <CostCard
-            label="Materials subtotal"
-            value={formatValue(quotation.materials_subtotal)}
-          />
-          <CostCard label="Labor cost" value={formatValue(quotation.labor_cost)} />
-        </View>
+          <SectionCard
+            title="Battery summary"
+            subtitle="Battery sizing values returned by the backend.">
+            <DetailRow
+              label="Battery required kWh"
+              value={formatValue(quotation.battery_required_kwh)}
+            />
+            <DetailRow
+              label="Battery required Ah"
+              value={formatValue(quotation.battery_required_ah)}
+            />
+          </SectionCard>
 
-        <View style={styles.totalCard}>
-          <Text style={styles.totalLabel}>Project cost</Text>
-          <Text style={styles.totalValue}>
-            {formatCurrency(quotation.project_cost)}
-          </Text>
-        </View>
-      </SectionCard>
+          <SectionCard
+            title="Cost summary"
+            subtitle="All cost values are shown exactly as returned by the backend.">
+            <View style={styles.costGrid}>
+              <CostCard label="Panel cost" value={formatValue(quotation.panel_cost)} />
+              <CostCard
+                label="Inverter cost"
+                value={formatValue(quotation.inverter_cost)}
+              />
+              <CostCard
+                label="Battery cost"
+                value={formatValue(quotation.battery_cost)}
+              />
+              <CostCard label="BOS cost" value={formatValue(quotation.bos_cost)} />
+              <CostCard
+                label="Materials subtotal"
+                value={formatValue(quotation.materials_subtotal)}
+              />
+              <CostCard label="Labor cost" value={formatValue(quotation.labor_cost)} />
+            </View>
+
+            <View style={styles.totalCard}>
+              <Text style={styles.totalLabel}>Project cost</Text>
+              <Text style={styles.totalValue}>
+                {formatCurrency(quotation.project_cost)}
+              </Text>
+            </View>
+          </SectionCard>
+        </>
+      )}
 
       <SectionCard title="Notes">
         <DetailRow label="Remarks" value={formatValue(quotation.remarks)} />
@@ -509,6 +564,17 @@ const styles = StyleSheet.create({
     color: '#475569',
     fontSize: 16,
     fontWeight: '600',
+    lineHeight: 22,
+  },
+  noticeTitle: {
+    color: '#9a3412',
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 8,
+  },
+  noticeText: {
+    color: '#7c2d12',
+    fontSize: 14,
     lineHeight: 22,
   },
   sectionCard: {

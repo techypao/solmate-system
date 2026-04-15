@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Admin\QuotationSettingsPageController;
+use App\Http\Controllers\Admin\PricingCatalogPageController;
 use App\Http\Controllers\Admin\RequestAssignmentPageController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\QuotationItemBuilderPageController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -36,8 +38,14 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+    Route::get('/quotations/item-builder', [QuotationItemBuilderPageController::class, 'show'])
+        ->name('quotations.item-builder');
+
     Route::get('/admin/quotation-settings', [QuotationSettingsPageController::class, 'show'])
         ->name('admin.quotation-settings');
+
+    Route::get('/admin/pricing-catalog', [PricingCatalogPageController::class, 'show'])
+        ->name('admin.pricing-catalog');
 
     Route::get('/admin/request-assignments', [RequestAssignmentPageController::class, 'show'])
         ->name('admin.request-assignments');

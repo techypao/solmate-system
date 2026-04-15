@@ -16,9 +16,12 @@ type Quotation = {
   user_id?: number;
   quotation_type: string;
   status: string;
-  monthly_kwh?: number | null;
+  monthly_electric_bill?: number | null;
+  pv_system_type?: string | null;
+  panel_quantity?: number | null;
   system_kw?: number | null;
   project_cost?: number | null;
+  roi_years?: number | null;
   created_at?: string;
 };
 
@@ -28,6 +31,22 @@ function formatValue(value?: number | null) {
   }
 
   return String(value);
+}
+
+function formatCurrency(value?: number | null) {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return 'N/A';
+  }
+
+  return `₱${value.toFixed(2)}`;
+}
+
+function formatYears(value?: number | null) {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return 'N/A';
+  }
+
+  return `${value.toFixed(2)} years`;
 }
 
 function formatDate(value?: string) {
@@ -146,21 +165,32 @@ export default function QuotationListScreen({navigation}: any) {
 
           <View style={styles.metricRow}>
             <View style={styles.metricCard}>
-              <Text style={styles.metricLabel}>Monthly kWh</Text>
-              <Text style={styles.metricValue}>{formatValue(item.monthly_kwh)}</Text>
+              <Text style={styles.metricLabel}>Recommended</Text>
+              <Text style={styles.metricValue}>
+                {(item.pv_system_type || 'hybrid').toUpperCase()}
+              </Text>
             </View>
             <View style={styles.metricCard}>
-              <Text style={styles.metricLabel}>System kW</Text>
+              <Text style={styles.metricLabel}>System summary</Text>
               <Text style={styles.metricValue}>{formatValue(item.system_kw)}</Text>
+              <Text style={styles.metricHint}>
+                {formatValue(item.panel_quantity)} panels
+              </Text>
             </View>
           </View>
 
           <View style={styles.footerRow}>
             <View>
-              <Text style={styles.footerLabel}>Project cost</Text>
-              <Text style={styles.footerValue}>{formatValue(item.project_cost)}</Text>
+              <Text style={styles.footerLabel}>Estimated total</Text>
+              <Text style={styles.footerValue}>
+                {formatCurrency(item.project_cost)}
+              </Text>
+              <Text style={styles.footerSubValue}>
+                ROI {formatYears(item.roi_years)}
+              </Text>
             </View>
             <View style={styles.footerMetaWrap}>
+              <Text style={styles.estimateTag}>Estimate only</Text>
               <Text style={styles.footerMeta}>{formatDate(item.created_at)}</Text>
               <Text style={styles.tapHint}>Tap for details</Text>
             </View>
@@ -362,6 +392,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
   },
+  metricHint: {
+    color: '#64748b',
+    fontSize: 12,
+    marginTop: 4,
+  },
   footerRow: {
     alignItems: 'flex-end',
     borderTopColor: '#e2e8f0',
@@ -382,9 +417,21 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
   },
+  footerSubValue: {
+    color: '#475569',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
+  },
   footerMetaWrap: {
     alignItems: 'flex-end',
     marginLeft: 12,
+  },
+  estimateTag: {
+    color: '#9a3412',
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 6,
   },
   footerMeta: {
     color: '#64748b',

@@ -4,10 +4,12 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\QuotationController;
+use App\Http\Controllers\QuotationLineItemController;
 use App\Http\Controllers\InspectionRequestController;
 use App\Http\Controllers\ServiceRequestController;
 use App\Http\Controllers\TechnicianController;
 use App\Http\Controllers\TestimonyController;
+use App\Http\Controllers\Admin\PricingItemController;
 use App\Http\Controllers\Admin\QuotationSettingsController;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -21,10 +23,12 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json($request->user());
     });
 
+    Route::get('/pricing-items', [PricingItemController::class, 'catalog']);
     Route::get('/quotations', [QuotationController::class, 'index']);
     Route::post('/quotations', [QuotationController::class, 'store']);
     Route::get('/quotations/{id}', [QuotationController::class, 'show']);
     Route::put('/quotations/{id}', [QuotationController::class, 'update']);
+    Route::match(['put', 'patch'], '/quotations/{quotation}/line-items', [QuotationLineItemController::class, 'replace']);
 
     Route::put('/service-requests/{id}/assign-technician', [ServiceRequestController::class, 'assignTechnician']);
 });
@@ -38,6 +42,9 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::put('/inspection-requests/{id}/assign-technician', [InspectionRequestController::class, 'assignTechnician']);
     Route::get('/admin/quotation-settings', [QuotationSettingsController::class, 'show']);
     Route::match(['put', 'patch'], '/admin/quotation-settings', [QuotationSettingsController::class, 'update']);
+    Route::get('/admin/pricing-items', [PricingItemController::class, 'index']);
+    Route::post('/admin/pricing-items', [PricingItemController::class, 'store']);
+    Route::match(['put', 'patch'], '/admin/pricing-items/{pricingItem}', [PricingItemController::class, 'update']);
 });
 
 // TECHNICIAN ROUTES
