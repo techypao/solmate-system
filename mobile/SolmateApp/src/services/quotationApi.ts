@@ -134,6 +134,16 @@ export type FinalQuotationOption<T extends string | number = string | number> = 
   battery_capacity_ah?: number;
 };
 
+export type FinalQuotationComputationDefaults = {
+  rate_per_kwh: number;
+  days_in_month: number;
+  sun_hours: number;
+  pv_safety_factor: number;
+  battery_factor: number;
+  battery_voltage: number;
+  default_panel_watts: number;
+};
+
 export type ReplaceQuotationLineItemsPayload = {
   line_items: Array<{
     pricing_item_id?: number | null;
@@ -151,6 +161,7 @@ export type FinalQuotationOptions = {
   panel_options: FinalQuotationOption<number>[];
   battery_options: FinalQuotationOption<string>[];
   inverter_options: FinalQuotationOption<string>[];
+  computation_defaults: FinalQuotationComputationDefaults;
 };
 
 type QuotationResponse = {
@@ -214,6 +225,15 @@ export async function getFinalQuotationOptions() {
     panel_options: [],
     battery_options: [],
     inverter_options: [],
+    computation_defaults: {
+      rate_per_kwh: 14,
+      days_in_month: 30,
+      sun_hours: 4.5,
+      pv_safety_factor: 1.8,
+      battery_factor: 1,
+      battery_voltage: 51.2,
+      default_panel_watts: 610,
+    },
   });
 }
 

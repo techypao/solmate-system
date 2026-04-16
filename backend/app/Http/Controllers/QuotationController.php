@@ -537,7 +537,20 @@ private function storeFinalQuotationMessages(): array
 
 private function finalQuotationOptions(): array
 {
-    return config('quotation_options.final_quotation', []);
+    $options = config('quotation_options.final_quotation', []);
+    $defaultSettings = $this->quotationSettingsService->current();
+
+    $options['computation_defaults'] = [
+        'rate_per_kwh' => (float) $defaultSettings['rate_per_kwh'],
+        'days_in_month' => (int) $defaultSettings['days_in_month'],
+        'sun_hours' => (float) $defaultSettings['sun_hours'],
+        'pv_safety_factor' => (float) $defaultSettings['pv_safety_factor'],
+        'battery_factor' => (float) $defaultSettings['battery_factor'],
+        'battery_voltage' => (float) $defaultSettings['battery_voltage'],
+        'default_panel_watts' => (float) $defaultSettings['default_panel_watts'],
+    ];
+
+    return $options;
 }
 
 private function finalQuotationOptionValues(string $key): array

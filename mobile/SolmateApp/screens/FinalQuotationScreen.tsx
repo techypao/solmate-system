@@ -15,6 +15,7 @@ import {useFocusEffect} from '@react-navigation/native';
 import {AppButton, AppCard, AppInput} from '../components';
 import {ApiError} from '../src/services/api';
 import {
+  FinalQuotationComputationDefaults,
   FinalQuotationOption,
   FinalQuotationOptions,
   PricingItemSummary,
@@ -78,6 +79,18 @@ type ComputedTotals = {
   roiYears: number | null;
 };
 
+type SuggestedQuantityState = Record<number, number>;
+
+type SizingPreview = {
+  monthlyKwh: number;
+  dailyKwh: number;
+  requiredSystemKw: number;
+  suggestedSystemKw: number;
+  panelQuantityBaseline: number;
+  requiredBatteryKwh: number;
+  requiredBatteryAh: number;
+};
+
 const STATUS_OPTIONS: QuotationStatus[] = [
   'pending',
   'approved',
@@ -95,6 +108,29 @@ const CATEGORY_ORDER = [
   'grounding',
   'misc',
 ];
+
+const WIZARD_STEPS = [
+  {
+    number: 1,
+    label: 'Energy Inputs',
+    subtitle: 'Enter the customer bill, system type, presets, and any optional overrides.',
+  },
+  {
+    number: 2,
+    label: 'Calculated Outputs',
+    subtitle: 'Review the computed sizing before building the detailed quotation.',
+  },
+  {
+    number: 3,
+    label: 'Cost Breakdown',
+    subtitle: 'Pick catalog items, adjust quantities, and review computed totals.',
+  },
+  {
+    number: 4,
+    label: 'Review & Submit',
+    subtitle: 'Check the full quotation summary, remarks, and submit the final quotation.',
+  },
+] as const;
 
 function sanitizeNumericInput(value: string) {
   const cleanedValue = value.replace(/[^0-9.]/g, '');
@@ -157,6 +193,109 @@ function formatCategoryLabel(category: string) {
     .split(/[_-]/g)
     .map(part => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+function roundToTwo(value: number) {
+  return Number(value.toFixed(2));
+}
+
+function getPricingItemSearchText(item: PricingItemSummary) {
+  return [
+    item.name,
+    item.brand,
+    item.model,
+    item.specification,
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
+
+function extractNumberByPattern(
+  pattern: RegExp,
+  value: string,
+): number | null {
+  const match = value.match(pattern);
+
+  if (!match?.[1]) {
+    return null;
+  }
+
+  const parsedValue = Number(match[1]);
+  return Number.isFinite(parsedValue) ? parsedValue : null;
+}
+
+function extractPanelWatts(item: PricingItemSummary): number | null {
+  return extractNumberByPattern(
+    /(\d+(?:\.\d+)?)\s*w\b/i,
+    getPricingItemSearchText(item),
+  );
+}
+
+function extractBatteryAh(item: PricingItemSummary): number | null {
+  return extractNumberByPattern(
+    /(\d+(?:\.\d+)?)\s*ah\b/i,
+    getPricingItemSearchText(item),
+  );
+}
+
+function extractBatteryVoltage(item: PricingItemSummary): number | null {
+  return extractNumberByPattern(
+    /(\d+(?:\.\d+)?)\s*v\b/i,
+    getPricingItemSearchText(item),
+  );
+}
+
+function extractInverterKw(item: PricingItemSummary): number | null {
+  return extractNumberByPattern(
+    /(\d+(?:\.\d+)?)\s*kw\b/i,
+    getPricingItemSearchText(item),
+  );
+}
+
+function buildSizingPreview(
+  form: FinalQuotationFormState,
+  defaults: FinalQuotationComputationDefaults,
+): SizingPreview | null {
+  const monthlyElectricBill = toNumberOrUndefined(form.monthly_electric_bill);
+
+  if (!monthlyElectricBill || monthlyElectricBill <= 0) {
+    return null;
+  }
+
+  const ratePerKwh = toNumberOrUndefined(form.rate_per_kwh) ?? defaults.rate_per_kwh;
+  const daysInMonth =
+    toNumberOrUndefined(form.days_in_month) ?? defaults.days_in_month;
+  const sunHours = toNumberOrUndefined(form.sun_hours) ?? defaults.sun_hours;
+  const pvSafetyFactor =
+    toNumberOrUndefined(form.pv_safety_factor) ?? defaults.pv_safety_factor;
+  const batteryFactor =
+    toNumberOrUndefined(form.battery_factor) ?? defaults.battery_factor;
+  const batteryVoltage =
+    toNumberOrUndefined(form.battery_voltage) ?? defaults.battery_voltage;
+  const panelWatts =
+    toNumberOrUndefined(form.panel_watts) ?? defaults.default_panel_watts;
+  const withBattery = form.with_battery && form.pv_system_type !== 'on-grid';
+
+  const monthlyKwh = ratePerKwh > 0 ? monthlyElectricBill / ratePerKwh : 0;
+  const dailyKwh = daysInMonth > 0 ? monthlyKwh / daysInMonth : 0;
+  const pvKwRaw = sunHours > 0 ? dailyKwh / sunHours : 0;
+  const pvKwSafe = pvKwRaw * pvSafetyFactor;
+  const panelQuantityBaseline =
+    panelWatts > 0 ? Math.ceil((pvKwSafe * 1000) / panelWatts) : 0;
+  const systemKw = (panelQuantityBaseline * panelWatts) / 1000;
+  const batteryRequiredKwh = withBattery ? dailyKwh * batteryFactor : 0;
+  const batteryRequiredAh =
+    batteryVoltage > 0 ? (batteryRequiredKwh * 1000) / batteryVoltage : 0;
+
+  return {
+    monthlyKwh: roundToTwo(monthlyKwh),
+    dailyKwh: roundToTwo(dailyKwh),
+    requiredSystemKw: roundToTwo(pvKwSafe),
+    suggestedSystemKw: roundToTwo(systemKw),
+    panelQuantityBaseline,
+    requiredBatteryKwh: roundToTwo(batteryRequiredKwh),
+    requiredBatteryAh: roundToTwo(batteryRequiredAh),
+  };
 }
 
 function buildInitialFormState(): FinalQuotationFormState {
@@ -250,6 +389,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
   const [form, setForm] = useState<FinalQuotationFormState>(() =>
     buildInitialFormState(),
   );
+  const [currentStep, setCurrentStep] = useState(1);
 
   const loadInspectionRequest = useCallback(
     async (showLoadingState = false) => {
@@ -368,6 +508,25 @@ export default function FinalQuotationScreen({navigation, route}: any) {
   );
 
   const completed = canCreateFinalQuotation(inspectionRequest?.status);
+  const computationDefaults = useMemo(
+    () =>
+      finalQuotationOptions?.computation_defaults ?? {
+        rate_per_kwh: 14,
+        days_in_month: 30,
+        sun_hours: 4.5,
+        pv_safety_factor: 1.8,
+        battery_factor: 1,
+        battery_voltage: 51.2,
+        default_panel_watts: 610,
+      },
+    [finalQuotationOptions?.computation_defaults],
+  );
+  const supportsBatteryFlow =
+    form.with_battery && form.pv_system_type !== 'on-grid';
+  const sizingPreview = useMemo(
+    () => buildSizingPreview(form, computationDefaults),
+    [computationDefaults, form],
+  );
 
   const groupedPricingCatalog = useMemo(() => {
     return CATEGORY_ORDER.map(category => ({
@@ -377,26 +536,161 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           return false;
         }
 
-        if (category === 'battery' && !form.with_battery) {
+        if (category === 'battery' && !supportsBatteryFlow) {
           return false;
         }
 
         return true;
       }),
     })).filter(group => group.items.length > 0);
-  }, [form.with_battery, pricingCatalog]);
+  }, [pricingCatalog, supportsBatteryFlow]);
+
+  const suggestedQuantities = useMemo<SuggestedQuantityState>(() => {
+    if (!sizingPreview) {
+      return {};
+    }
+
+    const suggestions: SuggestedQuantityState = {};
+
+    const panelItems = pricingCatalog
+      .filter(item => item.category === 'panel')
+      .map(item => ({
+        item,
+        watts: extractPanelWatts(item),
+      }))
+      .filter(
+        (entry): entry is {item: PricingItemSummary; watts: number} =>
+          entry.watts !== null && entry.watts > 0,
+      );
+
+    if (panelItems.length > 0 && sizingPreview.requiredSystemKw > 0) {
+      const targetPanelWatts =
+        toNumberOrUndefined(form.panel_watts) ?? computationDefaults.default_panel_watts;
+      const suggestedPanel = [...panelItems].sort((a, b) => {
+        return Math.abs(a.watts - targetPanelWatts) - Math.abs(b.watts - targetPanelWatts);
+      })[0];
+
+      suggestions[suggestedPanel.item.id] = Math.max(
+        1,
+        Math.ceil(sizingPreview.requiredSystemKw / (suggestedPanel.watts / 1000)),
+      );
+    }
+
+    const inverterItems = pricingCatalog
+      .filter(item => item.category === 'inverter')
+      .map(item => ({
+        item,
+        kw: extractInverterKw(item),
+      }))
+      .filter(
+        (entry): entry is {item: PricingItemSummary; kw: number} =>
+          entry.kw !== null && entry.kw > 0,
+      );
+
+    if (inverterItems.length > 0 && sizingPreview.requiredSystemKw > 0) {
+      const suitableItems = inverterItems
+        .filter(entry => entry.kw >= sizingPreview.requiredSystemKw)
+        .sort((a, b) => a.kw - b.kw);
+      const sortedBySize = [...inverterItems].sort((a, b) => a.kw - b.kw);
+      const suggestedInverter =
+        suitableItems[0] ?? sortedBySize[sortedBySize.length - 1];
+
+      suggestions[suggestedInverter.item.id] = 1;
+    }
+
+    const batteryItems = pricingCatalog
+      .filter(item => item.category === 'battery')
+      .map(item => ({
+        item,
+        ah: extractBatteryAh(item),
+        voltage: extractBatteryVoltage(item),
+      }))
+      .filter(
+        (
+          entry,
+        ): entry is {item: PricingItemSummary; ah: number; voltage: number | null} =>
+          entry.ah !== null && entry.ah > 0,
+      );
+
+    if (supportsBatteryFlow && batteryItems.length > 0 && sizingPreview.requiredBatteryAh > 0) {
+      const preferredBatteryAh = toNumberOrUndefined(form.battery_capacity_ah);
+      const preferredBatteryModel = form.battery_model.trim().toLowerCase();
+
+      let suggestedBattery:
+        | {item: PricingItemSummary; ah: number; voltage: number | null}
+        | undefined;
+
+      if (preferredBatteryModel || preferredBatteryAh) {
+        suggestedBattery = [...batteryItems].sort((a, b) => {
+          const aText = getPricingItemSearchText(a.item).toLowerCase();
+          const bText = getPricingItemSearchText(b.item).toLowerCase();
+          const aModelScore = preferredBatteryModel && aText.includes(preferredBatteryModel) ? 0 : 1;
+          const bModelScore = preferredBatteryModel && bText.includes(preferredBatteryModel) ? 0 : 1;
+          const aCapacityScore = preferredBatteryAh ? Math.abs(a.ah - preferredBatteryAh) : 0;
+          const bCapacityScore = preferredBatteryAh ? Math.abs(b.ah - preferredBatteryAh) : 0;
+
+          return aModelScore - bModelScore || aCapacityScore - bCapacityScore;
+        })[0];
+      } else if (batteryItems.length === 1) {
+        suggestedBattery = batteryItems[0];
+      }
+
+      if (suggestedBattery) {
+        const selectedBatteryCapacity =
+          suggestedBattery.voltage && suggestedBattery.voltage > 0
+            ? (suggestedBattery.voltage * suggestedBattery.ah) / 1000
+            : null;
+
+        suggestions[suggestedBattery.item.id] = Math.max(
+          1,
+          Math.ceil(
+            selectedBatteryCapacity && selectedBatteryCapacity > 0
+              ? sizingPreview.requiredBatteryKwh / selectedBatteryCapacity
+              : sizingPreview.requiredBatteryAh / suggestedBattery.ah,
+          ),
+        );
+      }
+    }
+
+    return suggestions;
+  }, [
+    computationDefaults.default_panel_watts,
+    form.battery_capacity_ah,
+    form.battery_model,
+    form.panel_watts,
+    pricingCatalog,
+    sizingPreview,
+    supportsBatteryFlow,
+  ]);
+
+  const effectiveCatalogQuantities = useMemo<CatalogQuantityState>(() => {
+    const quantities: CatalogQuantityState = {};
+
+    for (const item of pricingCatalog) {
+      if (Object.prototype.hasOwnProperty.call(catalogQuantities, item.id)) {
+        quantities[item.id] = catalogQuantities[item.id];
+        continue;
+      }
+
+      if (suggestedQuantities[item.id] !== undefined) {
+        quantities[item.id] = String(suggestedQuantities[item.id]);
+      }
+    }
+
+    return quantities;
+  }, [catalogQuantities, pricingCatalog, suggestedQuantities]);
 
   const selectedLineItems = useMemo<SelectedCatalogLineItem[]>(() => {
     return pricingCatalog
       .map(item => {
-        const qty = Number(catalogQuantities[item.id] || '');
+        const qty = Number(effectiveCatalogQuantities[item.id] || '');
         const unitAmount = Number(item.default_unit_price || 0);
 
         if (!Number.isFinite(qty) || qty <= 0) {
           return null;
         }
 
-        if (!form.with_battery && item.category === 'battery') {
+        if (!supportsBatteryFlow && item.category === 'battery') {
           return null;
         }
 
@@ -412,7 +706,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         };
       })
       .filter((item): item is SelectedCatalogLineItem => item !== null);
-  }, [catalogQuantities, form.with_battery, pricingCatalog]);
+  }, [effectiveCatalogQuantities, pricingCatalog, supportsBatteryFlow]);
 
   const computedTotals = useMemo<ComputedTotals>(() => {
     const totals = {
@@ -489,6 +783,67 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     selectedLineItems.length,
   ]);
 
+  const stepValidationMessage = useMemo(() => {
+    if (currentStep === 1) {
+      if (!form.monthly_electric_bill) {
+        return 'Enter the monthly electric bill before continuing.';
+      }
+
+      if (!form.pv_system_type) {
+        return 'Select a PV system type before continuing.';
+      }
+    }
+
+    if (currentStep === 3) {
+      if (pricingCatalog.length === 0) {
+        return 'No active pricing items are available yet. Ask the admin to seed or enable the pricing catalog.';
+      }
+
+      if (selectedLineItems.length === 0) {
+        return 'Add at least one pricing item with a quantity before continuing.';
+      }
+    }
+
+    return '';
+  }, [
+    currentStep,
+    form.monthly_electric_bill,
+    form.pv_system_type,
+    pricingCatalog.length,
+    selectedLineItems.length,
+  ]);
+
+  const activeStep = WIZARD_STEPS[currentStep - 1];
+  const suggestedInverterItem = useMemo(
+    () =>
+      pricingCatalog.find(
+        item =>
+          item.category === 'inverter' &&
+          suggestedQuantities[item.id] !== undefined,
+      ) ?? null,
+    [pricingCatalog, suggestedQuantities],
+  );
+  const displayValidationMessage =
+    currentStep === WIZARD_STEPS.length ? validationMessage : stepValidationMessage;
+
+  const selectedPvSystemLabel =
+    finalQuotationOptions?.system_types.find(
+      option => option.value === form.pv_system_type,
+    )?.label ?? 'Not selected';
+  const selectedPanelPresetLabel = form.panel_watts
+    ? `${form.panel_watts} W`
+    : 'Admin default';
+  const selectedBatteryPresetLabel = supportsBatteryFlow
+    ? form.battery_model.trim() ||
+      (form.battery_capacity_ah
+        ? `${form.battery_capacity_ah} Ah`
+        : 'No preset')
+    : 'Not included';
+  const selectedInverterLabel =
+    form.inverter_type.trim() ||
+    suggestedInverterItem?.name ||
+    'Select from catalog';
+
   const updateField = <K extends keyof FinalQuotationFormState>(
     key: K,
     value: FinalQuotationFormState[K],
@@ -540,7 +895,42 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     }));
   };
 
+  const clearBatteryQuantities = () => {
+    setCatalogQuantities(current => {
+      const nextQuantities = {...current};
+
+      for (const item of pricingCatalog) {
+        if (item.category === 'battery') {
+          nextQuantities[item.id] = '';
+        }
+      }
+
+      return nextQuantities;
+    });
+  };
+
+  const handlePvSystemTypeChange = (value: PvSystemType) => {
+    if (value === 'on-grid') {
+      setForm(current => ({
+        ...current,
+        pv_system_type: value,
+        with_battery: false,
+        battery_model: '',
+        battery_capacity_ah: '',
+        battery_voltage: '',
+      }));
+      clearBatteryQuantities();
+      return;
+    }
+
+    updateField('pv_system_type', value);
+  };
+
   const handleBatteryToggle = (value: boolean) => {
+    if (form.pv_system_type === 'on-grid') {
+      return;
+    }
+
     updateField('with_battery', value);
 
     if (!value) {
@@ -551,18 +941,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         battery_capacity_ah: '',
         battery_voltage: '',
       }));
-
-      setCatalogQuantities(current => {
-        const nextQuantities = {...current};
-
-        for (const item of pricingCatalog) {
-          if (item.category === 'battery') {
-            nextQuantities[item.id] = '';
-          }
-        }
-
-        return nextQuantities;
-      });
+      clearBatteryQuantities();
     }
   };
 
@@ -570,6 +949,19 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     loadInspectionRequest(true);
     loadOptions(true);
     loadPricingCatalog(true);
+  };
+
+  const handleNextStep = () => {
+    if (stepValidationMessage) {
+      Alert.alert('Before you continue', stepValidationMessage);
+      return;
+    }
+
+    setCurrentStep(current => Math.min(current + 1, WIZARD_STEPS.length));
+  };
+
+  const handlePreviousStep = () => {
+    setCurrentStep(current => Math.max(current - 1, 1));
   };
 
   const handleSubmit = async () => {
@@ -723,6 +1115,561 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     );
   }
 
+  const basicInputsSection = (
+    <FormSection
+      title="Energy inputs"
+      subtitle="Enter the monthly bill and optional computation overrides. These values drive the live requirement summary.">
+      <AppInput
+        label="Inspection request ID"
+        editable={false}
+        value={`${inspectionRequest.id}`}
+        containerStyle={styles.fieldSpacing}
+      />
+      <AppInput
+        label="Monthly electric bill"
+        keyboardType="decimal-pad"
+        onChangeText={value =>
+          updateField('monthly_electric_bill', sanitizeNumericInput(value))
+        }
+        value={form.monthly_electric_bill}
+        containerStyle={styles.fieldSpacing}
+      />
+      <AppInput
+        label="Rate per kWh"
+        placeholder="Leave blank to use admin default"
+        keyboardType="decimal-pad"
+        onChangeText={value =>
+          updateField('rate_per_kwh', sanitizeNumericInput(value))
+        }
+        value={form.rate_per_kwh}
+        containerStyle={styles.fieldSpacing}
+      />
+      <AppInput
+        label="Days in month"
+        placeholder="Leave blank to use admin default"
+        keyboardType="number-pad"
+        onChangeText={value =>
+          updateField('days_in_month', sanitizeIntegerInput(value))
+        }
+        value={form.days_in_month}
+        containerStyle={styles.fieldSpacing}
+      />
+      <AppInput
+        label="Sun hours"
+        placeholder="Leave blank to use admin default"
+        keyboardType="decimal-pad"
+        onChangeText={value =>
+          updateField('sun_hours', sanitizeNumericInput(value))
+        }
+        value={form.sun_hours}
+        containerStyle={styles.fieldSpacing}
+      />
+      <AppInput
+        label="PV safety factor"
+        placeholder="Leave blank to use admin default"
+        keyboardType="decimal-pad"
+        onChangeText={value =>
+          updateField('pv_safety_factor', sanitizeNumericInput(value))
+        }
+        value={form.pv_safety_factor}
+        containerStyle={styles.fieldSpacing}
+      />
+      <AppInput
+        label="Battery factor"
+        placeholder="Leave blank to use admin default"
+        keyboardType="decimal-pad"
+        onChangeText={value =>
+          updateField('battery_factor', sanitizeNumericInput(value))
+        }
+        value={form.battery_factor}
+        containerStyle={styles.fieldSpacing}
+      />
+      <AppInput
+        label="Battery voltage"
+        placeholder="Leave blank to use admin default"
+        keyboardType="decimal-pad"
+        onChangeText={value =>
+          updateField('battery_voltage', sanitizeNumericInput(value))
+        }
+        value={form.battery_voltage}
+      />
+    </FormSection>
+  );
+
+  const systemSetupSection = (
+    <FormSection
+      title="System setup"
+      subtitle="Use backend-provided options where available, or type optional custom values if needed.">
+      <Text style={styles.optionLabel}>PV system type</Text>
+      <View style={styles.optionRow}>
+        {finalQuotationOptions.system_types.map(option => (
+          <OptionChip
+            key={option.value}
+            label={option.label}
+            selected={form.pv_system_type === option.value}
+            onPress={() => handlePvSystemTypeChange(option.value as PvSystemType)}
+          />
+        ))}
+      </View>
+
+      <Text style={styles.optionLabel}>Panel watt preset</Text>
+      <View style={styles.optionRow}>
+        <OptionChip
+          label="Use admin default"
+          selected={!form.panel_watts}
+          onPress={() => updateField('panel_watts', '')}
+        />
+        {finalQuotationOptions.panel_options.map(option => (
+          <OptionChip
+            key={option.value}
+            label={option.label}
+            selected={form.panel_watts === String(option.value)}
+            onPress={() => updateField('panel_watts', String(option.value))}
+          />
+        ))}
+      </View>
+
+      <View style={styles.switchRow}>
+        <View style={styles.switchTextWrap}>
+          <Text style={styles.switchLabel}>With battery</Text>
+          <Text style={styles.switchHint}>
+            {form.pv_system_type === 'on-grid'
+              ? 'Battery is disabled for on-grid quotations.'
+              : 'Toggle off if the final proposal does not include battery storage.'}
+          </Text>
+        </View>
+        <Switch
+          disabled={form.pv_system_type === 'on-grid'}
+          trackColor={{false: '#cbd5e1', true: '#93c5fd'}}
+          thumbColor={form.with_battery ? '#2563eb' : '#f8fafc'}
+          value={form.with_battery}
+          onValueChange={handleBatteryToggle}
+        />
+      </View>
+
+      <Text style={styles.optionLabel}>Inverter option</Text>
+      <View style={styles.optionRow}>
+        <OptionChip
+          label="No preset"
+          selected={!form.inverter_type.trim()}
+          onPress={() => updateField('inverter_type', '')}
+        />
+        {finalQuotationOptions.inverter_options.map(option => (
+          <OptionChip
+            key={option.value}
+            label={option.label}
+            selected={form.inverter_type === option.value}
+            onPress={() => updateField('inverter_type', option.value)}
+          />
+        ))}
+      </View>
+
+      {supportsBatteryFlow ? (
+        <>
+          <Text style={styles.optionLabel}>Battery preset</Text>
+          <View style={styles.optionRow}>
+            <OptionChip
+              label="No preset"
+              selected={
+                !form.battery_model.trim() &&
+                !form.battery_capacity_ah &&
+                !form.battery_voltage
+              }
+              onPress={() => applyBatteryPreset(null)}
+            />
+            {finalQuotationOptions.battery_options.map(option => (
+              <OptionChip
+                key={option.value}
+                label={option.label}
+                selected={form.battery_model === option.value}
+                onPress={() => applyBatteryPreset(option)}
+              />
+            ))}
+          </View>
+        </>
+      ) : null}
+
+      <AppInput
+        label="Inverter type"
+        placeholder="Leave blank or use a preset above"
+        onChangeText={value => updateField('inverter_type', value)}
+        value={form.inverter_type}
+        containerStyle={styles.fieldSpacing}
+      />
+      <AppInput
+        label="Battery model"
+        editable={supportsBatteryFlow}
+        placeholder="Leave blank or use a preset above"
+        onChangeText={value => updateField('battery_model', value)}
+        value={form.battery_model}
+        containerStyle={styles.fieldSpacing}
+      />
+      <AppInput
+        label="Battery capacity Ah"
+        editable={supportsBatteryFlow}
+        placeholder="Optional"
+        keyboardType="decimal-pad"
+        onChangeText={value =>
+          updateField('battery_capacity_ah', sanitizeNumericInput(value))
+        }
+        value={form.battery_capacity_ah}
+        containerStyle={styles.fieldSpacing}
+      />
+      <AppInput
+        label="Panel watts"
+        placeholder="Leave blank to use admin default"
+        keyboardType="decimal-pad"
+        onChangeText={value =>
+          updateField('panel_watts', sanitizeNumericInput(value))
+        }
+        value={form.panel_watts}
+      />
+    </FormSection>
+  );
+
+  const computedRequirementSection = (
+    <FormSection
+      title="Calculated system outputs"
+      subtitle="These values mirror the current backend sizing formula and update automatically when Step 1 changes.">
+      <View style={styles.totalsGrid}>
+        <View style={styles.totalCard}>
+          <Text style={styles.totalLabel}>Required PV size</Text>
+          <Text style={styles.totalValue}>
+            {sizingPreview
+              ? `${sizingPreview.requiredSystemKw.toFixed(2)} kW`
+              : 'Enter bill'}
+          </Text>
+        </View>
+        <View style={styles.totalCard}>
+          <Text style={styles.totalLabel}>Projected system size</Text>
+          <Text style={styles.totalValue}>
+            {sizingPreview
+              ? `${sizingPreview.suggestedSystemKw.toFixed(2)} kW`
+              : 'Enter bill'}
+          </Text>
+        </View>
+        <View style={styles.totalCard}>
+          <Text style={styles.totalLabel}>Baseline panel qty</Text>
+          <Text style={styles.totalValue}>
+            {sizingPreview ? String(sizingPreview.panelQuantityBaseline) : '0'}
+          </Text>
+        </View>
+        <View style={styles.totalCard}>
+          <Text style={styles.totalLabel}>Required battery</Text>
+          <Text style={styles.totalValue}>
+            {supportsBatteryFlow && sizingPreview
+              ? `${sizingPreview.requiredBatteryKwh.toFixed(2)} kWh`
+              : 'N/A'}
+          </Text>
+          <Text style={styles.totalSubValue}>
+            {supportsBatteryFlow && sizingPreview
+              ? `${sizingPreview.requiredBatteryAh.toFixed(2)} Ah`
+              : 'Battery hidden for on-grid'}
+          </Text>
+        </View>
+        <View style={styles.totalCard}>
+          <Text style={styles.totalLabel}>Suggested inverter</Text>
+          <Text style={styles.totalValue}>
+            {suggestedInverterItem?.name || form.inverter_type.trim() || 'Select from catalog'}
+          </Text>
+          <Text style={styles.totalSubValue}>
+            {suggestedInverterItem
+              ? 'Nearest suitable inverter from catalog'
+              : 'Updates after catalog loads and bill is entered'}
+          </Text>
+        </View>
+      </View>
+    </FormSection>
+  );
+
+  const selectedLineItemsSection = (
+    <FormSection
+      title="Selected line items"
+      subtitle="Anything with a quantity greater than zero will be saved as an itemized final quotation line item.">
+      {selectedLineItems.length > 0 ? (
+        selectedLineItems.map(item => (
+          <View key={item.pricing_item_id} style={styles.selectedItemCard}>
+            <View style={styles.selectedItemHeader}>
+              <View style={styles.selectedItemTextWrap}>
+                <Text style={styles.selectedItemName}>{item.description}</Text>
+                <Text style={styles.selectedItemMeta}>
+                  {formatCategoryLabel(item.category)} • {item.unit} •{' '}
+                  {formatCurrency(item.unit_amount)} each
+                </Text>
+              </View>
+              <AppButton
+                title="Remove"
+                variant="outline"
+                onPress={() => clearCatalogItem(item.pricing_item_id)}
+                style={styles.removeButton}
+                textStyle={styles.removeButtonText}
+              />
+            </View>
+
+            <View style={styles.selectedItemTotalsRow}>
+              <Text style={styles.selectedItemTotalsLabel}>
+                Qty {item.qty.toFixed(2).replace(/\.00$/, '')}
+              </Text>
+              <Text style={styles.selectedItemTotalsValue}>
+                {formatCurrency(item.total_amount)}
+              </Text>
+            </View>
+          </View>
+        ))
+      ) : (
+        <Text style={styles.emptyCatalogText}>
+          No pricing items selected yet. Add quantities from the catalog
+          below.
+        </Text>
+      )}
+    </FormSection>
+  );
+
+  const pricingCatalogSection = (
+    <FormSection
+      title="Pricing catalog"
+      subtitle="Use the admin-managed catalog to add itemized components and materials.">
+      {groupedPricingCatalog.map(group => (
+        <View key={group.category} style={styles.catalogGroup}>
+          <Text style={styles.catalogGroupTitle}>
+            {formatCategoryLabel(group.category)}
+          </Text>
+
+          {group.items.map(item => (
+            <View key={item.id} style={styles.catalogItemCard}>
+              <View style={styles.catalogItemInfo}>
+                <Text style={styles.catalogItemName}>
+                  {item.name || 'Unnamed item'}
+                </Text>
+                <Text style={styles.catalogItemMeta}>
+                  {item.unit || 'pc'} •{' '}
+                  {formatCurrency(Number(item.default_unit_price || 0))}
+                </Text>
+                {suggestedQuantities[item.id] !== undefined ? (
+                  <Text style={styles.catalogSuggestionText}>
+                    {item.category === 'panel'
+                      ? `Suggested qty ${suggestedQuantities[item.id]} from required PV size.`
+                      : item.category === 'battery'
+                        ? `Suggested qty ${suggestedQuantities[item.id]} from required battery capacity.`
+                        : `Suggested qty ${suggestedQuantities[item.id]} as the nearest suitable inverter selection.`}
+                  </Text>
+                ) : null}
+              </View>
+
+              <View style={styles.catalogItemActions}>
+                <AppInput
+                  label="Qty"
+                  keyboardType="decimal-pad"
+                  onChangeText={value => updateCatalogQuantity(item.id, value)}
+                  value={effectiveCatalogQuantities[item.id] || ''}
+                  containerStyle={styles.quantityInputContainer}
+                />
+                {suggestedQuantities[item.id] !== undefined &&
+                catalogQuantities[item.id] !== undefined &&
+                catalogQuantities[item.id] !==
+                  String(suggestedQuantities[item.id]) ? (
+                  <AppButton
+                    title="Use Suggested"
+                    variant="secondary"
+                    onPress={() =>
+                      updateCatalogQuantity(
+                        item.id,
+                        String(suggestedQuantities[item.id]),
+                      )
+                    }
+                    style={styles.suggestButton}
+                    textStyle={styles.suggestButtonText}
+                  />
+                ) : null}
+                {(effectiveCatalogQuantities[item.id] || '').trim() ? (
+                  <AppButton
+                    title="Clear"
+                    variant="outline"
+                    onPress={() => clearCatalogItem(item.id)}
+                    style={styles.clearButton}
+                    textStyle={styles.clearButtonText}
+                  />
+                ) : null}
+              </View>
+            </View>
+          ))}
+        </View>
+      ))}
+    </FormSection>
+  );
+
+  const computedTotalsSection = (
+    <FormSection
+      title="Computed totals"
+      subtitle="These totals are previewed from the selected catalog items and will be recomputed by the backend after save.">
+      <View style={styles.totalsGrid}>
+        <View style={styles.totalCard}>
+          <Text style={styles.totalLabel}>Panel cost</Text>
+          <Text style={styles.totalValue}>
+            {formatCurrency(computedTotals.panelCost)}
+          </Text>
+        </View>
+        <View style={styles.totalCard}>
+          <Text style={styles.totalLabel}>Inverter cost</Text>
+          <Text style={styles.totalValue}>
+            {formatCurrency(computedTotals.inverterCost)}
+          </Text>
+        </View>
+        <View style={styles.totalCard}>
+          <Text style={styles.totalLabel}>Battery cost</Text>
+          <Text style={styles.totalValue}>
+            {formatCurrency(computedTotals.batteryCost)}
+          </Text>
+        </View>
+        <View style={styles.totalCard}>
+          <Text style={styles.totalLabel}>BOS cost</Text>
+          <Text style={styles.totalValue}>
+            {formatCurrency(computedTotals.bosCost)}
+          </Text>
+        </View>
+        <View style={styles.totalCard}>
+          <Text style={styles.totalLabel}>Materials subtotal</Text>
+          <Text style={styles.totalValue}>
+            {formatCurrency(computedTotals.materialsSubtotal)}
+          </Text>
+        </View>
+        <View style={styles.totalCard}>
+          <Text style={styles.totalLabel}>Labor cost</Text>
+          <Text style={styles.totalValue}>
+            {formatCurrency(computedTotals.laborCost)}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.projectTotalCard}>
+        <Text style={styles.projectTotalLabel}>Estimated project cost</Text>
+        <Text style={styles.projectTotalValue}>
+          {formatCurrency(computedTotals.projectCost)}
+        </Text>
+        <Text style={styles.projectTotalHint}>
+          ROI preview:{' '}
+          {computedTotals.roiYears !== null
+            ? `${computedTotals.roiYears.toFixed(2)} years`
+            : 'available after bill + items are entered'}
+        </Text>
+      </View>
+    </FormSection>
+  );
+
+  const notesSection = (
+    <FormSection
+      title="Remarks"
+      subtitle="Set the quotation status and add any final technician remarks for the customer.">
+      <Text style={styles.optionLabel}>Quotation status</Text>
+      <View style={styles.optionRow}>
+        {STATUS_OPTIONS.map(option => (
+          <OptionChip
+            key={option}
+            label={option}
+            selected={form.status === option}
+            onPress={() => updateField('status', option)}
+          />
+        ))}
+      </View>
+
+      <AppInput
+        label="Remarks"
+        multiline={true}
+        numberOfLines={5}
+        onChangeText={value => updateField('remarks', value)}
+        style={styles.textArea}
+        value={form.remarks}
+      />
+    </FormSection>
+  );
+
+  const reviewSection = (
+    <>
+      <FormSection
+        title="System choices"
+        subtitle="Review the technician inputs that drive the final quotation.">
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Monthly bill</Text>
+          <Text style={styles.summaryValue}>
+            {formatCurrency(toNumberOrUndefined(form.monthly_electric_bill))}
+          </Text>
+        </View>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>PV system type</Text>
+          <Text style={styles.summaryValue}>{selectedPvSystemLabel}</Text>
+        </View>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>With battery</Text>
+          <Text style={styles.summaryValue}>
+            {supportsBatteryFlow ? 'Yes' : 'No'}
+          </Text>
+        </View>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Panel preset</Text>
+          <Text style={styles.summaryValue}>{selectedPanelPresetLabel}</Text>
+        </View>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Suggested inverter</Text>
+          <Text style={styles.summaryValue}>{selectedInverterLabel}</Text>
+        </View>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Battery preset</Text>
+          <Text style={styles.summaryValue}>{selectedBatteryPresetLabel}</Text>
+        </View>
+      </FormSection>
+
+      {computedRequirementSection}
+      {selectedLineItemsSection}
+      {computedTotalsSection}
+      {notesSection}
+    </>
+  );
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <>
+            {basicInputsSection}
+            {systemSetupSection}
+          </>
+        );
+      case 2:
+        return (
+          <>
+            <AppCard style={styles.infoCard}>
+              <Text style={styles.infoTitle}>Live sizing preview</Text>
+              <Text style={styles.infoText}>
+                Step 2 updates automatically from the values in Step 1, so you
+                can go back anytime and refine the system inputs without losing
+                your work.
+              </Text>
+            </AppCard>
+            {computedRequirementSection}
+          </>
+        );
+      case 3:
+        return (
+          <>
+            <AppCard style={styles.infoCard}>
+              <Text style={styles.infoTitle}>Catalog-based pricing</Text>
+              <Text style={styles.infoText}>
+                Pricing comes from the admin-managed catalog. Suggested
+                quantities stay editable, and the totals below are computed
+                automatically before the quotation is saved.
+              </Text>
+            </AppCard>
+            {selectedLineItemsSection}
+            {pricingCatalogSection}
+            {computedTotalsSection}
+          </>
+        );
+      case 4:
+      default:
+        return reviewSection;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -740,9 +1687,48 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           </Text>
         </View>
 
+        <AppCard style={styles.stepperCard}>
+          <Text style={styles.stepHeaderEyebrow}>
+            Step {activeStep.number} of {WIZARD_STEPS.length}
+          </Text>
+          <Text style={styles.stepHeaderTitle}>{activeStep.label}</Text>
+          <Text style={styles.stepHeaderSubtitle}>{activeStep.subtitle}</Text>
+
+          <View style={styles.stepPillGrid}>
+            {WIZARD_STEPS.map(step => (
+              <View
+                key={step.number}
+                style={[
+                  styles.stepPill,
+                  step.number === currentStep ? styles.stepPillActive : null,
+                  step.number < currentStep ? styles.stepPillComplete : null,
+                ]}>
+                <Text
+                  style={[
+                    styles.stepPillNumber,
+                    step.number === currentStep || step.number < currentStep
+                      ? styles.stepPillNumberActive
+                      : null,
+                  ]}>
+                  {step.number}
+                </Text>
+                <Text
+                  style={[
+                    styles.stepPillLabel,
+                    step.number === currentStep || step.number < currentStep
+                      ? styles.stepPillLabelActive
+                      : null,
+                  ]}>
+                  {step.label}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </AppCard>
+
         <FormSection
           title="Inspection summary"
-          subtitle="This final quotation is tied directly to the completed inspection request.">
+          subtitle="This final quotation stays tied directly to the completed inspection request.">
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Inspection request ID</Text>
             <Text style={styles.summaryValue}>{inspectionRequest.id}</Text>
@@ -781,15 +1767,6 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           </AppCard>
         ) : null}
 
-        <AppCard style={styles.infoCard}>
-          <Text style={styles.infoTitle}>How this final pricing works now</Text>
-          <Text style={styles.infoText}>
-            Pricing is now itemized from the admin-managed catalog. Enter
-            quantities below and the app will preview the totals before saving
-            them through the existing quotation line-item backend.
-          </Text>
-        </AppCard>
-
         {submitError ? (
           <AppCard style={styles.errorCard}>
             <Text style={styles.errorCardTitle}>Submission error</Text>
@@ -797,396 +1774,48 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           </AppCard>
         ) : null}
 
-        {validationMessage ? (
+        {displayValidationMessage ? (
           <AppCard style={styles.infoCard}>
-            <Text style={styles.infoTitle}>Before you submit</Text>
-            <Text style={styles.infoText}>{validationMessage}</Text>
+            <Text style={styles.infoTitle}>
+              {currentStep === WIZARD_STEPS.length
+                ? 'Before you submit'
+                : 'Before you continue'}
+            </Text>
+            <Text style={styles.infoText}>{displayValidationMessage}</Text>
           </AppCard>
         ) : null}
 
-        <FormSection
-          title="Basic inputs"
-          subtitle="Enter the required customer bill and optional computation overrides.">
-          <AppInput
-            label="Inspection request ID"
-            editable={false}
-            value={`${inspectionRequest.id}`}
-            containerStyle={styles.fieldSpacing}
-          />
-          <AppInput
-            label="Monthly electric bill"
-            keyboardType="decimal-pad"
-            onChangeText={value =>
-              updateField('monthly_electric_bill', sanitizeNumericInput(value))
-            }
-            value={form.monthly_electric_bill}
-            containerStyle={styles.fieldSpacing}
-          />
-          <AppInput
-            label="Rate per kWh"
-            placeholder="Leave blank to use admin default"
-            keyboardType="decimal-pad"
-            onChangeText={value =>
-              updateField('rate_per_kwh', sanitizeNumericInput(value))
-            }
-            value={form.rate_per_kwh}
-            containerStyle={styles.fieldSpacing}
-          />
-          <AppInput
-            label="Days in month"
-            placeholder="Leave blank to use admin default"
-            keyboardType="number-pad"
-            onChangeText={value =>
-              updateField('days_in_month', sanitizeIntegerInput(value))
-            }
-            value={form.days_in_month}
-            containerStyle={styles.fieldSpacing}
-          />
-          <AppInput
-            label="Sun hours"
-            placeholder="Leave blank to use admin default"
-            keyboardType="decimal-pad"
-            onChangeText={value =>
-              updateField('sun_hours', sanitizeNumericInput(value))
-            }
-            value={form.sun_hours}
-            containerStyle={styles.fieldSpacing}
-          />
-          <AppInput
-            label="PV safety factor"
-            placeholder="Leave blank to use admin default"
-            keyboardType="decimal-pad"
-            onChangeText={value =>
-              updateField('pv_safety_factor', sanitizeNumericInput(value))
-            }
-            value={form.pv_safety_factor}
-            containerStyle={styles.fieldSpacing}
-          />
-          <AppInput
-            label="Battery factor"
-            placeholder="Leave blank to use admin default"
-            keyboardType="decimal-pad"
-            onChangeText={value =>
-              updateField('battery_factor', sanitizeNumericInput(value))
-            }
-            value={form.battery_factor}
-            containerStyle={styles.fieldSpacing}
-          />
-          <AppInput
-            label="Battery voltage"
-            placeholder="Leave blank to use admin default"
-            keyboardType="decimal-pad"
-            onChangeText={value =>
-              updateField('battery_voltage', sanitizeNumericInput(value))
-            }
-            value={form.battery_voltage}
-          />
-        </FormSection>
+        {renderStepContent()}
 
-        <FormSection
-          title="System setup"
-          subtitle="Use backend-provided options where available, or type optional custom values if needed.">
-          <Text style={styles.optionLabel}>PV system type</Text>
-          <View style={styles.optionRow}>
-            {finalQuotationOptions.system_types.map(option => (
-              <OptionChip
-                key={option.value}
-                label={option.label}
-                selected={form.pv_system_type === option.value}
-                onPress={() =>
-                  updateField('pv_system_type', option.value as PvSystemType)
-                }
-              />
-            ))}
-          </View>
-
-          <Text style={styles.optionLabel}>Panel watt preset</Text>
-          <View style={styles.optionRow}>
-            <OptionChip
-              label="Use admin default"
-              selected={!form.panel_watts}
-              onPress={() => updateField('panel_watts', '')}
+        <View style={styles.footerActions}>
+          {currentStep > 1 ? (
+            <AppButton
+              title="Back"
+              variant="outline"
+              onPress={handlePreviousStep}
+              style={styles.footerActionButton}
             />
-            {finalQuotationOptions.panel_options.map(option => (
-              <OptionChip
-                key={option.value}
-                label={option.label}
-                selected={form.panel_watts === String(option.value)}
-                onPress={() => updateField('panel_watts', String(option.value))}
-              />
-            ))}
-          </View>
-
-          <View style={styles.switchRow}>
-            <View style={styles.switchTextWrap}>
-              <Text style={styles.switchLabel}>With battery</Text>
-              <Text style={styles.switchHint}>
-                Toggle off if the final proposal does not include battery
-                storage.
-              </Text>
-            </View>
-            <Switch
-              trackColor={{false: '#cbd5e1', true: '#93c5fd'}}
-              thumbColor={form.with_battery ? '#2563eb' : '#f8fafc'}
-              value={form.with_battery}
-              onValueChange={handleBatteryToggle}
-            />
-          </View>
-
-          <Text style={styles.optionLabel}>Inverter option</Text>
-          <View style={styles.optionRow}>
-            <OptionChip
-              label="No preset"
-              selected={!form.inverter_type.trim()}
-              onPress={() => updateField('inverter_type', '')}
-            />
-            {finalQuotationOptions.inverter_options.map(option => (
-              <OptionChip
-                key={option.value}
-                label={option.label}
-                selected={form.inverter_type === option.value}
-                onPress={() => updateField('inverter_type', option.value)}
-              />
-            ))}
-          </View>
-
-          {form.with_battery ? (
-            <>
-              <Text style={styles.optionLabel}>Battery preset</Text>
-              <View style={styles.optionRow}>
-                <OptionChip
-                  label="No preset"
-                  selected={
-                    !form.battery_model.trim() &&
-                    !form.battery_capacity_ah &&
-                    !form.battery_voltage
-                  }
-                  onPress={() => applyBatteryPreset(null)}
-                />
-                {finalQuotationOptions.battery_options.map(option => (
-                  <OptionChip
-                    key={option.value}
-                    label={option.label}
-                    selected={form.battery_model === option.value}
-                    onPress={() => applyBatteryPreset(option)}
-                  />
-                ))}
-              </View>
-            </>
           ) : null}
 
-          <AppInput
-            label="Inverter type"
-            placeholder="Leave blank or use a preset above"
-            onChangeText={value => updateField('inverter_type', value)}
-            value={form.inverter_type}
-            containerStyle={styles.fieldSpacing}
-          />
-          <AppInput
-            label="Battery model"
-            editable={form.with_battery}
-            placeholder="Leave blank or use a preset above"
-            onChangeText={value => updateField('battery_model', value)}
-            value={form.battery_model}
-            containerStyle={styles.fieldSpacing}
-          />
-          <AppInput
-            label="Battery capacity Ah"
-            editable={form.with_battery}
-            placeholder="Optional"
-            keyboardType="decimal-pad"
-            onChangeText={value =>
-              updateField('battery_capacity_ah', sanitizeNumericInput(value))
-            }
-            value={form.battery_capacity_ah}
-            containerStyle={styles.fieldSpacing}
-          />
-          <AppInput
-            label="Panel watts"
-            placeholder="Leave blank to use admin default"
-            keyboardType="decimal-pad"
-            onChangeText={value =>
-              updateField('panel_watts', sanitizeNumericInput(value))
-            }
-            value={form.panel_watts}
-          />
-        </FormSection>
-
-        <FormSection
-          title="Selected line items"
-          subtitle="Anything with a quantity greater than zero will be saved as an itemized final quotation line item.">
-          {selectedLineItems.length > 0 ? (
-            selectedLineItems.map(item => (
-              <View key={item.pricing_item_id} style={styles.selectedItemCard}>
-                <View style={styles.selectedItemHeader}>
-                  <View style={styles.selectedItemTextWrap}>
-                    <Text style={styles.selectedItemName}>{item.description}</Text>
-                    <Text style={styles.selectedItemMeta}>
-                      {formatCategoryLabel(item.category)} • {item.unit} •{' '}
-                      {formatCurrency(item.unit_amount)} each
-                    </Text>
-                  </View>
-                  <AppButton
-                    title="Remove"
-                    variant="outline"
-                    onPress={() => clearCatalogItem(item.pricing_item_id)}
-                    style={styles.removeButton}
-                    textStyle={styles.removeButtonText}
-                  />
-                </View>
-
-                <View style={styles.selectedItemTotalsRow}>
-                  <Text style={styles.selectedItemTotalsLabel}>
-                    Qty {item.qty.toFixed(2).replace(/\.00$/, '')}
-                  </Text>
-                  <Text style={styles.selectedItemTotalsValue}>
-                    {formatCurrency(item.total_amount)}
-                  </Text>
-                </View>
-              </View>
-            ))
+          {currentStep < WIZARD_STEPS.length ? (
+            <AppButton
+              title="Next"
+              onPress={handleNextStep}
+              style={styles.footerActionButton}
+            />
           ) : (
-            <Text style={styles.emptyCatalogText}>
-              No pricing items selected yet. Add quantities from the catalog
-              below.
-            </Text>
+            <AppButton
+              title={
+                submitting
+                  ? 'Submitting final quotation...'
+                  : 'Submit Final Quotation'
+              }
+              disabled={submitting || !completed}
+              onPress={handleSubmit}
+              style={styles.footerActionButton}
+            />
           )}
-        </FormSection>
-
-        <FormSection
-          title="Pricing catalog"
-          subtitle="Use the admin-managed catalog to add itemized components and materials.">
-          {groupedPricingCatalog.map(group => (
-            <View key={group.category} style={styles.catalogGroup}>
-              <Text style={styles.catalogGroupTitle}>
-                {formatCategoryLabel(group.category)}
-              </Text>
-
-              {group.items.map(item => (
-                <View key={item.id} style={styles.catalogItemCard}>
-                  <View style={styles.catalogItemInfo}>
-                    <Text style={styles.catalogItemName}>
-                      {item.name || 'Unnamed item'}
-                    </Text>
-                    <Text style={styles.catalogItemMeta}>
-                      {item.unit || 'pc'} • {formatCurrency(Number(item.default_unit_price || 0))}
-                    </Text>
-                  </View>
-
-                  <View style={styles.catalogItemActions}>
-                    <AppInput
-                      label="Qty"
-                      keyboardType="decimal-pad"
-                      onChangeText={value => updateCatalogQuantity(item.id, value)}
-                      value={catalogQuantities[item.id] || ''}
-                      containerStyle={styles.quantityInputContainer}
-                    />
-                    {(catalogQuantities[item.id] || '').trim() ? (
-                      <AppButton
-                        title="Clear"
-                        variant="outline"
-                        onPress={() => clearCatalogItem(item.id)}
-                        style={styles.clearButton}
-                        textStyle={styles.clearButtonText}
-                      />
-                    ) : null}
-                  </View>
-                </View>
-              ))}
-            </View>
-          ))}
-        </FormSection>
-
-        <FormSection
-          title="Computed totals"
-          subtitle="These totals are previewed from the selected catalog items and will be recomputed by the backend after save.">
-          <View style={styles.totalsGrid}>
-            <View style={styles.totalCard}>
-              <Text style={styles.totalLabel}>Panel cost</Text>
-              <Text style={styles.totalValue}>
-                {formatCurrency(computedTotals.panelCost)}
-              </Text>
-            </View>
-            <View style={styles.totalCard}>
-              <Text style={styles.totalLabel}>Inverter cost</Text>
-              <Text style={styles.totalValue}>
-                {formatCurrency(computedTotals.inverterCost)}
-              </Text>
-            </View>
-            <View style={styles.totalCard}>
-              <Text style={styles.totalLabel}>Battery cost</Text>
-              <Text style={styles.totalValue}>
-                {formatCurrency(computedTotals.batteryCost)}
-              </Text>
-            </View>
-            <View style={styles.totalCard}>
-              <Text style={styles.totalLabel}>BOS cost</Text>
-              <Text style={styles.totalValue}>
-                {formatCurrency(computedTotals.bosCost)}
-              </Text>
-            </View>
-            <View style={styles.totalCard}>
-              <Text style={styles.totalLabel}>Materials subtotal</Text>
-              <Text style={styles.totalValue}>
-                {formatCurrency(computedTotals.materialsSubtotal)}
-              </Text>
-            </View>
-            <View style={styles.totalCard}>
-              <Text style={styles.totalLabel}>Labor cost</Text>
-              <Text style={styles.totalValue}>
-                {formatCurrency(computedTotals.laborCost)}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.projectTotalCard}>
-            <Text style={styles.projectTotalLabel}>Estimated project cost</Text>
-            <Text style={styles.projectTotalValue}>
-              {formatCurrency(computedTotals.projectCost)}
-            </Text>
-            <Text style={styles.projectTotalHint}>
-              ROI preview:{' '}
-              {computedTotals.roiYears !== null
-                ? `${computedTotals.roiYears.toFixed(2)} years`
-                : 'available after bill + items are entered'}
-            </Text>
-          </View>
-        </FormSection>
-
-        <FormSection
-          title="Notes"
-          subtitle="Set the quotation status and add any final technician remarks for the customer.">
-          <Text style={styles.optionLabel}>Quotation status</Text>
-          <View style={styles.optionRow}>
-            {STATUS_OPTIONS.map(option => (
-              <OptionChip
-                key={option}
-                label={option}
-                selected={form.status === option}
-                onPress={() => updateField('status', option)}
-              />
-            ))}
-          </View>
-
-          <AppInput
-            label="Remarks"
-            multiline={true}
-            numberOfLines={5}
-            onChangeText={value => updateField('remarks', value)}
-            style={styles.textArea}
-            value={form.remarks}
-          />
-        </FormSection>
-
-        <AppButton
-          title={
-            submitting
-              ? 'Submitting final quotation...'
-              : 'Submit Final Quotation'
-          }
-          disabled={submitting || !completed}
-          onPress={handleSubmit}
-        />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -1259,6 +1888,68 @@ const styles = StyleSheet.create({
     color: '#334155',
     fontSize: 14,
     lineHeight: 21,
+  },
+  stepperCard: {
+    marginBottom: 18,
+  },
+  stepHeaderEyebrow: {
+    color: '#2563eb',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  stepHeaderTitle: {
+    color: '#0f172a',
+    fontSize: 24,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+  stepHeaderSubtitle: {
+    color: '#64748b',
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  stepPillGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  stepPill: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#cbd5e1',
+    borderRadius: 18,
+    borderWidth: 1,
+    minWidth: '47%',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  stepPillActive: {
+    backgroundColor: '#dbeafe',
+    borderColor: '#2563eb',
+  },
+  stepPillComplete: {
+    backgroundColor: '#dcfce7',
+    borderColor: '#22c55e',
+  },
+  stepPillNumber: {
+    color: '#64748b',
+    fontSize: 12,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  stepPillNumberActive: {
+    color: '#1d4ed8',
+  },
+  stepPillLabel: {
+    color: '#334155',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  stepPillLabelActive: {
+    color: '#0f172a',
   },
   sectionCard: {
     marginBottom: 18,
@@ -1512,6 +2203,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
+  catalogSuggestionText: {
+    color: '#1d4ed8',
+    fontSize: 12,
+    fontWeight: '600',
+    lineHeight: 18,
+    marginTop: 6,
+  },
   catalogItemActions: {
     alignItems: 'flex-end',
     flexDirection: 'row',
@@ -1519,6 +2217,15 @@ const styles = StyleSheet.create({
   },
   quantityInputContainer: {
     flex: 1,
+  },
+  suggestButton: {
+    minHeight: 48,
+    minWidth: 108,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  suggestButtonText: {
+    fontSize: 12,
   },
   clearButton: {
     minHeight: 48,
@@ -1554,6 +2261,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
   },
+  totalSubValue: {
+    color: '#64748b',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 6,
+  },
   projectTotalCard: {
     backgroundColor: '#dcfce7',
     borderColor: '#86efac',
@@ -1583,5 +2296,12 @@ const styles = StyleSheet.create({
   textArea: {
     minHeight: 120,
     textAlignVertical: 'top',
+  },
+  footerActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  footerActionButton: {
+    flex: 1,
   },
 });
