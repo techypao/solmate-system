@@ -24,6 +24,7 @@ class ServiceRequestController extends Controller
         $validated = $request->validate([
             'request_type' => 'required|string|max:255',
             'details' => 'required|string',
+            'contact_number' => 'required|string|max:30',
             'date_needed' => 'nullable|date',
         ]);
 
@@ -31,6 +32,7 @@ class ServiceRequestController extends Controller
             'user_id' => $request->user()->id,
             'request_type' => $validated['request_type'],
             'details' => $validated['details'],
+            'contact_number' => trim($validated['contact_number']),
             'date_needed' => $validated['date_needed'] ?? null,
             'status' => 'pending',
         ]);

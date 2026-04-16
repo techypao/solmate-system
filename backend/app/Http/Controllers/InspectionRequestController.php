@@ -21,12 +21,14 @@ class InspectionRequestController extends Controller
     {
         $validated = $request->validate([
             'details' => 'required|string',
+            'contact_number' => 'required|string|max:30',
             'date_needed' => 'nullable|date',
         ]);
 
         $inspectionRequest = InspectionRequest::create([
             'user_id' => $request->user()->id,
             'details' => $validated['details'],
+            'contact_number' => trim($validated['contact_number']),
             'date_needed' => $validated['date_needed'] ?? null,
             'status' => 'pending',
         ]);

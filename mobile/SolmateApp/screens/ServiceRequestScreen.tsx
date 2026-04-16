@@ -27,7 +27,12 @@ const REQUEST_TYPE_OPTIONS = [
 type FieldErrors = {
   requestType?: string;
   details?: string;
+  contactNumber?: string;
 };
+
+function sanitizeContactNumber(value: string) {
+  return value.replace(/[^0-9+()\- ]/g, '');
+}
 
 function getFriendlyErrorMessage(error: unknown) {
   if (error instanceof ApiError) {
@@ -60,6 +65,7 @@ function formatDateForDisplay(date: Date) {
 export default function ServiceRequestScreen({ navigation }: any) {
   const [requestType, setRequestType] = useState('');
   const [details, setDetails] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
   const [dateNeeded, setDateNeeded] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [pickerDate, setPickerDate] = useState(new Date());
@@ -74,6 +80,7 @@ export default function ServiceRequestScreen({ navigation }: any) {
   const resetForm = () => {
     setRequestType('');
     setDetails('');
+    setContactNumber('');
     setDateNeeded('');
     setSelectedDate(null);
     setPickerDate(new Date());
@@ -110,6 +117,18 @@ export default function ServiceRequestScreen({ navigation }: any) {
       setFieldErrors(currentErrors => ({
         ...currentErrors,
         details: undefined,
+      }));
+    }
+  };
+
+  const handleContactNumberChange = (value: string) => {
+    setContactNumber(sanitizeContactNumber(value));
+    clearStatusMessages();
+
+    if (fieldErrors.contactNumber) {
+      setFieldErrors(currentErrors => ({
+        ...currentErrors,
+        contactNumber: undefined,
       }));
     }
   };
@@ -166,6 +185,7 @@ export default function ServiceRequestScreen({ navigation }: any) {
   const validateForm = () => {
     const trimmedRequestType = requestType.trim();
     const trimmedDetails = details.trim();
+    const trimmedContactNumber = contactNumber.trim();
     const nextErrors: FieldErrors = {};
 
     if (!trimmedRequestType) {
@@ -174,6 +194,10 @@ export default function ServiceRequestScreen({ navigation }: any) {
 
     if (!trimmedDetails) {
       nextErrors.details = 'Please add details about the service you need.';
+    }
+
+    if (!trimmedContactNumber) {
+      nextErrors.contactNumber = 'Contact number is required.';
     }
 
     setFieldErrors(nextErrors);
@@ -204,6 +228,9 @@ export default function ServiceRequestScreen({ navigation }: any) {
       const response = await createServiceRequest({
         request_type: requestType.trim(),
         details: details.trim(),
+        ...(contactNumber.trim()
+          ? { contact_number: contactNumber.trim() }
+          : {}),
         ...(dateNeeded ? { date_needed: dateNeeded } : {}),
       });
 
@@ -349,6 +376,32 @@ export default function ServiceRequestScreen({ navigation }: any) {
           </Text>
           {fieldErrors.details ? (
             <Text style={styles.fieldErrorText}>{fieldErrors.details}</Text>
+          ) : null}
+        </View>
+
+        <View style={styles.fieldGroup}>
+          <View style={styles.fieldHeader}>
+            <Text style={styles.fieldLabel}>Contact number</Text>
+            <Text style={styles.requiredText}>Required</Text>
+          </View>
+
+          <TextInput
+            keyboardType="phone-pad"
+            onChangeText={handleContactNumberChange}
+            placeholder="Enter a phone number we can reach"
+            placeholderTextColor="#94a3b8"
+            style={[
+              styles.input,
+              fieldErrors.contactNumber ? styles.inputError : null,
+            ]}
+            value={contactNumber}
+          />
+
+          <Text style={styles.helpText}>
+            Add the best number to call or text about this service request.
+          </Text>
+          {fieldErrors.contactNumber ? (
+            <Text style={styles.fieldErrorText}>{fieldErrors.contactNumber}</Text>
           ) : null}
         </View>
 

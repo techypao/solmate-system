@@ -138,6 +138,10 @@
                                 <strong>{{ $serviceRequest->customer?->email ?? 'Not available' }}</strong>
                             </div>
                             <div class="detail-item">
+                                <span class="detail-label">Contact Number</span>
+                                <strong>{{ $serviceRequest->contact_number ?: 'Not provided' }}</strong>
+                            </div>
+                            <div class="detail-item">
                                 <span class="detail-label">Request Type</span>
                                 <strong>{{ $serviceRequest->request_type ?: 'Not specified' }}</strong>
                             </div>
@@ -271,6 +275,10 @@
                             <div class="detail-item">
                                 <span class="detail-label">Customer Email</span>
                                 <strong>{{ $inspectionRequest->customer?->email ?? 'Not available' }}</strong>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Contact Number</span>
+                                <strong>{{ $inspectionRequest->contact_number ?: 'Not provided' }}</strong>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">Date Needed</span>

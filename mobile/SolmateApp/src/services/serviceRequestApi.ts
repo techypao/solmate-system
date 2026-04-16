@@ -14,6 +14,7 @@ export type ServiceRequest = {
   quotation_id?: number | null;
   request_type: string;
   details: string;
+  contact_number?: string | null;
   date_needed?: string | null;
   status: string;
   technician_marked_done_at?: string | null;
@@ -26,6 +27,7 @@ export type ServiceRequest = {
 export type CreateServiceRequestPayload = {
   request_type: string;
   details: string;
+  contact_number?: string;
   date_needed?: string;
 };
 

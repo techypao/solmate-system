@@ -10,6 +10,7 @@ import {
 
 import {ApiError} from '../src/services/api';
 import {getQuotations} from '../src/services/quotationApi';
+import {formatQuotationCurrency} from '../src/utils/currency';
 
 type Quotation = {
   id: number;
@@ -33,20 +34,31 @@ function formatValue(value?: number | null) {
   return String(value);
 }
 
-function formatCurrency(value?: number | null) {
-  if (value === null || value === undefined || Number.isNaN(value)) {
-    return 'N/A';
-  }
-
-  return `₱${value.toFixed(2)}`;
-}
-
 function formatYears(value?: number | null) {
   if (value === null || value === undefined || Number.isNaN(value)) {
     return 'N/A';
   }
 
   return `${value.toFixed(2)} years`;
+}
+
+function formatPanelQuantity(value?: number | null) {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return 'Panel count pending';
+  }
+
+  return `${value} panels`;
+}
+
+function formatQuotationTypeLabel(type?: string | null) {
+  switch ((type || '').toLowerCase()) {
+    case 'final':
+      return 'Final Quotation';
+    case 'initial':
+      return 'Initial Quotation';
+    default:
+      return 'Quotation';
+  }
 }
 
 function formatDate(value?: string) {
@@ -103,11 +115,7 @@ export default function QuotationListScreen({navigation}: any) {
 
         setErrorMessage('');
         const data = await getQuotations();
-        const initialQuotations = Array.isArray(data)
-          ? data.filter(item => item.quotation_type === 'initial')
-          : [];
-
-        setQuotations(initialQuotations);
+        setQuotations(Array.isArray(data) ? data : []);
       } catch (error) {
         if (error instanceof ApiError) {
           setErrorMessage(error.message);
@@ -135,6 +143,7 @@ export default function QuotationListScreen({navigation}: any) {
 
   const renderQuotationItem = ({item}: {item: Quotation}) => {
     const statusStyle = getStatusBadgeStyle(item.status);
+    const isInitialQuotation = item.quotation_type === 'initial';
 
     return (
       <Pressable
@@ -148,7 +157,7 @@ export default function QuotationListScreen({navigation}: any) {
             <View style={styles.cardTitleWrap}>
               <Text style={styles.cardEyebrow}>Quotation #{item.id}</Text>
               <Text style={styles.cardTitle}>
-                {item.quotation_type?.toUpperCase() || 'QUOTATION'}
+                {formatQuotationTypeLabel(item.quotation_type)}
               </Text>
             </View>
 
@@ -173,24 +182,26 @@ export default function QuotationListScreen({navigation}: any) {
             <View style={styles.metricCard}>
               <Text style={styles.metricLabel}>System summary</Text>
               <Text style={styles.metricValue}>{formatValue(item.system_kw)}</Text>
-              <Text style={styles.metricHint}>
-                {formatValue(item.panel_quantity)} panels
-              </Text>
+              <Text style={styles.metricHint}>{formatPanelQuantity(item.panel_quantity)}</Text>
             </View>
           </View>
 
           <View style={styles.footerRow}>
             <View>
-              <Text style={styles.footerLabel}>Estimated total</Text>
+              <Text style={styles.footerLabel}>
+                {isInitialQuotation ? 'Estimated total' : 'Project cost'}
+              </Text>
               <Text style={styles.footerValue}>
-                {formatCurrency(item.project_cost)}
+                {formatQuotationCurrency(item.project_cost)}
               </Text>
               <Text style={styles.footerSubValue}>
                 ROI {formatYears(item.roi_years)}
               </Text>
             </View>
             <View style={styles.footerMetaWrap}>
-              <Text style={styles.estimateTag}>Estimate only</Text>
+              <Text style={styles.estimateTag}>
+                {isInitialQuotation ? 'Estimate only' : 'Final quotation'}
+              </Text>
               <Text style={styles.footerMeta}>{formatDate(item.created_at)}</Text>
               <Text style={styles.tapHint}>Tap for details</Text>
             </View>
@@ -213,7 +224,7 @@ export default function QuotationListScreen({navigation}: any) {
     <View style={styles.container}>
       <Text style={styles.title}>My Quotations</Text>
       <Text style={styles.subtitle}>
-        Review the initial quotations you submitted and pull down to refresh the
+        Review your initial and final quotations, then pull down to refresh the
         list.
       </Text>
 
@@ -224,8 +235,8 @@ export default function QuotationListScreen({navigation}: any) {
           <View style={styles.emptyIcon} />
           <Text style={styles.emptyTitle}>No quotations yet</Text>
           <Text style={styles.emptyText}>
-            Your quotation requests will appear here once you create them from
-            the dashboard.
+            Your initial and final quotations will appear here once they are
+            created in the workflow.
           </Text>
         </View>
       ) : null}

@@ -252,6 +252,10 @@ export default function RequestDetailsScreen({navigation, route}: any) {
             label="Customer email"
             value={getCustomerEmail(inspectionRequest)}
           />
+          <DetailRow
+            label="Customer contact number"
+            value={inspectionRequest.contact_number || 'Not provided'}
+          />
         </AppCard>
 
         <AppCard style={styles.sectionCard}>
@@ -261,6 +265,10 @@ export default function RequestDetailsScreen({navigation, route}: any) {
           </Text>
 
           <DetailRow label="Inspection request ID" value={`${inspectionRequest.id}`} />
+          <DetailRow
+            label="Contact number"
+            value={inspectionRequest.contact_number || 'Not provided'}
+          />
           <DetailRow
             label="Date needed"
             value={formatDate(inspectionRequest.date_needed)}

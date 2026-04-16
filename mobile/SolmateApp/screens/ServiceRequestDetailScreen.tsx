@@ -305,6 +305,10 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
           <DetailRow label="Service request ID" value={`${serviceRequest.id}`} />
           <DetailRow label="Request type" value={serviceRequest.request_type} />
           <DetailRow
+            label="Contact number"
+            value={serviceRequest.contact_number || 'Not provided'}
+          />
+          <DetailRow
             label="Preferred date"
             value={formatDate(serviceRequest.date_needed)}
           />
@@ -345,6 +349,12 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
                 : serviceRequest.technician?.email || 'Not available yet'
             }
           />
+          {mode === 'technician' ? (
+            <DetailRow
+              label="Customer contact number"
+              value={serviceRequest.contact_number || 'Not provided'}
+            />
+          ) : null}
         </AppCard>
 
         <AppCard style={styles.sectionCard}>

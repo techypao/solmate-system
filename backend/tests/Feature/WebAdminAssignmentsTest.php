@@ -40,12 +40,14 @@ class WebAdminAssignmentsTest extends TestCase
             'user_id' => $customer->id,
             'request_type' => 'Maintenance',
             'details' => 'Check inverter',
+            'contact_number' => '0917-222-1000',
             'status' => 'pending',
         ]);
 
         InspectionRequest::query()->create([
             'user_id' => $customer->id,
             'details' => 'Inspect rooftop setup',
+            'contact_number' => '0917-333-2000',
             'status' => 'pending',
         ]);
 
@@ -55,7 +57,9 @@ class WebAdminAssignmentsTest extends TestCase
             ->assertSee('Admin Request Assignments')
             ->assertSee('Service Requests')
             ->assertSee('Inspection Requests')
-            ->assertSee($technician->email);
+            ->assertSee($technician->email)
+            ->assertSee('0917-222-1000')
+            ->assertSee('0917-333-2000');
     }
 
     public function test_admin_can_assign_technician_to_service_request_using_existing_api_route(): void

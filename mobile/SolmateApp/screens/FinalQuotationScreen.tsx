@@ -26,6 +26,7 @@ import {
   replaceQuotationLineItems,
   submitFinalQuotation,
 } from '../src/services/quotationApi';
+import {formatQuotationCurrency} from '../src/utils/currency';
 import {
   getAssignedInspectionRequestById,
   TechnicianInspectionRequest,
@@ -132,6 +133,8 @@ const WIZARD_STEPS = [
   },
 ] as const;
 
+const REQUEST_TIMEOUT_MS = 10000;
+
 function sanitizeNumericInput(value: string) {
   const cleanedValue = value.replace(/[^0-9.]/g, '');
   const parts = cleanedValue.split('.');
@@ -178,14 +181,6 @@ function getFriendlyErrorMessage(error: unknown) {
   }
 
   return 'Could not load the completed inspection request for final quotation.';
-}
-
-function formatCurrency(value?: number | null) {
-  if (value === null || value === undefined || Number.isNaN(value)) {
-    return 'PHP 0.00';
-  }
-
-  return `PHP ${value.toFixed(2)}`;
 }
 
 function formatCategoryLabel(category: string) {
@@ -318,6 +313,17 @@ function buildInitialFormState(): FinalQuotationFormState {
   };
 }
 
+function withTimeout<T>(promise: Promise<T>, label: string, timeoutMs = REQUEST_TIMEOUT_MS) {
+  return Promise.race<T>([
+    promise,
+    new Promise<T>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error(`${label} request timed out.`));
+      }, timeoutMs);
+    }),
+  ]);
+}
+
 function FormSection({
   title,
   subtitle,
@@ -406,7 +412,15 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         }
 
         setErrorMessage('');
-        const request = await getAssignedInspectionRequestById(inspectionRequestId);
+        if (initialInspectionRequest && !showLoadingState) {
+          setInspectionRequest(initialInspectionRequest);
+          return;
+        }
+
+        const request = await withTimeout(
+          getAssignedInspectionRequestById(inspectionRequestId),
+          'Assigned inspection request',
+        );
 
         if (!request) {
           setInspectionRequest(null);
@@ -418,13 +432,14 @@ export default function FinalQuotationScreen({navigation, route}: any) {
 
         setInspectionRequest(request);
       } catch (error) {
+        console.warn('FinalQuotationScreen: loadInspectionRequest failed', error);
         setInspectionRequest(null);
         setErrorMessage(getFriendlyErrorMessage(error));
       } finally {
         setLoading(false);
       }
     },
-    [inspectionRequestId],
+    [initialInspectionRequest, inspectionRequestId],
   );
 
   const loadOptions = useCallback(
@@ -435,7 +450,10 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         }
 
         setOptionsError('');
-        const options = await getFinalQuotationOptions();
+        const options = await withTimeout(
+          getFinalQuotationOptions(),
+          'Final quotation options',
+        );
         setFinalQuotationOptions(options);
         setForm(current => {
           const availablePvSystemTypes = options.system_types.map(
@@ -453,6 +471,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           };
         });
       } catch (error) {
+        console.warn('FinalQuotationScreen: loadOptions failed', error);
         if (error instanceof ApiError) {
           setOptionsError(error.message);
         } else {
@@ -473,9 +492,13 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         }
 
         setCatalogError('');
-        const items = await getPricingCatalog();
+        const items = await withTimeout(
+          getPricingCatalog(),
+          'Pricing catalog',
+        );
         setPricingCatalog(items);
       } catch (error) {
+        console.warn('FinalQuotationScreen: loadPricingCatalog failed', error);
         if (error instanceof ApiError) {
           setCatalogError(error.message);
         } else {
@@ -490,7 +513,9 @@ export default function FinalQuotationScreen({navigation, route}: any) {
 
   useFocusEffect(
     useCallback(() => {
-      loadInspectionRequest(!inspectionRequest);
+      if (!inspectionRequest) {
+        loadInspectionRequest(true);
+      }
       if (!finalQuotationOptions) {
         loadOptions(true);
       }
@@ -1394,7 +1419,11 @@ export default function FinalQuotationScreen({navigation, route}: any) {
                 <Text style={styles.selectedItemName}>{item.description}</Text>
                 <Text style={styles.selectedItemMeta}>
                   {formatCategoryLabel(item.category)} • {item.unit} •{' '}
-                  {formatCurrency(item.unit_amount)} each
+                  {formatQuotationCurrency(item.unit_amount, {
+                    currency: 'PHP',
+                    fallback: 'PHP 0.00',
+                    spaceAfterCurrency: true,
+                  })} each
                 </Text>
               </View>
               <AppButton
@@ -1411,7 +1440,11 @@ export default function FinalQuotationScreen({navigation, route}: any) {
                 Qty {item.qty.toFixed(2).replace(/\.00$/, '')}
               </Text>
               <Text style={styles.selectedItemTotalsValue}>
-                {formatCurrency(item.total_amount)}
+                {formatQuotationCurrency(item.total_amount, {
+                  currency: 'PHP',
+                  fallback: 'PHP 0.00',
+                  spaceAfterCurrency: true,
+                })}
               </Text>
             </View>
           </View>
@@ -1443,7 +1476,11 @@ export default function FinalQuotationScreen({navigation, route}: any) {
                 </Text>
                 <Text style={styles.catalogItemMeta}>
                   {item.unit || 'pc'} •{' '}
-                  {formatCurrency(Number(item.default_unit_price || 0))}
+                  {formatQuotationCurrency(Number(item.default_unit_price || 0), {
+                    currency: 'PHP',
+                    fallback: 'PHP 0.00',
+                    spaceAfterCurrency: true,
+                  })}
                 </Text>
                 {suggestedQuantities[item.id] !== undefined ? (
                   <Text style={styles.catalogSuggestionText}>
@@ -1506,37 +1543,61 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         <View style={styles.totalCard}>
           <Text style={styles.totalLabel}>Panel cost</Text>
           <Text style={styles.totalValue}>
-            {formatCurrency(computedTotals.panelCost)}
+            {formatQuotationCurrency(computedTotals.panelCost, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
           </Text>
         </View>
         <View style={styles.totalCard}>
           <Text style={styles.totalLabel}>Inverter cost</Text>
           <Text style={styles.totalValue}>
-            {formatCurrency(computedTotals.inverterCost)}
+            {formatQuotationCurrency(computedTotals.inverterCost, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
           </Text>
         </View>
         <View style={styles.totalCard}>
           <Text style={styles.totalLabel}>Battery cost</Text>
           <Text style={styles.totalValue}>
-            {formatCurrency(computedTotals.batteryCost)}
+            {formatQuotationCurrency(computedTotals.batteryCost, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
           </Text>
         </View>
         <View style={styles.totalCard}>
           <Text style={styles.totalLabel}>BOS cost</Text>
           <Text style={styles.totalValue}>
-            {formatCurrency(computedTotals.bosCost)}
+            {formatQuotationCurrency(computedTotals.bosCost, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
           </Text>
         </View>
         <View style={styles.totalCard}>
           <Text style={styles.totalLabel}>Materials subtotal</Text>
           <Text style={styles.totalValue}>
-            {formatCurrency(computedTotals.materialsSubtotal)}
+            {formatQuotationCurrency(computedTotals.materialsSubtotal, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
           </Text>
         </View>
         <View style={styles.totalCard}>
           <Text style={styles.totalLabel}>Labor cost</Text>
           <Text style={styles.totalValue}>
-            {formatCurrency(computedTotals.laborCost)}
+            {formatQuotationCurrency(computedTotals.laborCost, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
           </Text>
         </View>
       </View>
@@ -1544,7 +1605,11 @@ export default function FinalQuotationScreen({navigation, route}: any) {
       <View style={styles.projectTotalCard}>
         <Text style={styles.projectTotalLabel}>Estimated project cost</Text>
         <Text style={styles.projectTotalValue}>
-          {formatCurrency(computedTotals.projectCost)}
+          {formatQuotationCurrency(computedTotals.projectCost, {
+            currency: 'PHP',
+            fallback: 'PHP 0.00',
+            spaceAfterCurrency: true,
+          })}
         </Text>
         <Text style={styles.projectTotalHint}>
           ROI preview:{' '}
@@ -1591,7 +1656,14 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Monthly bill</Text>
           <Text style={styles.summaryValue}>
-            {formatCurrency(toNumberOrUndefined(form.monthly_electric_bill))}
+            {formatQuotationCurrency(
+              toNumberOrUndefined(form.monthly_electric_bill),
+              {
+                currency: 'PHP',
+                fallback: 'PHP 0.00',
+                spaceAfterCurrency: true,
+              },
+            )}
           </Text>
         </View>
         <View style={styles.summaryRow}>

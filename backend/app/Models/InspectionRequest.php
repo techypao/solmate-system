@@ -14,6 +14,7 @@ class InspectionRequest extends Model
         'user_id',
         'technician_id',
         'details',
+        'contact_number',
         'date_needed',
         'status',
     ];

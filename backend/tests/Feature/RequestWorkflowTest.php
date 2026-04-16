@@ -39,10 +39,12 @@ class RequestWorkflowTest extends TestCase
             ->postJson('/api/service-requests', [
                 'request_type' => 'Panel Cleaning',
                 'details' => 'Clean rooftop solar panels',
+                'contact_number' => '+63 917 123 4567',
                 'date_needed' => '2026-04-20',
             ])
             ->assertCreated()
-            ->assertJsonPath('data.status', 'pending');
+            ->assertJsonPath('data.status', 'pending')
+            ->assertJsonPath('data.contact_number', '+63 917 123 4567');
 
         $serviceRequestId = $createResponse->json('data.id');
 
@@ -90,6 +92,7 @@ class RequestWorkflowTest extends TestCase
             'id' => $serviceRequestId,
             'user_id' => $customer->id,
             'technician_id' => $technician->id,
+            'contact_number' => '+63 917 123 4567',
             'status' => 'completed',
         ]);
     }
@@ -184,10 +187,12 @@ class RequestWorkflowTest extends TestCase
         $createResponse = $this->actingAs($customer)
             ->postJson('/api/inspection-requests', [
                 'details' => 'Inspect the roof and inverter placement',
+                'contact_number' => '0917-555-0100',
                 'date_needed' => '2026-04-21',
             ])
             ->assertCreated()
-            ->assertJsonPath('data.status', 'pending');
+            ->assertJsonPath('data.status', 'pending')
+            ->assertJsonPath('data.contact_number', '0917-555-0100');
 
         $inspectionRequestId = $createResponse->json('data.id');
 
@@ -221,7 +226,33 @@ class RequestWorkflowTest extends TestCase
             'id' => $inspectionRequestId,
             'user_id' => $customer->id,
             'technician_id' => $technician->id,
+            'contact_number' => '0917-555-0100',
             'status' => 'completed',
         ]);
+    }
+
+    public function test_contact_number_is_required_for_request_creation(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Customer User',
+            'email' => 'customer_contact_required@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        $this->actingAs($customer)
+            ->postJson('/api/service-requests', [
+                'request_type' => 'Panel Cleaning',
+                'details' => 'Clean rooftop solar panels',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['contact_number']);
+
+        $this->actingAs($customer)
+            ->postJson('/api/inspection-requests', [
+                'details' => 'Inspect rooftop setup',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['contact_number']);
     }
 }

@@ -176,6 +176,10 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
 
           <DetailRow label="Inspection request ID" value={`${inspectionRequest.id}`} />
           <DetailRow
+            label="Contact number"
+            value={inspectionRequest.contact_number || 'Not provided'}
+          />
+          <DetailRow
             label="Preferred date"
             value={formatDate(inspectionRequest.date_needed)}
           />

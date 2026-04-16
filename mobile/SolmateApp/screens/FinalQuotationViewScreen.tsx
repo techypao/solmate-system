@@ -16,6 +16,7 @@ import {
   Quotation,
   QuotationLineItem,
 } from '../src/services/quotationApi';
+import {formatQuotationCurrency} from '../src/utils/currency';
 
 function formatValue(value?: string | number | null) {
   if (value === null || value === undefined || value === '') {
@@ -25,19 +26,17 @@ function formatValue(value?: string | number | null) {
   return String(value);
 }
 
-function formatCurrency(value: unknown) {
-  if (value === null || value === undefined || value === '') {
-    return 'PHP 0.00';
+function formatReadableText(value?: string | null) {
+  if (value === null || value === undefined || value.trim() === '') {
+    return 'N/A';
   }
 
-  const numericValue =
-    typeof value === 'number' ? value : Number(String(value).trim());
-
-  if (!Number.isFinite(numericValue)) {
-    return 'PHP 0.00';
-  }
-
-  return `PHP ${numericValue.toFixed(2)}`;
+  return value
+    .trim()
+    .replace(/\s*,\s*/g, ', ')
+    .replace(/(?:,\s*){2,}/g, ', ')
+    .replace(/,\s*([.!?])/g, '$1')
+    .replace(/\s{2,}/g, ' ');
 }
 
 function formatBoolean(value?: boolean | null) {
@@ -74,6 +73,23 @@ function formatLineItemMeta(item: QuotationLineItem) {
   }
 
   return parts.join(' • ');
+}
+
+function formatQuantityWithUnit(
+  quantity?: string | number | null,
+  unit?: string | number | null,
+) {
+  const parts = [quantity, unit]
+    .map(part => {
+      if (part === null || part === undefined || part === '') {
+        return null;
+      }
+
+      return String(part).trim();
+    })
+    .filter(Boolean);
+
+  return parts.length > 0 ? parts.join(' ') : 'N/A';
 }
 
 function getFriendlyErrorMessage(error: unknown) {
@@ -210,7 +226,7 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
           <DetailRow label="Status" value={formatValue(quotation.status)} />
           <DetailRow
             label="Remarks"
-            value={formatValue(quotation.remarks)}
+            value={formatReadableText(quotation.remarks)}
           />
         </SectionCard>
 
@@ -219,7 +235,11 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
           subtitle="Customer usage inputs and solar sizing assumptions used by the backend.">
           <DetailRow
             label="Monthly electric bill"
-            value={formatCurrency(quotation.monthly_electric_bill)}
+            value={formatQuotationCurrency(quotation.monthly_electric_bill, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
           />
           <DetailRow
             label="Rate per kWh"
@@ -283,11 +303,11 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
             value={formatValue(quotation.daily_kwh)}
           />
           <DetailRow
-            label="pv_kw_raw"
+            label="PV kW raw"
             value={formatValue(quotation.pv_kw_raw)}
           />
           <DetailRow
-            label="pv_kw_safe"
+            label="PV kW safe"
             value={formatValue(quotation.pv_kw_safe)}
           />
           <DetailRow
@@ -313,31 +333,59 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
           subtitle="Material, labor, and project pricing submitted by the technician.">
           <DetailRow
             label="Panel cost"
-            value={formatCurrency(quotation.panel_cost)}
+            value={formatQuotationCurrency(quotation.panel_cost, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
           />
           <DetailRow
             label="Inverter cost"
-            value={formatCurrency(quotation.inverter_cost)}
+            value={formatQuotationCurrency(quotation.inverter_cost, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
           />
           <DetailRow
             label="Battery cost"
-            value={formatCurrency(quotation.battery_cost)}
+            value={formatQuotationCurrency(quotation.battery_cost, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
           />
           <DetailRow
             label="BOS cost"
-            value={formatCurrency(quotation.bos_cost)}
+            value={formatQuotationCurrency(quotation.bos_cost, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
           />
           <DetailRow
             label="Materials subtotal"
-            value={formatCurrency(quotation.materials_subtotal)}
+            value={formatQuotationCurrency(quotation.materials_subtotal, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
           />
           <DetailRow
             label="Labor cost"
-            value={formatCurrency(quotation.labor_cost)}
+            value={formatQuotationCurrency(quotation.labor_cost, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
           />
           <DetailRow
             label="Project cost"
-            value={formatCurrency(quotation.project_cost)}
+            value={formatQuotationCurrency(quotation.project_cost, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
           />
         </SectionCard>
 
@@ -353,15 +401,23 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
                 <Text style={styles.lineItemMeta}>{formatLineItemMeta(item)}</Text>
                 <DetailRow
                   label="Quantity"
-                  value={`${formatValue(item.qty)} ${formatValue(item.unit)}`}
+                  value={formatQuantityWithUnit(item.qty, item.unit)}
                 />
                 <DetailRow
                   label="Unit amount"
-                  value={formatCurrency(item.unit_amount)}
+                  value={formatQuotationCurrency(item.unit_amount, {
+                    currency: 'PHP',
+                    fallback: 'PHP 0.00',
+                    spaceAfterCurrency: true,
+                  })}
                 />
                 <DetailRow
                   label="Total amount"
-                  value={formatCurrency(item.total_amount)}
+                  value={formatQuotationCurrency(item.total_amount, {
+                    currency: 'PHP',
+                    fallback: 'PHP 0.00',
+                    spaceAfterCurrency: true,
+                  })}
                 />
               </View>
             ))
@@ -377,11 +433,19 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
           subtitle="Projected savings and estimated payback returned by the backend.">
           <DetailRow
             label="Estimated monthly savings"
-            value={formatCurrency(quotation.estimated_monthly_savings)}
+            value={formatQuotationCurrency(quotation.estimated_monthly_savings, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
           />
           <DetailRow
             label="Estimated annual savings"
-            value={formatCurrency(quotation.estimated_annual_savings)}
+            value={formatQuotationCurrency(quotation.estimated_annual_savings, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
           />
           <DetailRow label="ROI years" value={formatValue(quotation.roi_years)} />
         </SectionCard>

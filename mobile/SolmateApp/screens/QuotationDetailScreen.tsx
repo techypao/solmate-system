@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 
 import {ApiError, apiGet} from '../src/services/api';
+import {formatQuotationCurrency} from '../src/utils/currency';
 
 type QuotationDetail = {
   id: number;
@@ -45,12 +46,17 @@ function formatValue(value?: string | number | null) {
   return String(value);
 }
 
-function formatCurrency(value?: number | null) {
-  if (value === null || value === undefined || Number.isNaN(value)) {
+function formatReadableText(value?: string | null) {
+  if (value === null || value === undefined || value.trim() === '') {
     return 'N/A';
   }
 
-  return `₱${value.toFixed(2)}`;
+  return value
+    .trim()
+    .replace(/\s*,\s*/g, ', ')
+    .replace(/(?:,\s*){2,}/g, ', ')
+    .replace(/,\s*([.!?])/g, '$1')
+    .replace(/\s{2,}/g, ' ');
 }
 
 function formatYears(value?: number | null) {
@@ -63,16 +69,20 @@ function formatYears(value?: number | null) {
 
 function formatSystemSummary(quotation: QuotationDetail) {
   const systemType = (quotation.pv_system_type || 'hybrid').toUpperCase();
-  const systemKw =
-    quotation.system_kw !== null && quotation.system_kw !== undefined
-      ? `${quotation.system_kw} kW`
-      : 'N/A';
-  const panelQuantity =
-    quotation.panel_quantity !== null && quotation.panel_quantity !== undefined
-      ? `${quotation.panel_quantity} panels`
-      : 'panel count pending';
+  const parts = [`${systemType} system`];
 
-  return `${systemType} • ${systemKw} • ${panelQuantity}`;
+  if (quotation.system_kw !== null && quotation.system_kw !== undefined) {
+    parts.push(`${quotation.system_kw} kW`);
+  }
+
+  if (
+    quotation.panel_quantity !== null &&
+    quotation.panel_quantity !== undefined
+  ) {
+    parts.push(`${quotation.panel_quantity} panels`);
+  }
+
+  return parts.join(', ');
 }
 
 function formatDate(value?: string | null) {
@@ -263,7 +273,7 @@ export default function QuotationDetailScreen({route}: any) {
         <View style={styles.summaryStripCard}>
           <Text style={styles.summaryStripLabel}>Monthly Bill</Text>
           <Text style={styles.summaryStripValue}>
-            {formatCurrency(quotation.monthly_electric_bill)}
+            {formatQuotationCurrency(quotation.monthly_electric_bill)}
           </Text>
         </View>
         <View style={styles.summaryStripCard}>
@@ -271,7 +281,7 @@ export default function QuotationDetailScreen({route}: any) {
             {isInitialQuotation ? 'Estimated Total' : 'Project Cost'}
           </Text>
           <Text style={styles.summaryStripValue}>
-            {formatCurrency(quotation.project_cost)}
+            {formatQuotationCurrency(quotation.project_cost)}
           </Text>
         </View>
       </View>
@@ -300,7 +310,7 @@ export default function QuotationDetailScreen({route}: any) {
                       Estimated Monthly Savings
                     </Text>
                     <Text style={styles.roiMetricValue}>
-                      {formatCurrency(quotation.estimated_monthly_savings)}
+                      {formatQuotationCurrency(quotation.estimated_monthly_savings)}
                     </Text>
                   </View>
 
@@ -309,7 +319,7 @@ export default function QuotationDetailScreen({route}: any) {
                       Estimated Annual Savings
                     </Text>
                     <Text style={styles.roiMetricValue}>
-                      {formatCurrency(quotation.estimated_annual_savings)}
+                      {formatQuotationCurrency(quotation.estimated_annual_savings)}
                     </Text>
                   </View>
                 </View>
@@ -332,7 +342,7 @@ export default function QuotationDetailScreen({route}: any) {
             />
             <DetailRow
               label="Monthly electric bill"
-              value={formatCurrency(quotation.monthly_electric_bill)}
+              value={formatQuotationCurrency(quotation.monthly_electric_bill)}
             />
           </SectionCard>
 
@@ -355,7 +365,7 @@ export default function QuotationDetailScreen({route}: any) {
             subtitle="High-level request information and customer usage input.">
             <DetailRow
               label="Monthly electric bill"
-              value={formatCurrency(quotation.monthly_electric_bill)}
+              value={formatQuotationCurrency(quotation.monthly_electric_bill)}
             />
             <DetailRow label="Monthly kWh" value={formatValue(quotation.monthly_kwh)} />
             <DetailRow label="Daily kWh" value={formatValue(quotation.daily_kwh)} />
@@ -390,27 +400,36 @@ export default function QuotationDetailScreen({route}: any) {
             title="Cost summary"
             subtitle="All cost values are shown exactly as returned by the backend.">
             <View style={styles.costGrid}>
-              <CostCard label="Panel cost" value={formatValue(quotation.panel_cost)} />
+              <CostCard
+                label="Panel cost"
+                value={formatQuotationCurrency(quotation.panel_cost)}
+              />
               <CostCard
                 label="Inverter cost"
-                value={formatValue(quotation.inverter_cost)}
+                value={formatQuotationCurrency(quotation.inverter_cost)}
               />
               <CostCard
                 label="Battery cost"
-                value={formatValue(quotation.battery_cost)}
+                value={formatQuotationCurrency(quotation.battery_cost)}
               />
-              <CostCard label="BOS cost" value={formatValue(quotation.bos_cost)} />
+              <CostCard
+                label="BOS cost"
+                value={formatQuotationCurrency(quotation.bos_cost)}
+              />
               <CostCard
                 label="Materials subtotal"
-                value={formatValue(quotation.materials_subtotal)}
+                value={formatQuotationCurrency(quotation.materials_subtotal)}
               />
-              <CostCard label="Labor cost" value={formatValue(quotation.labor_cost)} />
+              <CostCard
+                label="Labor cost"
+                value={formatQuotationCurrency(quotation.labor_cost)}
+              />
             </View>
 
             <View style={styles.totalCard}>
               <Text style={styles.totalLabel}>Project cost</Text>
               <Text style={styles.totalValue}>
-                {formatCurrency(quotation.project_cost)}
+                {formatQuotationCurrency(quotation.project_cost)}
               </Text>
             </View>
           </SectionCard>
@@ -418,7 +437,7 @@ export default function QuotationDetailScreen({route}: any) {
       )}
 
       <SectionCard title="Notes">
-        <DetailRow label="Remarks" value={formatValue(quotation.remarks)} />
+        <DetailRow label="Remarks" value={formatReadableText(quotation.remarks)} />
       </SectionCard>
     </ScrollView>
   );

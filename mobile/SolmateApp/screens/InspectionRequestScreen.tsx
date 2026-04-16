@@ -17,6 +17,11 @@ import {AppButton, AppCard} from '../components';
 import {ApiError} from '../src/services/api';
 import {createInspectionRequest} from '../src/services/inspectionRequestApi';
 
+type FieldErrors = {
+  details?: string;
+  contactNumber?: string;
+};
+
 function getFriendlyErrorMessage(error: unknown) {
   if (error instanceof ApiError) {
     if (error.status === 401) {
@@ -37,32 +42,52 @@ function formatDateForApi(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+function sanitizeContactNumber(value: string) {
+  return value.replace(/[^0-9+()\- ]/g, '');
+}
+
 export default function InspectionRequestScreen({navigation}: any) {
   const [details, setDetails] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
   const [dateNeeded, setDateNeeded] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [pickerDate, setPickerDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
   const resetForm = () => {
     setDetails('');
+    setContactNumber('');
     setDateNeeded('');
     setSelectedDate(null);
     setPickerDate(new Date());
+    setFieldErrors({});
   };
 
   const handleDetailsChange = (value: string) => {
     setDetails(value);
+    clearStatusMessages();
 
-    if (errorMessage) {
-      setErrorMessage('');
+    if (fieldErrors.details) {
+      setFieldErrors(currentErrors => ({
+        ...currentErrors,
+        details: undefined,
+      }));
     }
+  };
 
-    if (successMessage) {
-      setSuccessMessage('');
+  const handleContactNumberChange = (value: string) => {
+    setContactNumber(sanitizeContactNumber(value));
+    clearStatusMessages();
+
+    if (fieldErrors.contactNumber) {
+      setFieldErrors(currentErrors => ({
+        ...currentErrors,
+        contactNumber: undefined,
+      }));
     }
   };
 
@@ -115,19 +140,42 @@ export default function InspectionRequestScreen({navigation}: any) {
     setShowDatePicker(false);
   };
 
+  const validateForm = () => {
+    const trimmedDetails = details.trim();
+    const trimmedContactNumber = contactNumber.trim();
+    const nextErrors: FieldErrors = {};
+
+    if (!trimmedDetails) {
+      nextErrors.details = 'Inspection details are required.';
+    }
+
+    if (!trimmedContactNumber) {
+      nextErrors.contactNumber = 'Contact number is required.';
+    }
+
+    setFieldErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      setErrorMessage('Please complete the required fields before submitting.');
+      setSuccessMessage('');
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async () => {
     if (submitting) {
       return;
     }
 
-    const trimmedDetails = details.trim();
-    const trimmedDateNeeded = dateNeeded.trim();
-
-    if (!trimmedDetails) {
-      setErrorMessage('Inspection details are required.');
-      setSuccessMessage('');
+    if (!validateForm()) {
       return;
     }
+
+    const trimmedDetails = details.trim();
+    const trimmedContactNumber = contactNumber.trim();
+    const trimmedDateNeeded = dateNeeded.trim();
 
     try {
       setSubmitting(true);
@@ -136,6 +184,9 @@ export default function InspectionRequestScreen({navigation}: any) {
 
       const response = await createInspectionRequest({
         details: trimmedDetails,
+        ...(trimmedContactNumber
+          ? {contact_number: trimmedContactNumber}
+          : {}),
         ...(trimmedDateNeeded ? {date_needed: trimmedDateNeeded} : {}),
       });
 
@@ -211,7 +262,7 @@ export default function InspectionRequestScreen({navigation}: any) {
             style={[
               styles.input,
               styles.textArea,
-              errorMessage && !details.trim() ? styles.inputError : null,
+              fieldErrors.details ? styles.inputError : null,
             ]}
             textAlignVertical="top"
             value={details}
@@ -221,6 +272,35 @@ export default function InspectionRequestScreen({navigation}: any) {
             Example: roof check, panel placement review, or site condition
             concerns.
           </Text>
+          {fieldErrors.details ? (
+            <Text style={styles.fieldErrorText}>{fieldErrors.details}</Text>
+          ) : null}
+        </View>
+
+        <View style={styles.fieldGroup}>
+          <View style={styles.fieldHeader}>
+            <Text style={styles.fieldLabel}>Contact number</Text>
+            <Text style={styles.requiredText}>Required</Text>
+          </View>
+
+          <TextInput
+            keyboardType="phone-pad"
+            onChangeText={handleContactNumberChange}
+            placeholder="Enter a phone number we can reach"
+            placeholderTextColor="#94a3b8"
+            style={[
+              styles.input,
+              fieldErrors.contactNumber ? styles.inputError : null,
+            ]}
+            value={contactNumber}
+          />
+
+          <Text style={styles.helpText}>
+            Add the best number to call or text about this inspection request.
+          </Text>
+          {fieldErrors.contactNumber ? (
+            <Text style={styles.fieldErrorText}>{fieldErrors.contactNumber}</Text>
+          ) : null}
         </View>
 
         <View style={styles.fieldGroup}>
@@ -464,6 +544,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     marginTop: 6,
+  },
+  fieldErrorText: {
+    color: '#b91c1c',
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 8,
   },
   submitCard: {
     backgroundColor: '#ffffff',

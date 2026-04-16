@@ -15,6 +15,7 @@ class ServiceRequest extends Model
         'technician_id',
         'request_type',
         'details',
+        'contact_number',
         'date_needed',
         'status',
         'technician_marked_done_at',
