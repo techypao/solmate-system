@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CustomerAccountController;
+use App\Http\Controllers\Api\TechnicianAccountController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\QuotationLineItemController;
 use App\Http\Controllers\InspectionRequestController;
@@ -64,6 +66,8 @@ Route::middleware(['auth:sanctum', 'role:technician'])->group(function () {
 
     Route::get('/technician/final-quotation-options', [QuotationController::class, 'getFinalQuotationOptions']);
     Route::post('/technician/final-quotations', [QuotationController::class, 'storeFinalQuotation']);
+    Route::put('/technician/account', [TechnicianAccountController::class, 'updateProfile']);
+    Route::put('/technician/account/password', [TechnicianAccountController::class, 'updatePassword']);
 });
 
 // CUSTOMER ROUTES
@@ -79,4 +83,6 @@ Route::middleware(['auth:sanctum', 'role:customer'])->group(function () {
     Route::get('/service-requests', [ServiceRequestController::class, 'index']);
 
     Route::get('/customer/final-quotations/{inspection_request_id}', [QuotationController::class, 'getCustomerFinalQuotation']);
+    Route::put('/customer/account', [CustomerAccountController::class, 'updateProfile']);
+    Route::put('/customer/account/password', [CustomerAccountController::class, 'updatePassword']);
 });

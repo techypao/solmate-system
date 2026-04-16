@@ -427,6 +427,7 @@
                         <a href="{{ route('quotations.item-builder') }}">Quotation Item Builder</a>
                     @endif
                     @if (auth()->user()->role === \App\Models\User::ROLE_ADMIN)
+                        <a href="{{ route('admin.profile.show') }}">Profile</a>
                         <a href="{{ route('admin.quotation-settings') }}">Quotation Settings</a>
                         <a href="{{ route('admin.pricing-catalog') }}">Pricing Catalog</a>
                         <a href="{{ route('admin.technicians.create') }}">Register Technician</a>

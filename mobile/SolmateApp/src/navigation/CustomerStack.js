@@ -3,6 +3,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import HomeScreen from '../../screens/HomeScreen';
+import CustomerSettingsScreen from '../../screens/CustomerSettingsScreen';
 import FinalQuotationViewScreen from '../../screens/FinalQuotationViewScreen';
 import InspectionRequestDetailScreen from '../../screens/InspectionRequestDetailScreen';
 import InspectionRequestListScreen from '../../screens/InspectionRequestListScreen';
@@ -31,6 +32,12 @@ export default function CustomerStack() {
         name="Home"
         component={HomeScreen}
         options={{ title: 'Customer Dashboard' }}
+      />
+
+      <Stack.Screen
+        name="CustomerSettings"
+        component={CustomerSettingsScreen}
+        options={{ title: 'Settings' }}
       />
 
       {/* Quotation creation form */}

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\QuotationSettingsPageController;
 use App\Http\Controllers\Admin\PricingCatalogPageController;
+use App\Http\Controllers\Admin\ProfilePageController;
 use App\Http\Controllers\Admin\RequestAssignmentPageController;
 use App\Http\Controllers\Admin\TechnicianRegistrationController;
 use App\Http\Controllers\AuthController;
@@ -56,4 +57,15 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/admin/request-assignments', [RequestAssignmentPageController::class, 'show'])
         ->name('admin.request-assignments');
+
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/admin/profile', [ProfilePageController::class, 'show'])
+            ->name('admin.profile.show');
+
+        Route::put('/admin/profile', [ProfilePageController::class, 'updateProfile'])
+            ->name('admin.profile.update');
+
+        Route::put('/admin/profile/password', [ProfilePageController::class, 'updatePassword'])
+            ->name('admin.profile.password.update');
+    });
 });

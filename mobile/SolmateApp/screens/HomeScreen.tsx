@@ -47,7 +47,7 @@ function QuickActionCard({
 }
 
 export default function HomeScreen({ navigation }: any) {
-  const { logout, user } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const customerName = user?.name || 'Customer';
 
   return (
@@ -225,17 +225,18 @@ export default function HomeScreen({ navigation }: any) {
           </View>
         </AppCard>
 
-        <AppCard style={styles.logoutCard}>
-          <Text style={styles.sectionTitle}>Account actions</Text>
+        <AppCard style={styles.accountCard}>
+          <Text style={styles.sectionTitle}>Settings and account</Text>
           <Text style={styles.sectionSubtitle}>
-            Use this when you are ready to end your session.
+            Open your customer settings page to review account details and
+            manage your session.
           </Text>
 
           <AppButton
             style={styles.buttonSpacing}
-            title="Logout"
-            variant="outline"
-            onPress={logout}
+            title="Open Settings"
+            variant="secondary"
+            onPress={() => navigation.navigate('CustomerSettings')}
           />
         </AppCard>
       </ScrollView>
@@ -451,7 +452,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
-  logoutCard: {
+  accountCard: {
     marginBottom: 8,
   },
   pressed: {

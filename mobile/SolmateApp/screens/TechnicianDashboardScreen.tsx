@@ -230,6 +230,12 @@ export default function TechnicianDashboardScreen({navigation}: any) {
               onPress={() => navigation.navigate('TechnicianServiceRequests')}
             />
             <AppButton
+              title="Open Settings"
+              variant="secondary"
+              style={styles.buttonSpacing}
+              onPress={() => navigation.navigate('TechnicianSettings')}
+            />
+            <AppButton
               title="Logout"
               variant="outline"
               style={styles.buttonSpacing}
