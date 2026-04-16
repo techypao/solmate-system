@@ -143,7 +143,23 @@
             background: #fff;
         }
 
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #bcccdc;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #fff;
+        }
+
         input:focus {
+            outline: 2px solid #9bd0ff;
+            border-color: #0f5f9c;
+        }
+
+        select:focus,
+        textarea:focus {
             outline: 2px solid #9bd0ff;
             border-color: #0f5f9c;
         }
@@ -237,6 +253,164 @@
             display: grid;
             gap: 12px;
         }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .summary-grid {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        }
+
+        .summary-card {
+            padding: 16px;
+            border: 1px solid #d9e2ec;
+            border-radius: 12px;
+            background: #f8fbff;
+        }
+
+        .summary-label {
+            color: #52606d;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .summary-value {
+            color: #102a43;
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .request-list {
+            display: grid;
+            gap: 16px;
+        }
+
+        .request-card {
+            padding: 18px;
+            border: 1px solid #d9e2ec;
+            border-radius: 12px;
+            background: #fbfcfe;
+        }
+
+        .request-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .request-title {
+            color: #102a43;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .request-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .detail-grid {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        }
+
+        .detail-item {
+            padding: 12px 14px;
+            border: 1px solid #e4e7eb;
+            border-radius: 10px;
+            background: #ffffff;
+        }
+
+        .detail-label {
+            display: block;
+            margin-bottom: 4px;
+            color: #7b8794;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .assignment-row {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: end;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px 10px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        .badge-neutral {
+            background: #f0f4f8;
+            color: #334e68;
+            border-color: #d9e2ec;
+        }
+
+        .badge-warning {
+            background: #fff7d6;
+            color: #8d5d00;
+            border-color: #f6d776;
+        }
+
+        .badge-info {
+            background: #e8f1fb;
+            color: #124e78;
+            border-color: #bfd8f4;
+        }
+
+        .badge-primary {
+            background: #e0f2fe;
+            color: #075985;
+            border-color: #93c5fd;
+        }
+
+        .badge-success {
+            background: #e3f9e5;
+            color: #1f5132;
+            border-color: #b7e6be;
+        }
+
+        .list-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 12px 14px;
+            border: 1px solid #e4e7eb;
+            border-radius: 10px;
+            background: #ffffff;
+        }
+
+        @media (max-width: 720px) {
+            .assignment-row {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -255,6 +429,7 @@
                     @if (auth()->user()->role === \App\Models\User::ROLE_ADMIN)
                         <a href="{{ route('admin.quotation-settings') }}">Quotation Settings</a>
                         <a href="{{ route('admin.pricing-catalog') }}">Pricing Catalog</a>
+                        <a href="{{ route('admin.technicians.create') }}">Register Technician</a>
                         <a href="{{ route('admin.request-assignments') }}">Request Assignments</a>
                     @endif
                     <form method="POST" action="{{ route('logout') }}">

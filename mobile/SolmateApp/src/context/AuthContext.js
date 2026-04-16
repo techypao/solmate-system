@@ -4,6 +4,7 @@ import {
   getStoredToken,
   removeStoredToken,
   saveStoredToken,
+  setSessionToken,
 } from '../services/api';
 
 export const AuthContext = createContext();
@@ -15,14 +16,17 @@ export const AuthProvider = ({children}) => {
 
   const fetchUser = useCallback(async authToken => {
     try {
+      setSessionToken(authToken);
       const userData = await apiGet('/user');
       setUser(userData);
       setToken(authToken);
     } catch (error) {
       console.log('Fetch user error:', error?.message || error);
+      setSessionToken(null);
       await removeStoredToken();
       setUser(null);
       setToken(null);
+      throw error;
     }
   }, []);
 
@@ -32,6 +36,8 @@ export const AuthProvider = ({children}) => {
 
       if (storedToken) {
         await fetchUser(storedToken);
+      } else {
+        setSessionToken(null);
       }
     } catch (error) {
       console.log('Check login error:', error);
@@ -53,11 +59,13 @@ export const AuthProvider = ({children}) => {
       await fetchUser(newToken);
     } catch (error) {
       console.log('Login context error:', error);
+      throw error;
     }
   };
 
   const logout = async () => {
     try {
+      setSessionToken(null);
       await removeStoredToken();
       setUser(null);
       setToken(null);

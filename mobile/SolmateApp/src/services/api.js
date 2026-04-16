@@ -3,6 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const BASE_URL = 'http://10.0.2.2:8000/api';
 export const TOKEN_STORAGE_KEY = 'token';
 
+let sessionToken = null;
+
 export class ApiError extends Error {
   constructor(message, status = 0, data = null, errors = null) {
     super(message);
@@ -15,6 +17,14 @@ export class ApiError extends Error {
 
 export async function getStoredToken() {
   return AsyncStorage.getItem(TOKEN_STORAGE_KEY);
+}
+
+export function getSessionToken() {
+  return sessionToken;
+}
+
+export function setSessionToken(token) {
+  sessionToken = token;
 }
 
 export async function saveStoredToken(token) {
@@ -92,7 +102,7 @@ async function apiRequest(endpoint, options = {}) {
   }
 
   if (requiresAuth) {
-    const token = await getStoredToken();
+    const token = getSessionToken() ?? (await getStoredToken());
 
     if (!token) {
       throw new ApiError('No login token found. Please log in again.', 401);

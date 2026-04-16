@@ -10,14 +10,23 @@ class ServiceRequest extends Model
 {
     use HasFactory;
 
-   protected $fillable = [
-    'user_id',
-    'technician_id',
-    'request_type',
-    'details',
-    'date_needed',
-    'status',
-];
+    protected $fillable = [
+        'user_id',
+        'technician_id',
+        'request_type',
+        'details',
+        'date_needed',
+        'status',
+        'technician_marked_done_at',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'date_needed' => 'date',
+            'technician_marked_done_at' => 'datetime',
+        ];
+    }
 
     public function user()
     {
@@ -25,12 +34,12 @@ class ServiceRequest extends Model
     }
 
     public function customer()
-{
-    return $this->belongsTo(User::class, 'user_id');
-}
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 
-public function technician()
-{
-    return $this->belongsTo(User::class, 'technician_id');
-}
+    public function technician()
+    {
+        return $this->belongsTo(User::class, 'technician_id');
+    }
 }

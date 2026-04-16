@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\QuotationSettingsPageController;
 use App\Http\Controllers\Admin\PricingCatalogPageController;
 use App\Http\Controllers\Admin\RequestAssignmentPageController;
+use App\Http\Controllers\Admin\TechnicianRegistrationController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\QuotationItemBuilderPageController;
 use App\Models\User;
@@ -46,6 +47,12 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/admin/pricing-catalog', [PricingCatalogPageController::class, 'show'])
         ->name('admin.pricing-catalog');
+
+    Route::get('/admin/technicians/create', [TechnicianRegistrationController::class, 'create'])
+        ->name('admin.technicians.create');
+
+    Route::post('/admin/technicians', [TechnicianRegistrationController::class, 'store'])
+        ->name('admin.technicians.store');
 
     Route::get('/admin/request-assignments', [RequestAssignmentPageController::class, 'show'])
         ->name('admin.request-assignments');

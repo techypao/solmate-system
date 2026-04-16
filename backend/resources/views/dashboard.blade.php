@@ -15,6 +15,12 @@
                     <a class="button-link" href="{{ route('admin.quotation-settings') }}">Open Admin Quotation Settings</a>
                 </div>
                 <div>
+                    <a class="button-link secondary" href="{{ route('admin.technicians.create') }}">Register Technician Account</a>
+                </div>
+                <div>
+                    <a class="button-link secondary" href="{{ route('admin.request-assignments') }}">Open Request Assignments</a>
+                </div>
+                <div>
                     <a class="button-link secondary" href="{{ route('quotations.item-builder') }}">Open Quotation Item Builder</a>
                 </div>
             @elseif ($user->role === \App\Models\User::ROLE_TECHNICIAN)

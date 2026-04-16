@@ -101,6 +101,7 @@ function normalizeServiceRequest(item: ServiceRequest): ServiceRequest {
   return {
     ...item,
     status: item.status || 'pending',
+    technician_marked_done_at: item.technician_marked_done_at || null,
   };
 }
 
@@ -148,6 +149,8 @@ export default function ServiceRequestListScreen({ navigation, route }: any) {
   const renderServiceRequest = ({ item }: { item: ServiceRequest }) => {
     const statusStyle = getStatusBadgeStyle(item.status);
     const customerName = item.customer?.name || 'Customer not available';
+    const awaitingAdminReview =
+      !!item.technician_marked_done_at && item.status !== 'completed';
 
     return (
       <View style={styles.card}>
@@ -186,6 +189,17 @@ export default function ServiceRequestListScreen({ navigation, route }: any) {
           <Text style={styles.detailsLabel}>Details</Text>
           <Text style={styles.detailsText}>{item.details}</Text>
         </View>
+
+        {awaitingAdminReview ? (
+          <View style={styles.reviewCard}>
+            <Text style={styles.reviewTitle}>Awaiting admin confirmation</Text>
+            <Text style={styles.reviewText}>
+              {mode === 'technician'
+                ? 'You already marked this service as done. The admin will confirm the final official status.'
+                : 'The technician reported the work as done. The admin still needs to confirm the final official status.'}
+            </Text>
+          </View>
+        ) : null}
 
         <View style={styles.metaGrid}>
           <View style={styles.metaCard}>
@@ -491,6 +505,25 @@ const styles = StyleSheet.create({
     color: '#334155',
     fontSize: 14,
     lineHeight: 21,
+  },
+  reviewCard: {
+    backgroundColor: '#fff7ed',
+    borderColor: '#fed7aa',
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 14,
+    padding: 14,
+  },
+  reviewTitle: {
+    color: '#9a3412',
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  reviewText: {
+    color: '#9a3412',
+    fontSize: 13,
+    lineHeight: 19,
   },
   metaGrid: {
     flexDirection: 'row',

@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use RuntimeException;
 
 class AuthController extends Controller
 {
@@ -16,15 +18,39 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
+        $validated = $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
-        if (!Auth::attempt($credentials, $request->boolean('remember'))) {
-            return back()
-                ->withErrors(['email' => 'Invalid email or password.'])
-                ->onlyInput('email');
+        $credentials = [
+            'email' => trim($validated['email']),
+            'password' => $validated['password'],
+        ];
+
+        try {
+            $authenticated = Auth::attempt($credentials, $request->boolean('remember'));
+        } catch (RuntimeException) {
+            $authenticated = false;
+        }
+
+        if (!$authenticated) {
+            $legacyUser = User::query()
+                ->where('email', $credentials['email'])
+                ->first();
+
+            if ($legacyUser && hash_equals((string) $legacyUser->getAuthPassword(), $credentials['password'])) {
+                // Upgrade legacy plain-text passwords to hashed passwords after a verified login.
+                $legacyUser->forceFill([
+                    'password' => Hash::make($credentials['password']),
+                ])->save();
+
+                Auth::login($legacyUser, $request->boolean('remember'));
+            } else {
+                return back()
+                    ->withErrors(['email' => 'Invalid email or password.'])
+                    ->onlyInput('email');
+            }
         }
 
         $request->session()->regenerate();

@@ -16,6 +16,7 @@ export type ServiceRequest = {
   details: string;
   date_needed?: string | null;
   status: string;
+  technician_marked_done_at?: string | null;
   created_at?: string;
   updated_at?: string;
   customer?: UserSummary | null;
@@ -30,8 +31,7 @@ export type CreateServiceRequestPayload = {
 
 export type TechnicianServiceRequestStatus =
   | 'assigned'
-  | 'in_progress'
-  | 'completed';
+  | 'in_progress';
 
 type CreateServiceRequestResponse = {
   message: string;
@@ -82,6 +82,14 @@ export async function updateTechnicianServiceRequestStatus(
   const response = await apiPut<{message?: string; data?: ServiceRequest}>(
     `/technician/service-requests/${id}/status`,
     {status},
+  );
+
+  return response?.data ?? ({} as ServiceRequest);
+}
+
+export async function requestTechnicianServiceCompletion(id: number) {
+  const response = await apiPost<{message?: string; data?: ServiceRequest}>(
+    `/technician/service-requests/${id}/completion-request`,
   );
 
   return response?.data ?? ({} as ServiceRequest);

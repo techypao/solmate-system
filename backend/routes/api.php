@@ -29,8 +29,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/quotations/{id}', [QuotationController::class, 'show']);
     Route::put('/quotations/{id}', [QuotationController::class, 'update']);
     Route::match(['put', 'patch'], '/quotations/{quotation}/line-items', [QuotationLineItemController::class, 'replace']);
-
-    Route::put('/service-requests/{id}/assign-technician', [ServiceRequestController::class, 'assignTechnician']);
 });
 
 // ADMIN ROUTES
@@ -39,6 +37,8 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
         return response()->json(['message' => 'Welcome Admin']);
     });
 
+    Route::put('/service-requests/{id}/assign-technician', [ServiceRequestController::class, 'assignTechnician']);
+    Route::put('/admin/service-requests/{id}/status', [ServiceRequestController::class, 'updateAdminStatus']);
     Route::put('/inspection-requests/{id}/assign-technician', [InspectionRequestController::class, 'assignTechnician']);
     Route::get('/admin/quotation-settings', [QuotationSettingsController::class, 'show']);
     Route::match(['put', 'patch'], '/admin/quotation-settings', [QuotationSettingsController::class, 'update']);
@@ -55,6 +55,7 @@ Route::middleware(['auth:sanctum', 'role:technician'])->group(function () {
 
     Route::get('/technician/service-requests', [ServiceRequestController::class, 'assignedRequests']);
     Route::put('/technician/service-requests/{id}/status', [ServiceRequestController::class, 'updateStatus']);
+    Route::post('/technician/service-requests/{id}/completion-request', [ServiceRequestController::class, 'requestCompletion']);
 
     Route::get('/technician/inspection-requests', [InspectionRequestController::class, 'assignedToTechnician']);
     Route::put('/technician/inspection-requests/{id}/status', [InspectionRequestController::class, 'updateStatus']);

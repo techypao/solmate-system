@@ -21,10 +21,12 @@ class RequestAssignmentPageController extends Controller
                 ->get(),
             'serviceRequests' => ServiceRequest::query()
                 ->with(['customer', 'technician'])
+                ->orderByRaw("CASE WHEN technician_marked_done_at IS NOT NULL AND status != 'completed' THEN 0 WHEN technician_id IS NULL THEN 1 ELSE 2 END")
                 ->latest()
                 ->get(),
             'inspectionRequests' => InspectionRequest::query()
                 ->with(['customer', 'technician'])
+                ->orderByRaw('CASE WHEN technician_id IS NULL THEN 0 ELSE 1 END')
                 ->latest()
                 ->get(),
         ]);

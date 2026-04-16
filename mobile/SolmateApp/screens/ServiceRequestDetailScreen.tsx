@@ -15,6 +15,7 @@ import {ApiError} from '../src/services/api';
 import {
   getServiceRequestById,
   getTechnicianServiceRequestById,
+  requestTechnicianServiceCompletion,
   ServiceRequest,
   TechnicianServiceRequestStatus,
   updateTechnicianServiceRequestStatus,
@@ -77,7 +78,7 @@ function DetailRow({
 
 const TECHNICIAN_STATUS_ACTIONS: Array<{
   label: string;
-  value: TechnicianServiceRequestStatus;
+  value: TechnicianServiceRequestStatus | 'notify_admin_done';
   currentStatuses: string[];
   successMessage: string;
 }> = [
@@ -88,10 +89,10 @@ const TECHNICIAN_STATUS_ACTIONS: Array<{
     successMessage: 'The service request is now in progress.',
   },
   {
-    label: 'Mark Completed',
-    value: 'completed',
+    label: 'Notify Admin Service Done',
+    value: 'notify_admin_done',
     currentStatuses: ['in_progress'],
-    successMessage: 'The service request has been completed.',
+    successMessage: 'The admin has been notified that the service is done.',
   },
 ];
 
@@ -154,18 +155,27 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
 
   const availableActions = useMemo(() => {
     const currentStatus = (serviceRequest?.status || '').toLowerCase();
+    const alreadyRequestedCompletion = !!serviceRequest?.technician_marked_done_at;
 
     if (mode !== 'technician') {
       return [];
     }
 
-    return TECHNICIAN_STATUS_ACTIONS.filter(action =>
-      action.currentStatuses.includes(currentStatus),
-    );
-  }, [mode, serviceRequest?.status]);
+    return TECHNICIAN_STATUS_ACTIONS.filter(action => {
+      if (!action.currentStatuses.includes(currentStatus)) {
+        return false;
+      }
+
+      if (action.value === 'notify_admin_done' && alreadyRequestedCompletion) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [mode, serviceRequest?.status, serviceRequest?.technician_marked_done_at]);
 
   const handleStatusUpdate = async (
-    nextStatus: TechnicianServiceRequestStatus,
+    nextStatus: TechnicianServiceRequestStatus | 'notify_admin_done',
     successMessage: string,
   ) => {
     if (!serviceRequest || actionLoading) {
@@ -175,15 +185,23 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
     try {
       setActionLoading(true);
 
-      const updatedServiceRequest = await updateTechnicianServiceRequestStatus(
-        serviceRequest.id,
-        nextStatus,
-      );
+      const updatedServiceRequest =
+        nextStatus === 'notify_admin_done'
+          ? await requestTechnicianServiceCompletion(serviceRequest.id)
+          : await updateTechnicianServiceRequestStatus(
+              serviceRequest.id,
+              nextStatus,
+            );
 
       const nextRequest =
         updatedServiceRequest?.id !== undefined
           ? updatedServiceRequest
-          : {...serviceRequest, status: nextStatus};
+          : {
+              ...serviceRequest,
+              ...(nextStatus === 'notify_admin_done'
+                ? {technician_marked_done_at: new Date().toISOString()}
+                : {status: nextStatus}),
+            };
 
       setServiceRequest(nextRequest);
       navigation.replace(route.name, {
@@ -198,7 +216,7 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
       } else {
         Alert.alert(
           'Update failed',
-          'Could not update the service request status.',
+          'Could not update the service request.',
         );
       }
     } finally {
@@ -244,6 +262,10 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
   }
 
   const statusColors = getServiceRequestStatusColors(serviceRequest.status);
+  const awaitingAdminConfirmation =
+    !!serviceRequest.technician_marked_done_at &&
+    serviceRequest.status !== 'completed';
+  const adminConfirmedCompletion = serviceRequest.status === 'completed';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -255,8 +277,8 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
           <Text style={styles.heroTitle}>{serviceRequest.request_type}</Text>
           <Text style={styles.heroSubtitle}>
             {mode === 'technician'
-              ? 'Review the assigned service request and update its current progress.'
-              : 'Review the current status and details of your submitted service request.'}
+              ? 'Review the assigned service request, update its work progress, and notify the admin when the job is done.'
+              : 'Review the current official status and details of your submitted service request.'}
           </Text>
 
           <View
@@ -325,19 +347,66 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
           />
         </AppCard>
 
+        <AppCard style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Completion review</Text>
+          <Text style={styles.sectionSubtitle}>
+            The technician can report the work as done, but the admin confirms
+            the final official service status.
+          </Text>
+
+          {awaitingAdminConfirmation ? (
+            <View style={styles.infoCard}>
+              <Text style={styles.infoTitle}>Awaiting admin confirmation</Text>
+              <Text style={styles.infoText}>
+                {mode === 'technician'
+                  ? 'You already marked this service as done. Wait for the admin to review and finalize the official status.'
+                  : 'The technician reported that the service work is done. The admin still needs to confirm the final official status.'}
+              </Text>
+              <DetailRow
+                label="Technician marked done"
+                value={formatDateTime(serviceRequest.technician_marked_done_at)}
+              />
+            </View>
+          ) : adminConfirmedCompletion ? (
+            <View style={styles.successCard}>
+              <Text style={styles.successTitle}>Admin confirmed completion</Text>
+              <Text style={styles.successText}>
+                This service request is officially completed.
+              </Text>
+              {serviceRequest.technician_marked_done_at ? (
+                <DetailRow
+                  label="Technician marked done"
+                  value={formatDateTime(serviceRequest.technician_marked_done_at)}
+                />
+              ) : null}
+            </View>
+          ) : (
+            <View style={styles.infoCard}>
+              <Text style={styles.infoTitle}>No completion request yet</Text>
+              <Text style={styles.infoText}>
+                {mode === 'technician'
+                  ? 'When the job is finished, use the button below to notify the admin for final review.'
+                  : 'The completed status will appear here after the technician finishes the work and the admin confirms it.'}
+              </Text>
+            </View>
+          )}
+        </AppCard>
+
         {mode === 'technician' ? (
           <AppCard style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Update status</Text>
+            <Text style={styles.sectionTitle}>Progress updates</Text>
             <Text style={styles.sectionSubtitle}>
-              Status transitions follow the current backend rules and are only
-              available when valid for this request.
+              Move the service into progress, then notify the admin when the
+              work is done.
             </Text>
 
             {availableActions.length === 0 ? (
               <View style={styles.infoCard}>
-                <Text style={styles.infoTitle}>No further updates available</Text>
+                <Text style={styles.infoTitle}>No further technician updates available</Text>
                 <Text style={styles.infoText}>
-                  This request is already in its latest allowed state.
+                  {awaitingAdminConfirmation
+                    ? 'This request is waiting for admin review.'
+                    : 'This request is already in its latest technician-managed state.'}
                 </Text>
               </View>
             ) : null}
@@ -345,7 +414,7 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
             {availableActions.map(action => (
               <AppButton
                 key={action.value}
-                title={actionLoading ? 'Updating status...' : action.label}
+                title={actionLoading ? 'Saving update...' : action.label}
                 disabled={actionLoading}
                 onPress={() =>
                   handleStatusUpdate(action.value, action.successMessage)
@@ -495,6 +564,25 @@ const styles = StyleSheet.create({
   },
   infoText: {
     color: '#9a3412',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  successCard: {
+    backgroundColor: '#dcfce7',
+    borderColor: '#86efac',
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 16,
+    padding: 16,
+  },
+  successTitle: {
+    color: '#166534',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  successText: {
+    color: '#166534',
     fontSize: 14,
     lineHeight: 20,
   },
