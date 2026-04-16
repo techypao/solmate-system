@@ -74,6 +74,28 @@ class ServiceRequestController extends Controller
         ], 200);
     }
 
+    public function updatePreferredDate(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'date_needed' => 'required|date',
+        ], [
+            'date_needed.required' => 'Preferred date is required.',
+            'date_needed.date' => 'Preferred date must be a valid date.',
+        ]);
+
+        $serviceRequest = ServiceRequest::query()
+            ->with(['customer', 'technician'])
+            ->findOrFail($id);
+
+        $serviceRequest->date_needed = $validated['date_needed'];
+        $serviceRequest->save();
+
+        return response()->json([
+            'message' => 'Service preferred date updated successfully.',
+            'data' => $serviceRequest,
+        ], 200);
+    }
+
     public function assignedRequests(Request $request)
     {
         $technician = $request->user();

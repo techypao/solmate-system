@@ -38,8 +38,10 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     });
 
     Route::put('/service-requests/{id}/assign-technician', [ServiceRequestController::class, 'assignTechnician']);
+    Route::match(['put', 'patch'], '/admin/service-requests/{id}/preferred-date', [ServiceRequestController::class, 'updatePreferredDate']);
     Route::put('/admin/service-requests/{id}/status', [ServiceRequestController::class, 'updateAdminStatus']);
     Route::put('/inspection-requests/{id}/assign-technician', [InspectionRequestController::class, 'assignTechnician']);
+    Route::match(['put', 'patch'], '/inspection-requests/{id}/preferred-date', [InspectionRequestController::class, 'updatePreferredDate']);
     Route::get('/admin/quotation-settings', [QuotationSettingsController::class, 'show']);
     Route::match(['put', 'patch'], '/admin/quotation-settings', [QuotationSettingsController::class, 'update']);
     Route::get('/admin/pricing-items', [PricingItemController::class, 'index']);

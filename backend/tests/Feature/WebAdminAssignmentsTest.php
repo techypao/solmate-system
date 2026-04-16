@@ -106,6 +106,47 @@ class WebAdminAssignmentsTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_update_service_request_preferred_date(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_service_date@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $customer = User::query()->create([
+            'name' => 'Customer User',
+            'email' => 'customer_service_date@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        $serviceRequest = ServiceRequest::query()->create([
+            'user_id' => $customer->id,
+            'request_type' => 'Maintenance',
+            'details' => 'Inspect inverter and wiring',
+            'contact_number' => '0917-444-1100',
+            'date_needed' => '2026-04-23',
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->putJson("/api/admin/service-requests/{$serviceRequest->id}/preferred-date", [
+                'date_needed' => '2026-04-27',
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.id', $serviceRequest->id);
+
+        $this->assertStringStartsWith('2026-04-27', (string) $response->json('data.date_needed'));
+
+        $this->assertDatabaseHas('service_requests', [
+            'id' => $serviceRequest->id,
+            'date_needed' => '2026-04-27 00:00:00',
+        ]);
+    }
+
     public function test_admin_can_assign_technician_to_inspection_request_using_existing_api_route(): void
     {
         $admin = User::query()->create([
@@ -147,6 +188,67 @@ class WebAdminAssignmentsTest extends TestCase
             'technician_id' => $technician->id,
             'status' => 'assigned',
         ]);
+    }
+
+    public function test_admin_can_update_inspection_request_preferred_date(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_inspection_date@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $customer = User::query()->create([
+            'name' => 'Customer User',
+            'email' => 'customer_inspection_date@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        $inspectionRequest = InspectionRequest::query()->create([
+            'user_id' => $customer->id,
+            'details' => 'Inspect the site layout',
+            'contact_number' => '0917-444-1000',
+            'date_needed' => '2026-04-21',
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($admin)
+            ->putJson("/api/inspection-requests/{$inspectionRequest->id}/preferred-date", [
+                'date_needed' => '2026-04-24',
+            ])
+            ->assertOk()
+            ->assertJsonPath('inspection_request.id', $inspectionRequest->id)
+            ->assertJsonPath('inspection_request.date_needed', '2026-04-24');
+
+        $this->assertDatabaseHas('inspection_requests', [
+            'id' => $inspectionRequest->id,
+            'date_needed' => '2026-04-24',
+        ]);
+    }
+
+    public function test_non_admin_cannot_update_inspection_request_preferred_date(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Customer User',
+            'email' => 'customer_inspection_date_blocked@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        $inspectionRequest = InspectionRequest::query()->create([
+            'user_id' => $customer->id,
+            'details' => 'Inspect the meter area',
+            'date_needed' => '2026-04-21',
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($customer)
+            ->putJson("/api/inspection-requests/{$inspectionRequest->id}/preferred-date", [
+                'date_needed' => '2026-04-25',
+            ])
+            ->assertForbidden();
     }
 
     public function test_non_admin_cannot_open_request_assignments_page(): void
@@ -193,6 +295,30 @@ class WebAdminAssignmentsTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_non_admin_cannot_update_service_request_preferred_date(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Customer User',
+            'email' => 'customer_service_date_blocked@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        $serviceRequest = ServiceRequest::query()->create([
+            'user_id' => $customer->id,
+            'request_type' => 'Repair',
+            'details' => 'Replace damaged wiring',
+            'date_needed' => '2026-04-23',
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($customer)
+            ->putJson("/api/admin/service-requests/{$serviceRequest->id}/preferred-date", [
+                'date_needed' => '2026-04-29',
+            ])
+            ->assertForbidden();
+    }
+
     public function test_admin_request_assignments_page_shows_service_completion_review_controls(): void
     {
         $admin = User::query()->create([
@@ -231,5 +357,73 @@ class WebAdminAssignmentsTest extends TestCase
             ->assertSee('Awaiting admin review')
             ->assertSee('Official service status')
             ->assertSee('Save official status');
+    }
+
+    public function test_admin_request_assignments_page_shows_service_preferred_date_controls(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_service_page_date@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $customer = User::query()->create([
+            'name' => 'Customer User',
+            'email' => 'customer_service_page_date@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        ServiceRequest::query()->create([
+            'user_id' => $customer->id,
+            'request_type' => 'Maintenance',
+            'details' => 'Check solar panel connections',
+            'contact_number' => '0917-888-2100',
+            'date_needed' => '2026-04-27',
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/admin/request-assignments')
+            ->assertOk()
+            ->assertSee('Preferred Date')
+            ->assertSee('Official preferred date')
+            ->assertSee('Save preferred date')
+            ->assertSee("Adjust this when the customer's requested service date needs to move for technician availability.", false)
+            ->assertSee('Apr 27, 2026');
+    }
+
+    public function test_admin_request_assignments_page_shows_inspection_preferred_date_controls(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_inspection_page_date@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $customer = User::query()->create([
+            'name' => 'Customer User',
+            'email' => 'customer_inspection_page_date@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        InspectionRequest::query()->create([
+            'user_id' => $customer->id,
+            'details' => 'Inspect rooftop setup',
+            'contact_number' => '0917-888-2000',
+            'date_needed' => '2026-04-28',
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/admin/request-assignments')
+            ->assertOk()
+            ->assertSee('Preferred Date')
+            ->assertSee('Official preferred date')
+            ->assertSee('Save preferred date')
+            ->assertSee('Apr 28, 2026');
     }
 }

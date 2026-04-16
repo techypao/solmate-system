@@ -59,7 +59,7 @@
         <div class="section-header">
             <div>
                 <h2 style="margin: 0;">Service Requests</h2>
-                <p class="page-copy" style="margin-bottom: 0;">Technicians can mark a service as done for review, but the official service status stays under admin control here.</p>
+                <p class="page-copy" style="margin-bottom: 0;">Technicians can mark a service as done for review, while admin keeps the official preferred date, assignment, and status under control here.</p>
             </div>
             <span class="badge badge-neutral">{{ $serviceRequests->count() }} total</span>
         </div>
@@ -146,8 +146,8 @@
                                 <strong>{{ $serviceRequest->request_type ?: 'Not specified' }}</strong>
                             </div>
                             <div class="detail-item">
-                                <span class="detail-label">Date Needed</span>
-                                <strong>{{ $dateNeeded }}</strong>
+                                <span class="detail-label">Preferred Date</span>
+                                <strong data-service-preferred-date-for="{{ $requestKey }}">{{ $dateNeeded }}</strong>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">Assigned Technician</span>
@@ -165,6 +165,28 @@
                         </div>
 
                         <div class="stack">
+                            <form
+                                class="service-preferred-date-form"
+                                data-endpoint="/api/admin/service-requests/{{ $serviceRequest->id }}/preferred-date"
+                                data-request-key="{{ $requestKey }}"
+                            >
+                                <label for="service_date_needed_{{ $serviceRequest->id }}">Official preferred date</label>
+                                <div class="assignment-row">
+                                    <div>
+                                        <input
+                                            id="service_date_needed_{{ $serviceRequest->id }}"
+                                            name="date_needed"
+                                            type="date"
+                                            value="{{ $serviceRequest->date_needed ? \Illuminate\Support\Carbon::parse($serviceRequest->date_needed)->toDateString() : '' }}"
+                                            required
+                                        >
+                                        <div class="muted" style="margin-top: 8px;">Adjust this when the customer's requested service date needs to move for technician availability.</div>
+                                    </div>
+                                    <button type="submit">Save preferred date</button>
+                                </div>
+                                <div class="field-error" data-form-error></div>
+                            </form>
+
                             <form
                                 class="assignment-form"
                                 data-endpoint="/api/service-requests/{{ $serviceRequest->id }}/assign-technician"
@@ -228,7 +250,7 @@
         <div class="section-header">
             <div>
                 <h2 style="margin: 0;">Inspection Requests</h2>
-                <p class="page-copy" style="margin-bottom: 0;">Inspection requests stay grouped here with customer details, current status, and technician assignment in one place.</p>
+                <p class="page-copy" style="margin-bottom: 0;">Inspection requests stay grouped here with customer details, the official preferred date, current status, and technician assignment in one place.</p>
             </div>
             <span class="badge badge-neutral">{{ $inspectionRequests->count() }} total</span>
         </div>
@@ -281,8 +303,8 @@
                                 <strong>{{ $inspectionRequest->contact_number ?: 'Not provided' }}</strong>
                             </div>
                             <div class="detail-item">
-                                <span class="detail-label">Date Needed</span>
-                                <strong>{{ $dateNeeded }}</strong>
+                                <span class="detail-label">Preferred Date</span>
+                                <strong data-preferred-date-for="{{ $requestKey }}">{{ $dateNeeded }}</strong>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">Current Status</span>
@@ -297,6 +319,28 @@
                         <div class="info-box" style="margin-bottom: 14px;">
                             <strong>Request details:</strong> {{ $inspectionRequest->details }}
                         </div>
+
+                        <form
+                            class="preferred-date-form"
+                            data-endpoint="/api/inspection-requests/{{ $inspectionRequest->id }}/preferred-date"
+                            data-request-key="{{ $requestKey }}"
+                        >
+                            <label for="inspection_date_needed_{{ $inspectionRequest->id }}">Official preferred date</label>
+                            <div class="assignment-row">
+                                <div>
+                                    <input
+                                        id="inspection_date_needed_{{ $inspectionRequest->id }}"
+                                        name="date_needed"
+                                        type="date"
+                                        value="{{ $inspectionRequest->date_needed ? \Illuminate\Support\Carbon::parse($inspectionRequest->date_needed)->toDateString() : '' }}"
+                                        required
+                                    >
+                                    <div class="muted" style="margin-top: 8px;">Use this when the original customer date needs to be adjusted for technician availability.</div>
+                                </div>
+                                <button type="submit">Save preferred date</button>
+                            </div>
+                            <div class="field-error" data-form-error></div>
+                        </form>
 
                         <form
                             class="assignment-form"
@@ -338,6 +382,8 @@
         const successBox = document.getElementById('assignment-success');
         const errorBox = document.getElementById('assignment-error');
         const assignmentForms = document.querySelectorAll('.assignment-form');
+        const servicePreferredDateForms = document.querySelectorAll('.service-preferred-date-form');
+        const preferredDateForms = document.querySelectorAll('.preferred-date-form');
         const serviceStatusForms = document.querySelectorAll('.service-status-form');
 
         function getCookie(name) {
@@ -361,6 +407,24 @@
 
         function formatStatus(status) {
             return (status || 'unknown').replace(/_/g, ' ');
+        }
+
+        function formatDisplayDate(value) {
+            if (!value) {
+                return 'Not specified';
+            }
+
+            const parsedDate = new Date(`${value}T00:00:00`);
+
+            if (Number.isNaN(parsedDate.getTime())) {
+                return value;
+            }
+
+            return parsedDate.toLocaleDateString(undefined, {
+                month: 'short',
+                day: '2-digit',
+                year: 'numeric',
+            });
         }
 
         function statusBadgeClass(status) {
@@ -428,6 +492,94 @@
 
             return responseBody;
         }
+
+        servicePreferredDateForms.forEach((form) => {
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                clearGlobalMessages();
+
+                const input = form.elements.namedItem('date_needed');
+                const button = form.querySelector('button[type="submit"]');
+                const inlineError = form.querySelector('[data-form-error]');
+                const requestKey = form.dataset.requestKey;
+                const preferredDateLabel = document.querySelector(`[data-service-preferred-date-for="${requestKey}"]`);
+
+                inlineError.textContent = '';
+                button.disabled = true;
+                button.textContent = 'Saving...';
+
+                try {
+                    const responseBody = await submitJson(form.dataset.endpoint, {
+                        date_needed: input.value,
+                    });
+
+                    const updatedRequest = responseBody.data || null;
+                    const updatedDate = updatedRequest?.date_needed || input.value;
+
+                    if (preferredDateLabel) {
+                        preferredDateLabel.textContent = formatDisplayDate(updatedDate);
+                    }
+
+                    if (updatedDate) {
+                        input.value = updatedDate;
+                    }
+
+                    successBox.textContent = responseBody.message || 'Service preferred date updated successfully.';
+                    setVisible(successBox, true);
+                } catch (error) {
+                    inlineError.textContent = error.message || 'Could not update the preferred date.';
+                    errorBox.textContent = error.message || 'Could not update the preferred date.';
+                    setVisible(errorBox, true);
+                } finally {
+                    button.disabled = false;
+                    button.textContent = 'Save preferred date';
+                }
+            });
+        });
+
+        preferredDateForms.forEach((form) => {
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                clearGlobalMessages();
+
+                const input = form.elements.namedItem('date_needed');
+                const button = form.querySelector('button[type="submit"]');
+                const inlineError = form.querySelector('[data-form-error]');
+                const requestKey = form.dataset.requestKey;
+                const preferredDateLabel = document.querySelector(`[data-preferred-date-for="${requestKey}"]`);
+
+                inlineError.textContent = '';
+                button.disabled = true;
+                button.textContent = 'Saving...';
+
+                try {
+                    const responseBody = await submitJson(form.dataset.endpoint, {
+                        date_needed: input.value,
+                    });
+
+                    const updatedRequest = responseBody.inspection_request || null;
+                    const updatedDate = updatedRequest?.date_needed || input.value;
+
+                    if (preferredDateLabel) {
+                        preferredDateLabel.textContent = formatDisplayDate(updatedDate);
+                    }
+
+                    if (updatedDate) {
+                        input.value = updatedDate;
+                    }
+
+                    successBox.textContent = responseBody.message || 'Inspection preferred date updated successfully.';
+                    setVisible(successBox, true);
+                } catch (error) {
+                    inlineError.textContent = error.message || 'Could not update the preferred date.';
+                    errorBox.textContent = error.message || 'Could not update the preferred date.';
+                    setVisible(errorBox, true);
+                } finally {
+                    button.disabled = false;
+                    button.textContent = 'Save preferred date';
+                }
+            });
+        });
 
         assignmentForms.forEach((form) => {
             form.addEventListener('submit', async (event) => {

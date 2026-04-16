@@ -98,11 +98,13 @@
                     <div>
                         <h2 style="margin: 0 0 6px;">Pricing Items</h2>
                         <div class="muted">Activate, deactivate, or edit existing catalog entries.</div>
+                        <div class="muted">Grouped into Panels, Inverters, Batteries, Other Materials / BOS, and Labor / Installation when available.</div>
                     </div>
                     <button id="refresh-button" type="button" class="secondary">Refresh</button>
                 </div>
 
                 <div id="pricing-items-empty" class="info-box" style="display: none; margin-top: 16px;">No pricing items found yet.</div>
+                <div id="pricing-group-summary" class="form-grid two-columns" style="margin-top: 16px; display: none;"></div>
 
                 <div id="pricing-items-list" class="stack" style="margin-top: 16px; display: none;"></div>
             </div>
@@ -119,10 +121,72 @@
         const form = document.getElementById('pricing-item-form');
         const list = document.getElementById('pricing-items-list');
         const emptyState = document.getElementById('pricing-items-empty');
+        const groupSummary = document.getElementById('pricing-group-summary');
         const refreshButton = document.getElementById('refresh-button');
         const saveButton = document.getElementById('save-item-button');
         const resetFormButton = document.getElementById('reset-form-button');
         const formModeHint = document.getElementById('form-mode-hint');
+        const pricingGroups = [
+            {
+                key: 'panels',
+                label: 'Panels',
+                description: 'Solar panel items',
+            },
+            {
+                key: 'inverters',
+                label: 'Inverters',
+                description: 'Inverter units and related pricing',
+            },
+            {
+                key: 'batteries',
+                label: 'Batteries',
+                description: 'Battery units and storage items',
+            },
+            {
+                key: 'other-materials',
+                label: 'Other Materials / BOS',
+                description: 'Protection, mounting, wiring, grounding, and other balance-of-system items',
+            },
+            {
+                key: 'labor-installation',
+                label: 'Labor / Installation',
+                description: 'Service, labor, and installation pricing',
+            },
+        ];
+        const categoryMetadata = {
+            panel: {
+                label: 'Panel',
+                group: 'panels',
+            },
+            inverter: {
+                label: 'Inverter',
+                group: 'inverters',
+            },
+            battery: {
+                label: 'Battery',
+                group: 'batteries',
+            },
+            protection: {
+                label: 'Protection',
+                group: 'other-materials',
+            },
+            mounting: {
+                label: 'Mounting',
+                group: 'other-materials',
+            },
+            wiring: {
+                label: 'Wiring',
+                group: 'other-materials',
+            },
+            grounding: {
+                label: 'Grounding',
+                group: 'other-materials',
+            },
+            misc: {
+                label: 'Misc',
+                group: 'other-materials',
+            },
+        };
         const initialFormState = {
             pricing_item_id: '',
             name: '',
@@ -135,8 +199,8 @@
             is_active: true,
         };
 
-        function setVisible(element, visible) {
-            element.style.display = visible ? 'block' : 'none';
+        function setVisible(element, visible, displayValue = 'block') {
+            element.style.display = visible ? displayValue : 'none';
         }
 
         function getCookie(name) {
@@ -187,6 +251,72 @@
             return number.toFixed(2);
         }
 
+        function formatCountLabel(count, singularLabel, pluralLabel = `${singularLabel}s`) {
+            return `${count} ${count === 1 ? singularLabel : pluralLabel}`;
+        }
+
+        function humanizeLabel(value) {
+            return String(value || '')
+                .replace(/[_-]+/g, ' ')
+                .replace(/\b\w/g, (character) => character.toUpperCase());
+        }
+
+        function normalizeCategory(category) {
+            return String(category || '').trim().toLowerCase();
+        }
+
+        function getCategoryLabel(category) {
+            const normalizedCategory = normalizeCategory(category);
+            return categoryMetadata[normalizedCategory]?.label || humanizeLabel(normalizedCategory || 'uncategorized');
+        }
+
+        function resolveGroupKey(category) {
+            const normalizedCategory = normalizeCategory(category);
+
+            if (categoryMetadata[normalizedCategory]) {
+                return categoryMetadata[normalizedCategory].group;
+            }
+
+            if (normalizedCategory.includes('labor') || normalizedCategory.includes('install')) {
+                return 'labor-installation';
+            }
+
+            return 'other-materials';
+        }
+
+        function groupPricingItems(items) {
+            const groupsByKey = new Map(
+                pricingGroups.map((group) => [
+                    group.key,
+                    {
+                        ...group,
+                        items: [],
+                    },
+                ])
+            );
+
+            items.forEach((item) => {
+                const groupKey = resolveGroupKey(item.category);
+                const group = groupsByKey.get(groupKey) || groupsByKey.get('other-materials');
+
+                group.items.push(item);
+            });
+
+            groupsByKey.forEach((group) => {
+                group.items.sort((left, right) => {
+                    if (left.is_active !== right.is_active) {
+                        return Number(right.is_active) - Number(left.is_active);
+                    }
+
+                    return String(left.name || '').localeCompare(String(right.name || ''));
+                });
+            });
+
+            return pricingGroups
+                .map((group) => groupsByKey.get(group.key))
+                .filter((group) => group.items.length > 0);
+        }
+
         function escapeHtml(value) {
             return String(value ?? '')
                 .replaceAll('&', '&amp;')
@@ -215,88 +345,154 @@
             resetFormButton.style.display = isEditing ? 'inline-flex' : 'none';
         }
 
+        function renderGroupSummary(groups) {
+            groupSummary.innerHTML = '';
+
+            if (!groups.length) {
+                setVisible(groupSummary, false);
+                return;
+            }
+
+            groups.forEach((group) => {
+                const activeItems = group.items.filter((item) => item.is_active).length;
+                const summaryCard = document.createElement('div');
+                summaryCard.className = 'card';
+                summaryCard.style.padding = '16px';
+                summaryCard.style.marginTop = '0';
+                summaryCard.style.background = '#f8fbfd';
+                summaryCard.innerHTML = `
+                    <div style="font-weight: 700; color: #102a43;">${escapeHtml(group.label)}</div>
+                    <div class="muted" style="margin-top: 4px;">${escapeHtml(group.description)}</div>
+                    <div class="muted" style="margin-top: 10px;">
+                        ${escapeHtml(formatCountLabel(group.items.length, 'item'))} | ${escapeHtml(formatCountLabel(activeItems, 'active item'))}
+                    </div>
+                `;
+
+                groupSummary.appendChild(summaryCard);
+            });
+
+            setVisible(groupSummary, true, 'grid');
+        }
+
         function renderList(items) {
             list.innerHTML = '';
 
             if (!items.length) {
                 setVisible(emptyState, true);
                 setVisible(list, false);
+                setVisible(groupSummary, false);
                 return;
             }
 
             setVisible(emptyState, false);
-            setVisible(list, true);
+            setVisible(list, true, 'grid');
 
-            items.forEach((item) => {
-                const row = document.createElement('div');
-                row.className = 'card';
-                row.style.padding = '18px';
-                row.innerHTML = `
-                    <div class="actions" style="justify-content: space-between; align-items: flex-start;">
-                        <div class="stack" style="gap: 6px;">
-                            <div><strong>${escapeHtml(item.name)}</strong></div>
-                            <div class="muted">Category: ${escapeHtml(item.category)} | Unit: ${escapeHtml(item.unit)} | Price: ${formatCurrency(item.default_unit_price)}</div>
-                            <div class="muted">Brand: ${escapeHtml(item.brand || 'N/A')} | Model: ${escapeHtml(item.model || 'N/A')}</div>
-                            <div class="muted">Status: <span data-status-label>${item.is_active ? 'Active' : 'Inactive'}</span></div>
-                            <div>${escapeHtml(item.specification || 'No specification provided.')}</div>
-                        </div>
-                        <div class="actions">
-                            <button type="button" class="secondary" data-action="edit">Edit</button>
-                            <button type="button" class="${item.is_active ? 'secondary' : ''}" data-action="toggle">
-                                ${item.is_active ? 'Deactivate' : 'Activate'}
-                            </button>
-                        </div>
+            const groups = groupPricingItems(items);
+            renderGroupSummary(groups);
+
+            groups.forEach((group) => {
+                const section = document.createElement('section');
+                section.className = 'card';
+                section.style.padding = '18px';
+                section.style.marginTop = '0';
+                section.style.background = '#f8fbfd';
+
+                const sectionHeader = document.createElement('div');
+                sectionHeader.className = 'actions';
+                sectionHeader.style.justifyContent = 'space-between';
+                sectionHeader.style.alignItems = 'flex-start';
+                sectionHeader.innerHTML = `
+                    <div>
+                        <h3 style="margin: 0 0 6px; color: #102a43;">${escapeHtml(group.label)}</h3>
+                        <div class="muted">${escapeHtml(group.description)}</div>
                     </div>
+                    <div class="muted">${escapeHtml(formatCountLabel(group.items.length, 'item'))}</div>
                 `;
 
-                row.querySelector('[data-action="edit"]').addEventListener('click', () => {
-                    clearMessages();
-                    clearFieldErrors();
-                    fillForm(item);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                });
+                const itemStack = document.createElement('div');
+                itemStack.className = 'stack';
+                itemStack.style.marginTop = '14px';
 
-                row.querySelector('[data-action="toggle"]').addEventListener('click', async (event) => {
-                    const button = event.currentTarget;
+                group.items.forEach((item) => {
+                    const row = document.createElement('div');
+                    row.className = 'card';
+                    row.style.padding = '18px';
+                    row.style.marginTop = '0';
+                    row.innerHTML = `
+                        <div class="actions" style="justify-content: space-between; align-items: flex-start;">
+                            <div class="stack" style="gap: 6px;">
+                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <strong>${escapeHtml(item.name)}</strong>
+                                    <span style="padding: 4px 8px; border-radius: 999px; background: ${item.is_active ? '#e3f9e5' : '#fde8e8'}; color: ${item.is_active ? '#1f5132' : '#8a1c1c'}; font-size: 12px; font-weight: 700;">
+                                        ${item.is_active ? 'Active' : 'Inactive'}
+                                    </span>
+                                </div>
+                                <div class="muted">Category: ${escapeHtml(getCategoryLabel(item.category))} | Unit: ${escapeHtml(item.unit)} | Price: ${formatCurrency(item.default_unit_price)}</div>
+                                <div class="muted">Brand: ${escapeHtml(item.brand || 'N/A')} | Model: ${escapeHtml(item.model || 'N/A')}</div>
+                                <div>${escapeHtml(item.specification || 'No specification provided.')}</div>
+                            </div>
+                            <div class="actions">
+                                <button type="button" class="secondary" data-action="edit">Edit</button>
+                                <button type="button" class="${item.is_active ? 'secondary' : ''}" data-action="toggle">
+                                    ${item.is_active ? 'Deactivate' : 'Activate'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
 
-                    clearMessages();
-                    button.disabled = true;
-                    button.textContent = item.is_active ? 'Deactivating...' : 'Activating...';
+                    row.querySelector('[data-action="edit"]').addEventListener('click', () => {
+                        clearMessages();
+                        clearFieldErrors();
+                        fillForm(item);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
 
-                    try {
-                        await ensureCsrfCookie();
+                    row.querySelector('[data-action="toggle"]').addEventListener('click', async (event) => {
+                        const button = event.currentTarget;
 
-                        const response = await fetch(`/api/admin/pricing-items/${item.id}`, {
-                            method: 'PATCH',
-                            credentials: 'same-origin',
-                            headers: {
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest',
-                                'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') || '',
-                            },
-                            body: JSON.stringify({
-                                is_active: !item.is_active,
-                            }),
-                        });
+                        clearMessages();
+                        button.disabled = true;
+                        button.textContent = item.is_active ? 'Deactivating...' : 'Activating...';
 
-                        const responseBody = await response.json();
+                        try {
+                            await ensureCsrfCookie();
 
-                        if (!response.ok) {
-                            throw new Error(responseBody.message || 'Could not update pricing item status.');
+                            const response = await fetch(`/api/admin/pricing-items/${item.id}`, {
+                                method: 'PATCH',
+                                credentials: 'same-origin',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') || '',
+                                },
+                                body: JSON.stringify({
+                                    is_active: !item.is_active,
+                                }),
+                            });
+
+                            const responseBody = await response.json();
+
+                            if (!response.ok) {
+                                throw new Error(responseBody.message || 'Could not update pricing item status.');
+                            }
+
+                            successBox.textContent = responseBody.message || 'Pricing item updated successfully.';
+                            setVisible(successBox, true);
+                            await loadPricingItems(true);
+                        } catch (error) {
+                            showError(error.message || 'Could not update pricing item status.');
+                        } finally {
+                            button.disabled = false;
                         }
+                    });
 
-                        successBox.textContent = responseBody.message || 'Pricing item updated successfully.';
-                        setVisible(successBox, true);
-                        await loadPricingItems(true);
-                    } catch (error) {
-                        showError(error.message || 'Could not update pricing item status.');
-                    } finally {
-                        button.disabled = false;
-                    }
+                    itemStack.appendChild(row);
                 });
 
-                list.appendChild(row);
+                section.appendChild(sectionHeader);
+                section.appendChild(itemStack);
+                list.appendChild(section);
             });
         }
 
@@ -309,6 +505,7 @@
             setVisible(form, false);
             setVisible(list, false);
             setVisible(emptyState, false);
+            setVisible(groupSummary, false);
 
             try {
                 const response = await fetch('/api/admin/pricing-items', {
@@ -327,7 +524,7 @@
                 const items = payload.data || [];
                 renderList(items);
                 fillForm();
-                setVisible(form, true);
+                setVisible(form, true, 'grid');
             } catch (error) {
                 showError(error.message || 'Could not load pricing items.');
             } finally {

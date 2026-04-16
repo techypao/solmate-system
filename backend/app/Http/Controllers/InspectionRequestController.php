@@ -69,6 +69,25 @@ class InspectionRequestController extends Controller
         ]);
     }
 
+    public function updatePreferredDate(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'date_needed' => 'required|date',
+        ], [
+            'date_needed.required' => 'Preferred date is required.',
+            'date_needed.date' => 'Preferred date must be a valid date.',
+        ]);
+
+        $inspectionRequest = InspectionRequest::findOrFail($id);
+        $inspectionRequest->date_needed = $validated['date_needed'];
+        $inspectionRequest->save();
+
+        return response()->json([
+            'message' => 'Inspection preferred date updated successfully.',
+            'inspection_request' => $inspectionRequest->fresh(['customer', 'technician']),
+        ]);
+    }
+
     public function assignedToTechnician(Request $request)
     {
         $user = $request->user();

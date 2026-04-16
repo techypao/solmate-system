@@ -25,6 +25,7 @@ class WebAdminPricingCatalogTest extends TestCase
             ->assertSee('Admin Pricing Catalog')
             ->assertSee('Create or Edit Item')
             ->assertSee('panel')
+            ->assertSee('Other Materials / BOS')
             ->assertSee('Pricing Items');
     }
 
