@@ -1,21 +1,21 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Admin\PricingItemController;
+use App\Http\Controllers\Admin\QuotationSettingsController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CustomerAccountController;
 use App\Http\Controllers\Api\TechnicianAccountController;
+use App\Http\Controllers\InspectionRequestController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\QuotationLineItemController;
-use App\Http\Controllers\InspectionRequestController;
 use App\Http\Controllers\ServiceRequestController;
-use App\Http\Controllers\TechnicianController;
 use App\Http\Controllers\TestimonyController;
-use App\Http\Controllers\Admin\PricingItemController;
-use App\Http\Controllers\Admin\QuotationSettingsController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/public/testimonies', [TestimonyController::class, 'publicIndex']);
 
 // PROTECTED GENERAL ROUTES
 Route::middleware('auth:sanctum')->group(function () {
@@ -49,6 +49,11 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/admin/pricing-items', [PricingItemController::class, 'index']);
     Route::post('/admin/pricing-items', [PricingItemController::class, 'store']);
     Route::match(['put', 'patch'], '/admin/pricing-items/{pricingItem}', [PricingItemController::class, 'update']);
+    Route::get('/admin/testimonies', [TestimonyController::class, 'adminIndex']);
+    Route::patch('/admin/testimonies/{id}/approve', [TestimonyController::class, 'approve']);
+    Route::patch('/admin/testimonies/{id}/reject', [TestimonyController::class, 'reject']);
+    Route::put('/admin/testimonies/{id}', [TestimonyController::class, 'adminUpdate']);
+    Route::delete('/admin/testimonies/{id}', [TestimonyController::class, 'adminDestroy']);
 });
 
 // TECHNICIAN ROUTES
@@ -81,6 +86,10 @@ Route::middleware(['auth:sanctum', 'role:customer'])->group(function () {
 
     Route::post('/service-requests', [ServiceRequestController::class, 'store']);
     Route::get('/service-requests', [ServiceRequestController::class, 'index']);
+    Route::get('/my-testimonies', [TestimonyController::class, 'myIndex']);
+    Route::post('/testimonies', [TestimonyController::class, 'store']);
+    Route::put('/testimonies/{id}', [TestimonyController::class, 'update']);
+    Route::delete('/testimonies/{id}', [TestimonyController::class, 'destroy']);
 
     Route::get('/customer/final-quotations/{inspection_request_id}', [QuotationController::class, 'getCustomerFinalQuotation']);
     Route::put('/customer/account', [CustomerAccountController::class, 'updateProfile']);

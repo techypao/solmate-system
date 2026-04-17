@@ -4,10 +4,13 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import HomeScreen from '../../screens/HomeScreen';
 import CustomerSettingsScreen from '../../screens/CustomerSettingsScreen';
+import CreateTestimonyScreen from '../../screens/CreateTestimonyScreen';
+import EditTestimonyScreen from '../../screens/EditTestimonyScreen';
 import FinalQuotationViewScreen from '../../screens/FinalQuotationViewScreen';
 import InspectionRequestDetailScreen from '../../screens/InspectionRequestDetailScreen';
 import InspectionRequestListScreen from '../../screens/InspectionRequestListScreen';
 import InspectionRequestScreen from '../../screens/InspectionRequestScreen';
+import MyTestimoniesScreen from '../../screens/MyTestimoniesScreen';
 import QuotationDetailScreen from '../../screens/QuotationDetailScreen';
 import QuotationListScreen from '../../screens/QuotationListScreen';
 import QuotationScreen from '../../screens/QuotationScreen';
@@ -88,6 +91,24 @@ export default function CustomerStack() {
         name="ServiceRequestList"
         component={ServiceRequestListScreen}
         options={{ title: 'My Service Requests' }}
+      />
+
+      <Stack.Screen
+        name="MyTestimonies"
+        component={MyTestimoniesScreen}
+        options={{ title: 'My Testimonies' }}
+      />
+
+      <Stack.Screen
+        name="CreateTestimony"
+        component={CreateTestimonyScreen}
+        options={{ title: 'Add Testimony' }}
+      />
+
+      <Stack.Screen
+        name="EditTestimony"
+        component={EditTestimonyScreen}
+        options={{ title: 'Edit Testimony' }}
       />
 
       <Stack.Screen

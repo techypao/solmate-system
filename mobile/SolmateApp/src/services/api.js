@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const BASE_URL = 'http://10.0.2.2:8000/api';
+export const API_BASE_URL = 'http://10.0.2.2:8000/api';
+export const BASE_URL = API_BASE_URL;
 export const TOKEN_STORAGE_KEY = 'token';
 
 let sessionToken = null;
@@ -91,13 +92,14 @@ async function apiRequest(endpoint, options = {}) {
     method = 'GET',
     body,
     requiresAuth = true,
+    isMultipart = false,
   } = options;
 
   const headers = {
     Accept: 'application/json',
   };
 
-  if (body !== undefined) {
+  if (body !== undefined && !isMultipart) {
     headers['Content-Type'] = 'application/json';
   }
 
@@ -115,7 +117,12 @@ async function apiRequest(endpoint, options = {}) {
     const response = await fetch(buildUrl(endpoint), {
       method,
       headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body:
+        body === undefined
+          ? undefined
+          : isMultipart
+            ? body
+            : JSON.stringify(body),
     });
 
     const data = await parseResponse(response);
@@ -164,5 +171,31 @@ export async function apiPut(endpoint, body = undefined, requiresAuth = true) {
     method: 'PUT',
     body,
     requiresAuth,
+  });
+}
+
+export async function apiDelete(endpoint, body = undefined, requiresAuth = true) {
+  return apiRequest(endpoint, {
+    method: 'DELETE',
+    body,
+    requiresAuth,
+  });
+}
+
+export async function apiPostForm(endpoint, formData, requiresAuth = true) {
+  return apiRequest(endpoint, {
+    method: 'POST',
+    body: formData,
+    requiresAuth,
+    isMultipart: true,
+  });
+}
+
+export async function apiPutForm(endpoint, formData, requiresAuth = true) {
+  return apiRequest(endpoint, {
+    method: 'PUT',
+    body: formData,
+    requiresAuth,
+    isMultipart: true,
   });
 }

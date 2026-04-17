@@ -2,13 +2,10 @@
 
 namespace App\Models;
 
-use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\InspectionRequest;
-use App\Models\ServiceRequest;
 
 class User extends Authenticatable
 {
@@ -16,7 +13,9 @@ class User extends Authenticatable
 
     // Define Role Constants
     const ROLE_ADMIN = 'admin';
+
     const ROLE_CUSTOMER = 'customer';
+
     const ROLE_TECHNICIAN = 'technician';
 
     /**
@@ -24,8 +23,6 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-
-    
     protected $fillable = [
         'name',
         'email',
@@ -62,24 +59,28 @@ class User extends Authenticatable
         return $this->role === $role;
     }
 
-   
-public function serviceRequests()
-{
-    return $this->hasMany(ServiceRequest::class, 'user_id');
-}
+    public function serviceRequests()
+    {
+        return $this->hasMany(ServiceRequest::class, 'user_id');
+    }
 
-public function assignedServiceRequests()
-{
-    return $this->hasMany(ServiceRequest::class, 'technician_id');
-}
+    public function assignedServiceRequests()
+    {
+        return $this->hasMany(ServiceRequest::class, 'technician_id');
+    }
 
-public function inspectionRequests()
-{
-    return $this->hasMany(InspectionRequest::class, 'user_id');
-}
+    public function inspectionRequests()
+    {
+        return $this->hasMany(InspectionRequest::class, 'user_id');
+    }
 
-public function assignedInspectionRequests()
-{
-    return $this->hasMany(InspectionRequest::class, 'technician_id');
-}
+    public function assignedInspectionRequests()
+    {
+        return $this->hasMany(InspectionRequest::class, 'technician_id');
+    }
+
+    public function testimonies()
+    {
+        return $this->hasMany(Testimony::class);
+    }
 }

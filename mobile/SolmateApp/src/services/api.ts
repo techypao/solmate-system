@@ -6,7 +6,7 @@ export const TOKEN_STORAGE_KEY = 'token';
 
 let sessionToken: string | null = null;
 
-type HttpMethod = 'GET' | 'POST' | 'PUT';
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 type ValidationErrors = Record<string, string[]>;
 
@@ -14,6 +14,7 @@ type ApiRequestOptions = {
   method?: HttpMethod;
   body?: unknown;
   requiresAuth?: boolean;
+  isMultipart?: boolean;
 };
 
 export class ApiError extends Error {
@@ -108,13 +109,13 @@ async function apiRequest<T>(
   endpoint: string,
   options: ApiRequestOptions = {},
 ): Promise<T> {
-  const {method = 'GET', body, requiresAuth = true} = options;
+  const {method = 'GET', body, requiresAuth = true, isMultipart = false} = options;
 
   const headers: Record<string, string> = {
     Accept: 'application/json',
   };
 
-  if (body !== undefined) {
+  if (body !== undefined && !isMultipart) {
     headers['Content-Type'] = 'application/json';
   }
 
@@ -132,7 +133,12 @@ async function apiRequest<T>(
     const response = await fetch(buildUrl(endpoint), {
       method,
       headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body:
+        body === undefined
+          ? undefined
+          : isMultipart
+            ? (body as any)
+            : JSON.stringify(body),
     });
 
     const data = await parseResponse(response);
@@ -185,5 +191,43 @@ export function apiPut<T>(endpoint: string, body?: unknown, requiresAuth = true)
     method: 'PUT',
     body,
     requiresAuth,
+  });
+}
+
+export function apiDelete<T>(
+  endpoint: string,
+  body?: unknown,
+  requiresAuth = true,
+) {
+  return apiRequest<T>(endpoint, {
+    method: 'DELETE',
+    body,
+    requiresAuth,
+  });
+}
+
+export function apiPostForm<T>(
+  endpoint: string,
+  formData: FormData,
+  requiresAuth = true,
+) {
+  return apiRequest<T>(endpoint, {
+    method: 'POST',
+    body: formData,
+    requiresAuth,
+    isMultipart: true,
+  });
+}
+
+export function apiPutForm<T>(
+  endpoint: string,
+  formData: FormData,
+  requiresAuth = true,
+) {
+  return apiRequest<T>(endpoint, {
+    method: 'PUT',
+    body: formData,
+    requiresAuth,
+    isMultipart: true,
   });
 }

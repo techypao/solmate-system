@@ -127,6 +127,12 @@ export default function HomeScreen({ navigation }: any) {
               accentColor="#fb923c"
               onPress={() => navigation.navigate('ServiceRequestList')}
             />
+            <QuickActionCard
+              title="My Testimonies"
+              subtitle="Review your submitted testimonies and their moderation status."
+              accentColor="#60a5fa"
+              onPress={() => navigation.navigate('MyTestimonies')}
+            />
           </View>
 
           <View style={styles.buttonStack}>
@@ -164,6 +170,12 @@ export default function HomeScreen({ navigation }: any) {
               title="View My Service Requests"
               variant="secondary"
               onPress={() => navigation.navigate('ServiceRequestList')}
+            />
+            <AppButton
+              style={styles.buttonSpacing}
+              title="My Testimonies"
+              variant="outline"
+              onPress={() => navigation.navigate('MyTestimonies')}
             />
           </View>
         </AppCard>
