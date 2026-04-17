@@ -423,11 +423,15 @@
                 </div>
                 <div class="nav-links">
                     <a href="{{ route('dashboard') }}">Dashboard</a>
+                    @if (auth()->user()->role === \App\Models\User::ROLE_CUSTOMER)
+                        <a href="{{ route('customer.testimonies') }}">My Testimonies</a>
+                    @endif
                     @if (in_array(auth()->user()->role, [\App\Models\User::ROLE_ADMIN, \App\Models\User::ROLE_TECHNICIAN], true))
                         <a href="{{ route('quotations.item-builder') }}">Quotation Item Builder</a>
                     @endif
                     @if (auth()->user()->role === \App\Models\User::ROLE_ADMIN)
                         <a href="{{ route('admin.profile.show') }}">Profile</a>
+                        <a href="{{ route('admin.testimonies') }}">Testimonies</a>
                         <a href="{{ route('admin.quotation-settings') }}">Quotation Settings</a>
                         <a href="{{ route('admin.pricing-catalog') }}">Pricing Catalog</a>
                         <a href="{{ route('admin.technicians.create') }}">Register Technician</a>

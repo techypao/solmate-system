@@ -31,6 +31,7 @@
             <div class="actions">
                 <button type="submit">Login</button>
                 <a class="button-link secondary" href="{{ route('register') }}">Create account</a>
+                <a class="button-link secondary" href="{{ route('public.testimonies') }}">View testimonies</a>
             </div>
         </form>
     </div>

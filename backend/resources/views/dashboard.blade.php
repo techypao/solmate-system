@@ -12,6 +12,9 @@
 
             @if ($user->role === \App\Models\User::ROLE_ADMIN)
                 <div>
+                    <a class="button-link secondary" href="{{ route('admin.testimonies') }}">Open Admin Testimonies</a>
+                </div>
+                <div>
                     <a class="button-link" href="{{ route('admin.quotation-settings') }}">Open Admin Quotation Settings</a>
                 </div>
                 <div>
@@ -28,6 +31,9 @@
                     <a class="button-link" href="{{ route('quotations.item-builder') }}">Open Quotation Item Builder</a>
                 </div>
             @else
+                <div>
+                    <a class="button-link" href="{{ route('customer.testimonies') }}">Open My Testimonies</a>
+                </div>
                 <div class="info-box">
                     Your account can log in to the website, but the quotation settings page is available to admin users only.
                 </div>

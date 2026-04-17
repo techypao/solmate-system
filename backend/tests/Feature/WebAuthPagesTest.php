@@ -29,6 +29,11 @@ class WebAuthPagesTest extends TestCase
         $this->get('/register')
             ->assertOk()
             ->assertSee('Register');
+
+        $this->get('/testimonies')
+            ->assertOk()
+            ->assertSee('Customer Testimonies')
+            ->assertSee('Loading approved testimonies');
     }
 
     public function test_register_creates_customer_user_and_redirects_to_dashboard(): void
@@ -46,6 +51,22 @@ class WebAuthPagesTest extends TestCase
             'email' => 'web_customer@example.com',
             'role' => User::ROLE_CUSTOMER,
         ]);
+    }
+
+    public function test_customer_can_open_customer_testimonies_page(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Web Customer Testimonies',
+            'email' => 'web_customer_testimonies@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        $this->actingAs($customer)
+            ->get('/customer/testimonies')
+            ->assertOk()
+            ->assertSee('My Testimonies')
+            ->assertSee('Submitted testimonies');
     }
 
     public function test_admin_can_log_in_and_open_admin_quotation_settings_page(): void
@@ -68,6 +89,11 @@ class WebAuthPagesTest extends TestCase
             ->assertOk()
             ->assertSee('Admin Quotation Settings')
             ->assertSee('rate_per_kwh');
+
+        $this->get('/admin/testimonies')
+            ->assertOk()
+            ->assertSee('Admin Testimonies')
+            ->assertSee('Moderation queue');
 
         $this->getJson('/api/admin/quotation-settings')
             ->assertOk()
@@ -145,6 +171,24 @@ class WebAuthPagesTest extends TestCase
 
         $this->actingAs($customer)
             ->get('/admin/quotation-settings')
+            ->assertForbidden();
+
+        $this->actingAs($customer)
+            ->get('/admin/testimonies')
+            ->assertForbidden();
+    }
+
+    public function test_non_customer_cannot_open_customer_testimonies_page(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Web Admin Blocked',
+            'email' => 'web_admin_blocked@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/customer/testimonies')
             ->assertForbidden();
     }
 }

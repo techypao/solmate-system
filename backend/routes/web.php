@@ -4,8 +4,11 @@ use App\Http\Controllers\Admin\QuotationSettingsPageController;
 use App\Http\Controllers\Admin\PricingCatalogPageController;
 use App\Http\Controllers\Admin\ProfilePageController;
 use App\Http\Controllers\Admin\RequestAssignmentPageController;
+use App\Http\Controllers\Admin\TestimonyModerationPageController;
 use App\Http\Controllers\Admin\TechnicianRegistrationController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CustomerTestimonyPageController;
+use App\Http\Controllers\PublicTestimonyPageController;
 use App\Http\Controllers\QuotationItemBuilderPageController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +25,9 @@ Route::get('/', function () {
 
     return redirect()->route('dashboard');
 })->name('home');
+
+Route::get('/testimonies', [PublicTestimonyPageController::class, 'show'])
+    ->name('public.testimonies');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -59,6 +65,9 @@ Route::middleware('auth')->group(function () {
         ->name('admin.request-assignments');
 
     Route::middleware('role:admin')->group(function () {
+        Route::get('/admin/testimonies', [TestimonyModerationPageController::class, 'show'])
+            ->name('admin.testimonies');
+
         Route::get('/admin/profile', [ProfilePageController::class, 'show'])
             ->name('admin.profile.show');
 
@@ -67,5 +76,10 @@ Route::middleware('auth')->group(function () {
 
         Route::put('/admin/profile/password', [ProfilePageController::class, 'updatePassword'])
             ->name('admin.profile.password.update');
+    });
+
+    Route::middleware('role:customer')->group(function () {
+        Route::get('/customer/testimonies', [CustomerTestimonyPageController::class, 'show'])
+            ->name('customer.testimonies');
     });
 });
