@@ -106,7 +106,7 @@
                         }
                     @endphp
 
-                    <div class="request-card">
+                    <div id="service-request-{{ $serviceRequest->id }}" class="request-card">
                         <div class="request-header">
                             <div>
                                 <div class="request-title">Service Request #{{ $serviceRequest->id }}</div>
@@ -273,7 +273,7 @@
                             : 'Not assigned';
                     @endphp
 
-                    <div class="request-card">
+                    <div id="inspection-request-{{ $inspectionRequest->id }}" class="request-card">
                         <div class="request-header">
                             <div>
                                 <div class="request-title">Inspection Request #{{ $inspectionRequest->id }}</div>

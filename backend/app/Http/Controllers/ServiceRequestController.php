@@ -4,10 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\ServiceRequest;
 use App\Models\User;
+use App\Services\InAppNotificationService;
 use Illuminate\Http\Request;
 
 class ServiceRequestController extends Controller
 {
+    public function __construct(
+        private InAppNotificationService $notificationService
+    ) {
+    }
+
     public function index(Request $request)
     {
         $serviceRequests = ServiceRequest::query()
@@ -37,6 +43,9 @@ class ServiceRequestController extends Controller
             'status' => 'pending',
         ]);
 
+        $serviceRequest->load('customer');
+        $this->notificationService->notifyAdminsOfNewServiceRequest($serviceRequest, $request->user());
+
         return response()->json([
             'message' => 'Service request submitted successfully.',
             'data' => $serviceRequest,
@@ -51,6 +60,8 @@ class ServiceRequestController extends Controller
 
         $serviceRequest = ServiceRequest::query()->findOrFail($id);
         $technician = User::query()->findOrFail($request->technician_id);
+        $previousTechnicianId = $serviceRequest->technician_id;
+        $previousStatus = $serviceRequest->status;
 
         if ($technician->role !== User::ROLE_TECHNICIAN) {
             return response()->json([
@@ -67,6 +78,20 @@ class ServiceRequestController extends Controller
         $serviceRequest->save();
 
         $serviceRequest->load(['customer', 'technician']);
+
+        if ($previousTechnicianId !== $technician->id) {
+            $this->notificationService->notifyTechnicianOfServiceRequestAssignment(
+                $serviceRequest,
+                $request->user()->id
+            );
+        }
+
+        if ($previousStatus !== $serviceRequest->status) {
+            $this->notificationService->notifyCustomerOfServiceRequestStatusUpdate(
+                $serviceRequest,
+                $request->user()->id
+            );
+        }
 
         return response()->json([
             'message' => 'Technician assigned successfully.',
@@ -86,9 +111,18 @@ class ServiceRequestController extends Controller
         $serviceRequest = ServiceRequest::query()
             ->with(['customer', 'technician'])
             ->findOrFail($id);
+        $previousDate = $serviceRequest->date_needed?->toDateString();
 
         $serviceRequest->date_needed = $validated['date_needed'];
         $serviceRequest->save();
+
+        if ($previousDate !== $validated['date_needed']) {
+            $this->notificationService->notifyServiceRequestRescheduled(
+                $serviceRequest,
+                $previousDate,
+                $request->user()->id
+            );
+        }
 
         return response()->json([
             'message' => 'Service preferred date updated successfully.',
@@ -155,6 +189,13 @@ class ServiceRequestController extends Controller
         $serviceRequest->status = $newStatus;
         $serviceRequest->save();
 
+        if ($currentStatus !== $newStatus) {
+            $this->notificationService->notifyCustomerOfServiceRequestStatusUpdate(
+                $serviceRequest,
+                $request->user()->id
+            );
+        }
+
         return response()->json([
             'message' => 'Service request progress updated successfully.',
             'data' => $serviceRequest,
@@ -211,9 +252,17 @@ class ServiceRequestController extends Controller
         $serviceRequest = ServiceRequest::query()
             ->with(['customer', 'technician'])
             ->findOrFail($id);
+        $previousStatus = $serviceRequest->status;
 
         $serviceRequest->status = $request->status;
         $serviceRequest->save();
+
+        if ($previousStatus !== $serviceRequest->status) {
+            $this->notificationService->notifyCustomerOfServiceRequestStatusUpdate(
+                $serviceRequest,
+                $request->user()->id
+            );
+        }
 
         return response()->json([
             'message' => 'Official service request status updated successfully.',

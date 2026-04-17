@@ -57,6 +57,28 @@
             flex-wrap: wrap;
         }
 
+        .nav-link-with-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .notification-count-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 999px;
+            background: #d64545;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
         .brand {
             font-weight: 700;
             color: #102a43;
@@ -299,6 +321,12 @@
             border: 1px solid #d9e2ec;
             border-radius: 12px;
             background: #fbfcfe;
+            scroll-margin-top: 24px;
+        }
+
+        .request-card:target {
+            border-color: #7cc4fa;
+            box-shadow: 0 0 0 3px rgba(124, 196, 250, 0.25);
         }
 
         .request-header {
@@ -430,6 +458,10 @@
                         <a href="{{ route('quotations.item-builder') }}">Quotation Item Builder</a>
                     @endif
                     @if (auth()->user()->role === \App\Models\User::ROLE_ADMIN)
+                        <a href="{{ route('admin.notifications') }}" class="nav-link-with-badge">
+                            Notifications
+                            <span id="admin-notification-badge" class="notification-count-badge" style="display: none;">0</span>
+                        </a>
                         <a href="{{ route('admin.profile.show') }}">Profile</a>
                         <a href="{{ route('admin.testimonies') }}">Testimonies</a>
                         <a href="{{ route('admin.quotation-settings') }}">Quotation Settings</a>
@@ -464,5 +496,60 @@
     </div>
 
     @stack('scripts')
+
+    @auth
+        @if (auth()->user()->role === \App\Models\User::ROLE_ADMIN)
+            <script>
+                (function () {
+                    const badge = document.getElementById('admin-notification-badge');
+
+                    function setBadgeCount(count) {
+                        if (!badge) {
+                            return;
+                        }
+
+                        const normalizedCount = Number.isFinite(Number(count)) ? Math.max(0, Number(count)) : 0;
+
+                        badge.textContent = String(normalizedCount);
+                        badge.style.display = normalizedCount > 0 ? 'inline-flex' : 'none';
+                    }
+
+                    async function refreshUnreadCount() {
+                        try {
+                            const response = await fetch('/api/notifications/unread-count', {
+                                credentials: 'same-origin',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                },
+                            });
+
+                            if (!response.ok) {
+                                throw new Error('Could not load notification count.');
+                            }
+
+                            const payload = await response.json();
+                            setBadgeCount(payload?.unread_count ?? 0);
+                        } catch (error) {
+                            setBadgeCount(0);
+                        }
+                    }
+
+                    window.adminNotifications = {
+                        refreshUnreadCount,
+                        setBadgeCount,
+                    };
+
+                    refreshUnreadCount();
+                    window.addEventListener('focus', refreshUnreadCount);
+                    document.addEventListener('visibilitychange', () => {
+                        if (document.visibilityState === 'visible') {
+                            refreshUnreadCount();
+                        }
+                    });
+                })();
+            </script>
+        @endif
+    @endauth
 </body>
 </html>

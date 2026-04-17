@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from '../../screens/HomeScreen';
 import CustomerSettingsScreen from '../../screens/CustomerSettingsScreen';
 import CreateTestimonyScreen from '../../screens/CreateTestimonyScreen';
+import CustomerNotificationsScreen from '../../screens/CustomerNotificationsScreen';
 import EditTestimonyScreen from '../../screens/EditTestimonyScreen';
 import FinalQuotationViewScreen from '../../screens/FinalQuotationViewScreen';
 import InspectionRequestDetailScreen from '../../screens/InspectionRequestDetailScreen';
@@ -41,6 +42,12 @@ export default function CustomerStack() {
         name="CustomerSettings"
         component={CustomerSettingsScreen}
         options={{ title: 'Settings' }}
+      />
+
+      <Stack.Screen
+        name="CustomerNotifications"
+        component={CustomerNotificationsScreen}
+        options={{ title: 'Notifications' }}
       />
 
       {/* Quotation creation form */}

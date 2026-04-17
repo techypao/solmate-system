@@ -10,19 +10,23 @@ use Illuminate\Validation\Rule;
 use App\Models\ServiceRequest;
 use App\Models\InspectionRequest;
 use App\Services\QuotationComputationService;
+use App\Services\InAppNotificationService;
 use App\Services\QuotationSettingsService;
 
 class QuotationController extends Controller
 {
     private QuotationComputationService $quotationComputationService;
+    private InAppNotificationService $notificationService;
     private QuotationSettingsService $quotationSettingsService;
 
     public function __construct(
         QuotationComputationService $quotationComputationService,
+        InAppNotificationService $notificationService,
         QuotationSettingsService $quotationSettingsService
     )
     {
         $this->quotationComputationService = $quotationComputationService;
+        $this->notificationService = $notificationService;
         $this->quotationSettingsService = $quotationSettingsService;
     }
 
@@ -350,6 +354,7 @@ public function storeFinalQuotation(Request $request)
     ]);
 
     $quotation->load(['customer', 'inspectionRequest']);
+    $this->notificationService->notifyCustomerOfFinalQuotationAvailable($quotation, $technician->id);
 
     return response()->json([
         'message' => 'Final quotation created successfully.',

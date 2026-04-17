@@ -6,7 +6,7 @@ export const TOKEN_STORAGE_KEY = 'token';
 
 let sessionToken: string | null = null;
 
-type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 type ValidationErrors = Record<string, string[]>;
 
@@ -189,6 +189,18 @@ export function apiPost<T>(
 export function apiPut<T>(endpoint: string, body?: unknown, requiresAuth = true) {
   return apiRequest<T>(endpoint, {
     method: 'PUT',
+    body,
+    requiresAuth,
+  });
+}
+
+export function apiPatch<T>(
+  endpoint: string,
+  body?: unknown,
+  requiresAuth = true,
+) {
+  return apiRequest<T>(endpoint, {
+    method: 'PATCH',
     body,
     requiresAuth,
   });

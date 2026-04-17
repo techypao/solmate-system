@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CustomerAccountController;
 use App\Http\Controllers\Api\TechnicianAccountController;
 use App\Http\Controllers\InspectionRequestController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\QuotationLineItemController;
 use App\Http\Controllers\ServiceRequestController;
@@ -26,6 +27,10 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::get('/pricing-items', [PricingItemController::class, 'catalog']);
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::patch('/notifications/mark-all-read', [NotificationController::class, 'markAllRead']);
+    Route::patch('/notifications/{id}/read', [NotificationController::class, 'markRead']);
     Route::get('/quotations', [QuotationController::class, 'index']);
     Route::post('/quotations', [QuotationController::class, 'store']);
     Route::get('/quotations/{id}', [QuotationController::class, 'show']);

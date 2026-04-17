@@ -5,9 +5,15 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\InspectionRequest;
 use App\Models\User;
+use App\Services\InAppNotificationService;
 
 class InspectionRequestController extends Controller
 {
+    public function __construct(
+        private InAppNotificationService $notificationService
+    ) {
+    }
+
     public function index(Request $request)
     {
         $inspectionRequests = InspectionRequest::where('user_id', $request->user()->id)
@@ -33,6 +39,9 @@ class InspectionRequestController extends Controller
             'status' => 'pending',
         ]);
 
+        $inspectionRequest->load('customer');
+        $this->notificationService->notifyAdminsOfNewInspectionRequest($inspectionRequest, $request->user());
+
         return response()->json([
             'message' => 'Inspection request submitted successfully.',
             'data' => $inspectionRequest,
@@ -45,11 +54,12 @@ class InspectionRequestController extends Controller
             'technician_id' => 'required|exists:users,id',
         ]);
 
-        $inspectionRequest = InspectionRequest::findOrFail($id);
+        $inspectionRequest = InspectionRequest::query()->findOrFail($id);
+        $technician = User::query()->findOrFail($request->technician_id);
+        $previousTechnicianId = $inspectionRequest->technician_id;
+        $previousStatus = $inspectionRequest->status;
 
-        $technician = User::findOrFail($request->technician_id);
-
-        if ($technician->role !== 'technician') {
+        if ($technician->role !== User::ROLE_TECHNICIAN) {
             return response()->json([
                 'message' => 'Selected user is not a technician.'
             ], 422);
@@ -62,6 +72,21 @@ class InspectionRequestController extends Controller
         }
 
         $inspectionRequest->save();
+        $inspectionRequest->load(['customer', 'technician']);
+
+        if ($previousTechnicianId !== $technician->id) {
+            $this->notificationService->notifyTechnicianOfInspectionRequestAssignment(
+                $inspectionRequest,
+                $request->user()->id
+            );
+        }
+
+        if ($previousStatus !== $inspectionRequest->status) {
+            $this->notificationService->notifyCustomerOfInspectionRequestStatusUpdate(
+                $inspectionRequest,
+                $request->user()->id
+            );
+        }
 
         return response()->json([
             'message' => 'Technician assigned successfully.',
@@ -78,9 +103,20 @@ class InspectionRequestController extends Controller
             'date_needed.date' => 'Preferred date must be a valid date.',
         ]);
 
-        $inspectionRequest = InspectionRequest::findOrFail($id);
+        $inspectionRequest = InspectionRequest::query()
+            ->with(['customer', 'technician'])
+            ->findOrFail($id);
+        $previousDate = $inspectionRequest->date_needed;
         $inspectionRequest->date_needed = $validated['date_needed'];
         $inspectionRequest->save();
+
+        if ($previousDate !== $validated['date_needed']) {
+            $this->notificationService->notifyInspectionRequestRescheduled(
+                $inspectionRequest,
+                $previousDate,
+                $request->user()->id
+            );
+        }
 
         return response()->json([
             'message' => 'Inspection preferred date updated successfully.',
@@ -92,7 +128,7 @@ class InspectionRequestController extends Controller
     {
         $user = $request->user();
 
-        if ($user->role !== 'technician') {
+        if ($user->role !== User::ROLE_TECHNICIAN) {
             return response()->json([
                 'message' => 'Unauthorized. Only technicians can view assigned inspection requests.'
             ], 403);
@@ -116,13 +152,16 @@ class InspectionRequestController extends Controller
 
         $user = $request->user();
 
-        if ($user->role !== 'technician') {
+        if ($user->role !== User::ROLE_TECHNICIAN) {
             return response()->json([
                 'message' => 'Unauthorized. Only technicians can update inspection request status.'
             ], 403);
         }
 
-        $inspectionRequest = InspectionRequest::findOrFail($id);
+        $inspectionRequest = InspectionRequest::query()
+            ->with(['customer', 'technician'])
+            ->findOrFail($id);
+        $previousStatus = $inspectionRequest->status;
 
         if ($inspectionRequest->technician_id !== $user->id) {
             return response()->json([
@@ -132,6 +171,13 @@ class InspectionRequestController extends Controller
 
         $inspectionRequest->status = $request->status;
         $inspectionRequest->save();
+
+        if ($previousStatus !== $inspectionRequest->status) {
+            $this->notificationService->notifyCustomerOfInspectionRequestStatusUpdate(
+                $inspectionRequest,
+                $request->user()->id
+            );
+        }
 
         return response()->json([
             'message' => 'Inspection request status updated successfully.',

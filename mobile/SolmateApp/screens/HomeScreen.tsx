@@ -1,5 +1,6 @@
-import React, { useContext } from 'react';
+import React, {useCallback, useContext, useState} from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -7,9 +8,12 @@ import {
   Text,
   View,
 } from 'react-native';
+import {useFocusEffect} from '@react-navigation/native';
 
 import { AppButton, AppCard } from '../components';
 import { AuthContext } from '../src/context/AuthContext';
+import {ApiError} from '../src/services/api';
+import {getUnreadNotificationCount} from '../src/services/notificationApi';
 
 type QuickActionProps = {
   title: string;
@@ -49,6 +53,29 @@ function QuickActionCard({
 export default function HomeScreen({ navigation }: any) {
   const { user } = useContext(AuthContext);
   const customerName = user?.name || 'Customer';
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
+
+  const loadUnreadCount = useCallback(async () => {
+    try {
+      setNotificationsLoading(true);
+      const count = await getUnreadNotificationCount();
+      setUnreadCount(count);
+    } catch (error) {
+      if (__DEV__ && error instanceof ApiError) {
+        console.log('Unread notification count error:', error.message);
+      }
+      setUnreadCount(0);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadUnreadCount();
+    }, [loadUnreadCount]),
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -71,6 +98,32 @@ export default function HomeScreen({ navigation }: any) {
             <Text style={styles.heroBadgeValue}>Active</Text>
           </View>
         </View>
+
+        <Pressable
+          onPress={() => navigation.navigate('CustomerNotifications')}
+          style={({pressed}) => [
+            styles.notificationCard,
+            pressed ? styles.pressed : null,
+          ]}>
+          <View style={styles.notificationCardTextWrap}>
+            <Text style={styles.notificationEyebrow}>Notifications</Text>
+            <Text style={styles.notificationTitle}>Open your latest updates</Text>
+            <Text style={styles.notificationSubtitle}>
+              Review request updates, schedule changes, and final quotation alerts.
+            </Text>
+          </View>
+
+          <View style={styles.notificationBadge}>
+            {notificationsLoading ? (
+              <ActivityIndicator color="#1d4ed8" size="small" />
+            ) : (
+              <>
+                <Text style={styles.notificationBadgeValue}>{unreadCount}</Text>
+                <Text style={styles.notificationBadgeLabel}>Unread</Text>
+              </>
+            )}
+          </View>
+        </Pressable>
 
         <AppCard style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Quick actions</Text>
@@ -314,6 +367,62 @@ const styles = StyleSheet.create({
     color: '#0f172a',
     fontSize: 18,
     fontWeight: '700',
+  },
+  notificationCard: {
+    backgroundColor: '#ffffff',
+    borderColor: '#bfdbfe',
+    borderRadius: 24,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 18,
+    padding: 20,
+  },
+  notificationCardTextWrap: {
+    flex: 1,
+    paddingRight: 16,
+  },
+  notificationEyebrow: {
+    color: '#2563eb',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  notificationTitle: {
+    color: '#0f172a',
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: 8,
+  },
+  notificationSubtitle: {
+    color: '#475569',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  notificationBadge: {
+    alignItems: 'center',
+    backgroundColor: '#dbeafe',
+    borderRadius: 18,
+    justifyContent: 'center',
+    minHeight: 78,
+    minWidth: 86,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  notificationBadgeValue: {
+    color: '#1d4ed8',
+    fontSize: 26,
+    fontWeight: '800',
+  },
+  notificationBadgeLabel: {
+    color: '#1e40af',
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 2,
+    textTransform: 'uppercase',
   },
   sectionCard: {
     marginBottom: 18,

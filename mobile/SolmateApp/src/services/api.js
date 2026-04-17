@@ -174,6 +174,18 @@ export async function apiPut(endpoint, body = undefined, requiresAuth = true) {
   });
 }
 
+export async function apiPatch(
+  endpoint,
+  body = undefined,
+  requiresAuth = true,
+) {
+  return apiRequest(endpoint, {
+    method: 'PATCH',
+    body,
+    requiresAuth,
+  });
+}
+
 export async function apiDelete(endpoint, body = undefined, requiresAuth = true) {
   return apiRequest(endpoint, {
     method: 'DELETE',

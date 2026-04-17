@@ -13,6 +13,7 @@ import {useFocusEffect} from '@react-navigation/native';
 import {AppButton, AppCard} from '../components';
 import {AuthContext} from '../src/context/AuthContext';
 import {ApiError} from '../src/services/api';
+import {getUnreadNotificationCount} from '../src/services/notificationApi';
 import {getAssignedInspectionRequests} from '../src/services/technicianApi';
 
 type ActionCardProps = {
@@ -59,6 +60,8 @@ export default function TechnicianDashboardScreen({navigation}: any) {
 
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [requestCounts, setRequestCounts] = useState({
     total: 0,
     assigned: 0,
@@ -97,10 +100,31 @@ export default function TechnicianDashboardScreen({navigation}: any) {
     }
   }, []);
 
+  const loadUnreadCount = useCallback(async () => {
+    try {
+      setNotificationsLoading(true);
+      const count = await getUnreadNotificationCount();
+      setUnreadCount(count);
+    } catch (error) {
+      if (__DEV__ && error instanceof ApiError) {
+        console.log('Technician unread notification count error:', error.message);
+      }
+      setUnreadCount(0);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       loadDashboard();
     }, [loadDashboard]),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      loadUnreadCount();
+    }, [loadUnreadCount]),
   );
 
   return (
@@ -129,6 +153,33 @@ export default function TechnicianDashboardScreen({navigation}: any) {
             </View>
           </View>
         </View>
+
+        <Pressable
+          onPress={() => navigation.navigate('TechnicianNotifications')}
+          style={({pressed}) => [
+            styles.notificationCard,
+            pressed ? styles.pressed : null,
+          ]}>
+          <View style={styles.notificationCardTextWrap}>
+            <Text style={styles.notificationEyebrow}>Notifications</Text>
+            <Text style={styles.notificationTitle}>Open your latest updates</Text>
+            <Text style={styles.notificationSubtitle}>
+              Review new assignments, schedule changes, and request updates for
+              your technician account.
+            </Text>
+          </View>
+
+          <View style={styles.notificationBadge}>
+            {notificationsLoading ? (
+              <ActivityIndicator color="#0369a1" size="small" />
+            ) : (
+              <>
+                <Text style={styles.notificationBadgeValue}>{unreadCount}</Text>
+                <Text style={styles.notificationBadgeLabel}>Unread</Text>
+              </>
+            )}
+          </View>
+        </Pressable>
 
         <AppCard style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Inspection workload snapshot</Text>
@@ -308,6 +359,62 @@ const styles = StyleSheet.create({
   },
   sectionCard: {
     marginBottom: 18,
+  },
+  notificationCard: {
+    backgroundColor: '#ffffff',
+    borderColor: '#bae6fd',
+    borderRadius: 24,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 18,
+    padding: 20,
+  },
+  notificationCardTextWrap: {
+    flex: 1,
+    paddingRight: 16,
+  },
+  notificationEyebrow: {
+    color: '#0369a1',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  notificationTitle: {
+    color: '#0f172a',
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: 8,
+  },
+  notificationSubtitle: {
+    color: '#475569',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  notificationBadge: {
+    alignItems: 'center',
+    backgroundColor: '#e0f2fe',
+    borderRadius: 18,
+    justifyContent: 'center',
+    minHeight: 78,
+    minWidth: 86,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  notificationBadgeValue: {
+    color: '#0369a1',
+    fontSize: 26,
+    fontWeight: '800',
+  },
+  notificationBadgeLabel: {
+    color: '#075985',
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 2,
+    textTransform: 'uppercase',
   },
   sectionTitle: {
     color: '#0f172a',

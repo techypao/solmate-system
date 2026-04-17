@@ -9,6 +9,7 @@ import RequestDetailsScreen from '../../screens/RequestDetailsScreen';
 import ServiceRequestDetailScreen from '../../screens/ServiceRequestDetailScreen';
 import ServiceRequestListScreen from '../../screens/ServiceRequestListScreen';
 import TechnicianDashboardScreen from '../../screens/TechnicianDashboardScreen';
+import TechnicianNotificationsScreen from '../../screens/TechnicianNotificationsScreen';
 import TechnicianSettingsScreen from '../../screens/TechnicianSettingsScreen';
 
 const Stack = createNativeStackNavigator();
@@ -29,6 +30,11 @@ export default function TechnicianStack() {
         name="TechnicianSettings"
         component={TechnicianSettingsScreen}
         options={{title: 'Settings'}}
+      />
+      <Stack.Screen
+        name="TechnicianNotifications"
+        component={TechnicianNotificationsScreen}
+        options={{title: 'Notifications'}}
       />
       <Stack.Screen
         name="AssignedInspectionRequests"
