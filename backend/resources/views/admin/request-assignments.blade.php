@@ -3,17 +3,47 @@
 @php
     $statusClasses = [
         'pending' => 'badge badge-warning',
+        'approved' => 'badge badge-info',
+        'scheduled' => 'badge badge-primary',
         'assigned' => 'badge badge-info',
         'in_progress' => 'badge badge-primary',
+        'cancelled' => 'badge badge-neutral',
+        'declined' => 'badge badge-neutral',
         'completed' => 'badge badge-success',
     ];
 
     $serviceStatusOptions = [
         'pending' => 'Pending',
+        'approved' => 'Approved',
+        'scheduled' => 'Scheduled',
         'assigned' => 'Assigned',
         'in_progress' => 'In Progress',
+        'cancelled' => 'Cancelled',
+        'declined' => 'Declined',
         'completed' => 'Completed',
     ];
+
+    $serviceRequestRecords = $serviceRequests
+        ->map(fn ($request) => [
+            'requestKey' => "service-{$request->id}",
+            'date_needed' => $request->date_needed
+                ? \Illuminate\Support\Carbon::parse($request->date_needed)->toDateString()
+                : null,
+            'status' => $request->status,
+        ])
+        ->values()
+        ->all();
+
+    $inspectionRequestRecords = $inspectionRequests
+        ->map(fn ($request) => [
+            'requestKey' => "inspection-{$request->id}",
+            'date_needed' => $request->date_needed
+                ? \Illuminate\Support\Carbon::parse($request->date_needed)->toDateString()
+                : null,
+            'status' => $request->status,
+        ])
+        ->values()
+        ->all();
 @endphp
 
 @section('content')
@@ -180,7 +210,8 @@
                                             value="{{ $serviceRequest->date_needed ? \Illuminate\Support\Carbon::parse($serviceRequest->date_needed)->toDateString() : '' }}"
                                             required
                                         >
-                                        <div class="muted" style="margin-top: 8px;">Adjust this when the customer's requested service date needs to move for technician availability.</div>
+                                        <div class="muted" style="margin-top: 8px;">Adjust this when the customer's requested service date needs to move for technician availability. Some dates may already be reserved by other active requests.</div>
+                                        <div class="muted" style="margin-top: 8px;" data-availability-helper></div>
                                     </div>
                                     <button type="submit">Save preferred date</button>
                                 </div>
@@ -335,7 +366,8 @@
                                         value="{{ $inspectionRequest->date_needed ? \Illuminate\Support\Carbon::parse($inspectionRequest->date_needed)->toDateString() : '' }}"
                                         required
                                     >
-                                    <div class="muted" style="margin-top: 8px;">Use this when the original customer date needs to be adjusted for technician availability.</div>
+                                    <div class="muted" style="margin-top: 8px;">Use this when the original customer date needs to be adjusted for technician availability. Some dates may already be reserved by other active requests.</div>
+                                    <div class="muted" style="margin-top: 8px;" data-availability-helper></div>
                                 </div>
                                 <button type="submit">Save preferred date</button>
                             </div>
@@ -379,12 +411,17 @@
 
 @push('scripts')
     <script>
+        const reservedDateMessage = 'Selected date is already reserved. Please choose another date.';
         const successBox = document.getElementById('assignment-success');
         const errorBox = document.getElementById('assignment-error');
         const assignmentForms = document.querySelectorAll('.assignment-form');
         const servicePreferredDateForms = document.querySelectorAll('.service-preferred-date-form');
         const preferredDateForms = document.querySelectorAll('.preferred-date-form');
         const serviceStatusForms = document.querySelectorAll('.service-status-form');
+        const lockingStatuses = new Set(['pending', 'approved', 'scheduled', 'assigned', 'in_progress']);
+        const serviceRequestRecords = @js($serviceRequestRecords);
+        const inspectionRequestRecords = @js($inspectionRequestRecords);
+        const requestRecords = serviceRequestRecords.concat(inspectionRequestRecords);
 
         function getCookie(name) {
             const prefix = `${name}=`;
@@ -409,12 +446,20 @@
             return (status || 'unknown').replace(/_/g, ' ');
         }
 
+        function normalizeDate(value) {
+            if (!value) {
+                return '';
+            }
+
+            return `${value}`.slice(0, 10);
+        }
+
         function formatDisplayDate(value) {
             if (!value) {
                 return 'Not specified';
             }
 
-            const parsedDate = new Date(`${value}T00:00:00`);
+            const parsedDate = new Date(`${normalizeDate(value)}T00:00:00`);
 
             if (Number.isNaN(parsedDate.getTime())) {
                 return value;
@@ -431,15 +476,89 @@
             switch (status) {
                 case 'pending':
                     return 'badge badge-warning';
+                case 'approved':
+                    return 'badge badge-info';
+                case 'scheduled':
+                    return 'badge badge-primary';
                 case 'assigned':
                     return 'badge badge-info';
                 case 'in_progress':
                     return 'badge badge-primary';
+                case 'cancelled':
+                case 'declined':
+                    return 'badge badge-neutral';
                 case 'completed':
                     return 'badge badge-success';
                 default:
                     return 'badge badge-neutral';
             }
+        }
+
+        function isRequestLocking(record) {
+            return Boolean(record?.date_needed) && lockingStatuses.has(record.status);
+        }
+
+        function getReservedDatesExcluding(requestKey) {
+            const reservedDates = new Set();
+
+            requestRecords.forEach((record) => {
+                if (record.requestKey === requestKey || !isRequestLocking(record)) {
+                    return;
+                }
+
+                reservedDates.add(normalizeDate(record.date_needed));
+            });
+
+            return Array.from(reservedDates).sort();
+        }
+
+        function formatReservedDatesSummary(dates) {
+            if (!dates.length) {
+                return 'No other reserved dates are currently listed. Backend validation still applies when you save.';
+            }
+
+            const visibleDates = dates.slice(0, 6).map((date) => formatDisplayDate(date));
+            const remainingCount = dates.length - visibleDates.length;
+
+            return `Other reserved dates right now: ${visibleDates.join(', ')}${remainingCount > 0 ? `, +${remainingCount} more` : ''}. Backend validation still applies when you save.`;
+        }
+
+        function getRequestRecord(requestKey) {
+            return requestRecords.find((record) => record.requestKey === requestKey) || null;
+        }
+
+        function renderAvailabilityForForm(form) {
+            const requestKey = form.dataset.requestKey;
+            const input = form.elements.namedItem('date_needed');
+            const inlineError = form.querySelector('[data-form-error]');
+            const helper = form.querySelector('[data-availability-helper]');
+            const reservedDates = getReservedDatesExcluding(requestKey);
+            const normalizedValue = normalizeDate(input?.value);
+
+            if (helper) {
+                helper.textContent = formatReservedDatesSummary(reservedDates);
+            }
+
+            if (normalizedValue && reservedDates.includes(normalizedValue)) {
+                inlineError.textContent = reservedDateMessage;
+            } else if (inlineError?.textContent === reservedDateMessage) {
+                inlineError.textContent = '';
+            }
+        }
+
+        function refreshAllAvailabilityHints() {
+            servicePreferredDateForms.forEach(renderAvailabilityForForm);
+            preferredDateForms.forEach(renderAvailabilityForForm);
+        }
+
+        function updateRequestRecord(requestKey, updates) {
+            const record = getRequestRecord(requestKey);
+
+            if (!record) {
+                return;
+            }
+
+            Object.assign(record, updates);
         }
 
         async function ensureCsrfCookie() {
@@ -493,18 +612,33 @@
             return responseBody;
         }
 
+        refreshAllAvailabilityHints();
+
         servicePreferredDateForms.forEach((form) => {
+            const input = form.elements.namedItem('date_needed');
+
+            input.addEventListener('input', () => {
+                renderAvailabilityForForm(form);
+            });
+
             form.addEventListener('submit', async (event) => {
                 event.preventDefault();
                 clearGlobalMessages();
 
-                const input = form.elements.namedItem('date_needed');
                 const button = form.querySelector('button[type="submit"]');
                 const inlineError = form.querySelector('[data-form-error]');
                 const requestKey = form.dataset.requestKey;
                 const preferredDateLabel = document.querySelector(`[data-service-preferred-date-for="${requestKey}"]`);
 
                 inlineError.textContent = '';
+
+                if (getReservedDatesExcluding(requestKey).includes(normalizeDate(input.value))) {
+                    inlineError.textContent = reservedDateMessage;
+                    errorBox.textContent = reservedDateMessage;
+                    setVisible(errorBox, true);
+                    return;
+                }
+
                 button.disabled = true;
                 button.textContent = 'Saving...';
 
@@ -521,9 +655,13 @@
                     }
 
                     if (updatedDate) {
-                        input.value = updatedDate;
+                        input.value = normalizeDate(updatedDate);
                     }
 
+                    updateRequestRecord(requestKey, {
+                        date_needed: normalizeDate(updatedDate),
+                    });
+                    refreshAllAvailabilityHints();
                     successBox.textContent = responseBody.message || 'Service preferred date updated successfully.';
                     setVisible(successBox, true);
                 } catch (error) {
@@ -538,17 +676,30 @@
         });
 
         preferredDateForms.forEach((form) => {
+            const input = form.elements.namedItem('date_needed');
+
+            input.addEventListener('input', () => {
+                renderAvailabilityForForm(form);
+            });
+
             form.addEventListener('submit', async (event) => {
                 event.preventDefault();
                 clearGlobalMessages();
 
-                const input = form.elements.namedItem('date_needed');
                 const button = form.querySelector('button[type="submit"]');
                 const inlineError = form.querySelector('[data-form-error]');
                 const requestKey = form.dataset.requestKey;
                 const preferredDateLabel = document.querySelector(`[data-preferred-date-for="${requestKey}"]`);
 
                 inlineError.textContent = '';
+
+                if (getReservedDatesExcluding(requestKey).includes(normalizeDate(input.value))) {
+                    inlineError.textContent = reservedDateMessage;
+                    errorBox.textContent = reservedDateMessage;
+                    setVisible(errorBox, true);
+                    return;
+                }
+
                 button.disabled = true;
                 button.textContent = 'Saving...';
 
@@ -565,9 +716,13 @@
                     }
 
                     if (updatedDate) {
-                        input.value = updatedDate;
+                        input.value = normalizeDate(updatedDate);
                     }
 
+                    updateRequestRecord(requestKey, {
+                        date_needed: normalizeDate(updatedDate),
+                    });
+                    refreshAllAvailabilityHints();
                     successBox.textContent = responseBody.message || 'Inspection preferred date updated successfully.';
                     setVisible(successBox, true);
                 } catch (error) {
@@ -612,6 +767,17 @@
                     if (assignmentStateBadge) {
                         assignmentStateBadge.textContent = 'Assigned';
                         assignmentStateBadge.className = 'badge badge-neutral';
+                    }
+
+                    const serviceRequest = responseBody.data || responseBody.service_request || null;
+                    const inspectionRequest = responseBody.inspection_request || null;
+                    const updatedStatus = serviceRequest?.status || inspectionRequest?.status || null;
+
+                    if (updatedStatus) {
+                        updateRequestRecord(requestKey, {
+                            status: updatedStatus,
+                        });
+                        refreshAllAvailabilityHints();
                     }
 
                     if (completionStateBadge) {
@@ -667,6 +833,11 @@
                         statusBadge.textContent = formatStatus(updatedStatus);
                         statusBadge.className = statusBadgeClass(updatedStatus);
                     }
+
+                    updateRequestRecord(requestKey, {
+                        status: updatedStatus,
+                    });
+                    refreshAllAvailabilityHints();
 
                     if (completionStateBadge) {
                         if (completionRequestedAt && updatedStatus === 'completed') {

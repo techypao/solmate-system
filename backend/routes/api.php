@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CustomerAccountController;
 use App\Http\Controllers\Api\TechnicianAccountController;
 use App\Http\Controllers\InspectionRequestController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PreferredDateAvailabilityController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\QuotationLineItemController;
 use App\Http\Controllers\ServiceRequestController;
@@ -36,6 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/quotations/{id}', [QuotationController::class, 'show']);
     Route::put('/quotations/{id}', [QuotationController::class, 'update']);
     Route::match(['put', 'patch'], '/quotations/{quotation}/line-items', [QuotationLineItemController::class, 'replace']);
+    Route::get('/preferred-date-availability', PreferredDateAvailabilityController::class);
 });
 
 // ADMIN ROUTES
@@ -49,6 +51,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::put('/admin/service-requests/{id}/status', [ServiceRequestController::class, 'updateAdminStatus']);
     Route::put('/inspection-requests/{id}/assign-technician', [InspectionRequestController::class, 'assignTechnician']);
     Route::match(['put', 'patch'], '/inspection-requests/{id}/preferred-date', [InspectionRequestController::class, 'updatePreferredDate']);
+    Route::put('/admin/inspection-requests/{id}/status', [InspectionRequestController::class, 'updateAdminStatus']);
     Route::get('/admin/quotation-settings', [QuotationSettingsController::class, 'show']);
     Route::match(['put', 'patch'], '/admin/quotation-settings', [QuotationSettingsController::class, 'update']);
     Route::get('/admin/pricing-items', [PricingItemController::class, 'index']);

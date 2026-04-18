@@ -5,14 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Services\InAppNotificationService;
+use App\Services\PreferredDateLockService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ServiceRequestController extends Controller
 {
     public function __construct(
-        private InAppNotificationService $notificationService
-    ) {
-    }
+        private InAppNotificationService $notificationService,
+        private PreferredDateLockService $preferredDateLockService
+    ) {}
 
     public function index(Request $request)
     {
@@ -34,14 +36,23 @@ class ServiceRequestController extends Controller
             'date_needed' => 'nullable|date',
         ]);
 
-        $serviceRequest = ServiceRequest::query()->create([
-            'user_id' => $request->user()->id,
-            'request_type' => $validated['request_type'],
-            'details' => $validated['details'],
-            'contact_number' => trim($validated['contact_number']),
-            'date_needed' => $validated['date_needed'] ?? null,
-            'status' => 'pending',
-        ]);
+        $serviceRequest = $this->preferredDateLockService->withLockedDates(
+            [$validated['date_needed'] ?? null],
+            function () use ($request, $validated) {
+                return DB::transaction(function () use ($request, $validated) {
+                    $this->preferredDateLockService->ensureDateIsAvailable($validated['date_needed'] ?? null);
+
+                    return ServiceRequest::query()->create([
+                        'user_id' => $request->user()->id,
+                        'request_type' => $validated['request_type'],
+                        'details' => $validated['details'],
+                        'contact_number' => trim($validated['contact_number']),
+                        'date_needed' => $validated['date_needed'] ?? null,
+                        'status' => 'pending',
+                    ]);
+                });
+            }
+        );
 
         $serviceRequest->load('customer');
         $this->notificationService->notifyAdminsOfNewServiceRequest($serviceRequest, $request->user());
@@ -108,13 +119,39 @@ class ServiceRequestController extends Controller
             'date_needed.date' => 'Preferred date must be a valid date.',
         ]);
 
-        $serviceRequest = ServiceRequest::query()
-            ->with(['customer', 'technician'])
-            ->findOrFail($id);
-        $previousDate = $serviceRequest->date_needed?->toDateString();
+        $currentDate = ServiceRequest::query()
+            ->findOrFail($id)
+            ->date_needed;
 
-        $serviceRequest->date_needed = $validated['date_needed'];
-        $serviceRequest->save();
+        $result = $this->preferredDateLockService->withLockedDates(
+            [$validated['date_needed'], $currentDate],
+            function () use ($id, $validated) {
+                return DB::transaction(function () use ($id, $validated) {
+                    $serviceRequest = ServiceRequest::query()
+                        ->with(['customer', 'technician'])
+                        ->lockForUpdate()
+                        ->findOrFail($id);
+
+                    $this->preferredDateLockService->ensureDateIsAvailable(
+                        $validated['date_needed'],
+                        $serviceRequest->id,
+                        ServiceRequest::class
+                    );
+
+                    $previousDate = $serviceRequest->date_needed?->toDateString();
+                    $serviceRequest->date_needed = $validated['date_needed'];
+                    $serviceRequest->save();
+
+                    return [
+                        'service_request' => $serviceRequest->fresh(['customer', 'technician']),
+                        'previous_date' => $previousDate,
+                    ];
+                });
+            }
+        );
+
+        $serviceRequest = $result['service_request'];
+        $previousDate = $result['previous_date'];
 
         if ($previousDate !== $validated['date_needed']) {
             $this->notificationService->notifyServiceRequestRescheduled(
@@ -180,7 +217,7 @@ class ServiceRequestController extends Controller
         $currentStatus = $serviceRequest->status;
         $newStatus = $request->status;
 
-        if (!in_array($newStatus, $allowedTransitions[$currentStatus] ?? [], true)) {
+        if (! in_array($newStatus, $allowedTransitions[$currentStatus] ?? [], true)) {
             return response()->json([
                 'message' => "Invalid status transition from {$currentStatus} to {$newStatus}.",
             ], 422);
@@ -246,7 +283,7 @@ class ServiceRequestController extends Controller
     public function updateAdminStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:pending,assigned,in_progress,completed',
+            'status' => 'required|in:pending,approved,scheduled,assigned,in_progress,cancelled,declined,completed',
         ]);
 
         $serviceRequest = ServiceRequest::query()

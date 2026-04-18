@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\InspectionRequest;
 use App\Models\User;
 use App\Services\InAppNotificationService;
+use App\Services\PreferredDateLockService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class InspectionRequestController extends Controller
 {
     public function __construct(
-        private InAppNotificationService $notificationService
-    ) {
-    }
+        private InAppNotificationService $notificationService,
+        private PreferredDateLockService $preferredDateLockService
+    ) {}
 
     public function index(Request $request)
     {
@@ -31,13 +33,22 @@ class InspectionRequestController extends Controller
             'date_needed' => 'nullable|date',
         ]);
 
-        $inspectionRequest = InspectionRequest::create([
-            'user_id' => $request->user()->id,
-            'details' => $validated['details'],
-            'contact_number' => trim($validated['contact_number']),
-            'date_needed' => $validated['date_needed'] ?? null,
-            'status' => 'pending',
-        ]);
+        $inspectionRequest = $this->preferredDateLockService->withLockedDates(
+            [$validated['date_needed'] ?? null],
+            function () use ($request, $validated) {
+                return DB::transaction(function () use ($request, $validated) {
+                    $this->preferredDateLockService->ensureDateIsAvailable($validated['date_needed'] ?? null);
+
+                    return InspectionRequest::create([
+                        'user_id' => $request->user()->id,
+                        'details' => $validated['details'],
+                        'contact_number' => trim($validated['contact_number']),
+                        'date_needed' => $validated['date_needed'] ?? null,
+                        'status' => 'pending',
+                    ]);
+                });
+            }
+        );
 
         $inspectionRequest->load('customer');
         $this->notificationService->notifyAdminsOfNewInspectionRequest($inspectionRequest, $request->user());
@@ -61,7 +72,7 @@ class InspectionRequestController extends Controller
 
         if ($technician->role !== User::ROLE_TECHNICIAN) {
             return response()->json([
-                'message' => 'Selected user is not a technician.'
+                'message' => 'Selected user is not a technician.',
             ], 422);
         }
 
@@ -90,7 +101,7 @@ class InspectionRequestController extends Controller
 
         return response()->json([
             'message' => 'Technician assigned successfully.',
-            'inspection_request' => $inspectionRequest
+            'inspection_request' => $inspectionRequest,
         ]);
     }
 
@@ -103,12 +114,39 @@ class InspectionRequestController extends Controller
             'date_needed.date' => 'Preferred date must be a valid date.',
         ]);
 
-        $inspectionRequest = InspectionRequest::query()
-            ->with(['customer', 'technician'])
-            ->findOrFail($id);
-        $previousDate = $inspectionRequest->date_needed;
-        $inspectionRequest->date_needed = $validated['date_needed'];
-        $inspectionRequest->save();
+        $currentDate = InspectionRequest::query()
+            ->findOrFail($id)
+            ->date_needed;
+
+        $result = $this->preferredDateLockService->withLockedDates(
+            [$validated['date_needed'], $currentDate],
+            function () use ($id, $validated) {
+                return DB::transaction(function () use ($id, $validated) {
+                    $inspectionRequest = InspectionRequest::query()
+                        ->with(['customer', 'technician'])
+                        ->lockForUpdate()
+                        ->findOrFail($id);
+
+                    $this->preferredDateLockService->ensureDateIsAvailable(
+                        $validated['date_needed'],
+                        $inspectionRequest->id,
+                        InspectionRequest::class
+                    );
+
+                    $previousDate = $inspectionRequest->date_needed;
+                    $inspectionRequest->date_needed = $validated['date_needed'];
+                    $inspectionRequest->save();
+
+                    return [
+                        'inspection_request' => $inspectionRequest->fresh(['customer', 'technician']),
+                        'previous_date' => $previousDate,
+                    ];
+                });
+            }
+        );
+
+        $inspectionRequest = $result['inspection_request'];
+        $previousDate = $result['previous_date'];
 
         if ($previousDate !== $validated['date_needed']) {
             $this->notificationService->notifyInspectionRequestRescheduled(
@@ -120,7 +158,7 @@ class InspectionRequestController extends Controller
 
         return response()->json([
             'message' => 'Inspection preferred date updated successfully.',
-            'inspection_request' => $inspectionRequest->fresh(['customer', 'technician']),
+            'inspection_request' => $inspectionRequest,
         ]);
     }
 
@@ -130,7 +168,7 @@ class InspectionRequestController extends Controller
 
         if ($user->role !== User::ROLE_TECHNICIAN) {
             return response()->json([
-                'message' => 'Unauthorized. Only technicians can view assigned inspection requests.'
+                'message' => 'Unauthorized. Only technicians can view assigned inspection requests.',
             ], 403);
         }
 
@@ -140,7 +178,7 @@ class InspectionRequestController extends Controller
             ->get();
 
         return response()->json([
-            'inspection_requests' => $inspectionRequests
+            'inspection_requests' => $inspectionRequests,
         ]);
     }
 
@@ -154,7 +192,7 @@ class InspectionRequestController extends Controller
 
         if ($user->role !== User::ROLE_TECHNICIAN) {
             return response()->json([
-                'message' => 'Unauthorized. Only technicians can update inspection request status.'
+                'message' => 'Unauthorized. Only technicians can update inspection request status.',
             ], 403);
         }
 
@@ -165,7 +203,7 @@ class InspectionRequestController extends Controller
 
         if ($inspectionRequest->technician_id !== $user->id) {
             return response()->json([
-                'message' => 'Unauthorized. You are not assigned to this inspection request.'
+                'message' => 'Unauthorized. You are not assigned to this inspection request.',
             ], 403);
         }
 
@@ -181,7 +219,34 @@ class InspectionRequestController extends Controller
 
         return response()->json([
             'message' => 'Inspection request status updated successfully.',
-            'inspection_request' => $inspectionRequest
+            'inspection_request' => $inspectionRequest,
+        ]);
+    }
+
+    public function updateAdminStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,approved,scheduled,assigned,in_progress,cancelled,declined,completed',
+        ]);
+
+        $inspectionRequest = InspectionRequest::query()
+            ->with(['customer', 'technician'])
+            ->findOrFail($id);
+        $previousStatus = $inspectionRequest->status;
+
+        $inspectionRequest->status = $request->status;
+        $inspectionRequest->save();
+
+        if ($previousStatus !== $inspectionRequest->status) {
+            $this->notificationService->notifyCustomerOfInspectionRequestStatusUpdate(
+                $inspectionRequest,
+                $request->user()->id
+            );
+        }
+
+        return response()->json([
+            'message' => 'Official inspection request status updated successfully.',
+            'inspection_request' => $inspectionRequest,
         ]);
     }
 }

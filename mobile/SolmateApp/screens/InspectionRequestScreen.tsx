@@ -1,26 +1,20 @@
-import React, {useState} from 'react';
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from '@react-native-community/datetimepicker';
-import {
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import React, {useCallback, useEffect, useState} from 'react';
+import {useFocusEffect} from '@react-navigation/native';
+import {ScrollView, StyleSheet, Text, TextInput, View} from 'react-native';
 
-import {AppButton, AppCard} from '../components';
+import {AppButton, AppCard, PreferredDateCalendar} from '../components';
 import {ApiError} from '../src/services/api';
+import {getUnavailablePreferredDates} from '../src/services/preferredDateAvailabilityApi';
 import {createInspectionRequest} from '../src/services/inspectionRequestApi';
 
 type FieldErrors = {
   details?: string;
   contactNumber?: string;
+  dateNeeded?: string;
 };
+
+const RESERVED_DATE_MESSAGE =
+  'Selected date is already reserved. Please choose another date.';
 
 function getFriendlyErrorMessage(error: unknown) {
   if (error instanceof ApiError) {
@@ -34,25 +28,30 @@ function getFriendlyErrorMessage(error: unknown) {
   return 'Something went wrong while submitting your inspection request.';
 }
 
-function formatDateForApi(date: Date) {
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
-  const day = `${date.getDate()}`.padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
-}
-
 function sanitizeContactNumber(value: string) {
   return value.replace(/[^0-9+()\- ]/g, '');
+}
+
+function getFieldValidationMessage(error: unknown, field: string) {
+  if (!(error instanceof ApiError)) {
+    return null;
+  }
+
+  const messages = error.errors?.[field];
+
+  if (Array.isArray(messages) && messages.length > 0) {
+    return messages[0];
+  }
+
+  return null;
 }
 
 export default function InspectionRequestScreen({navigation}: any) {
   const [details, setDetails] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [dateNeeded, setDateNeeded] = useState('');
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [pickerDate, setPickerDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [unavailableDates, setUnavailableDates] = useState<string[]>([]);
+  const [availabilityMessage, setAvailabilityMessage] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -62,9 +61,57 @@ export default function InspectionRequestScreen({navigation}: any) {
     setDetails('');
     setContactNumber('');
     setDateNeeded('');
-    setSelectedDate(null);
-    setPickerDate(new Date());
     setFieldErrors({});
+  };
+
+  const loadUnavailableDates = useCallback(async () => {
+    try {
+      const dates = await getUnavailablePreferredDates();
+      setUnavailableDates(dates);
+      setAvailabilityMessage('');
+    } catch {
+      setAvailabilityMessage(
+        'Live reserved-date updates could not be loaded right now. The backend will still verify your preferred date when you submit.',
+      );
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadUnavailableDates();
+    }, [loadUnavailableDates]),
+  );
+
+  useEffect(() => {
+    const isReserved = Boolean(dateNeeded && unavailableDates.includes(dateNeeded));
+
+    setFieldErrors(currentErrors => {
+      if (isReserved && currentErrors.dateNeeded !== RESERVED_DATE_MESSAGE) {
+        return {
+          ...currentErrors,
+          dateNeeded: RESERVED_DATE_MESSAGE,
+        };
+      }
+
+      if (!isReserved && currentErrors.dateNeeded === RESERVED_DATE_MESSAGE) {
+        return {
+          ...currentErrors,
+          dateNeeded: undefined,
+        };
+      }
+
+      return currentErrors;
+    });
+  }, [dateNeeded, unavailableDates]);
+
+  const clearStatusMessages = () => {
+    if (errorMessage) {
+      setErrorMessage('');
+    }
+
+    if (successMessage) {
+      setSuccessMessage('');
+    }
   };
 
   const handleDetailsChange = (value: string) => {
@@ -91,53 +138,22 @@ export default function InspectionRequestScreen({navigation}: any) {
     }
   };
 
-  const clearStatusMessages = () => {
-    if (errorMessage) {
-      setErrorMessage('');
-    }
-
-    if (successMessage) {
-      setSuccessMessage('');
-    }
-  };
-
-  const openDatePicker = () => {
+  const handleDateSelect = (value: string) => {
+    setDateNeeded(value);
     clearStatusMessages();
-    setPickerDate(selectedDate || new Date());
-    setShowDatePicker(true);
+    setFieldErrors(currentErrors => ({
+      ...currentErrors,
+      dateNeeded: undefined,
+    }));
   };
 
-  const applySelectedDate = (date: Date) => {
-    setSelectedDate(date);
-    setPickerDate(date);
-    setDateNeeded(formatDateForApi(date));
+  const clearSelectedDate = () => {
+    setDateNeeded('');
     clearStatusMessages();
-  };
-
-  const handleAndroidDateChange = (
-    _event: DateTimePickerEvent,
-    pickedDate?: Date,
-  ) => {
-    setShowDatePicker(false);
-
-    if (pickedDate) {
-      applySelectedDate(pickedDate);
-    }
-  };
-
-  const handleIosDateChange = (_event: DateTimePickerEvent, pickedDate?: Date) => {
-    if (pickedDate) {
-      setPickerDate(pickedDate);
-    }
-  };
-
-  const handleIosCancel = () => {
-    setShowDatePicker(false);
-  };
-
-  const handleIosConfirm = () => {
-    applySelectedDate(pickerDate);
-    setShowDatePicker(false);
+    setFieldErrors(currentErrors => ({
+      ...currentErrors,
+      dateNeeded: undefined,
+    }));
   };
 
   const validateForm = () => {
@@ -151,6 +167,10 @@ export default function InspectionRequestScreen({navigation}: any) {
 
     if (!trimmedContactNumber) {
       nextErrors.contactNumber = 'Contact number is required.';
+    }
+
+    if (dateNeeded && unavailableDates.includes(dateNeeded)) {
+      nextErrors.dateNeeded = RESERVED_DATE_MESSAGE;
     }
 
     setFieldErrors(nextErrors);
@@ -176,6 +196,16 @@ export default function InspectionRequestScreen({navigation}: any) {
     const trimmedDetails = details.trim();
     const trimmedContactNumber = contactNumber.trim();
     const trimmedDateNeeded = dateNeeded.trim();
+
+    if (trimmedDateNeeded && unavailableDates.includes(trimmedDateNeeded)) {
+      setFieldErrors(currentErrors => ({
+        ...currentErrors,
+        dateNeeded: RESERVED_DATE_MESSAGE,
+      }));
+      setErrorMessage(RESERVED_DATE_MESSAGE);
+      setSuccessMessage('');
+      return;
+    }
 
     try {
       setSubmitting(true);
@@ -206,7 +236,17 @@ export default function InspectionRequestScreen({navigation}: any) {
         response.message || 'Inspection request submitted successfully.',
       );
     } catch (error) {
-      setErrorMessage(getFriendlyErrorMessage(error));
+      const dateFieldMessage = getFieldValidationMessage(error, 'date_needed');
+
+      if (dateFieldMessage) {
+        setFieldErrors(currentErrors => ({
+          ...currentErrors,
+          dateNeeded: dateFieldMessage,
+        }));
+        loadUnavailableDates();
+      }
+
+      setErrorMessage(dateFieldMessage || getFriendlyErrorMessage(error));
     } finally {
       setSubmitting(false);
     }
@@ -303,32 +343,17 @@ export default function InspectionRequestScreen({navigation}: any) {
           ) : null}
         </View>
 
-        <View style={styles.fieldGroup}>
-          <View style={styles.fieldHeader}>
-            <Text style={styles.fieldLabel}>Date needed</Text>
-            <Text style={styles.optionalText}>Optional</Text>
-          </View>
-
-          <Pressable
-            onPress={openDatePicker}
-            style={({pressed}) => [
-              styles.input,
-              styles.dateInput,
-              pressed ? styles.pressedInput : null,
-            ]}>
-            <Text
-              style={[
-                styles.dateInputText,
-                !dateNeeded ? styles.placeholderText : null,
-              ]}>
-              {dateNeeded || 'Select date'}
-            </Text>
-          </Pressable>
-
-          <Text style={styles.helpText}>
-            Tap the field to choose a date from the calendar picker.
-          </Text>
-        </View>
+        <PreferredDateCalendar
+          availabilityMessage={availabilityMessage}
+          errorText={fieldErrors.dateNeeded}
+          helperText="Some dates may already be reserved by other active requests. The backend will always confirm availability when you submit."
+          label="Date needed"
+          onClearDate={clearSelectedDate}
+          onSelectDate={handleDateSelect}
+          reservedDateMessage={RESERVED_DATE_MESSAGE}
+          selectedDate={dateNeeded}
+          unavailableDates={unavailableDates}
+        />
       </AppCard>
 
       <View style={styles.submitCard}>
@@ -354,47 +379,6 @@ export default function InspectionRequestScreen({navigation}: any) {
           variant="outline"
         />
       </View>
-
-      {showDatePicker && Platform.OS === 'android' ? (
-        <DateTimePicker
-          mode="date"
-          onChange={handleAndroidDateChange}
-          value={pickerDate}
-        />
-      ) : null}
-
-      <Modal
-        animationType="fade"
-        onRequestClose={handleIosCancel}
-        transparent={true}
-        visible={showDatePicker && Platform.OS === 'ios'}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Select date</Text>
-
-            <DateTimePicker
-              display="spinner"
-              mode="date"
-              onChange={handleIosDateChange}
-              value={pickerDate}
-            />
-
-            <View style={styles.modalActions}>
-              <AppButton
-                onPress={handleIosCancel}
-                style={styles.modalButton}
-                title="Cancel"
-                variant="outline"
-              />
-              <AppButton
-                onPress={handleIosConfirm}
-                style={styles.modalButton}
-                title="Done"
-              />
-            </View>
-          </View>
-        </View>
-      </Modal>
     </ScrollView>
   );
 }
@@ -503,12 +487,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textTransform: 'uppercase',
   },
-  optionalText: {
-    color: '#64748b',
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
   input: {
     backgroundColor: '#f8fafc',
     borderColor: '#cbd5e1',
@@ -524,20 +502,6 @@ const styles = StyleSheet.create({
   },
   textArea: {
     minHeight: 120,
-  },
-  dateInput: {
-    justifyContent: 'center',
-    minHeight: 54,
-  },
-  dateInputText: {
-    color: '#0f172a',
-    fontSize: 16,
-  },
-  placeholderText: {
-    color: '#94a3b8',
-  },
-  pressedInput: {
-    opacity: 0.88,
   },
   helpText: {
     color: '#64748b',
@@ -583,33 +547,5 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     marginTop: 12,
-  },
-  modalOverlay: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.35)',
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  modalCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 20,
-    width: '100%',
-  },
-  modalTitle: {
-    color: '#0f172a',
-    fontSize: 18,
-    fontWeight: '800',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 12,
-  },
-  modalButton: {
-    flex: 1,
   },
 });

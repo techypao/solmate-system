@@ -1,10 +1,6 @@
-import React, { useMemo, useState } from 'react';
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from '@react-native-community/datetimepicker';
+import React, {useCallback, useEffect, useState} from 'react';
+import {useFocusEffect} from '@react-navigation/native';
 import {
-  Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,9 +9,10 @@ import {
   View,
 } from 'react-native';
 
-import { AppButton, AppCard } from '../components';
-import { ApiError } from '../src/services/api';
-import { createServiceRequest } from '../src/services/serviceRequestApi';
+import {AppButton, AppCard, PreferredDateCalendar} from '../components';
+import {ApiError} from '../src/services/api';
+import {getUnavailablePreferredDates} from '../src/services/preferredDateAvailabilityApi';
+import {createServiceRequest} from '../src/services/serviceRequestApi';
 
 const REQUEST_TYPE_OPTIONS = [
   'Battery Check',
@@ -28,7 +25,11 @@ type FieldErrors = {
   requestType?: string;
   details?: string;
   contactNumber?: string;
+  dateNeeded?: string;
 };
+
+const RESERVED_DATE_MESSAGE =
+  'Selected date is already reserved. Please choose another date.';
 
 function sanitizeContactNumber(value: string) {
   return value.replace(/[^0-9+()\- ]/g, '');
@@ -46,46 +47,79 @@ function getFriendlyErrorMessage(error: unknown) {
   return 'Something went wrong while submitting your service request.';
 }
 
-function formatDateForApi(date: Date) {
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
-  const day = `${date.getDate()}`.padStart(2, '0');
+function getFieldValidationMessage(error: unknown, field: string) {
+  if (!(error instanceof ApiError)) {
+    return null;
+  }
 
-  return `${year}-${month}-${day}`;
+  const messages = error.errors?.[field];
+
+  if (Array.isArray(messages) && messages.length > 0) {
+    return messages[0];
+  }
+
+  return null;
 }
 
-function formatDateForDisplay(date: Date) {
-  return date.toLocaleDateString(undefined, {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
-
-export default function ServiceRequestScreen({ navigation }: any) {
+export default function ServiceRequestScreen({navigation}: any) {
   const [requestType, setRequestType] = useState('');
   const [details, setDetails] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [dateNeeded, setDateNeeded] = useState('');
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [pickerDate, setPickerDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [unavailableDates, setUnavailableDates] = useState<string[]>([]);
+  const [availabilityMessage, setAvailabilityMessage] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-
-  const minimumDate = useMemo(() => new Date(), []);
 
   const resetForm = () => {
     setRequestType('');
     setDetails('');
     setContactNumber('');
     setDateNeeded('');
-    setSelectedDate(null);
-    setPickerDate(new Date());
     setFieldErrors({});
   };
+
+  const loadUnavailableDates = useCallback(async () => {
+    try {
+      const dates = await getUnavailablePreferredDates();
+      setUnavailableDates(dates);
+      setAvailabilityMessage('');
+    } catch {
+      setAvailabilityMessage(
+        'Live reserved-date updates could not be loaded right now. The backend will still verify your preferred date when you submit.',
+      );
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadUnavailableDates();
+    }, [loadUnavailableDates]),
+  );
+
+  useEffect(() => {
+    const isReserved = Boolean(dateNeeded && unavailableDates.includes(dateNeeded));
+
+    setFieldErrors(currentErrors => {
+      if (isReserved && currentErrors.dateNeeded !== RESERVED_DATE_MESSAGE) {
+        return {
+          ...currentErrors,
+          dateNeeded: RESERVED_DATE_MESSAGE,
+        };
+      }
+
+      if (!isReserved && currentErrors.dateNeeded === RESERVED_DATE_MESSAGE) {
+        return {
+          ...currentErrors,
+          dateNeeded: undefined,
+        };
+      }
+
+      return currentErrors;
+    });
+  }, [dateNeeded, unavailableDates]);
 
   const clearStatusMessages = () => {
     if (errorMessage) {
@@ -133,53 +167,22 @@ export default function ServiceRequestScreen({ navigation }: any) {
     }
   };
 
-  const openDatePicker = () => {
+  const handleDateSelect = (value: string) => {
+    setDateNeeded(value);
     clearStatusMessages();
-    setPickerDate(selectedDate || new Date());
-    setShowDatePicker(true);
-  };
-
-  const applySelectedDate = (date: Date) => {
-    setSelectedDate(date);
-    setPickerDate(date);
-    setDateNeeded(formatDateForApi(date));
-    clearStatusMessages();
+    setFieldErrors(currentErrors => ({
+      ...currentErrors,
+      dateNeeded: undefined,
+    }));
   };
 
   const clearSelectedDate = () => {
-    setSelectedDate(null);
     setDateNeeded('');
-    setPickerDate(new Date());
     clearStatusMessages();
-  };
-
-  const handleAndroidDateChange = (
-    _event: DateTimePickerEvent,
-    pickedDate?: Date,
-  ) => {
-    setShowDatePicker(false);
-
-    if (pickedDate) {
-      applySelectedDate(pickedDate);
-    }
-  };
-
-  const handleIosDateChange = (
-    _event: DateTimePickerEvent,
-    pickedDate?: Date,
-  ) => {
-    if (pickedDate) {
-      setPickerDate(pickedDate);
-    }
-  };
-
-  const handleIosCancel = () => {
-    setShowDatePicker(false);
-  };
-
-  const handleIosConfirm = () => {
-    applySelectedDate(pickerDate);
-    setShowDatePicker(false);
+    setFieldErrors(currentErrors => ({
+      ...currentErrors,
+      dateNeeded: undefined,
+    }));
   };
 
   const validateForm = () => {
@@ -198,6 +201,10 @@ export default function ServiceRequestScreen({ navigation }: any) {
 
     if (!trimmedContactNumber) {
       nextErrors.contactNumber = 'Contact number is required.';
+    }
+
+    if (dateNeeded && unavailableDates.includes(dateNeeded)) {
+      nextErrors.dateNeeded = RESERVED_DATE_MESSAGE;
     }
 
     setFieldErrors(nextErrors);
@@ -220,6 +227,16 @@ export default function ServiceRequestScreen({ navigation }: any) {
       return;
     }
 
+    if (dateNeeded && unavailableDates.includes(dateNeeded)) {
+      setFieldErrors(currentErrors => ({
+        ...currentErrors,
+        dateNeeded: RESERVED_DATE_MESSAGE,
+      }));
+      setErrorMessage(RESERVED_DATE_MESSAGE);
+      setSuccessMessage('');
+      return;
+    }
+
     try {
       setSubmitting(true);
       setErrorMessage('');
@@ -229,9 +246,9 @@ export default function ServiceRequestScreen({ navigation }: any) {
         request_type: requestType.trim(),
         details: details.trim(),
         ...(contactNumber.trim()
-          ? { contact_number: contactNumber.trim() }
+          ? {contact_number: contactNumber.trim()}
           : {}),
-        ...(dateNeeded ? { date_needed: dateNeeded } : {}),
+        ...(dateNeeded ? {date_needed: dateNeeded} : {}),
       });
 
       const createdServiceRequest = response?.data;
@@ -251,7 +268,17 @@ export default function ServiceRequestScreen({ navigation }: any) {
         response.message || 'Service request submitted successfully.',
       );
     } catch (error) {
-      setErrorMessage(getFriendlyErrorMessage(error));
+      const dateFieldMessage = getFieldValidationMessage(error, 'date_needed');
+
+      if (dateFieldMessage) {
+        setFieldErrors(currentErrors => ({
+          ...currentErrors,
+          dateNeeded: dateFieldMessage,
+        }));
+        loadUnavailableDates();
+      }
+
+      setErrorMessage(dateFieldMessage || getFriendlyErrorMessage(error));
     } finally {
       setSubmitting(false);
     }
@@ -263,8 +290,7 @@ export default function ServiceRequestScreen({ navigation }: any) {
     <ScrollView
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
-    >
+      showsVerticalScrollIndicator={false}>
       <View style={styles.heroCard}>
         <Text style={styles.eyebrow}>Request service</Text>
         <Text style={styles.title}>Schedule support for your solar system</Text>
@@ -309,18 +335,16 @@ export default function ServiceRequestScreen({ navigation }: any) {
                 <Pressable
                   key={option}
                   onPress={() => handleRequestTypeChange(option)}
-                  style={({ pressed }) => [
+                  style={({pressed}) => [
                     styles.typeChip,
                     isSelected ? styles.typeChipSelected : null,
                     pressed ? styles.pressedChip : null,
-                  ]}
-                >
+                  ]}>
                   <Text
                     style={[
                       styles.typeChipText,
                       isSelected ? styles.typeChipTextSelected : null,
-                    ]}
-                  >
+                    ]}>
                     {option}
                   </Text>
                 </Pressable>
@@ -405,46 +429,17 @@ export default function ServiceRequestScreen({ navigation }: any) {
           ) : null}
         </View>
 
-        <View style={styles.fieldGroup}>
-          <View style={styles.fieldHeader}>
-            <Text style={styles.fieldLabel}>Preferred date</Text>
-            <Text style={styles.optionalText}>Optional</Text>
-          </View>
-
-          <Pressable
-            onPress={openDatePicker}
-            style={({ pressed }) => [
-              styles.input,
-              styles.dateInput,
-              pressed ? styles.pressedInput : null,
-            ]}
-          >
-            <Text
-              style={[
-                styles.dateInputText,
-                !selectedDate ? styles.placeholderText : null,
-              ]}
-            >
-              {selectedDate
-                ? formatDateForDisplay(selectedDate)
-                : 'Select date'}
-            </Text>
-          </Pressable>
-
-          <Text style={styles.helpText}>
-            Tap to choose a customer-friendly calendar date for your preferred
-            service visit.
-          </Text>
-
-          {selectedDate ? (
-            <Pressable
-              onPress={clearSelectedDate}
-              style={styles.clearDateButton}
-            >
-              <Text style={styles.clearDateText}>Clear selected date</Text>
-            </Pressable>
-          ) : null}
-        </View>
+        <PreferredDateCalendar
+          availabilityMessage={availabilityMessage}
+          errorText={fieldErrors.dateNeeded}
+          helperText="Some dates may already be reserved by other active requests. The backend will always confirm availability when you submit."
+          label="Preferred date"
+          onClearDate={clearSelectedDate}
+          onSelectDate={handleDateSelect}
+          reservedDateMessage={RESERVED_DATE_MESSAGE}
+          selectedDate={dateNeeded}
+          unavailableDates={unavailableDates}
+        />
       </AppCard>
 
       <View style={styles.submitCard}>
@@ -470,50 +465,6 @@ export default function ServiceRequestScreen({ navigation }: any) {
           variant="outline"
         />
       </View>
-
-      {showDatePicker && Platform.OS === 'android' ? (
-        <DateTimePicker
-          minimumDate={minimumDate}
-          mode="date"
-          onChange={handleAndroidDateChange}
-          value={pickerDate}
-        />
-      ) : null}
-
-      <Modal
-        animationType="fade"
-        onRequestClose={handleIosCancel}
-        transparent={true}
-        visible={showDatePicker && Platform.OS === 'ios'}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Select date</Text>
-
-            <DateTimePicker
-              display="spinner"
-              minimumDate={minimumDate}
-              mode="date"
-              onChange={handleIosDateChange}
-              value={pickerDate}
-            />
-
-            <View style={styles.modalActions}>
-              <AppButton
-                onPress={handleIosCancel}
-                style={styles.modalButton}
-                title="Cancel"
-                variant="outline"
-              />
-              <AppButton
-                onPress={handleIosConfirm}
-                style={styles.modalButton}
-                title="Done"
-              />
-            </View>
-          </View>
-        </View>
-      </Modal>
     </ScrollView>
   );
 }
@@ -622,12 +573,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textTransform: 'uppercase',
   },
-  optionalText: {
-    color: '#64748b',
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
   chipGroup: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -685,29 +630,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginTop: 6,
   },
-  dateInput: {
-    justifyContent: 'center',
-    minHeight: 54,
-  },
-  dateInputText: {
-    color: '#0f172a',
-    fontSize: 16,
-  },
-  placeholderText: {
-    color: '#94a3b8',
-  },
-  pressedInput: {
-    opacity: 0.88,
-  },
-  clearDateButton: {
-    alignSelf: 'flex-start',
-    marginTop: 10,
-  },
-  clearDateText: {
-    color: '#d97706',
-    fontSize: 13,
-    fontWeight: '700',
-  },
   submitCard: {
     backgroundColor: '#ffffff',
     borderColor: '#dbe4f0',
@@ -740,33 +662,5 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     marginTop: 12,
-  },
-  modalOverlay: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.35)',
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  modalCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 20,
-    width: '100%',
-  },
-  modalTitle: {
-    color: '#0f172a',
-    fontSize: 18,
-    fontWeight: '800',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 12,
-  },
-  modalButton: {
-    flex: 1,
   },
 });
