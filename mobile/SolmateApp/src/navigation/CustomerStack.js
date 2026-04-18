@@ -8,6 +8,7 @@ import CreateTestimonyScreen from '../../screens/CreateTestimonyScreen';
 import CustomerNotificationsScreen from '../../screens/CustomerNotificationsScreen';
 import EditTestimonyScreen from '../../screens/EditTestimonyScreen';
 import FinalQuotationViewScreen from '../../screens/FinalQuotationViewScreen';
+import ChatbotScreen from '../../screens/ChatbotScreen';
 import InspectionRequestDetailScreen from '../../screens/InspectionRequestDetailScreen';
 import InspectionRequestListScreen from '../../screens/InspectionRequestListScreen';
 import InspectionRequestScreen from '../../screens/InspectionRequestScreen';
@@ -48,6 +49,12 @@ export default function CustomerStack() {
         name="CustomerNotifications"
         component={CustomerNotificationsScreen}
         options={{ title: 'Notifications' }}
+      />
+
+      <Stack.Screen
+        name="Chatbot"
+        component={ChatbotScreen}
+        options={{ title: 'SolMate Assistant' }}
       />
 
       {/* Quotation creation form */}

@@ -143,6 +143,12 @@ export default function HomeScreen({ navigation }: any) {
 
           <View style={styles.quickActionGrid}>
             <QuickActionCard
+              title="SolMate Assistant"
+              subtitle="Open the customer chatbot UI for guidance and common questions."
+              accentColor="#38bdf8"
+              onPress={() => navigation.navigate('Chatbot')}
+            />
+            <QuickActionCard
               title="Create Initial Quotation"
               subtitle="Start a new customer quotation request for your account."
               accentColor="#93c5fd"
@@ -190,6 +196,12 @@ export default function HomeScreen({ navigation }: any) {
 
           <View style={styles.buttonStack}>
             {/* These buttons mirror the same navigation actions as the cards. */}
+            <AppButton
+              style={styles.buttonSpacing}
+              title="Open SolMate Assistant"
+              variant="secondary"
+              onPress={() => navigation.navigate('Chatbot')}
+            />
             <AppButton
               title="Create Initial Quotation"
               onPress={() => navigation.navigate('Quotations')}
