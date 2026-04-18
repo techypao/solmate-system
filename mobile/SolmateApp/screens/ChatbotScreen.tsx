@@ -6,6 +6,7 @@ import {
   Platform,
   Pressable,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -35,14 +36,7 @@ const QUICK_PROMPTS = [
 const WELCOME_MESSAGE =
   'Hi! I’m SolMate Assistant. I can help you with quotations, inspection requests, service requests, testimonies, notifications, and general app guidance.';
 
-const INITIAL_MESSAGES: ChatMessage[] = [
-  {
-    id: 'assistant-welcome',
-    sender: 'bot',
-    text: WELCOME_MESSAGE,
-    timestamp: Date.now(),
-  },
-];
+const INITIAL_MESSAGES: ChatMessage[] = [];
 
 function MessageBubble({message}: {message: ChatMessage}) {
   const isUser = message.sender === 'user';
@@ -54,27 +48,25 @@ function MessageBubble({message}: {message: ChatMessage}) {
         styles.messageRow,
         isUser ? styles.messageRowUser : styles.messageRowAssistant,
       ]}>
+      {!isUser ? (
+        <View style={[styles.messageAvatar, styles.assistantAvatar]}>
+          <Text style={[styles.messageAvatarText, styles.assistantAvatarText]}>
+            AI
+          </Text>
+        </View>
+      ) : null}
+
       <View
         style={[
-          styles.messageAvatar,
-          isUser ? styles.userAvatar : styles.assistantAvatar,
+          styles.messageBubbleWrap,
+          isUser ? styles.messageBubbleWrapUser : styles.messageBubbleWrapAssistant,
         ]}>
-        <Text
+        <View
           style={[
-            styles.messageAvatarText,
-            isUser ? styles.userAvatarText : styles.assistantAvatarText,
+            styles.messageBubble,
+            isUser ? styles.userBubble : styles.assistantBubble,
+            isError ? styles.errorBubble : null,
           ]}>
-          {isUser ? 'You' : 'AI'}
-        </Text>
-      </View>
-      <View
-        style={[
-          styles.messageCard,
-          styles.messageBubble,
-          isUser ? styles.userBubble : styles.assistantBubble,
-          isError ? styles.errorBubble : null,
-        ]}>
-        <View style={styles.messageMetaRow}>
           <Text
             style={[
               styles.messageSenderLabel,
@@ -83,23 +75,33 @@ function MessageBubble({message}: {message: ChatMessage}) {
             {isUser ? 'You' : 'SolMate Assistant'}
           </Text>
           {isError ? <Text style={styles.errorBadge}>Retry available</Text> : null}
+          <Text
+            android_hyphenationFrequency="normal"
+            style={[
+              styles.messageText,
+              isUser ? styles.userMessageText : styles.assistantMessageText,
+              isError ? styles.errorMessageText : null,
+            ]}
+            textBreakStrategy="highQuality">
+            {message.text}
+          </Text>
+          <Text
+            style={[
+              styles.messageTimestamp,
+              isUser ? styles.userTimestamp : styles.assistantTimestamp,
+            ]}>
+            {formatTimestamp(message.timestamp)}
+          </Text>
         </View>
-        <Text
-          style={[
-            styles.messageText,
-            isUser ? styles.userMessageText : styles.assistantMessageText,
-            isError ? styles.errorMessageText : null,
-          ]}>
-          {message.text}
-        </Text>
-        <Text
-          style={[
-            styles.messageTimestamp,
-            isUser ? styles.userTimestamp : styles.assistantTimestamp,
-          ]}>
-          {formatTimestamp(message.timestamp)}
-        </Text>
       </View>
+
+      {isUser ? (
+        <View style={[styles.messageAvatar, styles.userAvatar]}>
+          <Text style={[styles.messageAvatarText, styles.userAvatarText]}>
+            You
+          </Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -110,19 +112,20 @@ function TypingBubble() {
       <View style={[styles.messageAvatar, styles.assistantAvatar]}>
         <Text style={[styles.messageAvatarText, styles.assistantAvatarText]}>AI</Text>
       </View>
-      <View
-        style={[
-          styles.messageCard,
-          styles.messageBubble,
-          styles.assistantBubble,
-          styles.typingBubble,
-        ]}>
-        <Text style={styles.typingLabel}>SolMate Assistant</Text>
-        <View style={styles.typingIndicator}>
-          <ActivityIndicator color="#2563eb" size="small" />
-          <Text style={styles.typingText}>
-            Reviewing your SolMate question...
-          </Text>
+      <View style={[styles.messageBubbleWrap, styles.messageBubbleWrapAssistant]}>
+        <View
+          style={[
+            styles.messageBubble,
+            styles.assistantBubble,
+            styles.typingBubble,
+          ]}>
+          <Text style={styles.typingLabel}>SolMate Assistant</Text>
+          <View style={styles.typingIndicator}>
+            <ActivityIndicator color="#2563eb" size="small" />
+            <Text style={styles.typingText}>
+              Reviewing your SolMate question...
+            </Text>
+          </View>
         </View>
       </View>
     </View>
@@ -238,66 +241,74 @@ export default function ChatbotScreen() {
         <View style={styles.screenHeader}>
           <Text style={styles.screenEyebrow}>Customer support</Text>
           <Text style={styles.screenTitle}>SolMate Assistant</Text>
-          <Text style={styles.screenSubtitle}>
-            Ask common questions and get concise SolMate guidance right inside
-            the app.
-          </Text>
+          {messages.length === 0 && (
+            <Text style={styles.screenSubtitle}>
+              Ask common questions and get concise SolMate guidance right inside
+              the app.
+            </Text>
+          )}
         </View>
 
-        <FlatList
-          ref={listRef}
-          contentContainerStyle={styles.messageListContent}
-          data={messages}
-          keyExtractor={item => item.id}
-          keyboardShouldPersistTaps="handled"
-          onContentSizeChange={() => listRef.current?.scrollToEnd({animated: true})}
-          ListHeaderComponent={
-            <View>
-              <View style={styles.welcomeCard}>
-                <View style={styles.welcomeTopRow}>
-                  <View style={styles.welcomeBadge}>
-                    <Text style={styles.welcomeBadgeText}>SolMate help</Text>
-                  </View>
-                  <View style={styles.welcomeStatusPill}>
-                    <View style={styles.welcomeStatusDot} />
-                    <Text style={styles.welcomeStatusText}>Gemini ready</Text>
-                  </View>
+        {messages.length === 0 && (
+          <View style={styles.introSection}>
+            <View style={styles.welcomeCard}>
+              <View style={styles.welcomeTopRow}>
+                <View style={styles.welcomeBadge}>
+                  <Text style={styles.welcomeBadgeText}>SolMate help</Text>
                 </View>
-                <Text style={styles.welcomeTitle}>Start with a quick prompt</Text>
-                <Text style={styles.welcomeText}>
-                  Tap one of the suggested prompts below or type your own
-                  question to chat with SolMate Assistant about quotations,
-                  inspections, service requests, testimonies, notifications,
-                  and general app guidance.
-                </Text>
-              </View>
-
-              <View style={styles.promptSection}>
-                <Text style={styles.promptSectionTitle}>Suggested questions</Text>
-                <Text style={styles.promptSectionText}>
-                  Ask about the common SolMate customer tasks below.
-                </Text>
-                <View style={styles.promptWrap}>
-                  {QUICK_PROMPTS.map(prompt => (
-                    <PromptChip
-                      disabled={isSending}
-                      key={prompt}
-                      label={prompt}
-                      onPress={() => sendMessage(prompt)}
-                    />
-                  ))}
+                <View style={styles.welcomeStatusPill}>
+                  <View style={styles.welcomeStatusDot} />
+                  <Text style={styles.welcomeStatusText}>Gemini ready</Text>
                 </View>
               </View>
-
-              <Text style={styles.chatSectionLabel}>Conversation</Text>
+              <Text style={styles.welcomeText}>{WELCOME_MESSAGE}</Text>
             </View>
-          }
-          ListFooterComponent={
-            isSending ? <TypingBubble /> : <View style={styles.listFooterSpacer} />
-          }
-          renderItem={({item}) => <MessageBubble message={item} />}
-          showsVerticalScrollIndicator={false}
-        />
+          </View>
+        )}
+
+        <View style={styles.promptBar}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.promptScrollContent}
+            keyboardShouldPersistTaps="handled">
+            {QUICK_PROMPTS.map(prompt => (
+              <PromptChip
+                disabled={isSending}
+                key={prompt}
+                label={prompt}
+                onPress={() => sendMessage(prompt)}
+              />
+            ))}
+          </ScrollView>
+        </View>
+
+        <View style={styles.chatSection}>
+          <FlatList
+            ref={listRef}
+            contentContainerStyle={styles.messageListContent}
+            data={messages}
+            keyExtractor={item => item.id}
+            keyboardShouldPersistTaps="handled"
+            onContentSizeChange={() => listRef.current?.scrollToEnd({animated: true})}
+            removeClippedSubviews={false}
+            ListEmptyComponent={
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateTitle}>No messages yet</Text>
+                <Text style={styles.emptyStateText}>
+                  Start the conversation with one of the prompts above or type
+                  your own SolMate question below.
+                </Text>
+              </View>
+            }
+            ListFooterComponent={
+              isSending ? <TypingBubble /> : <View style={styles.listFooterSpacer} />
+            }
+            renderItem={({item}) => <MessageBubble message={item} />}
+            showsVerticalScrollIndicator={false}
+            style={styles.messageList}
+          />
+        </View>
 
         <View style={styles.composerWrap}>
           <View style={styles.composerCard}>
@@ -390,7 +401,8 @@ const styles = StyleSheet.create({
   },
   screenHeader: {
     paddingHorizontal: 20,
-    paddingTop: 18,
+    paddingTop: 12,
+    paddingBottom: 4,
   },
   screenEyebrow: {
     color: '#2563eb',
@@ -402,34 +414,31 @@ const styles = StyleSheet.create({
   },
   screenTitle: {
     color: '#0f172a',
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: '800',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   screenSubtitle: {
     color: '#475569',
     fontSize: 14,
     lineHeight: 20,
   },
-  messageListContent: {
-    paddingBottom: 28,
+  introSection: {
     paddingHorizontal: 20,
-    paddingTop: 18,
+    paddingTop: 10,
   },
   welcomeCard: {
     backgroundColor: '#eff6ff',
     borderColor: '#bfdbfe',
-    borderRadius: 28,
+    borderRadius: 16,
     borderWidth: 1,
-    marginBottom: 20,
-    overflow: 'hidden',
-    padding: 20,
+    padding: 14,
   },
   welcomeTopRow: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 18,
+    marginBottom: 8,
   },
   welcomeBadge: {
     alignSelf: 'flex-start',
@@ -465,45 +474,27 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textTransform: 'uppercase',
   },
-  welcomeTitle: {
-    color: '#0f172a',
-    fontSize: 20,
-    fontWeight: '800',
-    marginBottom: 8,
-  },
   welcomeText: {
     color: '#334155',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  promptSection: {
-    marginBottom: 20,
-  },
-  promptSectionTitle: {
-    color: '#0f172a',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  promptSectionText: {
-    color: '#64748b',
     fontSize: 13,
     lineHeight: 18,
-    marginBottom: 12,
   },
-  promptWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  promptBar: {
+    borderBottomColor: '#e2e8f0',
+    borderBottomWidth: 1,
+    paddingVertical: 8,
+  },
+  promptScrollContent: {
+    paddingHorizontal: 20,
   },
   promptChip: {
     backgroundColor: '#ffffff',
     borderColor: '#cbd5e1',
     borderRadius: 999,
     borderWidth: 1,
-    marginBottom: 10,
-    marginRight: 10,
-    paddingHorizontal: 15,
-    paddingVertical: 11,
+    marginRight: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   promptChipPressed: {
     backgroundColor: '#eff6ff',
@@ -519,24 +510,44 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     lineHeight: 18,
   },
-  chatSectionLabel: {
-    color: '#64748b',
-    fontSize: 12,
+  chatSection: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 4,
+  },
+  messageList: {
+    flex: 1,
+  },
+  messageListContent: {
+    paddingBottom: 24,
+    paddingTop: 4,
+  },
+  emptyState: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+    borderRadius: 20,
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    padding: 18,
+  },
+  emptyStateTitle: {
+    color: '#0f172a',
+    fontSize: 16,
     fontWeight: '700',
-    letterSpacing: 0.5,
-    marginBottom: 12,
-    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  emptyStateText: {
+    color: '#64748b',
+    fontSize: 14,
+    lineHeight: 20,
   },
   messageRow: {
+    alignItems: 'flex-end',
     flexDirection: 'row',
     marginBottom: 12,
   },
-  messageRowAssistant: {
-    alignItems: 'flex-start',
-  },
+  messageRowAssistant: {},
   messageRowUser: {
-    alignItems: 'flex-end',
-    flexDirection: 'row-reverse',
     justifyContent: 'flex-end',
   },
   messageAvatar: {
@@ -566,13 +577,19 @@ const styles = StyleSheet.create({
   userAvatarText: {
     color: '#1e40af',
   },
-  messageCard: {
-    maxWidth: '84%',
+  messageBubbleWrap: {
     flexShrink: 1,
+    maxWidth: '82%',
+    minWidth: 0,
+  },
+  messageBubbleWrapAssistant: {
+    alignItems: 'flex-start',
+  },
+  messageBubbleWrapUser: {
+    alignItems: 'flex-end',
   },
   messageBubble: {
     borderRadius: 22,
-    alignSelf: 'flex-start',
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
@@ -596,17 +613,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff7ed',
     borderColor: '#fdba74',
   },
-  messageMetaRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
   messageSenderLabel: {
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.3,
+    marginBottom: 8,
     textTransform: 'uppercase',
   },
   assistantSenderLabel: {
@@ -616,15 +627,15 @@ const styles = StyleSheet.create({
     color: '#dbeafe',
   },
   errorBadge: {
+    alignSelf: 'flex-start',
     color: '#c2410c',
     fontSize: 11,
     fontWeight: '700',
+    marginBottom: 8,
   },
   messageText: {
-    flexShrink: 1,
     fontSize: 15,
     lineHeight: 22,
-    width: '100%',
   },
   messageTimestamp: {
     alignSelf: 'flex-start',
@@ -668,7 +679,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   listFooterSpacer: {
-    height: 6,
+    height: 8,
   },
   composerWrap: {
     backgroundColor: '#ffffff',
