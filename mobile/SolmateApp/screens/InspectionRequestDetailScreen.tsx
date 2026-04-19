@@ -1,6 +1,7 @@
 import React, {useCallback, useState} from 'react';
 import {
   ActivityIndicator,
+  Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -9,63 +10,67 @@ import {
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 
-import {AppButton, AppCard, StatusBadge} from '../components';
+import {StatusBadge} from '../components';
 import {ApiError} from '../src/services/api';
 import {
   getInspectionRequestById,
   InspectionRequest,
 } from '../src/services/inspectionRequestApi';
 
+/* \u2500\u2500 design tokens \u2500\u2500 */
+
+const NAVY = '#152a4a';
+const GOLD = '#e8a800';
+const MUTED = '#7b8699';
+const BG = '#e0e8f5';
+const CARD = '#ffffff';
+const DIVIDER = '#edf1f7';
+
+/* \u2500\u2500 helpers (preserved) \u2500\u2500 */
+
 function formatDate(value?: string | null, fallback = 'Flexible') {
-  if (!value) {
-    return fallback;
-  }
-
+  if (!value) return fallback;
   const parsedDate = new Date(value);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return value;
-  }
-
+  if (Number.isNaN(parsedDate.getTime())) return value;
   return parsedDate.toLocaleDateString();
 }
 
 function formatDateTime(value?: string | null, fallback = 'Not available') {
-  if (!value) {
-    return fallback;
-  }
-
+  if (!value) return fallback;
   const parsedDate = new Date(value);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return value;
-  }
-
+  if (Number.isNaN(parsedDate.getTime())) return value;
   return parsedDate.toLocaleString();
 }
 
 function getFriendlyErrorMessage(error: unknown) {
-  if (error instanceof ApiError) {
-    return error.message;
-  }
-
+  if (error instanceof ApiError) return error.message;
   return 'Could not load the inspection request details.';
 }
+
+/* \u2500\u2500 DetailRow \u2500\u2500 */
 
 function DetailRow({
   label,
   value,
+  bold,
 }: {
   label: string;
   value?: string | null;
+  bold?: boolean;
 }) {
   return (
-    <View style={styles.detailRow}>
-      <Text style={styles.detailLabel}>{label}</Text>
-      <Text style={styles.detailValue}>{value || 'Not available'}</Text>
+    <View style={s.detailRow}>
+      <Text style={s.detailLabel}>{label}</Text>
+      <Text style={[s.detailValue, bold && s.detailValueBold]}>
+        {value || 'Not available'}
+      </Text>
     </View>
   );
 }
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+   Main screen
+   \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
 
 export default function InspectionRequestDetailScreen({navigation, route}: any) {
   const inspectionRequestId = route?.params?.inspectionRequestId;
@@ -73,9 +78,8 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
     | InspectionRequest
     | undefined;
 
-  const [inspectionRequest, setInspectionRequest] = useState<InspectionRequest | null>(
-    initialInspectionRequest || null,
-  );
+  const [inspectionRequest, setInspectionRequest] =
+    useState<InspectionRequest | null>(initialInspectionRequest || null);
   const [loading, setLoading] = useState(!initialInspectionRequest);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -89,10 +93,7 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
       }
 
       try {
-        if (showLoadingState) {
-          setLoading(true);
-        }
-
+        if (showLoadingState) setLoading(true);
         setErrorMessage('');
         const request = await getInspectionRequestById(inspectionRequestId);
 
@@ -119,142 +120,215 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
     }, [inspectionRequest, loadInspectionRequest]),
   );
 
+  /* \u2500\u2500 loading \u2500\u2500 */
+
   if (loading) {
     return (
-      <View style={styles.centeredContainer}>
-        <ActivityIndicator size="large" color="#16a34a" />
-        <Text style={styles.loadingText}>Loading inspection request...</Text>
-      </View>
+      <SafeAreaView style={s.safe}>
+        <View style={s.centered}>
+          <ActivityIndicator size="large" color={GOLD} />
+          <Text style={s.loadingText}>Loading inspection request\u2026</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
+  /* \u2500\u2500 error / missing \u2500\u2500 */
+
   if (errorMessage || !inspectionRequest) {
     return (
-      <View style={styles.centeredContainer}>
-        <Text style={styles.errorTitle}>Inspection request unavailable</Text>
-        <Text style={styles.errorText}>
-          {errorMessage || 'No inspection request details were found.'}
-        </Text>
-        <AppButton
-          title="Try again"
-          onPress={() => loadInspectionRequest(true)}
-          style={styles.actionButton}
-        />
-        <AppButton
-          title="Back to requests"
-          variant="outline"
-          onPress={() => navigation.navigate('InspectionRequestList')}
-          style={styles.secondaryButton}
-        />
-      </View>
+      <SafeAreaView style={s.safe}>
+        <View style={s.centered}>
+          <Text style={s.errorTitle}>Inspection request unavailable</Text>
+          <Text style={s.errorText}>
+            {errorMessage || 'No inspection request details were found.'}
+          </Text>
+          <Pressable
+            onPress={() => loadInspectionRequest(true)}
+            style={({pressed}) => [s.goldBtn, pressed && s.pressed]}>
+            <Text style={s.goldBtnText}>Try Again</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => navigation.navigate('InspectionRequestList')}
+            style={({pressed}) => [s.outlineBtn, pressed && s.pressed]}>
+            <Text style={s.outlineBtnText}>Back to Requests</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
     );
   }
+
+  /* \u2500\u2500 main \u2500\u2500 */
 
   const canOpenFinalQuotation = inspectionRequest.status === 'completed';
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={s.safe}>
       <ScrollView
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={s.scroll}
         showsVerticalScrollIndicator={false}>
-        <View style={styles.heroCard}>
-          <Text style={styles.eyebrow}>Inspection request #{inspectionRequest.id}</Text>
-          <Text style={styles.heroTitle}>Site visit request</Text>
-          <Text style={styles.heroSubtitle}>
-            Review the request details, current progress, and technician
-            assignment for this inspection.
-          </Text>
 
+        {/* \u2500\u2500 brand \u2500\u2500 */}
+        <Text style={s.brand}>
+          Sol<Text style={s.brandAccent}>Mate</Text>
+        </Text>
+
+        {/* \u2500\u2500 back \u2500\u2500 */}
+        <Pressable
+          hitSlop={14}
+          onPress={() => navigation.goBack()}
+          style={({pressed}) => [s.backBtn, pressed && s.pressed]}>
+          <Text style={s.backIcon}>{'\u2039'}</Text>
+        </Pressable>
+
+        {/* \u2500\u2500 title \u2500\u2500 */}
+        <Text style={s.title}>Inspection Details</Text>
+        <Text style={s.subtitle}>
+          Review the request details, current progress, and technician
+          assignment for this inspection.
+        </Text>
+
+        {/* \u2500\u2500 badges row \u2500\u2500 */}
+        <View style={s.badgeRow}>
+          <View style={s.typeBadge}>
+            <Text style={s.typeBadgeText}>Inspection</Text>
+          </View>
           <StatusBadge status={inspectionRequest.status} />
         </View>
 
-        <AppCard style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Request details</Text>
-          <Text style={styles.sectionSubtitle}>
-            These are the details submitted from your customer account.
-          </Text>
+        {/* \u2500\u2500 Inspection Information \u2500\u2500 */}
+        <View style={s.card}>
+          <Text style={s.cardTitle}>Inspection Information</Text>
 
-          <DetailRow label="Inspection request ID" value={`${inspectionRequest.id}`} />
           <DetailRow
-            label="Contact number"
-            value={inspectionRequest.contact_number || 'Not provided'}
+            label="Inspection Request ID"
+            value={'IR-' + inspectionRequest.id}
+            bold
           />
           <DetailRow
-            label="Preferred date"
+            label="Status"
+            value={inspectionRequest.status
+              ? inspectionRequest.status.charAt(0).toUpperCase() +
+                inspectionRequest.status.slice(1).replace(/_/g, ' ')
+              : 'Pending'}
+            bold
+          />
+          <DetailRow
+            label="Created At"
+            value={formatDateTime(inspectionRequest.created_at)}
+          />
+          <DetailRow
+            label="Schedule Date"
             value={formatDate(inspectionRequest.date_needed)}
           />
           <DetailRow
-            label="Submitted"
-            value={formatDateTime(inspectionRequest.created_at)}
-          />
-
-          <View style={styles.detailsBlock}>
-            <Text style={styles.detailLabel}>Details</Text>
-            <Text style={styles.detailsText}>{inspectionRequest.details}</Text>
-          </View>
-        </AppCard>
-
-        <AppCard style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Assignment</Text>
-          <Text style={styles.sectionSubtitle}>
-            Technician assignment appears here once your request is picked up.
-          </Text>
-
-          <DetailRow
-            label="Technician"
+            label="Technician Assigned"
             value={inspectionRequest.technician?.name || 'Pending assignment'}
+            bold
           />
-          <DetailRow
-            label="Technician email"
-            value={inspectionRequest.technician?.email || 'Not available yet'}
-          />
-        </AppCard>
+        </View>
 
-        <AppCard style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Final quotation</Text>
-          <Text style={styles.sectionSubtitle}>
-            The final quotation becomes available after the inspection is marked
-            as completed by the assigned technician.
+        {/* \u2500\u2500 Request Details \u2500\u2500 */}
+        <View style={s.card}>
+          <Text style={s.cardTitle}>Request Details</Text>
+
+          <DetailRow
+            label="Contact Number"
+            value={inspectionRequest.contact_number || 'Not provided'}
+          />
+
+          <View style={s.descBlock}>
+            <Text style={s.descLabel}>Problem Description</Text>
+            <Text style={s.descText}>{inspectionRequest.details}</Text>
+          </View>
+        </View>
+
+        {/* \u2500\u2500 Final Quotation \u2500\u2500 */}
+        <View style={s.card}>
+          <Text style={s.cardTitle}>Final Quotation</Text>
+          <Text style={s.cardSubtitle}>
+            {canOpenFinalQuotation
+              ? 'The inspection is completed. You can now view the technician-submitted final quotation.'
+              : 'The final quotation becomes available after the inspection is marked as completed by the assigned technician.'}
           </Text>
 
-          <AppButton
-            title="View Final Quotation"
+          <Pressable
             disabled={!canOpenFinalQuotation}
             onPress={() =>
               navigation.navigate('FinalQuotationView', {
                 inspectionRequestId: inspectionRequest.id,
               })
             }
-          />
-        </AppCard>
+            style={({pressed}) => [
+              canOpenFinalQuotation ? s.goldBtn : s.disabledBtn,
+              pressed && canOpenFinalQuotation && s.pressed,
+            ]}>
+            <Text
+              style={
+                canOpenFinalQuotation ? s.goldBtnText : s.disabledBtnText
+              }>
+              View Final Quotation
+            </Text>
+          </Pressable>
+        </View>
+
+        {/* \u2500\u2500 bottom button \u2500\u2500 */}
+        <Pressable
+          onPress={() => navigation.goBack()}
+          style={({pressed}) => [s.outlineBtn, pressed && s.pressed]}>
+          <Text style={s.outlineBtnText}>Back</Text>
+        </Pressable>
+
+        <View style={s.spacer} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: '#f5f7fb',
-    flex: 1,
-  },
-  contentContainer: {
-    padding: 20,
-    paddingBottom: 28,
-  },
-  centeredContainer: {
+/* \u2500\u2500 styles \u2500\u2500 */
+
+const s = StyleSheet.create({
+  safe: {flex: 1, backgroundColor: BG},
+  scroll: {paddingHorizontal: 22, paddingTop: 20, paddingBottom: 30},
+  pressed: {opacity: 0.85},
+
+  /* brand */
+  brand: {fontSize: 22, fontWeight: '800', color: NAVY, marginBottom: 10},
+  brandAccent: {color: GOLD},
+
+  /* back */
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: CARD,
     alignItems: 'center',
-    backgroundColor: '#f5f7fb',
+    justifyContent: 'center',
+    marginBottom: 18,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  backIcon: {fontSize: 28, color: NAVY, fontWeight: '600', marginTop: -2},
+
+  /* title */
+  title: {fontSize: 26, fontWeight: '900', color: NAVY, marginBottom: 4},
+  subtitle: {fontSize: 14, color: MUTED, lineHeight: 20, marginBottom: 18},
+
+  /* centered / loading */
+  centered: {
     flex: 1,
+    alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
   },
-  loadingText: {
-    color: '#475569',
-    fontSize: 14,
-    marginTop: 12,
-  },
+  loadingText: {color: MUTED, fontSize: 14, marginTop: 14},
+
+  /* error */
   errorTitle: {
-    color: '#0f172a',
+    color: NAVY,
     fontSize: 22,
     fontWeight: '800',
     marginBottom: 8,
@@ -265,82 +339,113 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',
-  },
-  actionButton: {
-    marginTop: 16,
-    width: '100%',
-  },
-  secondaryButton: {
-    marginTop: 12,
-    width: '100%',
-  },
-  heroCard: {
-    backgroundColor: '#dcfce7',
-    borderRadius: 28,
-    marginBottom: 18,
-    padding: 22,
-  },
-  eyebrow: {
-    color: '#166534',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  heroTitle: {
-    color: '#0f172a',
-    fontSize: 28,
-    fontWeight: '800',
-    marginBottom: 10,
-  },
-  heroSubtitle: {
-    color: '#334155',
-    fontSize: 14,
-    lineHeight: 21,
     marginBottom: 16,
   },
-  sectionCard: {
+
+  /* badges row */
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     marginBottom: 18,
   },
-  sectionTitle: {
-    color: '#0f172a',
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 6,
+  typeBadge: {
+    backgroundColor: '#e8ecf4',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
   },
-  sectionSubtitle: {
-    color: '#64748b',
+  typeBadgeText: {color: NAVY, fontSize: 12, fontWeight: '700'},
+
+  /* card */
+  card: {
+    backgroundColor: CARD,
+    borderRadius: 22,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    elevation: 4,
+  },
+  cardTitle: {fontSize: 18, fontWeight: '900', color: NAVY, marginBottom: 14},
+  cardSubtitle: {
     fontSize: 14,
+    color: MUTED,
     lineHeight: 20,
-    marginBottom: 16,
+    marginBottom: 14,
   },
+
+  /* detail row (horizontal label-value) */
   detailRow: {
-    borderTopColor: '#e2e8f0',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingVertical: 11,
+    borderTopColor: DIVIDER,
     borderTopWidth: 1,
-    paddingVertical: 12,
   },
-  detailLabel: {
-    color: '#64748b',
+  detailLabel: {color: MUTED, fontSize: 13, fontWeight: '600', flex: 1},
+  detailValue: {
+    color: NAVY,
+    fontSize: 14,
+    fontWeight: '600',
+    flex: 1,
+    textAlign: 'right',
+  },
+  detailValueBold: {fontWeight: '800'},
+
+  /* description block */
+  descBlock: {paddingTop: 14, borderTopColor: DIVIDER, borderTopWidth: 1},
+  descLabel: {
+    color: MUTED,
     fontSize: 12,
     fontWeight: '700',
-    marginBottom: 4,
     textTransform: 'uppercase',
+    marginBottom: 8,
   },
-  detailValue: {
-    color: '#0f172a',
+  descText: {color: NAVY, fontSize: 14, lineHeight: 22, opacity: 0.85},
+
+  /* buttons */
+  goldBtn: {
+    backgroundColor: GOLD,
+    borderRadius: 28,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 4,
+    shadowColor: GOLD,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  goldBtnText: {
     fontSize: 15,
-    fontWeight: '600',
-    lineHeight: 22,
+    fontWeight: '900',
+    color: CARD,
+    letterSpacing: 0.3,
   },
-  detailsBlock: {
-    borderTopColor: '#e2e8f0',
-    borderTopWidth: 1,
-    paddingTop: 12,
+  outlineBtn: {
+    backgroundColor: CARD,
+    borderRadius: 28,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: DIVIDER,
+    marginTop: 12,
   },
-  detailsText: {
-    color: '#0f172a',
-    fontSize: 15,
-    lineHeight: 23,
+  outlineBtnText: {fontSize: 15, fontWeight: '800', color: NAVY},
+  disabledBtn: {
+    backgroundColor: DIVIDER,
+    borderRadius: 28,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 4,
+    opacity: 0.6,
   },
+  disabledBtnText: {fontSize: 15, fontWeight: '800', color: MUTED},
+
+  /* spacer */
+  spacer: {minHeight: 20},
 });

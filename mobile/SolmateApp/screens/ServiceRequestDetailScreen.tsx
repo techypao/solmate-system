@@ -2,6 +2,7 @@ import React, {useCallback, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -10,7 +11,6 @@ import {
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 
-import {AppButton, AppCard} from '../components';
 import {ApiError} from '../src/services/api';
 import {
   getServiceRequestById,
@@ -25,56 +25,58 @@ import {
   getServiceRequestStatusColors,
 } from '../src/utils/technicianRequests';
 
+/* \u2500\u2500 design tokens \u2500\u2500 */
+
+const NAVY = '#152a4a';
+const GOLD = '#e8a800';
+const MUTED = '#7b8699';
+const BG = '#e0e8f5';
+const CARD = '#ffffff';
+const DIVIDER = '#edf1f7';
+
+/* \u2500\u2500 helpers (preserved) \u2500\u2500 */
+
 function formatDate(value?: string | null, fallback = 'Flexible') {
-  if (!value) {
-    return fallback;
-  }
-
+  if (!value) return fallback;
   const parsedDate = new Date(value);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return value;
-  }
-
+  if (Number.isNaN(parsedDate.getTime())) return value;
   return parsedDate.toLocaleDateString();
 }
 
 function formatDateTime(value?: string | null, fallback = 'Not available') {
-  if (!value) {
-    return fallback;
-  }
-
+  if (!value) return fallback;
   const parsedDate = new Date(value);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return value;
-  }
-
+  if (Number.isNaN(parsedDate.getTime())) return value;
   return parsedDate.toLocaleString();
 }
 
 function getFriendlyErrorMessage(error: unknown) {
-  if (error instanceof ApiError) {
-    return error.message;
-  }
-
+  if (error instanceof ApiError) return error.message;
   return 'Could not load the service request details.';
 }
+
+/* \u2500\u2500 DetailRow \u2500\u2500 */
 
 function DetailRow({
   label,
   value,
+  bold,
 }: {
   label: string;
   value?: string | null;
+  bold?: boolean;
 }) {
   return (
-    <View style={styles.detailRow}>
-      <Text style={styles.detailLabel}>{label}</Text>
-      <Text style={styles.detailValue}>{value || 'Not available'}</Text>
+    <View style={s.detailRow}>
+      <Text style={s.detailLabel}>{label}</Text>
+      <Text style={[s.detailValue, bold && s.detailValueBold]}>
+        {value || 'Not available'}
+      </Text>
     </View>
   );
 }
+
+/* \u2500\u2500 technician status actions (preserved) \u2500\u2500 */
 
 const TECHNICIAN_STATUS_ACTIONS: Array<{
   label: string;
@@ -95,6 +97,10 @@ const TECHNICIAN_STATUS_ACTIONS: Array<{
     successMessage: 'The admin has been notified that the service is done.',
   },
 ];
+
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+   Main screen
+   \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
 
 export default function ServiceRequestDetailScreen({navigation, route}: any) {
   const serviceRequestId = route?.params?.serviceRequestId;
@@ -120,10 +126,7 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
       }
 
       try {
-        if (showLoadingState) {
-          setLoading(true);
-        }
-
+        if (showLoadingState) setLoading(true);
         setErrorMessage('');
         const request =
           mode === 'technician'
@@ -155,21 +158,15 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
 
   const availableActions = useMemo(() => {
     const currentStatus = (serviceRequest?.status || '').toLowerCase();
-    const alreadyRequestedCompletion = !!serviceRequest?.technician_marked_done_at;
+    const alreadyRequestedCompletion =
+      !!serviceRequest?.technician_marked_done_at;
 
-    if (mode !== 'technician') {
-      return [];
-    }
+    if (mode !== 'technician') return [];
 
     return TECHNICIAN_STATUS_ACTIONS.filter(action => {
-      if (!action.currentStatuses.includes(currentStatus)) {
+      if (!action.currentStatuses.includes(currentStatus)) return false;
+      if (action.value === 'notify_admin_done' && alreadyRequestedCompletion)
         return false;
-      }
-
-      if (action.value === 'notify_admin_done' && alreadyRequestedCompletion) {
-        return false;
-      }
-
       return true;
     });
   }, [mode, serviceRequest?.status, serviceRequest?.technician_marked_done_at]);
@@ -178,9 +175,7 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
     nextStatus: TechnicianServiceRequestStatus | 'notify_admin_done',
     successMessage: string,
   ) => {
-    if (!serviceRequest || actionLoading) {
-      return;
-    }
+    if (!serviceRequest || actionLoading) return;
 
     try {
       setActionLoading(true);
@@ -224,42 +219,51 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
     }
   };
 
+  /* \u2500\u2500 loading \u2500\u2500 */
+
   if (loading) {
     return (
-      <View style={styles.centeredContainer}>
-        <ActivityIndicator size="large" color="#d97706" />
-        <Text style={styles.loadingText}>Loading service request...</Text>
-      </View>
+      <SafeAreaView style={s.safe}>
+        <View style={s.centered}>
+          <ActivityIndicator size="large" color={GOLD} />
+          <Text style={s.loadingText}>Loading service request\u2026</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
+  /* \u2500\u2500 error / missing \u2500\u2500 */
+
   if (errorMessage || !serviceRequest) {
     return (
-      <View style={styles.centeredContainer}>
-        <Text style={styles.errorTitle}>Service request unavailable</Text>
-        <Text style={styles.errorText}>
-          {errorMessage || 'No service request details were found.'}
-        </Text>
-        <AppButton
-          title="Try again"
-          onPress={() => loadServiceRequest(true)}
-          style={styles.actionButton}
-        />
-        <AppButton
-          title="Back to requests"
-          variant="outline"
-          onPress={() =>
-            navigation.navigate(
-              mode === 'technician'
-                ? 'TechnicianServiceRequests'
-                : 'ServiceRequestList',
-            )
-          }
-          style={styles.secondaryButton}
-        />
-      </View>
+      <SafeAreaView style={s.safe}>
+        <View style={s.centered}>
+          <Text style={s.errorTitle}>Service request unavailable</Text>
+          <Text style={s.errorText}>
+            {errorMessage || 'No service request details were found.'}
+          </Text>
+          <Pressable
+            onPress={() => loadServiceRequest(true)}
+            style={({pressed}) => [s.goldBtn, pressed && s.pressed]}>
+            <Text style={s.goldBtnText}>Try Again</Text>
+          </Pressable>
+          <Pressable
+            onPress={() =>
+              navigation.navigate(
+                mode === 'technician'
+                  ? 'TechnicianServiceRequests'
+                  : 'ServiceRequestList',
+              )
+            }
+            style={({pressed}) => [s.outlineBtn, pressed && s.pressed]}>
+            <Text style={s.outlineBtnText}>Back to Requests</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
     );
   }
+
+  /* \u2500\u2500 main \u2500\u2500 */
 
   const statusColors = getServiceRequestStatusColors(serviceRequest.status);
   const awaitingAdminConfirmation =
@@ -268,86 +272,100 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
   const adminConfirmedCompletion = serviceRequest.status === 'completed';
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={s.safe}>
       <ScrollView
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={s.scroll}
         showsVerticalScrollIndicator={false}>
-        <View style={styles.heroCard}>
-          <Text style={styles.eyebrow}>Service request #{serviceRequest.id}</Text>
-          <Text style={styles.heroTitle}>{serviceRequest.request_type}</Text>
-          <Text style={styles.heroSubtitle}>
-            {mode === 'technician'
-              ? 'Review the assigned service request, update its work progress, and notify the admin when the job is done.'
-              : 'Review the current official status and details of your submitted service request.'}
-          </Text>
 
+        {/* \u2500\u2500 brand \u2500\u2500 */}
+        <Text style={s.brand}>
+          Sol<Text style={s.brandAccent}>Mate</Text>
+        </Text>
+
+        {/* \u2500\u2500 back \u2500\u2500 */}
+        <Pressable
+          hitSlop={14}
+          onPress={() => navigation.goBack()}
+          style={({pressed}) => [s.backBtn, pressed && s.pressed]}>
+          <Text style={s.backIcon}>{'\u2039'}</Text>
+        </Pressable>
+
+        {/* \u2500\u2500 title \u2500\u2500 */}
+        <Text style={s.title}>Service Details</Text>
+        <Text style={s.subtitle}>
+          {mode === 'technician'
+            ? 'Review the assigned service request, update its work progress, and notify the admin when the job is done.'
+            : 'Review the current official status and details of your submitted service request.'}
+        </Text>
+
+        {/* \u2500\u2500 badges row \u2500\u2500 */}
+        <View style={s.badgeRow}>
+          <View style={s.typeBadge}>
+            <Text style={s.typeBadgeText}>{serviceRequest.request_type}</Text>
+          </View>
           <View
             style={[
-              styles.statusBadge,
+              s.statusBadge,
               {backgroundColor: statusColors.backgroundColor},
             ]}>
             <Text
-              style={[
-                styles.statusBadgeText,
-                {color: statusColors.textColor},
-              ]}>
+              style={[s.statusBadgeText, {color: statusColors.textColor}]}>
               {formatServiceRequestStatus(serviceRequest.status)}
             </Text>
           </View>
         </View>
 
-        <AppCard style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Request details</Text>
-          <Text style={styles.sectionSubtitle}>
-            Core information saved for this service request.
-          </Text>
+        {/* \u2500\u2500 Service Information \u2500\u2500 */}
+        <View style={s.card}>
+          <Text style={s.cardTitle}>Service Information</Text>
 
-          <DetailRow label="Service request ID" value={`${serviceRequest.id}`} />
-          <DetailRow label="Request type" value={serviceRequest.request_type} />
           <DetailRow
-            label="Contact number"
-            value={serviceRequest.contact_number || 'Not provided'}
+            label="Service Request ID"
+            value={'SR-' + serviceRequest.id}
+            bold
+          />
+          <DetailRow label="Type" value={serviceRequest.request_type} />
+          <DetailRow
+            label="Status"
+            value={formatServiceRequestStatus(serviceRequest.status)}
+            bold
           />
           <DetailRow
-            label="Preferred date"
+            label="Created At"
+            value={formatDateTime(serviceRequest.created_at)}
+          />
+          <DetailRow
+            label="Schedule Date"
             value={formatDate(serviceRequest.date_needed)}
           />
           <DetailRow
-            label="Submitted"
-            value={formatDateTime(serviceRequest.created_at)}
-          />
-
-          <View style={styles.detailsBlock}>
-            <Text style={styles.detailLabel}>Details</Text>
-            <Text style={styles.detailsText}>{serviceRequest.details}</Text>
-          </View>
-        </AppCard>
-
-        <AppCard style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>
-            {mode === 'technician' ? 'Customer information' : 'Assignment'}
-          </Text>
-          <Text style={styles.sectionSubtitle}>
-            {mode === 'technician'
-              ? 'Customer information for the assigned request.'
-              : 'Technician assignment appears here once your request is picked up.'}
-          </Text>
-
-          <DetailRow
-            label={mode === 'technician' ? 'Customer' : 'Technician'}
+            label={mode === 'technician' ? 'Customer' : 'Technician Assigned'}
             value={
               mode === 'technician'
                 ? serviceRequest.customer?.name || 'Customer not available'
                 : serviceRequest.technician?.name || 'Pending assignment'
             }
+            bold
           />
+        </View>
+
+        {/* \u2500\u2500 Request Details \u2500\u2500 */}
+        <View style={s.card}>
+          <Text style={s.cardTitle}>Request Details</Text>
+
           <DetailRow
-            label={mode === 'technician' ? 'Customer email' : 'Technician email'}
+            label={
+              mode === 'technician' ? 'Customer email' : 'Technician email'
+            }
             value={
               mode === 'technician'
                 ? serviceRequest.customer?.email || 'No email available'
                 : serviceRequest.technician?.email || 'Not available yet'
             }
+          />
+          <DetailRow
+            label="Contact Number"
+            value={serviceRequest.contact_number || 'Not provided'}
           />
           {mode === 'technician' ? (
             <DetailRow
@@ -355,65 +373,74 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
               value={serviceRequest.contact_number || 'Not provided'}
             />
           ) : null}
-        </AppCard>
 
-        <AppCard style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Completion review</Text>
-          <Text style={styles.sectionSubtitle}>
-            The technician can report the work as done, but the admin confirms
-            the final official service status.
-          </Text>
+          <View style={s.descBlock}>
+            <Text style={s.descLabel}>Problem Description</Text>
+            <Text style={s.descText}>{serviceRequest.details}</Text>
+          </View>
+        </View>
+
+        {/* \u2500\u2500 Completion Report \u2500\u2500 */}
+        <View style={s.card}>
+          <Text style={s.cardTitle}>Completion Report</Text>
 
           {awaitingAdminConfirmation ? (
-            <View style={styles.infoCard}>
-              <Text style={styles.infoTitle}>Awaiting admin confirmation</Text>
-              <Text style={styles.infoText}>
+            <View style={s.infoCard}>
+              <Text style={s.infoTitle}>Awaiting admin confirmation</Text>
+              <Text style={s.infoText}>
                 {mode === 'technician'
                   ? 'You already marked this service as done. Wait for the admin to review and finalize the official status.'
                   : 'The technician reported that the service work is done. The admin still needs to confirm the final official status.'}
               </Text>
-              <DetailRow
-                label="Technician marked done"
-                value={formatDateTime(serviceRequest.technician_marked_done_at)}
-              />
+              <View style={s.infoMeta}>
+                <Text style={s.infoMetaLabel}>Technician marked done</Text>
+                <Text style={s.infoMetaValue}>
+                  {formatDateTime(serviceRequest.technician_marked_done_at)}
+                </Text>
+              </View>
             </View>
           ) : adminConfirmedCompletion ? (
-            <View style={styles.successCard}>
-              <Text style={styles.successTitle}>Admin confirmed completion</Text>
-              <Text style={styles.successText}>
+            <View style={s.successCard}>
+              <Text style={s.successTitle}>Admin confirmed completion</Text>
+              <Text style={s.successText}>
                 This service request is officially completed.
               </Text>
               {serviceRequest.technician_marked_done_at ? (
-                <DetailRow
-                  label="Technician marked done"
-                  value={formatDateTime(serviceRequest.technician_marked_done_at)}
-                />
+                <View style={s.successMeta}>
+                  <Text style={s.successMetaLabel}>Technician marked done</Text>
+                  <Text style={s.successMetaValue}>
+                    {formatDateTime(serviceRequest.technician_marked_done_at)}
+                  </Text>
+                </View>
               ) : null}
             </View>
           ) : (
-            <View style={styles.infoCard}>
-              <Text style={styles.infoTitle}>No completion request yet</Text>
-              <Text style={styles.infoText}>
+            <View style={s.infoCard}>
+              <Text style={s.infoTitle}>No completion request yet</Text>
+              <Text style={s.infoText}>
                 {mode === 'technician'
                   ? 'When the job is finished, use the button below to notify the admin for final review.'
                   : 'The completed status will appear here after the technician finishes the work and the admin confirms it.'}
               </Text>
             </View>
           )}
-        </AppCard>
+        </View>
 
+        {/* \u2500\u2500 Progress Updates (technician only) \u2500\u2500 */}
         {mode === 'technician' ? (
-          <AppCard style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Progress updates</Text>
-            <Text style={styles.sectionSubtitle}>
+          <View style={s.card}>
+            <Text style={s.cardTitle}>Progress Updates</Text>
+            <Text style={s.cardSubtitle}>
               Move the service into progress, then notify the admin when the
               work is done.
             </Text>
 
             {availableActions.length === 0 ? (
-              <View style={styles.infoCard}>
-                <Text style={styles.infoTitle}>No further technician updates available</Text>
-                <Text style={styles.infoText}>
+              <View style={s.infoCard}>
+                <Text style={s.infoTitle}>
+                  No further technician updates available
+                </Text>
+                <Text style={s.infoText}>
                   {awaitingAdminConfirmation
                     ? 'This request is waiting for admin review.'
                     : 'This request is already in its latest technician-managed state.'}
@@ -422,46 +449,82 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
             ) : null}
 
             {availableActions.map(action => (
-              <AppButton
+              <Pressable
                 key={action.value}
-                title={actionLoading ? 'Saving update...' : action.label}
                 disabled={actionLoading}
                 onPress={() =>
                   handleStatusUpdate(action.value, action.successMessage)
                 }
-                style={styles.statusActionButton}
-              />
+                style={({pressed}) => [
+                  s.goldBtn,
+                  actionLoading && s.btnDisabled,
+                  pressed && s.pressed,
+                ]}>
+                <Text style={s.goldBtnText}>
+                  {actionLoading ? 'Saving update\u2026' : action.label}
+                </Text>
+              </Pressable>
             ))}
-          </AppCard>
+          </View>
         ) : null}
+
+        {/* \u2500\u2500 bottom button \u2500\u2500 */}
+        <Pressable
+          onPress={() => navigation.goBack()}
+          style={({pressed}) => [s.outlineBtn, pressed && s.pressed]}>
+          <Text style={s.outlineBtnText}>Back</Text>
+        </Pressable>
+
+        <View style={s.spacer} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: '#f5f7fb',
-    flex: 1,
-  },
-  contentContainer: {
-    padding: 20,
-    paddingBottom: 28,
-  },
-  centeredContainer: {
+/* \u2500\u2500 styles \u2500\u2500 */
+
+const s = StyleSheet.create({
+  safe: {flex: 1, backgroundColor: BG},
+  scroll: {paddingHorizontal: 22, paddingTop: 20, paddingBottom: 30},
+  pressed: {opacity: 0.85},
+
+  /* brand */
+  brand: {fontSize: 22, fontWeight: '800', color: NAVY, marginBottom: 10},
+  brandAccent: {color: GOLD},
+
+  /* back */
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: CARD,
     alignItems: 'center',
-    backgroundColor: '#f5f7fb',
+    justifyContent: 'center',
+    marginBottom: 18,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  backIcon: {fontSize: 28, color: NAVY, fontWeight: '600', marginTop: -2},
+
+  /* title */
+  title: {fontSize: 26, fontWeight: '900', color: NAVY, marginBottom: 4},
+  subtitle: {fontSize: 14, color: MUTED, lineHeight: 20, marginBottom: 18},
+
+  /* centered / loading */
+  centered: {
     flex: 1,
+    alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
   },
-  loadingText: {
-    color: '#475569',
-    fontSize: 14,
-    marginTop: 12,
-  },
+  loadingText: {color: MUTED, fontSize: 14, marginTop: 14},
+
+  /* error */
   errorTitle: {
-    color: '#0f172a',
+    color: NAVY,
     fontSize: 22,
     fontWeight: '800',
     marginBottom: 8,
@@ -472,131 +535,158 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',
-  },
-  actionButton: {
-    marginTop: 16,
-    width: '100%',
-  },
-  secondaryButton: {
-    marginTop: 12,
-    width: '100%',
-  },
-  heroCard: {
-    backgroundColor: '#fef3c7',
-    borderRadius: 28,
-    marginBottom: 18,
-    padding: 22,
-  },
-  eyebrow: {
-    color: '#b45309',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  heroTitle: {
-    color: '#0f172a',
-    fontSize: 28,
-    fontWeight: '800',
-    marginBottom: 10,
-  },
-  heroSubtitle: {
-    color: '#334155',
-    fontSize: 14,
-    lineHeight: 21,
     marginBottom: 16,
   },
-  statusBadge: {
-    alignSelf: 'flex-start',
-    borderRadius: 999,
+
+  /* badges row */
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 18,
+  },
+  typeBadge: {
+    backgroundColor: '#e8ecf4',
+    borderRadius: 20,
     paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingVertical: 7,
   },
-  statusBadgeText: {
-    fontSize: 13,
-    fontWeight: '700',
+  typeBadgeText: {color: NAVY, fontSize: 12, fontWeight: '700'},
+  statusBadge: {
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
   },
-  sectionCard: {
-    marginBottom: 18,
-  },
-  sectionTitle: {
-    color: '#0f172a',
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  sectionSubtitle: {
-    color: '#64748b',
-    fontSize: 14,
-    lineHeight: 20,
+  statusBadgeText: {fontSize: 12, fontWeight: '700'},
+
+  /* card */
+  card: {
+    backgroundColor: CARD,
+    borderRadius: 22,
+    padding: 20,
     marginBottom: 16,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    elevation: 4,
   },
+  cardTitle: {fontSize: 18, fontWeight: '900', color: NAVY, marginBottom: 14},
+  cardSubtitle: {
+    fontSize: 14,
+    color: MUTED,
+    lineHeight: 20,
+    marginBottom: 14,
+  },
+
+  /* detail row (horizontal label-value) */
   detailRow: {
-    borderTopColor: '#e2e8f0',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingVertical: 11,
+    borderTopColor: DIVIDER,
     borderTopWidth: 1,
-    paddingVertical: 12,
   },
-  detailLabel: {
-    color: '#64748b',
+  detailLabel: {color: MUTED, fontSize: 13, fontWeight: '600', flex: 1},
+  detailValue: {
+    color: NAVY,
+    fontSize: 14,
+    fontWeight: '600',
+    flex: 1,
+    textAlign: 'right',
+  },
+  detailValueBold: {fontWeight: '800'},
+
+  /* description block */
+  descBlock: {paddingTop: 14, borderTopColor: DIVIDER, borderTopWidth: 1},
+  descLabel: {
+    color: MUTED,
     fontSize: 12,
     fontWeight: '700',
-    marginBottom: 4,
     textTransform: 'uppercase',
+    marginBottom: 8,
   },
-  detailValue: {
-    color: '#0f172a',
-    fontSize: 15,
-    fontWeight: '600',
-    lineHeight: 22,
-  },
-  detailsBlock: {
-    borderTopColor: '#e2e8f0',
-    borderTopWidth: 1,
-    paddingTop: 12,
-  },
-  detailsText: {
-    color: '#0f172a',
-    fontSize: 15,
-    lineHeight: 23,
-  },
+  descText: {color: NAVY, fontSize: 14, lineHeight: 22, opacity: 0.85},
+
+  /* info card (awaiting / pending) */
   infoCard: {
-    backgroundColor: '#fff7ed',
-    borderRadius: 16,
-    marginBottom: 16,
-    padding: 16,
-  },
-  infoTitle: {
-    color: '#9a3412',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  infoText: {
-    color: '#9a3412',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  successCard: {
-    backgroundColor: '#dcfce7',
-    borderColor: '#86efac',
+    backgroundColor: '#fffbeb',
     borderRadius: 16,
     borderWidth: 1,
-    marginBottom: 16,
+    borderColor: '#fde68a',
     padding: 16,
+    marginBottom: 8,
+  },
+  infoTitle: {color: '#92400e', fontSize: 15, fontWeight: '700', marginBottom: 6},
+  infoText: {color: '#a16207', fontSize: 13, lineHeight: 19},
+  infoMeta: {marginTop: 12},
+  infoMetaLabel: {
+    color: '#a16207',
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  infoMetaValue: {color: '#92400e', fontSize: 14, fontWeight: '700'},
+
+  /* success card */
+  successCard: {
+    backgroundColor: '#f0fdf4',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    padding: 16,
+    marginBottom: 8,
   },
   successTitle: {
     color: '#166534',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     marginBottom: 6,
   },
-  successText: {
+  successText: {color: '#166534', fontSize: 13, lineHeight: 19},
+  successMeta: {marginTop: 12},
+  successMetaLabel: {
     color: '#166534',
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    marginBottom: 4,
   },
-  statusActionButton: {
+  successMetaValue: {color: '#166534', fontSize: 14, fontWeight: '700'},
+
+  /* buttons */
+  goldBtn: {
+    backgroundColor: GOLD,
+    borderRadius: 28,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 12,
+    shadowColor: GOLD,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  goldBtnText: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: CARD,
+    letterSpacing: 0.3,
+  },
+  outlineBtn: {
+    backgroundColor: CARD,
+    borderRadius: 28,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: DIVIDER,
     marginTop: 12,
   },
+  outlineBtnText: {fontSize: 15, fontWeight: '800', color: NAVY},
+  btnDisabled: {opacity: 0.5},
+
+  /* spacer */
+  spacer: {minHeight: 20},
 });

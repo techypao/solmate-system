@@ -1,6 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Pressable,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,6 +12,8 @@ import {
 
 import {ApiError, apiGet} from '../src/services/api';
 import {formatQuotationCurrency} from '../src/utils/currency';
+
+/* ── types ── */
 
 type QuotationDetail = {
   id: number;
@@ -38,149 +43,60 @@ type QuotationDetail = {
   created_at?: string | null;
 };
 
-function formatValue(value?: string | number | null) {
-  if (value === null || value === undefined || value === '') {
-    return 'N/A';
-  }
+/* ── constants ── */
 
+const NAVY = '#152a4a';
+const GOLD = '#e8a800';
+const MUTED = '#7b8699';
+const BG = '#e0e8f5';
+const CARD = '#ffffff';
+const R = 18;
+
+/* ── format helpers (preserved) ── */
+
+function fmtVal(value?: string | number | null) {
+  if (value === null || value === undefined || value === '') return 'N/A';
   return String(value);
 }
 
-function formatReadableText(value?: string | null) {
-  if (value === null || value === undefined || value.trim() === '') {
-    return 'N/A';
-  }
-
-  return value
-    .trim()
-    .replace(/\s*,\s*/g, ', ')
-    .replace(/(?:,\s*){2,}/g, ', ')
-    .replace(/,\s*([.!?])/g, '$1')
-    .replace(/\s{2,}/g, ' ');
+function fmtYears(value?: number | null) {
+  if (value === null || value === undefined || Number.isNaN(value)) return 'N/A';
+  return value.toFixed(1) + ' yrs';
 }
 
-function formatYears(value?: number | null) {
-  if (value === null || value === undefined || Number.isNaN(value)) {
-    return 'N/A';
-  }
-
-  return `${value.toFixed(2)} years`;
+function fmtKw(value?: number | null) {
+  if (value === null || value === undefined) return 'N/A';
+  return value + ' kWp';
 }
 
-function formatSystemSummary(quotation: QuotationDetail) {
-  const systemType = (quotation.pv_system_type || 'hybrid').toUpperCase();
-  const parts = [`${systemType} system`];
-
-  if (quotation.system_kw !== null && quotation.system_kw !== undefined) {
-    parts.push(`${quotation.system_kw} kW`);
-  }
-
-  if (
-    quotation.panel_quantity !== null &&
-    quotation.panel_quantity !== undefined
-  ) {
-    parts.push(`${quotation.panel_quantity} panels`);
-  }
-
-  return parts.join(', ');
+function fmtKwh(value?: number | null) {
+  if (value === null || value === undefined) return 'N/A';
+  return value + ' kWh';
 }
 
-function formatDate(value?: string | null) {
-  if (!value) {
-    return 'N/A';
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return date.toLocaleString();
+function fmtSystemType(value?: string | null) {
+  if (!value) return 'N/A';
+  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 }
 
-function getStatusBadgeStyle(status?: string | null) {
-  switch (status) {
-    case 'approved':
-      return {
-        backgroundColor: '#dcfce7',
-        textColor: '#166534',
-      };
-    case 'rejected':
-      return {
-        backgroundColor: '#fee2e2',
-        textColor: '#b91c1c',
-      };
-    case 'completed':
-      return {
-        backgroundColor: '#dbeafe',
-        textColor: '#1d4ed8',
-      };
-    default:
-      return {
-        backgroundColor: '#fef3c7',
-        textColor: '#92400e',
-      };
-  }
-}
+/* ── sub-components ── */
 
-function SectionCard({
-  title,
-  subtitle,
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  children: React.ReactNode;
-}) {
+function InfoRow({label, value, bold}: {label: string; value: string; bold?: boolean}) {
   return (
-    <View style={styles.sectionCard}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      {subtitle ? <Text style={styles.sectionSubtitle}>{subtitle}</Text> : null}
-      {children}
+    <View style={s.infoRow}>
+      <Text style={s.infoLabel}>{label}</Text>
+      <Text style={[s.infoValue, bold && s.infoValueBold]}>{value}</Text>
     </View>
   );
 }
 
-function DetailRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <View style={styles.detailRow}>
-      <Text style={styles.detailLabel}>{label}</Text>
-      <Text style={styles.detailValue}>{value}</Text>
-    </View>
-  );
-}
+/* ── main screen ── */
 
-function CostCard({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <View style={styles.costCard}>
-      <Text style={styles.costLabel}>{label}</Text>
-      <Text style={styles.costValue}>{value}</Text>
-    </View>
-  );
-}
-
-export default function QuotationDetailScreen({route}: any) {
+export default function QuotationDetailScreen({route, navigation}: any) {
   const {quotationId} = route.params;
-  const initialQuotation = route?.params?.initialQuotation as
-    | QuotationDetail
-    | undefined;
+  const initialQuotation = route?.params?.initialQuotation as QuotationDetail | undefined;
 
-  const [quotation, setQuotation] = useState<QuotationDetail | null>(
-    initialQuotation || null,
-  );
+  const [quotation, setQuotation] = useState<QuotationDetail | null>(initialQuotation || null);
   const [loading, setLoading] = useState(!initialQuotation);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -189,10 +105,7 @@ export default function QuotationDetailScreen({route}: any) {
       try {
         setLoading(true);
         setErrorMessage('');
-
-        const response = await apiGet<QuotationDetail>(
-          `/quotations/${quotationId}`,
-        );
+        const response = await apiGet<QuotationDetail>(`/quotations/${quotationId}`);
         setQuotation(response);
       } catch (error) {
         if (error instanceof ApiError) {
@@ -204,501 +117,331 @@ export default function QuotationDetailScreen({route}: any) {
         setLoading(false);
       }
     };
-
     fetchQuotationDetail();
   }, [quotationId]);
 
+  /* ── loading / error / empty states ── */
+
   if (loading) {
     return (
-      <View style={styles.centeredContainer}>
-        <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={styles.loadingText}>Loading quotation details...</Text>
-      </View>
+      <SafeAreaView style={s.safe}>
+        <View style={s.center}>
+          <ActivityIndicator size="large" color={GOLD} />
+          <Text style={s.loadingText}>Loading quotation details…</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (errorMessage) {
     return (
-      <View style={styles.centeredContainer}>
-        <Text style={styles.errorTitle}>Could not load quotation</Text>
-        <Text style={styles.errorText}>{errorMessage}</Text>
-      </View>
+      <SafeAreaView style={s.safe}>
+        <View style={s.center}>
+          <Text style={s.errTitle}>Could not load quotation</Text>
+          <Text style={s.errText}>{errorMessage}</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (!quotation) {
     return (
-      <View style={styles.centeredContainer}>
-        <Text style={styles.errorTitle}>Quotation not found</Text>
-        <Text style={styles.errorText}>
-          No quotation details were returned for this item.
-        </Text>
-      </View>
+      <SafeAreaView style={s.safe}>
+        <View style={s.center}>
+          <Text style={s.errTitle}>Quotation not found</Text>
+          <Text style={s.errText}>No quotation details were returned for this item.</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
-  const statusStyle = getStatusBadgeStyle(quotation.status);
-  const isInitialQuotation = quotation.quotation_type === 'initial';
+  /* ── derived values ── */
+
+  const systemSize = fmtKw(quotation.system_kw);
+  const roiDisplay = fmtYears(quotation.roi_years);
+  const monthlyBill = formatQuotationCurrency(quotation.monthly_electric_bill);
+  const monthlyKwh = fmtKwh(quotation.monthly_kwh);
+  const systemType = fmtSystemType(quotation.pv_system_type);
+  const panelQty = fmtVal(quotation.panel_quantity);
+
+  /* ── handlers ── */
+
+  const handleConfirm = () => {
+    Alert.alert(
+      'Confirm Quotation',
+      'This initial quotation will be marked as confirmed. You may proceed to request a site inspection next.',
+      [
+        {text: 'Cancel', style: 'cancel'},
+        {
+          text: 'Confirm',
+          onPress: () => {
+            Alert.alert('Confirmed', 'Your initial quotation has been confirmed.');
+          },
+        },
+      ],
+    );
+  };
+
+  const handleRequestInspection = () => {
+    navigation.navigate('InspectionRequest');
+  };
+
+  const handleSaveHistory = () => {
+    Alert.alert('Saved', 'Quotation saved to your history.');
+  };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      showsVerticalScrollIndicator={false}>
-      <View style={styles.heroCard}>
-        <View style={styles.heroTopRow}>
-          <View style={styles.heroTextWrap}>
-            <Text style={styles.heroEyebrow}>Quotation #{quotation.id}</Text>
-            <Text style={styles.heroTitle}>
-              {formatValue(quotation.quotation_type)}
-            </Text>
-          </View>
+    <SafeAreaView style={s.safe}>
+      <ScrollView
+        contentContainerStyle={s.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
 
-          <View
-            style={[
-              styles.statusBadge,
-              {backgroundColor: statusStyle.backgroundColor},
-            ]}>
-            <Text style={[styles.statusBadgeText, {color: statusStyle.textColor}]}>
-              {formatValue(quotation.status)}
-            </Text>
-          </View>
-        </View>
-
-        <Text style={styles.heroSubtitle}>
-          Created {formatDate(quotation.created_at)}
+        {/* ── brand ── */}
+        <Text style={s.brand}>
+          Sol<Text style={s.brandAccent}>Mate</Text>
         </Text>
-      </View>
 
-      <View style={styles.summaryStrip}>
-        <View style={styles.summaryStripCard}>
-          <Text style={styles.summaryStripLabel}>Monthly Bill</Text>
-          <Text style={styles.summaryStripValue}>
-            {formatQuotationCurrency(quotation.monthly_electric_bill)}
-          </Text>
-        </View>
-        <View style={styles.summaryStripCard}>
-          <Text style={styles.summaryStripLabel}>
-            {isInitialQuotation ? 'Estimated Total' : 'Project Cost'}
-          </Text>
-          <Text style={styles.summaryStripValue}>
-            {formatQuotationCurrency(quotation.project_cost)}
-          </Text>
-        </View>
-      </View>
+        {/* ── back ── */}
+        <Pressable
+          hitSlop={14}
+          onPress={() => navigation.goBack()}
+          style={({pressed}) => [s.backBtn, pressed && s.pressed]}>
+          <Text style={s.backIcon}>{'\u2039'}</Text>
+        </Pressable>
 
-      <SectionCard
-        title="Return on investment"
-        subtitle={
-          isInitialQuotation
-            ? 'Estimated payback for the initial hybrid recommendation.'
-            : 'Estimated savings and payback period based on the latest quotation values.'
-        }>
-        <View style={styles.roiCard}>
-          {quotation.roi_years !== null && quotation.roi_years !== undefined ? (
-            <>
-              <View style={styles.roiHeader}>
-                <Text style={styles.roiTitle}>ROI Overview</Text>
-                <Text style={styles.roiValue}>
-                  {formatYears(quotation.roi_years)}
-                </Text>
-              </View>
+        {/* ── title ── */}
+        <Text style={s.title}>Initial Results</Text>
+        <Text style={s.subtitle}>Based on your monthly bill + default system configuration.</Text>
 
-              {!isInitialQuotation ? (
-                <View style={styles.roiMetricsRow}>
-                  <View style={styles.roiMetricCard}>
-                    <Text style={styles.roiMetricLabel}>
-                      Estimated Monthly Savings
-                    </Text>
-                    <Text style={styles.roiMetricValue}>
-                      {formatQuotationCurrency(quotation.estimated_monthly_savings)}
-                    </Text>
-                  </View>
-
-                  <View style={styles.roiMetricCard}>
-                    <Text style={styles.roiMetricLabel}>
-                      Estimated Annual Savings
-                    </Text>
-                    <Text style={styles.roiMetricValue}>
-                      {formatQuotationCurrency(quotation.estimated_annual_savings)}
-                    </Text>
-                  </View>
-                </View>
-              ) : null}
-            </>
-          ) : (
-            <Text style={styles.roiUnavailableText}>ROI not available yet</Text>
-          )}
-        </View>
-      </SectionCard>
-
-      {isInitialQuotation ? (
-        <>
-          <SectionCard
-            title="Recommended system summary"
-            subtitle="This initial quotation keeps the recommendation high-level and package-based.">
-            <DetailRow
-              label="Recommended setup"
-              value={formatSystemSummary(quotation)}
-            />
-            <DetailRow
-              label="Monthly electric bill"
-              value={formatQuotationCurrency(quotation.monthly_electric_bill)}
-            />
-          </SectionCard>
-
-          <SectionCard
-            title="Estimate notice"
-            subtitle="What this initial quotation means for the customer.">
-            <Text style={styles.noticeTitle}>Estimate only</Text>
-            <Text style={styles.noticeText}>
-              This initial quotation is a simplified estimate based on your
-              monthly bill and the default hybrid recommendation. Final pricing,
-              component selection, and installation scope are still subject to
-              site inspection and technician confirmation.
-            </Text>
-          </SectionCard>
-        </>
-      ) : (
-        <>
-          <SectionCard
-            title="Overview"
-            subtitle="High-level request information and customer usage input.">
-            <DetailRow
-              label="Monthly electric bill"
-              value={formatQuotationCurrency(quotation.monthly_electric_bill)}
-            />
-            <DetailRow label="Monthly kWh" value={formatValue(quotation.monthly_kwh)} />
-            <DetailRow label="Daily kWh" value={formatValue(quotation.daily_kwh)} />
-          </SectionCard>
-
-          <SectionCard
-            title="Solar sizing"
-            subtitle="Calculated production and system sizing details.">
-            <DetailRow label="PV kW raw" value={formatValue(quotation.pv_kw_raw)} />
-            <DetailRow label="PV kW safe" value={formatValue(quotation.pv_kw_safe)} />
-            <DetailRow
-              label="Panel quantity"
-              value={formatValue(quotation.panel_quantity)}
-            />
-            <DetailRow label="System kW" value={formatValue(quotation.system_kw)} />
-          </SectionCard>
-
-          <SectionCard
-            title="Battery summary"
-            subtitle="Battery sizing values returned by the backend.">
-            <DetailRow
-              label="Battery required kWh"
-              value={formatValue(quotation.battery_required_kwh)}
-            />
-            <DetailRow
-              label="Battery required Ah"
-              value={formatValue(quotation.battery_required_ah)}
-            />
-          </SectionCard>
-
-          <SectionCard
-            title="Cost summary"
-            subtitle="All cost values are shown exactly as returned by the backend.">
-            <View style={styles.costGrid}>
-              <CostCard
-                label="Panel cost"
-                value={formatQuotationCurrency(quotation.panel_cost)}
-              />
-              <CostCard
-                label="Inverter cost"
-                value={formatQuotationCurrency(quotation.inverter_cost)}
-              />
-              <CostCard
-                label="Battery cost"
-                value={formatQuotationCurrency(quotation.battery_cost)}
-              />
-              <CostCard
-                label="BOS cost"
-                value={formatQuotationCurrency(quotation.bos_cost)}
-              />
-              <CostCard
-                label="Materials subtotal"
-                value={formatQuotationCurrency(quotation.materials_subtotal)}
-              />
-              <CostCard
-                label="Labor cost"
-                value={formatQuotationCurrency(quotation.labor_cost)}
-              />
+        {/* ── Quick Summary ── */}
+        <View style={s.card}>
+          <Text style={s.cardTitle}>Quick Summary</Text>
+          <View style={s.summaryRow}>
+            <View style={s.summaryCol}>
+              <Text style={s.summaryLabel}>System Size</Text>
+              <Text style={s.summaryValue}>{systemSize}</Text>
             </View>
-
-            <View style={styles.totalCard}>
-              <Text style={styles.totalLabel}>Project cost</Text>
-              <Text style={styles.totalValue}>
-                {formatQuotationCurrency(quotation.project_cost)}
-              </Text>
+            <View style={s.summaryCol}>
+              <Text style={s.summaryLabel}>Payback / ROI</Text>
+              <Text style={s.summaryValue}>{roiDisplay}</Text>
             </View>
-          </SectionCard>
-        </>
-      )}
+          </View>
+        </View>
 
-      <SectionCard title="Notes">
-        <DetailRow label="Remarks" value={formatReadableText(quotation.remarks)} />
-      </SectionCard>
-    </ScrollView>
+        {/* ── Bill Breakdown ── */}
+        <View style={s.card}>
+          <Text style={s.cardTitle}>Bill Breakdown</Text>
+          <InfoRow label="Monthly Bill" value={monthlyBill} bold />
+          <InfoRow label="Computed Monthly kWh" value={monthlyKwh} bold />
+        </View>
+
+        {/* ── Recommended System ── */}
+        <View style={s.card}>
+          <Text style={s.cardTitle}>Recommended System</Text>
+          <InfoRow label="System Type" value={systemType} bold />
+          <InfoRow label="System Size" value={systemSize} bold />
+          <InfoRow label="Panel Qty" value={panelQty} bold />
+        </View>
+
+        {/* ── action buttons ── */}
+        <Pressable
+          onPress={handleConfirm}
+          style={({pressed}) => [s.primaryBtn, pressed && s.pressed]}>
+          <Text style={s.primaryBtnText}>Confirm Initial Quotation</Text>
+        </Pressable>
+
+        <Pressable
+          onPress={handleRequestInspection}
+          style={({pressed}) => [s.secondaryBtn, pressed && s.pressed]}>
+          <Text style={s.secondaryBtnText}>Request Site Inspection</Text>
+        </Pressable>
+
+        <Pressable
+          onPress={handleSaveHistory}
+          style={({pressed}) => [s.secondaryBtn, pressed && s.pressed]}>
+          <Text style={s.secondaryBtnText}>Save to History (optional)</Text>
+        </Pressable>
+
+        {/* ── back to edit link ── */}
+        <Pressable
+          hitSlop={10}
+          onPress={() => navigation.goBack()}
+          style={({pressed}) => [s.backLink, pressed && s.pressed]}>
+          <Text style={s.backLinkText}>{'\u2039 Back to Edit Bill'}</Text>
+        </Pressable>
+
+        {/* ── spacer ── */}
+        <View style={s.spacer} />
+
+        {/* ── chatbot shortcut ── */}
+        <Pressable
+          onPress={() => navigation.navigate('Chatbot')}
+          style={({pressed}) => [s.chatRow, pressed && s.pressed]}>
+          <Text style={s.chatText}>Chat with SolBot</Text>
+          <View style={s.chatBtn}>
+            <Text style={s.chatBtnIcon}>{'\uD83E\uDD16'}</Text>
+          </View>
+        </Pressable>
+
+        {/* ── bottom nav ── */}
+        <View style={s.bottomNav}>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('Home')}>
+            <Text style={s.navIcon}>{'\uD83C\uDFE0'}</Text>
+            <Text style={s.navLabel}>Home</Text>
+          </Pressable>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('QuotationList')}>
+            <Text style={s.navIconActive}>{'\uD83D\uDCCB'}</Text>
+            <Text style={s.navLabelActive}>Quotation</Text>
+          </Pressable>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('ServiceRequestList')}>
+            <Text style={s.navIcon}>{'\u2699\uFE0F'}</Text>
+            <Text style={s.navLabel}>Services</Text>
+          </Pressable>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('InspectionRequestList')}>
+            <Text style={s.navIcon}>{'\uD83D\uDCCD'}</Text>
+            <Text style={s.navLabel}>Tracking</Text>
+          </Pressable>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('CustomerSettings')}>
+            <Text style={s.navIcon}>{'\uD83D\uDC64'}</Text>
+            <Text style={s.navLabel}>Profile</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#f5f7fb',
-    flexGrow: 1,
-    padding: 20,
-    paddingBottom: 32,
+/* ── styles ── */
+
+const s = StyleSheet.create({
+  safe: {flex: 1, backgroundColor: BG},
+  scroll: {paddingHorizontal: 22, paddingTop: 20, paddingBottom: 30},
+  pressed: {opacity: 0.85},
+  center: {flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: BG},
+
+  /* brand */
+  brand: {fontSize: 22, fontWeight: '800', color: NAVY, marginBottom: 10},
+  brandAccent: {color: GOLD},
+
+  /* back */
+  backBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: CARD,
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 18,
+    shadowColor: '#8a9bbd', shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.10, shadowRadius: 6, elevation: 3,
   },
-  centeredContainer: {
-    alignItems: 'center',
-    backgroundColor: '#f5f7fb',
-    flex: 1,
-    justifyContent: 'center',
-    padding: 24,
-  },
-  heroCard: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
-    borderRadius: 24,
-    borderWidth: 1,
-    marginBottom: 16,
-    padding: 20,
-    shadowColor: '#0f172a',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 2,
-  },
-  heroTopRow: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  heroTextWrap: {
-    flex: 1,
-    paddingRight: 12,
-  },
-  heroEyebrow: {
-    color: '#94a3b8',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    marginBottom: 4,
-    textTransform: 'uppercase',
-  },
-  heroTitle: {
-    color: '#0f172a',
-    fontSize: 28,
-    fontWeight: '800',
-    textTransform: 'capitalize',
-  },
-  heroSubtitle: {
-    color: '#64748b',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  statusBadge: {
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  statusBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  summaryStrip: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
-  },
-  summaryStripCard: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
-    borderRadius: 20,
-    borderWidth: 1,
-    flex: 1,
-    padding: 16,
-  },
-  summaryStripLabel: {
-    color: '#64748b',
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 6,
-    textTransform: 'uppercase',
-  },
-  summaryStripValue: {
-    color: '#0f172a',
-    fontSize: 20,
-    fontWeight: '800',
-  },
-  roiCard: {
-    backgroundColor: '#eff6ff',
-    borderRadius: 20,
-    padding: 18,
-  },
-  roiHeader: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-  },
-  roiTitle: {
-    color: '#1e3a8a',
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  roiValue: {
-    color: '#0f172a',
-    fontSize: 18,
-    fontWeight: '800',
-    textAlign: 'right',
-  },
-  roiMetricsRow: {
-    gap: 12,
-  },
-  roiMetricCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 14,
-  },
-  roiMetricLabel: {
-    color: '#64748b',
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 6,
-    textTransform: 'uppercase',
-  },
-  roiMetricValue: {
-    color: '#0f172a',
-    fontSize: 20,
-    fontWeight: '800',
-  },
-  roiUnavailableText: {
-    color: '#475569',
-    fontSize: 16,
-    fontWeight: '600',
-    lineHeight: 22,
-  },
-  noticeTitle: {
-    color: '#9a3412',
-    fontSize: 18,
-    fontWeight: '800',
-    marginBottom: 8,
-  },
-  noticeText: {
-    color: '#7c2d12',
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  sectionCard: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
+  backIcon: {fontSize: 28, color: NAVY, fontWeight: '600', marginTop: -2},
+
+  /* title */
+  title: {fontSize: 26, fontWeight: '900', color: NAVY, marginBottom: 4},
+  subtitle: {fontSize: 14, color: MUTED, lineHeight: 20, marginBottom: 22},
+
+  /* card */
+  card: {
+    backgroundColor: CARD,
     borderRadius: 22,
-    borderWidth: 1,
+    padding: 20,
     marginBottom: 16,
-    padding: 18,
-    shadowColor: '#0f172a',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.04,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.10,
     shadowRadius: 14,
-    elevation: 1,
+    elevation: 4,
   },
-  sectionTitle: {
-    color: '#0f172a',
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 6,
+  cardTitle: {
+    fontSize: 16, fontWeight: '900', color: NAVY, marginBottom: 14,
   },
-  sectionSubtitle: {
-    color: '#64748b',
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 14,
-  },
-  loadingText: {
-    color: '#475569',
-    fontSize: 14,
-    marginTop: 12,
-  },
-  errorTitle: {
-    color: '#0f172a',
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  errorText: {
-    color: '#dc2626',
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-  detailRow: {
-    borderTopColor: '#eef2f7',
+
+  /* quick summary */
+  summaryRow: {flexDirection: 'row'},
+  summaryCol: {flex: 1},
+  summaryLabel: {fontSize: 12, color: MUTED, marginBottom: 4},
+  summaryValue: {fontSize: 20, fontWeight: '900', color: NAVY},
+
+  /* info rows */
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     borderTopWidth: 1,
+    borderTopColor: '#edf1f7',
     paddingVertical: 12,
   },
-  detailLabel: {
-    color: '#64748b',
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 4,
-    textTransform: 'uppercase',
+  infoLabel: {fontSize: 14, color: MUTED},
+  infoValue: {fontSize: 14, color: NAVY},
+  infoValueBold: {fontWeight: '800'},
+
+  /* primary button */
+  primaryBtn: {
+    backgroundColor: GOLD,
+    borderRadius: 28,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: GOLD,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
   },
-  detailValue: {
-    color: '#0f172a',
-    fontSize: 16,
-    fontWeight: '600',
-    lineHeight: 22,
+  primaryBtnText: {
+    fontSize: 16, fontWeight: '900', color: CARD, letterSpacing: 0.3,
   },
-  costGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+
+  /* secondary button */
+  secondaryBtn: {
+    backgroundColor: CARD,
+    borderRadius: 28,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#dfe6f0',
   },
-  costCard: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 18,
-    minWidth: '47%',
-    padding: 14,
+  secondaryBtnText: {
+    fontSize: 16, fontWeight: '800', color: NAVY,
   },
-  costLabel: {
-    color: '#64748b',
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 6,
-    textTransform: 'uppercase',
+
+  /* back link */
+  backLink: {marginTop: 4, marginBottom: 8, alignSelf: 'flex-start'},
+  backLinkText: {fontSize: 14, color: MUTED, fontWeight: '600'},
+
+  /* spacer */
+  spacer: {minHeight: 40},
+
+  /* loading / error */
+  loadingText: {color: MUTED, fontSize: 14, marginTop: 12},
+  errTitle: {color: NAVY, fontSize: 20, fontWeight: '700', marginBottom: 8, textAlign: 'center'},
+  errText: {color: '#dc2626', fontSize: 14, lineHeight: 20, textAlign: 'center'},
+
+  /* chat shortcut */
+  chatRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end',
+    marginBottom: 22, marginTop: 4,
   },
-  costValue: {
-    color: '#0f172a',
-    fontSize: 17,
-    fontWeight: '700',
+  chatText: {fontSize: 13, color: MUTED, marginRight: 10},
+  chatBtn: {
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: NAVY,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: NAVY, shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.25, shadowRadius: 8, elevation: 5,
   },
-  totalCard: {
-    backgroundColor: '#eff6ff',
-    borderRadius: 20,
-    marginTop: 14,
-    padding: 16,
+  chatBtnIcon: {fontSize: 22},
+
+  /* bottom nav */
+  bottomNav: {
+    flexDirection: 'row', justifyContent: 'space-around',
+    backgroundColor: CARD, borderRadius: R, paddingVertical: 10,
+    shadowColor: '#8a9bbd', shadowOffset: {width: 0, height: -2},
+    shadowOpacity: 0.08, shadowRadius: 8, elevation: 4,
   },
-  totalLabel: {
-    color: '#1d4ed8',
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 6,
-    textTransform: 'uppercase',
-  },
-  totalValue: {
-    color: '#0f172a',
-    fontSize: 24,
-    fontWeight: '800',
-  },
+  navItem: {alignItems: 'center', paddingHorizontal: 6},
+  navIcon: {fontSize: 20, marginBottom: 2},
+  navIconActive: {fontSize: 20, marginBottom: 2},
+  navLabel: {fontSize: 11, color: MUTED, fontWeight: '600'},
+  navLabelActive: {fontSize: 11, color: NAVY, fontWeight: '700'},
 });

@@ -84,7 +84,7 @@ export default function PreferredDateCalendar({
       nextMarkedDates[selectedDate] = {
         ...nextMarkedDates[selectedDate],
         selected: true,
-        selectedColor: selectedDateIsUnavailable ? '#fecaca' : '#2563eb',
+        selectedColor: selectedDateIsUnavailable ? '#fecaca' : '#152a4a',
         selectedTextColor: selectedDateIsUnavailable ? '#991b1b' : '#ffffff',
       };
     }
@@ -164,38 +164,23 @@ export default function PreferredDateCalendar({
             </View>
           )}
           theme={{
-            arrowColor: '#2563eb',
+            arrowColor: '#152a4a',
             calendarBackground: '#ffffff',
-            dayTextColor: '#0f172a',
-            monthTextColor: '#0f172a',
+            dayTextColor: '#152a4a',
+            monthTextColor: '#152a4a',
             textDayFontSize: 15,
             textDayFontWeight: '600',
             textDayHeaderFontSize: 12,
             textDayHeaderFontWeight: '700',
-            textDisabledColor: '#cbd5e1',
+            textDisabledColor: '#c5cdd9',
             textMonthFontSize: 16,
             textMonthFontWeight: '800',
-            textSectionTitleColor: '#64748b',
-            todayTextColor: '#2563eb',
+            textSectionTitleColor: '#7b8699',
+            todayTextColor: '#e8a800',
           }}
         />
       </View>
 
-      <Text style={styles.helpText}>{helperText}</Text>
-      <Text style={styles.helpText}>Use the arrows to view other months.</Text>
-      <Text style={styles.helpText}>
-        Reserved and past dates are dimmed in the calendar and cannot be
-        selected.
-      </Text>
-      {reservedDatePreview.length > 0 ? (
-        <Text style={styles.helpText}>
-          Currently reserved dates: {reservedDatePreview.map(formatDateForDisplay).join(', ')}
-          {unavailableDates.length > reservedDatePreview.length
-            ? `, +${unavailableDates.length - reservedDatePreview.length} more`
-            : ''}
-          .
-        </Text>
-      ) : null}
       {availabilityMessage ? (
         <Text style={styles.helpText}>{availabilityMessage}</Text>
       ) : null}
@@ -219,19 +204,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   fieldLabel: {
-    color: '#0f172a',
-    fontSize: 16,
-    fontWeight: '700',
+    color: '#152a4a',
+    fontSize: 15,
+    fontWeight: '800',
   },
   optionalText: {
-    color: '#64748b',
-    fontSize: 12,
+    color: '#7b8699',
+    fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
   calendarCard: {
     backgroundColor: '#ffffff',
-    borderColor: '#dbe4f0',
+    borderColor: '#edf1f7',
     borderRadius: 18,
     borderWidth: 1,
     overflow: 'hidden',
@@ -247,26 +232,26 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   selectedDateLabel: {
-    color: '#64748b',
+    color: '#7b8699',
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 4,
     textTransform: 'uppercase',
   },
   selectedDateValue: {
-    color: '#0f172a',
+    color: '#152a4a',
     fontSize: 16,
     fontWeight: '700',
   },
   placeholderText: {
-    color: '#94a3b8',
+    color: '#7b8699',
   },
   clearDateButton: {
     paddingHorizontal: 4,
     paddingVertical: 4,
   },
   clearDateText: {
-    color: '#2563eb',
+    color: '#e8a800',
     fontSize: 13,
     fontWeight: '700',
   },
@@ -287,42 +272,42 @@ const styles = StyleSheet.create({
     width: 10,
   },
   legendSelected: {
-    backgroundColor: '#2563eb',
+    backgroundColor: '#152a4a',
   },
   legendUnavailable: {
     backgroundColor: '#e2e8f0',
-    borderColor: '#cbd5e1',
+    borderColor: '#c5cdd9',
     borderWidth: 1,
   },
   legendText: {
-    color: '#64748b',
+    color: '#7b8699',
     fontSize: 12,
     fontWeight: '600',
   },
   arrowButton: {
     alignItems: 'center',
-    backgroundColor: '#eff6ff',
-    borderColor: '#bfdbfe',
+    backgroundColor: '#e0e8f5',
+    borderColor: '#c5cdd9',
     borderRadius: 999,
     borderWidth: 1,
-    height: 28,
+    height: 30,
     justifyContent: 'center',
-    width: 28,
+    width: 30,
   },
   arrowText: {
-    color: '#2563eb',
+    color: '#152a4a',
     fontSize: 18,
     fontWeight: '800',
     lineHeight: 20,
   },
   helpText: {
-    color: '#64748b',
+    color: '#7b8699',
     fontSize: 13,
     lineHeight: 18,
     marginTop: 6,
   },
   fieldErrorText: {
-    color: '#b91c1c',
+    color: '#dc2626',
     fontSize: 13,
     fontWeight: '600',
     marginTop: 8,

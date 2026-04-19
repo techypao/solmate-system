@@ -42,13 +42,13 @@ export default function CustomerStack() {
       <Stack.Screen
         name="CustomerSettings"
         component={CustomerSettingsScreen}
-        options={{ title: 'Settings' }}
+        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="CustomerNotifications"
         component={CustomerNotificationsScreen}
-        options={{ title: 'Notifications' }}
+        options={{ headerShown: false }}
       />
 
       <Stack.Screen
@@ -61,82 +61,82 @@ export default function CustomerStack() {
       <Stack.Screen
         name="Quotations"
         component={QuotationScreen}
-        options={{ title: 'Create Initial Quotation' }}
+        options={{ headerShown: false }}
       />
 
       {/* Customer's list of submitted quotations */}
       <Stack.Screen
         name="QuotationList"
         component={QuotationListScreen}
-        options={{ title: 'My Quotations' }}
+        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="InspectionRequest"
         component={InspectionRequestScreen}
-        options={{ title: 'Request Inspection' }}
+        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="InspectionRequestList"
         component={InspectionRequestListScreen}
-        options={{ title: 'My Inspection Requests' }}
+        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="InspectionRequestDetail"
         component={InspectionRequestDetailScreen}
-        options={{ title: 'Inspection Request Details' }}
+        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="FinalQuotationView"
         component={FinalQuotationViewScreen}
-        options={{ title: 'Final Quotation' }}
+        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="ServiceRequest"
         component={ServiceRequestScreen}
-        options={{ title: 'Request Service' }}
+        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="ServiceRequestList"
         component={ServiceRequestListScreen}
-        options={{ title: 'My Service Requests' }}
+        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="MyTestimonies"
         component={MyTestimoniesScreen}
-        options={{ title: 'My Testimonies' }}
+        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="CreateTestimony"
         component={CreateTestimonyScreen}
-        options={{ title: 'Add Testimony' }}
+        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="EditTestimony"
         component={EditTestimonyScreen}
-        options={{ title: 'Edit Testimony' }}
+        options={{ headerShown: false }}
       />
 
       <Stack.Screen
         name="ServiceRequestDetail"
         component={ServiceRequestDetailScreen}
         initialParams={{ mode: 'customer' }}
-        options={{ title: 'Service Request Details' }}
+        options={{ headerShown: false }}
       />
 
       {/* Single quotation detail page */}
       <Stack.Screen
         name="QuotationDetail"
         component={QuotationDetailScreen}
-        options={{ title: 'Quotation Details' }}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

@@ -2,6 +2,7 @@ import React, {useCallback, useEffect, useState} from 'react';
 import {useFocusEffect} from '@react-navigation/native';
 import {
   Pressable,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,10 +10,21 @@ import {
   View,
 } from 'react-native';
 
-import {AppButton, AppCard, PreferredDateCalendar} from '../components';
+import {PreferredDateCalendar} from '../components';
 import {ApiError} from '../src/services/api';
 import {getUnavailablePreferredDates} from '../src/services/preferredDateAvailabilityApi';
 import {createServiceRequest} from '../src/services/serviceRequestApi';
+
+/* ── design tokens ── */
+
+const NAVY = '#152a4a';
+const GOLD = '#e8a800';
+const MUTED = '#7b8699';
+const BG = '#e0e8f5';
+const CARD = '#ffffff';
+const DIVIDER = '#edf1f7';
+
+/* ── constants (preserved) ── */
 
 const REQUEST_TYPE_OPTIONS = [
   'Battery Check',
@@ -31,35 +43,30 @@ type FieldErrors = {
 const RESERVED_DATE_MESSAGE =
   'Selected date is already reserved. Please choose another date.';
 
+/* ── helpers (preserved) ── */
+
 function sanitizeContactNumber(value: string) {
   return value.replace(/[^0-9+()\- ]/g, '');
 }
 
 function getFriendlyErrorMessage(error: unknown) {
   if (error instanceof ApiError) {
-    if (error.status === 401) {
-      return 'Your session has expired. Please log in again.';
-    }
-
+    if (error.status === 401) return 'Your session has expired. Please log in again.';
     return error.message;
   }
-
   return 'Something went wrong while submitting your service request.';
 }
 
 function getFieldValidationMessage(error: unknown, field: string) {
-  if (!(error instanceof ApiError)) {
-    return null;
-  }
-
+  if (!(error instanceof ApiError)) return null;
   const messages = error.errors?.[field];
-
-  if (Array.isArray(messages) && messages.length > 0) {
-    return messages[0];
-  }
-
+  if (Array.isArray(messages) && messages.length > 0) return messages[0];
   return null;
 }
+
+/* ══════════════════════════════════════════
+   Main screen
+   ══════════════════════════════════════════ */
 
 export default function ServiceRequestScreen({navigation}: any) {
   const [requestType, setRequestType] = useState('');
@@ -72,6 +79,8 @@ export default function ServiceRequestScreen({navigation}: any) {
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  /* ── form helpers (all preserved) ── */
 
   const resetForm = () => {
     setRequestType('');
@@ -101,88 +110,56 @@ export default function ServiceRequestScreen({navigation}: any) {
 
   useEffect(() => {
     const isReserved = Boolean(dateNeeded && unavailableDates.includes(dateNeeded));
-
     setFieldErrors(currentErrors => {
       if (isReserved && currentErrors.dateNeeded !== RESERVED_DATE_MESSAGE) {
-        return {
-          ...currentErrors,
-          dateNeeded: RESERVED_DATE_MESSAGE,
-        };
+        return {...currentErrors, dateNeeded: RESERVED_DATE_MESSAGE};
       }
-
       if (!isReserved && currentErrors.dateNeeded === RESERVED_DATE_MESSAGE) {
-        return {
-          ...currentErrors,
-          dateNeeded: undefined,
-        };
+        return {...currentErrors, dateNeeded: undefined};
       }
-
       return currentErrors;
     });
   }, [dateNeeded, unavailableDates]);
 
   const clearStatusMessages = () => {
-    if (errorMessage) {
-      setErrorMessage('');
-    }
-
-    if (successMessage) {
-      setSuccessMessage('');
-    }
+    if (errorMessage) setErrorMessage('');
+    if (successMessage) setSuccessMessage('');
   };
 
   const handleRequestTypeChange = (value: string) => {
     setRequestType(value);
     clearStatusMessages();
-
     if (fieldErrors.requestType) {
-      setFieldErrors(currentErrors => ({
-        ...currentErrors,
-        requestType: undefined,
-      }));
+      setFieldErrors(c => ({...c, requestType: undefined}));
     }
   };
 
   const handleDetailsChange = (value: string) => {
     setDetails(value);
     clearStatusMessages();
-
     if (fieldErrors.details) {
-      setFieldErrors(currentErrors => ({
-        ...currentErrors,
-        details: undefined,
-      }));
+      setFieldErrors(c => ({...c, details: undefined}));
     }
   };
 
   const handleContactNumberChange = (value: string) => {
     setContactNumber(sanitizeContactNumber(value));
     clearStatusMessages();
-
     if (fieldErrors.contactNumber) {
-      setFieldErrors(currentErrors => ({
-        ...currentErrors,
-        contactNumber: undefined,
-      }));
+      setFieldErrors(c => ({...c, contactNumber: undefined}));
     }
   };
 
   const handleDateSelect = (value: string) => {
     setDateNeeded(value);
     clearStatusMessages();
-    setFieldErrors(currentErrors => ({
-      ...currentErrors,
-      dateNeeded: undefined,
-    }));
+    setFieldErrors(c => ({...c, dateNeeded: undefined}));
   };
 
   const clearSelectedDate = () => {
     setDateNeeded('');
     clearStatusMessages();
-    setFieldErrors(currentErrors => ({
-      ...currentErrors,
-      dateNeeded: undefined,
-    }));
+    setFieldErrors(c => ({...c, dateNeeded: undefined}));
   };
 
   const validateForm = () => {
@@ -191,47 +168,26 @@ export default function ServiceRequestScreen({navigation}: any) {
     const trimmedContactNumber = contactNumber.trim();
     const nextErrors: FieldErrors = {};
 
-    if (!trimmedRequestType) {
-      nextErrors.requestType = 'Please choose or enter a request type.';
-    }
-
-    if (!trimmedDetails) {
-      nextErrors.details = 'Please add details about the service you need.';
-    }
-
-    if (!trimmedContactNumber) {
-      nextErrors.contactNumber = 'Contact number is required.';
-    }
-
-    if (dateNeeded && unavailableDates.includes(dateNeeded)) {
-      nextErrors.dateNeeded = RESERVED_DATE_MESSAGE;
-    }
+    if (!trimmedRequestType) nextErrors.requestType = 'Please choose or enter a request type.';
+    if (!trimmedDetails) nextErrors.details = 'Please add details about the service you need.';
+    if (!trimmedContactNumber) nextErrors.contactNumber = 'Contact number is required.';
+    if (dateNeeded && unavailableDates.includes(dateNeeded)) nextErrors.dateNeeded = RESERVED_DATE_MESSAGE;
 
     setFieldErrors(nextErrors);
-
     if (Object.keys(nextErrors).length > 0) {
       setErrorMessage('Please complete the required fields before submitting.');
       setSuccessMessage('');
       return false;
     }
-
     return true;
   };
 
   const handleSubmit = async () => {
-    if (submitting) {
-      return;
-    }
-
-    if (!validateForm()) {
-      return;
-    }
+    if (submitting) return;
+    if (!validateForm()) return;
 
     if (dateNeeded && unavailableDates.includes(dateNeeded)) {
-      setFieldErrors(currentErrors => ({
-        ...currentErrors,
-        dateNeeded: RESERVED_DATE_MESSAGE,
-      }));
+      setFieldErrors(c => ({...c, dateNeeded: RESERVED_DATE_MESSAGE}));
       setErrorMessage(RESERVED_DATE_MESSAGE);
       setSuccessMessage('');
       return;
@@ -245,14 +201,11 @@ export default function ServiceRequestScreen({navigation}: any) {
       const response = await createServiceRequest({
         request_type: requestType.trim(),
         details: details.trim(),
-        ...(contactNumber.trim()
-          ? {contact_number: contactNumber.trim()}
-          : {}),
+        ...(contactNumber.trim() ? {contact_number: contactNumber.trim()} : {}),
         ...(dateNeeded ? {date_needed: dateNeeded} : {}),
       });
 
       const createdServiceRequest = response?.data;
-
       if (createdServiceRequest?.id) {
         resetForm();
         navigation.replace('ServiceRequestDetail', {
@@ -264,20 +217,13 @@ export default function ServiceRequestScreen({navigation}: any) {
       }
 
       resetForm();
-      setSuccessMessage(
-        response.message || 'Service request submitted successfully.',
-      );
+      setSuccessMessage(response.message || 'Service request submitted successfully.');
     } catch (error) {
       const dateFieldMessage = getFieldValidationMessage(error, 'date_needed');
-
       if (dateFieldMessage) {
-        setFieldErrors(currentErrors => ({
-          ...currentErrors,
-          dateNeeded: dateFieldMessage,
-        }));
+        setFieldErrors(c => ({...c, dateNeeded: dateFieldMessage}));
         loadUnavailableDates();
       }
-
       setErrorMessage(dateFieldMessage || getFriendlyErrorMessage(error));
     } finally {
       setSubmitting(false);
@@ -286,381 +232,396 @@ export default function ServiceRequestScreen({navigation}: any) {
 
   const selectedRequestType = requestType.trim();
 
+  /* ── render ── */
+
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}>
-      <View style={styles.heroCard}>
-        <Text style={styles.eyebrow}>Request service</Text>
-        <Text style={styles.title}>Schedule support for your solar system</Text>
-        <Text style={styles.subtitle}>
-          Choose the kind of help you need, describe the issue clearly, and add
-          a preferred date if you already have one in mind.
-        </Text>
-      </View>
+    <SafeAreaView style={s.safe}>
+      <ScrollView
+        contentContainerStyle={s.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
 
-      <AppCard style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Service request details</Text>
-        <Text style={styles.sectionSubtitle}>
-          This request is submitted under your customer account and sent
-          securely with your saved login session.
+        {/* ── brand ── */}
+        <Text style={s.brand}>
+          Sol<Text style={s.brandAccent}>Mate</Text>
         </Text>
 
+        {/* ── back ── */}
+        <Pressable
+          hitSlop={14}
+          onPress={() => navigation.goBack()}
+          style={({pressed}) => [s.backBtn, pressed && s.pressed]}>
+          <Text style={s.backIcon}>{'\u2039'}</Text>
+        </Pressable>
+
+        {/* ── title ── */}
+        <Text style={s.title}>Request Service</Text>
+        <Text style={s.subtitle}>
+          Schedule support for your solar system. Choose the kind of help you
+          need, describe the issue, and pick a preferred date.
+        </Text>
+
+        {/* ── banners ── */}
         {errorMessage ? (
-          <View style={styles.errorBanner}>
-            <Text style={styles.bannerTitle}>Unable to submit</Text>
-            <Text style={styles.bannerText}>{errorMessage}</Text>
+          <View style={s.errorBanner}>
+            <Text style={s.errorBannerTitle}>Unable to submit</Text>
+            <Text style={s.errorBannerText}>{errorMessage}</Text>
           </View>
         ) : null}
 
         {successMessage ? (
-          <View style={styles.successBanner}>
-            <Text style={styles.successTitle}>Request submitted</Text>
-            <Text style={styles.successText}>{successMessage}</Text>
+          <View style={s.successBanner}>
+            <Text style={s.successBannerTitle}>Request submitted</Text>
+            <Text style={s.successBannerText}>{successMessage}</Text>
           </View>
         ) : null}
 
-        <View style={styles.fieldGroup}>
-          <View style={styles.fieldHeader}>
-            <Text style={styles.fieldLabel}>Request type</Text>
-            <Text style={styles.requiredText}>Required</Text>
-          </View>
+        {/* ── form card ── */}
+        <View style={s.card}>
 
-          <View style={styles.chipGroup}>
-            {REQUEST_TYPE_OPTIONS.map(option => {
-              const isSelected = selectedRequestType === option;
+          {/* A. Request type */}
+          <View style={s.fieldGroup}>
+            <View style={s.fieldHeader}>
+              <Text style={s.fieldLabel}>Request Type</Text>
+              <Text style={s.requiredTag}>Required</Text>
+            </View>
 
-              return (
-                <Pressable
-                  key={option}
-                  onPress={() => handleRequestTypeChange(option)}
-                  style={({pressed}) => [
-                    styles.typeChip,
-                    isSelected ? styles.typeChipSelected : null,
-                    pressed ? styles.pressedChip : null,
-                  ]}>
-                  <Text
-                    style={[
-                      styles.typeChipText,
-                      isSelected ? styles.typeChipTextSelected : null,
+            <View style={s.chipGroup}>
+              {REQUEST_TYPE_OPTIONS.map(option => {
+                const isSelected = selectedRequestType === option;
+                return (
+                  <Pressable
+                    key={option}
+                    onPress={() => handleRequestTypeChange(option)}
+                    style={({pressed}) => [
+                      s.chip,
+                      isSelected && s.chipSelected,
+                      pressed && s.pressed,
                     ]}>
-                    {option}
-                  </Text>
-                </Pressable>
-              );
-            })}
+                    <Text style={[s.chipText, isSelected && s.chipTextSelected]}>
+                      {option}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <TextInput
+              autoCapitalize="words"
+              onChangeText={handleRequestTypeChange}
+              placeholder="Or enter a custom request type"
+              placeholderTextColor={MUTED}
+              style={[s.input, fieldErrors.requestType && s.inputError]}
+              value={requestType}
+            />
+            <Text style={s.helpText}>
+              Common types are listed above, or enter your own.
+            </Text>
+            {fieldErrors.requestType ? (
+              <Text style={s.fieldErrorText}>{fieldErrors.requestType}</Text>
+            ) : null}
           </View>
 
-          <TextInput
-            autoCapitalize="words"
-            onChangeText={handleRequestTypeChange}
-            placeholder="Select a type above or enter a custom request"
-            placeholderTextColor="#94a3b8"
-            style={[
-              styles.input,
-              fieldErrors.requestType ? styles.inputError : null,
-            ]}
-            value={requestType}
-          />
-
-          <Text style={styles.helpText}>
-            Common service types are listed above, but you can also enter a
-            custom request that matches your concern.
-          </Text>
-          {fieldErrors.requestType ? (
-            <Text style={styles.fieldErrorText}>{fieldErrors.requestType}</Text>
-          ) : null}
-        </View>
-
-        <View style={styles.fieldGroup}>
-          <View style={styles.fieldHeader}>
-            <Text style={styles.fieldLabel}>Details</Text>
-            <Text style={styles.requiredText}>Required</Text>
+          {/* B. Details */}
+          <View style={s.fieldGroup}>
+            <View style={s.fieldHeader}>
+              <Text style={s.fieldLabel}>Details</Text>
+              <Text style={s.requiredTag}>Required</Text>
+            </View>
+            <TextInput
+              multiline
+              numberOfLines={5}
+              onChangeText={handleDetailsChange}
+              placeholder="Explain what is happening and what help you need"
+              placeholderTextColor={MUTED}
+              style={[s.input, s.textArea, fieldErrors.details && s.inputError]}
+              textAlignVertical="top"
+              value={details}
+            />
+            <Text style={s.helpText}>
+              Example: battery drains quickly at night, or inverter shows a warning light.
+            </Text>
+            {fieldErrors.details ? (
+              <Text style={s.fieldErrorText}>{fieldErrors.details}</Text>
+            ) : null}
           </View>
 
-          <TextInput
-            multiline={true}
-            numberOfLines={5}
-            onChangeText={handleDetailsChange}
-            placeholder="Explain what is happening and what kind of help you need"
-            placeholderTextColor="#94a3b8"
-            style={[
-              styles.input,
-              styles.textArea,
-              fieldErrors.details ? styles.inputError : null,
-            ]}
-            textAlignVertical="top"
-            value={details}
-          />
-
-          <Text style={styles.helpText}>
-            Example: our battery drains quickly at night, or one inverter is
-            showing a warning light.
-          </Text>
-          {fieldErrors.details ? (
-            <Text style={styles.fieldErrorText}>{fieldErrors.details}</Text>
-          ) : null}
-        </View>
-
-        <View style={styles.fieldGroup}>
-          <View style={styles.fieldHeader}>
-            <Text style={styles.fieldLabel}>Contact number</Text>
-            <Text style={styles.requiredText}>Required</Text>
+          {/* C. Contact number */}
+          <View style={s.fieldGroup}>
+            <View style={s.fieldHeader}>
+              <Text style={s.fieldLabel}>Contact Number</Text>
+              <Text style={s.requiredTag}>Required</Text>
+            </View>
+            <TextInput
+              keyboardType="phone-pad"
+              onChangeText={handleContactNumberChange}
+              placeholder="Enter a phone number we can reach"
+              placeholderTextColor={MUTED}
+              style={[s.input, fieldErrors.contactNumber && s.inputError]}
+              value={contactNumber}
+            />
+            <Text style={s.helpText}>
+              Best number to call or text about this request.
+            </Text>
+            {fieldErrors.contactNumber ? (
+              <Text style={s.fieldErrorText}>{fieldErrors.contactNumber}</Text>
+            ) : null}
           </View>
 
-          <TextInput
-            keyboardType="phone-pad"
-            onChangeText={handleContactNumberChange}
-            placeholder="Enter a phone number we can reach"
-            placeholderTextColor="#94a3b8"
-            style={[
-              styles.input,
-              fieldErrors.contactNumber ? styles.inputError : null,
-            ]}
-            value={contactNumber}
+          {/* D. Calendar (PreferredDateCalendar component) */}
+          <PreferredDateCalendar
+            availabilityMessage={availabilityMessage}
+            errorText={fieldErrors.dateNeeded}
+            helperText="Some dates may already be reserved by other active requests. The backend will always confirm availability when you submit."
+            label="Preferred date"
+            onClearDate={clearSelectedDate}
+            onSelectDate={handleDateSelect}
+            reservedDateMessage={RESERVED_DATE_MESSAGE}
+            selectedDate={dateNeeded}
+            unavailableDates={unavailableDates}
           />
-
-          <Text style={styles.helpText}>
-            Add the best number to call or text about this service request.
-          </Text>
-          {fieldErrors.contactNumber ? (
-            <Text style={styles.fieldErrorText}>{fieldErrors.contactNumber}</Text>
-          ) : null}
         </View>
 
-        <PreferredDateCalendar
-          availabilityMessage={availabilityMessage}
-          errorText={fieldErrors.dateNeeded}
-          helperText="Some dates may already be reserved by other active requests. The backend will always confirm availability when you submit."
-          label="Preferred date"
-          onClearDate={clearSelectedDate}
-          onSelectDate={handleDateSelect}
-          reservedDateMessage={RESERVED_DATE_MESSAGE}
-          selectedDate={dateNeeded}
-          unavailableDates={unavailableDates}
-        />
-      </AppCard>
+        {/* ── submit card ── */}
+        <View style={s.card}>
+          <Text style={s.submitTitle}>Ready to send your request?</Text>
+          <Text style={s.submitSubtitle}>
+            After submission, you will be taken to the request details screen.
+          </Text>
 
-      <View style={styles.submitCard}>
-        <Text style={styles.submitTitle}>Ready to send your request?</Text>
-        <Text style={styles.submitSubtitle}>
-          After submission, you will be taken straight to the request details
-          screen with its current status.
-        </Text>
+          <Pressable
+            disabled={submitting}
+            onPress={handleSubmit}
+            style={({pressed}) => [
+              s.primaryBtn,
+              submitting && s.btnDisabled,
+              pressed && s.pressed,
+            ]}>
+            <Text style={s.primaryBtnText}>
+              {submitting ? 'Submitting...' : 'Submit Request'}
+            </Text>
+          </Pressable>
 
-        <AppButton
-          disabled={submitting}
-          onPress={handleSubmit}
-          style={styles.submitButton}
-          title={
-            submitting ? 'Submitting service request...' : 'Submit request'
-          }
-        />
+          <Pressable
+            onPress={() => navigation.navigate('ServiceRequestList')}
+            style={({pressed}) => [s.secondaryBtn, pressed && s.pressed]}>
+            <Text style={s.secondaryBtnText}>View My Service Requests</Text>
+          </Pressable>
+        </View>
 
-        <AppButton
-          onPress={() => navigation.navigate('ServiceRequestList')}
-          style={styles.secondaryButton}
-          title="View my service requests"
-          variant="outline"
-        />
-      </View>
-    </ScrollView>
+        {/* ── spacer ── */}
+        <View style={s.spacer} />
+
+        {/* ── chatbot shortcut ── */}
+        <Pressable
+          onPress={() => navigation.navigate('Chatbot')}
+          style={({pressed}) => [s.chatRow, pressed && s.pressed]}>
+          <Text style={s.chatText}>Chat with SolBot</Text>
+          <View style={s.chatBtn}>
+            <Text style={s.chatBtnIcon}>{'\uD83E\uDD16'}</Text>
+          </View>
+        </Pressable>
+
+        {/* ── bottom nav ── */}
+        <View style={s.bottomNav}>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('Home')}>
+            <Text style={s.navIcon}>{'\uD83C\uDFE0'}</Text>
+            <Text style={s.navLabel}>Home</Text>
+          </Pressable>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('QuotationList')}>
+            <Text style={s.navIcon}>{'\uD83D\uDCCB'}</Text>
+            <Text style={s.navLabel}>Quotation</Text>
+          </Pressable>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('ServiceRequestList')}>
+            <Text style={s.navIconActive}>{'\u2699\uFE0F'}</Text>
+            <Text style={s.navLabelActive}>Services</Text>
+          </Pressable>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('InspectionRequestList')}>
+            <Text style={s.navIcon}>{'\uD83D\uDCCD'}</Text>
+            <Text style={s.navLabel}>Tracking</Text>
+          </Pressable>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('CustomerSettings')}>
+            <Text style={s.navIcon}>{'\uD83D\uDC64'}</Text>
+            <Text style={s.navLabel}>Profile</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#f5f7fb',
-    padding: 20,
-    paddingBottom: 32,
-  },
-  heroCard: {
-    backgroundColor: '#fef3c7',
-    borderRadius: 24,
+/* ── styles ── */
+
+const s = StyleSheet.create({
+  safe: {flex: 1, backgroundColor: BG},
+  scroll: {paddingHorizontal: 22, paddingTop: 20, paddingBottom: 30},
+  pressed: {opacity: 0.85},
+
+  /* brand */
+  brand: {fontSize: 22, fontWeight: '800', color: NAVY, marginBottom: 10},
+  brandAccent: {color: GOLD},
+
+  /* back */
+  backBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: CARD,
+    alignItems: 'center', justifyContent: 'center',
     marginBottom: 18,
-    padding: 22,
+    shadowColor: '#8a9bbd', shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.10, shadowRadius: 6, elevation: 3,
   },
-  eyebrow: {
-    color: '#b45309',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.6,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  title: {
-    color: '#0f172a',
-    fontSize: 28,
-    fontWeight: '800',
-    marginBottom: 10,
-  },
-  subtitle: {
-    color: '#334155',
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  sectionCard: {
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    color: '#0f172a',
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  sectionSubtitle: {
-    color: '#64748b',
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 18,
-  },
+  backIcon: {fontSize: 28, color: NAVY, fontWeight: '600', marginTop: -2},
+
+  /* title */
+  title: {fontSize: 26, fontWeight: '900', color: NAVY, marginBottom: 4},
+  subtitle: {fontSize: 14, color: MUTED, lineHeight: 20, marginBottom: 22},
+
+  /* banners */
   errorBanner: {
     backgroundColor: '#fef2f2',
-    borderColor: '#fecaca',
     borderRadius: 16,
     borderWidth: 1,
-    marginBottom: 16,
+    borderColor: '#fecaca',
     padding: 14,
+    marginBottom: 16,
   },
+  errorBannerTitle: {color: '#b91c1c', fontSize: 14, fontWeight: '700', marginBottom: 4},
+  errorBannerText: {color: '#991b1b', fontSize: 13, lineHeight: 18},
   successBanner: {
     backgroundColor: '#f0fdf4',
-    borderColor: '#bbf7d0',
     borderRadius: 16,
     borderWidth: 1,
-    marginBottom: 16,
+    borderColor: '#bbf7d0',
     padding: 14,
+    marginBottom: 16,
   },
-  bannerTitle: {
-    color: '#b91c1c',
-    fontSize: 14,
-    fontWeight: '700',
-    marginBottom: 4,
+  successBannerTitle: {color: '#166534', fontSize: 14, fontWeight: '700', marginBottom: 4},
+  successBannerText: {color: '#166534', fontSize: 13, lineHeight: 18},
+
+  /* card */
+  card: {
+    backgroundColor: CARD,
+    borderRadius: 22,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.10,
+    shadowRadius: 14,
+    elevation: 4,
   },
-  bannerText: {
-    color: '#991b1b',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  successTitle: {
-    color: '#166534',
-    fontSize: 14,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  successText: {
-    color: '#166534',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  fieldGroup: {
-    marginBottom: 18,
-  },
+
+  /* field groups */
+  fieldGroup: {marginBottom: 20},
   fieldHeader: {
-    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
   },
-  fieldLabel: {
-    color: '#0f172a',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  requiredText: {
-    color: '#b91c1c',
-    fontSize: 12,
-    fontWeight: '700',
+  fieldLabel: {fontSize: 15, fontWeight: '800', color: NAVY},
+  requiredTag: {
+    fontSize: 11, fontWeight: '700', color: '#dc2626',
     textTransform: 'uppercase',
   },
+
+  /* chips */
   chipGroup: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
     marginBottom: 12,
   },
-  typeChip: {
-    backgroundColor: '#fff7ed',
-    borderColor: '#fdba74',
-    borderRadius: 999,
-    borderWidth: 1,
+  chip: {
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 9,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: DIVIDER,
+    backgroundColor: CARD,
   },
-  typeChipSelected: {
-    backgroundColor: '#f59e0b',
-    borderColor: '#f59e0b',
+  chipSelected: {
+    backgroundColor: NAVY,
+    borderColor: NAVY,
   },
-  typeChipText: {
-    color: '#9a3412',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  typeChipTextSelected: {
-    color: '#ffffff',
-  },
-  pressedChip: {
-    opacity: 0.88,
-  },
+  chipText: {fontSize: 13, fontWeight: '700', color: MUTED},
+  chipTextSelected: {color: CARD},
+
+  /* inputs */
   input: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#cbd5e1',
+    backgroundColor: '#f7f9fc',
+    borderColor: DIVIDER,
     borderRadius: 16,
     borderWidth: 1,
-    color: '#0f172a',
-    fontSize: 16,
+    color: NAVY,
+    fontSize: 15,
     paddingHorizontal: 16,
-    paddingVertical: 15,
+    paddingVertical: 14,
   },
-  inputError: {
-    borderColor: '#ef4444',
+  inputError: {borderColor: '#ef4444'},
+  textArea: {minHeight: 120},
+
+  /* help / error text */
+  helpText: {color: MUTED, fontSize: 13, lineHeight: 18, marginTop: 6},
+  fieldErrorText: {color: '#dc2626', fontSize: 13, lineHeight: 18, marginTop: 6},
+
+  /* submit card */
+  submitTitle: {fontSize: 16, fontWeight: '900', color: NAVY, marginBottom: 4},
+  submitSubtitle: {fontSize: 14, color: MUTED, lineHeight: 20, marginBottom: 16},
+
+  /* buttons */
+  primaryBtn: {
+    backgroundColor: GOLD,
+    borderRadius: 28,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: GOLD,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
   },
-  textArea: {
-    minHeight: 120,
-  },
-  helpText: {
-    color: '#64748b',
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 6,
-  },
-  fieldErrorText: {
-    color: '#dc2626',
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 6,
-  },
-  submitCard: {
-    backgroundColor: '#ffffff',
-    borderColor: '#dbe4f0',
-    borderRadius: 22,
+  primaryBtnText: {fontSize: 16, fontWeight: '900', color: CARD, letterSpacing: 0.3},
+  secondaryBtn: {
+    backgroundColor: CARD,
+    borderRadius: 28,
+    paddingVertical: 16,
+    alignItems: 'center',
     borderWidth: 1,
-    padding: 18,
-    shadowColor: '#0f172a',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    elevation: 3,
+    borderColor: '#dfe6f0',
   },
-  submitTitle: {
-    color: '#0f172a',
-    fontSize: 18,
-    fontWeight: '800',
-    marginBottom: 6,
+  secondaryBtnText: {fontSize: 16, fontWeight: '800', color: NAVY},
+  btnDisabled: {opacity: 0.5},
+
+  /* spacer */
+  spacer: {minHeight: 30},
+
+  /* chat shortcut */
+  chatRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end',
+    marginBottom: 22, marginTop: 4,
   },
-  submitSubtitle: {
-    color: '#64748b',
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 14,
+  chatText: {fontSize: 13, color: MUTED, marginRight: 10},
+  chatBtn: {
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: NAVY,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: NAVY, shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.25, shadowRadius: 8, elevation: 5,
   },
-  submitButton: {
-    minHeight: 56,
+  chatBtnIcon: {fontSize: 22},
+
+  /* bottom nav */
+  bottomNav: {
+    flexDirection: 'row', justifyContent: 'space-around',
+    backgroundColor: CARD, borderRadius: 18, paddingVertical: 10,
+    shadowColor: '#8a9bbd', shadowOffset: {width: 0, height: -2},
+    shadowOpacity: 0.08, shadowRadius: 8, elevation: 4,
   },
-  secondaryButton: {
-    marginTop: 12,
-  },
+  navItem: {alignItems: 'center', paddingHorizontal: 6},
+  navIcon: {fontSize: 20, marginBottom: 2},
+  navIconActive: {fontSize: 20, marginBottom: 2},
+  navLabel: {fontSize: 11, color: MUTED, fontWeight: '600'},
+  navLabelActive: {fontSize: 11, color: NAVY, fontWeight: '700'},
 });

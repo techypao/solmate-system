@@ -1,6 +1,8 @@
 import React, {useState} from 'react';
 import {
   Alert,
+  Pressable,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -8,50 +10,43 @@ import {
   View,
 } from 'react-native';
 
-import {AppButton, AppCard} from '../components';
 import {ApiError} from '../src/services/api';
 import {createQuotation} from '../src/services/quotationApi';
+
+/* ── constants ───────────────────────────────────── */
+
+const NAVY = '#152a4a';
+const GOLD = '#e8a800';
+const MUTED = '#7b8699';
+const BG = '#e0e8f5';
+const CARD = '#ffffff';
+const R = 18;
+
+/* ── helpers (unchanged) ───────────────────────────── */
 
 function sanitizeNumericInput(value: string) {
   const cleanedValue = value.replace(/[^0-9.]/g, '');
   const parts = cleanedValue.split('.');
-
-  if (parts.length <= 1) {
-    return cleanedValue;
-  }
-
+  if (parts.length <= 1) return cleanedValue;
   return `${parts[0]}.${parts.slice(1).join('')}`;
 }
 
 function toNumberOrUndefined(value: string) {
   const trimmedValue = value.trim();
-
-  if (!trimmedValue) {
-    return undefined;
-  }
-
+  if (!trimmedValue) return undefined;
   const parsedValue = Number(trimmedValue);
-
-  if (Number.isNaN(parsedValue)) {
-    return undefined;
-  }
-
+  if (Number.isNaN(parsedValue)) return undefined;
   return parsedValue;
 }
 
 function formatLaravelErrors(error: ApiError) {
-  if (!error.errors) {
-    return error.message;
-  }
-
+  if (!error.errors) return error.message;
   const messages = Object.values(error.errors).flat();
-
-  if (messages.length === 0) {
-    return error.message;
-  }
-
+  if (messages.length === 0) return error.message;
   return messages.join('\n');
 }
+
+/* ── screen ─────────────────────────────────────── */
 
 export default function QuotationScreen({navigation}: any) {
   const [monthlyElectricBill, setMonthlyElectricBill] = useState('');
@@ -67,30 +62,18 @@ export default function QuotationScreen({navigation}: any) {
 
   const handleMonthlyBillChange = (value: string) => {
     setMonthlyElectricBill(sanitizeNumericInput(value));
-
-    if (billError) {
-      setBillError('');
-    }
+    if (billError) setBillError('');
   };
 
   const validateForm = () => {
     const parsedBill = toNumberOrUndefined(monthlyElectricBill);
-
-    if (parsedBill === undefined) {
-      return 'Monthly electric bill is required.';
-    }
-
-    if (parsedBill < 0) {
-      return 'Monthly electric bill must be at least 0.';
-    }
-
+    if (parsedBill === undefined) return 'Monthly electric bill is required.';
+    if (parsedBill < 0) return 'Monthly electric bill must be at least 0.';
     return '';
   };
 
   const handleSubmit = async () => {
-    if (submitting) {
-      return;
-    }
+    if (submitting) return;
 
     const validationMessage = validateForm();
     const parsedMonthlyElectricBill = toNumberOrUndefined(monthlyElectricBill);
@@ -101,8 +84,6 @@ export default function QuotationScreen({navigation}: any) {
       return;
     }
 
-    // Customers only fill in the bill and remarks.
-    // The app automatically sends the default backend values below.
     const payload = {
       monthly_electric_bill: parsedMonthlyElectricBill as number,
       remarks: remarks.trim() || undefined,
@@ -111,10 +92,8 @@ export default function QuotationScreen({navigation}: any) {
     try {
       setSubmitting(true);
       console.log('Submitting payload:', payload);
-
       const response = await createQuotation(payload);
       console.log('Quotation response:', response);
-
       const createdQuotation = response?.data;
 
       if (createdQuotation?.id) {
@@ -133,7 +112,6 @@ export default function QuotationScreen({navigation}: any) {
       resetForm();
     } catch (error) {
       console.log('Quotation error:', error);
-
       if (error instanceof ApiError) {
         Alert.alert('Submit failed', formatLaravelErrors(error));
       } else {
@@ -148,299 +126,312 @@ export default function QuotationScreen({navigation}: any) {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}>
-      <View style={styles.heroCard}>
-        <Text style={styles.eyebrow}>Create initial quotation</Text>
-        <Text style={styles.title}>Quick customer quotation</Text>
-        <Text style={styles.subtitle}>
-          Enter your monthly electric bill and any optional notes. Customers can
-          only create the initial quotation here. The technician handles the
-          final quotation later in the workflow.
-        </Text>
-      </View>
+    <SafeAreaView style={s.safe}>
+      <ScrollView
+        contentContainerStyle={s.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
 
-      <View style={styles.noticeCard}>
-        <Text style={styles.noticeTitle}>Estimate only</Text>
-        <Text style={styles.noticeText}>
-          This initial quotation is a simplified hybrid estimate based on your
-          monthly bill. Final pricing and exact component selection are still
-          subject to site inspection and technician confirmation.
-        </Text>
-      </View>
-
-      <AppCard style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Customer details</Text>
-        <Text style={styles.sectionSubtitle}>
-          Only the customer-facing inputs are shown here. Technical settings are
-          handled automatically in the background.
+        {/* ── brand header ── */}
+        <Text style={s.brand}>
+          Sol<Text style={s.brandAccent}>Mate</Text>
         </Text>
 
-        {billError ? (
-          <View style={styles.errorBanner}>
-            <Text style={styles.errorBannerTitle}>Please fix the form</Text>
-            <Text style={styles.errorBannerText}>{billError}</Text>
-          </View>
-        ) : null}
+        {/* ── back arrow ── */}
+        <Pressable
+          hitSlop={14}
+          onPress={() => navigation.goBack()}
+          style={({pressed}) => [s.backBtn, pressed && s.pressed]}>
+          <Text style={s.backIcon}>{'‹'}</Text>
+        </Pressable>
 
-        <View style={styles.fieldGroup}>
-          <View style={styles.fieldHeader}>
-            <Text style={styles.fieldLabel}>Monthly electric bill</Text>
-            <Text style={styles.requiredText}>Required</Text>
+        {/* ── title ── */}
+        <Text style={s.title}>Initial Quotation</Text>
+        <Text style={s.subtitle}>Input only: Monthly Electricity Bill</Text>
+
+        {/* ── input card ── */}
+        <View style={s.card}>
+          <Text style={s.inputLabel}>{'Monthly Electricity Bill (₱)'}</Text>
+
+          <View style={[s.inputRow, billError ? s.inputRowError : null]}>
+            <TextInput
+              value={monthlyElectricBill}
+              onChangeText={handleMonthlyBillChange}
+              placeholder="e.g., 2,500"
+              placeholderTextColor="#a0aec0"
+              keyboardType="decimal-pad"
+              style={s.input}
+            />
+            <View style={s.pesoBadge}>
+              <Text style={s.pesoText}>{'₱'}</Text>
+            </View>
           </View>
 
-          <TextInput
-            value={monthlyElectricBill}
-            onChangeText={handleMonthlyBillChange}
-            placeholder="Example: 3500"
-            placeholderTextColor="#94a3b8"
-            keyboardType="decimal-pad"
-            style={[styles.input, billError ? styles.inputError : null]}
-          />
-
-          {billError ? <Text style={styles.errorText}>{billError}</Text> : null}
-          {!billError ? (
-            <Text style={styles.helpText}>
-              This value is used to generate your initial quotation estimate.
-            </Text>
-          ) : null}
+          {billError ? (
+            <Text style={s.errorText}>{billError}</Text>
+          ) : (
+            <Text style={s.helpText}>Enter amount from your latest bill.</Text>
+          )}
         </View>
 
-        <View style={styles.fieldGroup}>
-          <View style={styles.fieldHeader}>
-            <Text style={styles.fieldLabel}>Remarks</Text>
-            <Text style={styles.optionalText}>Optional</Text>
-          </View>
-
-          <TextInput
-            value={remarks}
-            onChangeText={setRemarks}
-            placeholder="Add any extra notes or preferences"
-            placeholderTextColor="#94a3b8"
-            multiline={true}
-            numberOfLines={4}
-            style={[styles.input, styles.textArea]}
-          />
-
-          <Text style={styles.helpText}>
-            You can mention preferences, roof conditions, or anything else that
-            may help during review.
-          </Text>
-        </View>
-      </AppCard>
-
-      <View style={styles.infoCard}>
-        <Text style={styles.infoTitle}>Auto-filled by the app</Text>
-        <Text style={styles.infoText}>quotation_type: initial</Text>
-        <Text style={styles.infoText}>other technical values: handled by backend</Text>
-      </View>
-
-      <View style={styles.submitCard}>
-        <Text style={styles.submitTitle}>Ready to create your quotation?</Text>
-        <Text style={styles.submitSubtitle}>
-          Your request will be saved as an initial hybrid quotation for technician review.
-        </Text>
-        <AppButton
-          title={submitting ? 'Submitting quotation...' : 'Create quotation'}
-          onPress={handleSubmit}
+        {/* ── buttons ── */}
+        <Pressable
           disabled={submitting}
-          style={styles.submitButton}
-          textStyle={styles.submitButtonText}
-        />
-      </View>
-    </ScrollView>
+          onPress={handleSubmit}
+          style={({pressed}) => [
+            s.primaryBtn,
+            submitting && s.btnDisabled,
+            pressed && !submitting && s.pressed,
+          ]}>
+          <Text style={s.primaryBtnText}>
+            {submitting ? 'Generating...' : 'Generate Initial Quotation & Roi'}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          disabled={submitting}
+          onPress={resetForm}
+          style={({pressed}) => [s.secondaryBtn, pressed && s.pressed]}>
+          <Text style={s.secondaryBtnText}>Clear</Text>
+        </Pressable>
+
+        <Text style={s.footerHint}>No other required inputs.</Text>
+
+        {/* ── spacer before bottom area ── */}
+        <View style={s.spacer} />
+
+        {/* ── chatbot shortcut ── */}
+        <Pressable
+          onPress={() => navigation.navigate('Chatbot')}
+          style={({pressed}) => [s.chatRow, pressed && s.pressed]}>
+          <Text style={s.chatText}>Chat with SolBot</Text>
+          <View style={s.chatBtn}>
+            <Text style={s.chatBtnIcon}>{'🤖'}</Text>
+          </View>
+        </Pressable>
+
+        {/* ── bottom nav ── */}
+        <View style={s.bottomNav}>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('Home')}>
+            <Text style={s.navIcon}>{'🏠'}</Text>
+            <Text style={s.navLabel}>Home</Text>
+          </Pressable>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('QuotationList')}>
+            <Text style={s.navIconActive}>{'📋'}</Text>
+            <Text style={s.navLabelActive}>Quotation</Text>
+          </Pressable>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('ServiceRequestList')}>
+            <Text style={s.navIcon}>{'⚙️'}</Text>
+            <Text style={s.navLabel}>Services</Text>
+          </Pressable>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('InspectionRequestList')}>
+            <Text style={s.navIcon}>{'📍'}</Text>
+            <Text style={s.navLabel}>Tracking</Text>
+          </Pressable>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('CustomerSettings')}>
+            <Text style={s.navIcon}>{'👤'}</Text>
+            <Text style={s.navLabel}>Profile</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#f5f7fb',
-    padding: 20,
-    paddingBottom: 32,
-  },
-  heroCard: {
-    backgroundColor: '#dbeafe',
-    borderRadius: 24,
-    marginBottom: 18,
-    padding: 22,
-  },
-  noticeCard: {
-    backgroundColor: '#fff7ed',
-    borderColor: '#fed7aa',
+/* ── styles ──────────────────────────────────────── */
+
+const s = StyleSheet.create({
+  safe: {flex: 1, backgroundColor: BG},
+  scroll: {paddingHorizontal: 22, paddingTop: 20, paddingBottom: 30},
+  pressed: {opacity: 0.85},
+
+  /* brand */
+  brand: {fontSize: 22, fontWeight: '800', color: NAVY, marginBottom: 10},
+  brandAccent: {color: GOLD},
+
+  /* back */
+  backBtn: {
+    width: 40,
+    height: 40,
     borderRadius: 20,
-    borderWidth: 1,
-    marginBottom: 18,
-    padding: 18,
-  },
-  noticeTitle: {
-    color: '#9a3412',
-    fontSize: 16,
-    fontWeight: '800',
-    marginBottom: 6,
-  },
-  noticeText: {
-    color: '#7c2d12',
-    fontSize: 14,
-    lineHeight: 21,
-  },
-  eyebrow: {
-    color: '#1d4ed8',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.6,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  title: {
-    color: '#0f172a',
-    fontSize: 28,
-    fontWeight: '800',
-    marginBottom: 10,
-  },
-  subtitle: {
-    color: '#334155',
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  sectionCard: {
-    marginBottom: 16,
-  },
-  errorBanner: {
-    backgroundColor: '#fef2f2',
-    borderColor: '#fecaca',
-    borderRadius: 16,
-    borderWidth: 1,
-    marginBottom: 16,
-    padding: 14,
-  },
-  errorBannerTitle: {
-    color: '#b91c1c',
-    fontSize: 14,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  errorBannerText: {
-    color: '#991b1b',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  sectionTitle: {
-    color: '#0f172a',
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  sectionSubtitle: {
-    color: '#64748b',
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 18,
-  },
-  fieldGroup: {
-    marginBottom: 18,
-  },
-  fieldHeader: {
+    backgroundColor: CARD,
     alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  fieldLabel: {
-    color: '#0f172a',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  requiredText: {
-    color: '#b91c1c',
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  optionalText: {
-    color: '#64748b',
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  input: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#cbd5e1',
-    borderRadius: 16,
-    borderWidth: 1,
-    color: '#0f172a',
-    fontSize: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 15,
-  },
-  inputError: {
-    borderColor: '#ef4444',
-  },
-  textArea: {
-    minHeight: 110,
-    textAlignVertical: 'top',
-  },
-  helpText: {
-    color: '#64748b',
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 6,
-  },
-  errorText: {
-    color: '#dc2626',
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 6,
-  },
-  infoCard: {
-    backgroundColor: '#eff6ff',
-    borderRadius: 18,
-    marginBottom: 14,
-    padding: 16,
-  },
-  infoTitle: {
-    color: '#1d4ed8',
-    fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  infoText: {
-    color: '#334155',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  submitCard: {
-    backgroundColor: '#ffffff',
-    borderColor: '#dbe4f0',
-    borderRadius: 22,
-    borderWidth: 1,
-    padding: 18,
-    shadowColor: '#0f172a',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
+    justifyContent: 'center',
+    marginBottom: 18,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.10,
+    shadowRadius: 6,
     elevation: 3,
   },
-  submitTitle: {
-    color: '#0f172a',
-    fontSize: 18,
-    fontWeight: '800',
-    marginBottom: 6,
+  backIcon: {fontSize: 28, color: NAVY, fontWeight: '600', marginTop: -2},
+
+  /* title */
+  title: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: NAVY,
+    marginBottom: 4,
   },
-  submitSubtitle: {
-    color: '#64748b',
+  subtitle: {
     fontSize: 14,
-    lineHeight: 20,
+    color: MUTED,
+    marginBottom: 22,
+  },
+
+  /* input card */
+  card: {
+    backgroundColor: CARD,
+    borderRadius: 22,
+    padding: 22,
+    marginBottom: 22,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.10,
+    shadowRadius: 14,
+    elevation: 4,
+  },
+  inputLabel: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: NAVY,
     marginBottom: 14,
   },
-  submitButton: {
-    minHeight: 56,
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f4f7fb',
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: '#dfe6f0',
+    paddingHorizontal: 16,
+    paddingVertical: 4,
   },
-  submitButtonText: {
-    fontSize: 17,
+  inputRowError: {
+    borderColor: '#ef4444',
   },
+  input: {
+    flex: 1,
+    fontSize: 15,
+    color: NAVY,
+    paddingVertical: 12,
+  },
+  pesoBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: NAVY,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  pesoText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: NAVY,
+  },
+  helpText: {
+    fontSize: 12,
+    color: MUTED,
+    marginTop: 10,
+    lineHeight: 17,
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#dc2626',
+    marginTop: 10,
+    lineHeight: 17,
+  },
+
+  /* primary button */
+  primaryBtn: {
+    backgroundColor: GOLD,
+    borderRadius: 28,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: GOLD,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  primaryBtnText: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: CARD,
+    letterSpacing: 0.3,
+  },
+  btnDisabled: {opacity: 0.55},
+
+  /* secondary button */
+  secondaryBtn: {
+    backgroundColor: CARD,
+    borderRadius: 28,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#dfe6f0',
+  },
+  secondaryBtnText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: NAVY,
+  },
+
+  /* footer hint */
+  footerHint: {
+    fontSize: 12,
+    color: MUTED,
+    fontStyle: 'italic',
+    marginBottom: 8,
+  },
+
+  /* spacer */
+  spacer: {flex: 1, minHeight: 60},
+
+  /* chat shortcut */
+  chatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginBottom: 22,
+    marginTop: 4,
+  },
+  chatText: {fontSize: 13, color: MUTED, marginRight: 10},
+  chatBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: NAVY,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: NAVY,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  chatBtnIcon: {fontSize: 22},
+
+  /* bottom nav */
+  bottomNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: CARD,
+    borderRadius: R,
+    paddingVertical: 10,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: -2},
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  navItem: {alignItems: 'center', paddingHorizontal: 6},
+  navIcon: {fontSize: 20, marginBottom: 2},
+  navIconActive: {fontSize: 20, marginBottom: 2},
+  navLabel: {fontSize: 11, color: MUTED, fontWeight: '600'},
+  navLabelActive: {fontSize: 11, color: NAVY, fontWeight: '700'},
 });

@@ -1,47 +1,45 @@
-import React, { useCallback, useState } from 'react';
+import React, {useCallback, useState} from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Pressable,
   RefreshControl,
+  SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import {useFocusEffect} from '@react-navigation/native';
 
-import { AppButton } from '../components';
-import { ApiError } from '../src/services/api';
+import {ApiError} from '../src/services/api';
 import {
   getServiceRequests,
   getTechnicianServiceRequests,
   ServiceRequest,
 } from '../src/services/serviceRequestApi';
 
+/* ── design tokens ── */
+
+const NAVY = '#152a4a';
+const GOLD = '#e8a800';
+const MUTED = '#7b8699';
+const BG = '#e0e8f5';
+const CARD = '#ffffff';
+const DIVIDER = '#edf1f7';
+
+/* ── helpers (preserved) ── */
+
 function formatDate(value?: string | null, fallback = 'Not specified') {
-  if (!value) {
-    return fallback;
-  }
-
+  if (!value) return fallback;
   const parsedDate = new Date(value);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return value;
-  }
-
+  if (Number.isNaN(parsedDate.getTime())) return value;
   return parsedDate.toLocaleDateString();
 }
 
 function formatDateTime(value?: string) {
-  if (!value) {
-    return 'Not available';
-  }
-
+  if (!value) return 'Not available';
   const parsedDate = new Date(value);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return value;
-  }
-
+  if (Number.isNaN(parsedDate.getTime())) return value;
   return parsedDate.toLocaleString();
 }
 
@@ -64,36 +62,22 @@ function getFriendlyErrorMessage(error: unknown) {
     if (error.status === 401) {
       return 'Your session has expired. Please log in again.';
     }
-
     return error.message;
   }
-
   return 'Could not load your service requests right now.';
 }
 
 function getStatusBadgeStyle(status?: string | null) {
   switch ((status || 'pending').toLowerCase()) {
     case 'assigned':
-      return {
-        backgroundColor: '#fef3c7',
-        textColor: '#b45309',
-      };
+      return {backgroundColor: '#fef3c7', textColor: '#b45309'};
     case 'in_progress':
-      return {
-        backgroundColor: '#dbeafe',
-        textColor: '#1d4ed8',
-      };
+      return {backgroundColor: '#dbeafe', textColor: '#1d4ed8'};
     case 'completed':
-      return {
-        backgroundColor: '#dcfce7',
-        textColor: '#166534',
-      };
+      return {backgroundColor: '#dcfce7', textColor: '#166534'};
     case 'pending':
     default:
-      return {
-        backgroundColor: '#e2e8f0',
-        textColor: '#475569',
-      };
+      return {backgroundColor: '#e8ecf4', textColor: MUTED};
   }
 }
 
@@ -105,35 +89,39 @@ function normalizeServiceRequest(item: ServiceRequest): ServiceRequest {
   };
 }
 
-export default function ServiceRequestListScreen({ navigation, route }: any) {
+/* ════════════════════════════════════════════
+   Main screen
+   ════════════════════════════════════════════ */
+
+export default function ServiceRequestListScreen({navigation, route}: any) {
   const mode = route?.params?.mode === 'technician' ? 'technician' : 'customer';
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const loadServiceRequests = useCallback(async (showLoadingState = false) => {
-    try {
-      if (showLoadingState) {
-        setLoading(true);
+  const loadServiceRequests = useCallback(
+    async (showLoadingState = false) => {
+      try {
+        if (showLoadingState) setLoading(true);
+        setErrorMessage('');
+        const data =
+          mode === 'technician'
+            ? await getTechnicianServiceRequests()
+            : await getServiceRequests();
+        setServiceRequests(
+          Array.isArray(data) ? data.map(normalizeServiceRequest) : [],
+        );
+      } catch (error) {
+        setServiceRequests([]);
+        setErrorMessage(getFriendlyErrorMessage(error));
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
-
-      setErrorMessage('');
-      const data =
-        mode === 'technician'
-          ? await getTechnicianServiceRequests()
-          : await getServiceRequests();
-      setServiceRequests(
-        Array.isArray(data) ? data.map(normalizeServiceRequest) : [],
-      );
-    } catch (error) {
-      setServiceRequests([]);
-      setErrorMessage(getFriendlyErrorMessage(error));
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [mode]);
+    },
+    [mode],
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -146,54 +134,58 @@ export default function ServiceRequestListScreen({ navigation, route }: any) {
     loadServiceRequests(false);
   };
 
-  const renderServiceRequest = ({ item }: { item: ServiceRequest }) => {
+  /* ── card renderer ── */
+
+  const renderServiceRequest = ({item}: {item: ServiceRequest}) => {
     const statusStyle = getStatusBadgeStyle(item.status);
     const customerName = item.customer?.name || 'Customer not available';
     const awaitingAdminReview =
       !!item.technician_marked_done_at && item.status !== 'completed';
 
     return (
-      <View style={styles.card}>
-        <View style={styles.cardAccent} />
+      <View style={s.card}>
+        {/* accent bar */}
+        <View style={s.cardAccent} />
 
-        <View style={styles.cardHeader}>
-          <View style={styles.cardTitleWrap}>
-            <Text style={styles.cardEyebrow}>Service request #{item.id}</Text>
-            <Text style={styles.cardTitle}>{item.request_type}</Text>
+        {/* header row: title + status */}
+        <View style={s.cardHeader}>
+          <View style={s.cardTitleWrap}>
+            <Text style={s.cardEyebrow}>Service request #{item.id}</Text>
+            <Text style={s.cardTitle}>{item.request_type}</Text>
             {mode === 'technician' ? (
-              <Text style={styles.cardSubTitle}>{customerName}</Text>
+              <Text style={s.cardSubTitle}>{customerName}</Text>
             ) : null}
           </View>
 
-          <View style={styles.statusWrap}>
-            <Text style={styles.statusLabel}>Status</Text>
+          <View style={s.statusWrap}>
+            <Text style={s.statusLabel}>Status</Text>
             <View
               style={[
-                styles.statusBadge,
-                { backgroundColor: statusStyle.backgroundColor },
-              ]}
-            >
+                s.statusBadge,
+                {backgroundColor: statusStyle.backgroundColor},
+              ]}>
               <Text
                 style={[
-                  styles.statusBadgeText,
-                  { color: statusStyle.textColor },
-                ]}
-              >
+                  s.statusBadgeText,
+                  {color: statusStyle.textColor},
+                ]}>
                 {formatStatusLabel(item.status)}
               </Text>
             </View>
           </View>
         </View>
 
-        <View style={styles.detailsCard}>
-          <Text style={styles.detailsLabel}>Details</Text>
-          <Text style={styles.detailsText}>{item.details}</Text>
+        {/* details */}
+        <View style={s.detailsCard}>
+          <Text style={s.detailsLabel}>Details</Text>
+          <Text style={s.detailsText}>{item.details}</Text>
         </View>
 
+        {/* admin review notice */}
         {awaitingAdminReview ? (
-          <View style={styles.reviewCard}>
-            <Text style={styles.reviewTitle}>Awaiting admin confirmation</Text>
-            <Text style={styles.reviewText}>
+          <View style={s.reviewCard}>
+            <Text style={s.reviewTitle}>Awaiting admin confirmation</Text>
+            <Text style={s.reviewText}>
               {mode === 'technician'
                 ? 'You already marked this service as done. The admin will confirm the final official status.'
                 : 'The technician reported the work as done. The admin still needs to confirm the final official status.'}
@@ -201,30 +193,24 @@ export default function ServiceRequestListScreen({ navigation, route }: any) {
           </View>
         ) : null}
 
-        <View style={styles.metaGrid}>
-          <View style={styles.metaCard}>
-            <Text style={styles.metaLabel}>Date needed</Text>
-            <Text style={styles.metaValue}>
+        {/* meta grid */}
+        <View style={s.metaGrid}>
+          <View style={s.metaCard}>
+            <Text style={s.metaLabel}>Date needed</Text>
+            <Text style={s.metaValue}>
               {formatDate(item.date_needed, 'Not specified')}
             </Text>
           </View>
-
-          <View style={styles.metaCard}>
-            <Text style={styles.metaLabel}>Submitted</Text>
-            <Text style={styles.metaValue}>
+          <View style={s.metaCard}>
+            <Text style={s.metaLabel}>Submitted</Text>
+            <Text style={s.metaValue}>
               {formatDateTime(item.created_at)}
             </Text>
           </View>
         </View>
 
-        <AppButton
-          title={
-            mode === 'technician'
-              ? 'Open service request'
-              : 'View request details'
-          }
-          variant="outline"
-          style={styles.cardButton}
+        {/* action button */}
+        <Pressable
           onPress={() =>
             navigation.navigate(
               mode === 'technician'
@@ -237,46 +223,74 @@ export default function ServiceRequestListScreen({ navigation, route }: any) {
               },
             )
           }
-        />
+          style={({pressed}) => [s.cardBtn, pressed && s.pressed]}>
+          <Text style={s.cardBtnText}>
+            {mode === 'technician'
+              ? 'Open Service Request'
+              : 'View Request Details'}
+          </Text>
+        </Pressable>
       </View>
     );
   };
 
+  /* ── loading state ── */
+
   if (loading) {
     return (
-      <View style={styles.centeredContainer}>
-        <ActivityIndicator color="#d97706" size="large" />
-        <Text style={styles.loadingText}>Loading your service requests...</Text>
-      </View>
+      <SafeAreaView style={s.safe}>
+        <View style={s.centered}>
+          <ActivityIndicator color={GOLD} size="large" />
+          <Text style={s.loadingText}>Loading your service requests…</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
+  /* ── main render ── */
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
-        {mode === 'technician' ? 'Service Requests' : 'My Service Requests'}
-      </Text>
-      <Text style={styles.subtitle}>
-        {mode === 'technician'
-          ? 'Review service requests assigned to your technician account and pull down to refresh their latest status.'
-          : 'Review your submitted service requests and pull down to refresh their latest status.'}
-      </Text>
+    <SafeAreaView style={s.safe}>
+      <View style={s.topBar}>
+        {/* brand */}
+        <Text style={s.brand}>
+          Sol<Text style={s.brandAccent}>Mate</Text>
+        </Text>
+
+        {/* back */}
+        <Pressable
+          hitSlop={14}
+          onPress={() => navigation.goBack()}
+          style={({pressed}) => [s.backBtn, pressed && s.pressed]}>
+          <Text style={s.backIcon}>{'\u2039'}</Text>
+        </Pressable>
+
+        {/* title block */}
+        <Text style={s.title}>
+          {mode === 'technician' ? 'Service Requests' : 'My Service Requests'}
+        </Text>
+        <Text style={s.subtitle}>
+          {mode === 'technician'
+            ? 'Review service requests assigned to your technician account and pull down to refresh their latest status.'
+            : 'Review your submitted service requests and pull down to refresh their latest status.'}
+        </Text>
+      </View>
 
       {errorMessage ? (
-        <View style={styles.errorCard}>
-          <Text style={styles.errorTitle}>Something went wrong</Text>
-          <Text style={styles.errorText}>{errorMessage}</Text>
-          <AppButton
+        <View style={s.errorCard}>
+          <Text style={s.errorTitle}>Something went wrong</Text>
+          <Text style={s.errorText}>{errorMessage}</Text>
+          <Pressable
             onPress={() => loadServiceRequests(true)}
-            style={styles.retryButton}
-            title="Try again"
-          />
+            style={({pressed}) => [s.retryBtn, pressed && s.pressed]}>
+            <Text style={s.retryBtnText}>Try Again</Text>
+          </Pressable>
         </View>
       ) : (
         <FlatList
           contentContainerStyle={[
-            styles.listContent,
-            serviceRequests.length === 0 ? styles.emptyListContent : null,
+            s.listContent,
+            serviceRequests.length === 0 ? s.emptyListContent : null,
           ]}
           data={serviceRequests}
           keyExtractor={item => item.id.toString()}
@@ -285,151 +299,205 @@ export default function ServiceRequestListScreen({ navigation, route }: any) {
             <RefreshControl
               onRefresh={handleRefresh}
               refreshing={refreshing}
-              tintColor="#d97706"
+              tintColor={GOLD}
             />
           }
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <View style={styles.emptyIcon} />
-              <Text style={styles.emptyTitle}>
+            <View style={s.emptyState}>
+              <View style={s.emptyIcon}>
+                <Text style={s.emptyIconText}>{'\uD83D\uDCCB'}</Text>
+              </View>
+              <Text style={s.emptyTitle}>
                 {mode === 'technician'
                   ? 'No assigned service requests yet.'
                   : 'No service requests yet.'}
               </Text>
-              <Text style={styles.emptyText}>
+              <Text style={s.emptyText}>
                 {mode === 'technician'
                   ? 'Assigned service requests will appear here once they are linked to your technician account.'
                   : 'Submit your first request from the customer dashboard and it will appear here.'}
               </Text>
               {mode === 'customer' ? (
-                <AppButton
+                <Pressable
                   onPress={() => navigation.navigate('ServiceRequest')}
-                  style={styles.emptyButton}
-                  title="Request service"
-                  variant="outline"
-                />
+                  style={({pressed}) => [s.emptyBtn, pressed && s.pressed]}>
+                  <Text style={s.emptyBtnText}>Request Service</Text>
+                </Pressable>
               ) : null}
             </View>
           }
         />
       )}
-    </View>
+
+      {/* ── bottom nav ── */}
+      <View style={s.bottomNav}>
+        <Pressable style={s.navItem} onPress={() => navigation.navigate('Home')}>
+          <Text style={s.navIcon}>{'\uD83C\uDFE0'}</Text>
+          <Text style={s.navLabel}>Home</Text>
+        </Pressable>
+        <Pressable style={s.navItem} onPress={() => navigation.navigate('QuotationList')}>
+          <Text style={s.navIcon}>{'\uD83D\uDCCB'}</Text>
+          <Text style={s.navLabel}>Quotation</Text>
+        </Pressable>
+        <Pressable style={s.navItem} onPress={() => navigation.navigate('ServiceRequestList')}>
+          <Text style={s.navIconActive}>{'\u2699\uFE0F'}</Text>
+          <Text style={s.navLabelActive}>Services</Text>
+        </Pressable>
+        <Pressable style={s.navItem} onPress={() => navigation.navigate('InspectionRequestList')}>
+          <Text style={s.navIcon}>{'\uD83D\uDCCD'}</Text>
+          <Text style={s.navLabel}>Tracking</Text>
+        </Pressable>
+        <Pressable style={s.navItem} onPress={() => navigation.navigate('CustomerSettings')}>
+          <Text style={s.navIcon}>{'\uD83D\uDC64'}</Text>
+          <Text style={s.navLabel}>Profile</Text>
+        </Pressable>
+      </View>
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#f5f7fb',
-    flex: 1,
-    padding: 20,
+/* ── styles ── */
+
+const s = StyleSheet.create({
+  safe: {flex: 1, backgroundColor: BG},
+  pressed: {opacity: 0.85},
+
+  /* top bar */
+  topBar: {paddingHorizontal: 22, paddingTop: 20},
+
+  /* brand */
+  brand: {fontSize: 22, fontWeight: '800', color: NAVY, marginBottom: 10},
+  brandAccent: {color: GOLD},
+
+  /* back */
+  backBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: CARD,
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 18,
+    shadowColor: '#8a9bbd', shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.10, shadowRadius: 6, elevation: 3,
   },
-  centeredContainer: {
-    alignItems: 'center',
-    backgroundColor: '#f5f7fb',
+  backIcon: {fontSize: 28, color: NAVY, fontWeight: '600', marginTop: -2},
+
+  /* title */
+  title: {fontSize: 26, fontWeight: '900', color: NAVY, marginBottom: 4},
+  subtitle: {fontSize: 14, color: MUTED, lineHeight: 20, marginBottom: 16},
+
+  /* centered / loading */
+  centered: {
     flex: 1,
+    alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
   },
-  title: {
-    color: '#0f172a',
-    fontSize: 28,
-    fontWeight: '800',
-    marginBottom: 8,
-  },
-  subtitle: {
-    color: '#64748b',
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 18,
-  },
   loadingText: {
-    color: '#475569',
+    color: MUTED,
     fontSize: 14,
-    marginTop: 12,
+    marginTop: 14,
   },
+
+  /* error */
   errorCard: {
-    backgroundColor: '#ffffff',
-    borderColor: '#fecaca',
+    backgroundColor: CARD,
     borderRadius: 22,
     borderWidth: 1,
-    padding: 18,
+    borderColor: '#fecaca',
+    marginHorizontal: 22,
+    padding: 20,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.10,
+    shadowRadius: 14,
+    elevation: 4,
   },
   errorTitle: {
-    color: '#b91c1c',
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 8,
+    color: '#b91c1c', fontSize: 18, fontWeight: '800', marginBottom: 8,
   },
   errorText: {
-    color: '#991b1b',
-    fontSize: 14,
-    lineHeight: 20,
+    color: '#991b1b', fontSize: 14, lineHeight: 20,
   },
-  retryButton: {
+  retryBtn: {
     marginTop: 16,
+    backgroundColor: GOLD,
+    borderRadius: 28,
+    paddingVertical: 14,
+    alignItems: 'center',
   },
+  retryBtnText: {
+    fontSize: 15, fontWeight: '900', color: CARD, letterSpacing: 0.3,
+  },
+
+  /* list */
   listContent: {
-    paddingBottom: 24,
+    paddingHorizontal: 22,
+    paddingBottom: 12,
   },
   emptyListContent: {
     flexGrow: 1,
   },
+
+  /* empty state */
   emptyState: {
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
-    borderRadius: 24,
-    borderWidth: 1,
+    backgroundColor: CARD,
+    borderRadius: 22,
     marginTop: 8,
     padding: 28,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.10,
+    shadowRadius: 14,
+    elevation: 4,
   },
   emptyIcon: {
-    backgroundColor: '#fef3c7',
+    backgroundColor: '#f0edff',
     borderRadius: 999,
     height: 56,
-    marginBottom: 16,
     width: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
+  emptyIconText: {fontSize: 26},
   emptyTitle: {
-    color: '#0f172a',
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 8,
+    color: NAVY, fontSize: 18, fontWeight: '800', marginBottom: 8,
   },
   emptyText: {
-    color: '#64748b',
-    fontSize: 14,
-    lineHeight: 21,
-    textAlign: 'center',
+    color: MUTED, fontSize: 14, lineHeight: 21, textAlign: 'center',
   },
-  emptyButton: {
-    marginTop: 16,
+  emptyBtn: {
+    marginTop: 18,
     width: '100%',
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
-    borderRadius: 22,
+    backgroundColor: CARD,
+    borderRadius: 28,
+    paddingVertical: 14,
+    alignItems: 'center',
     borderWidth: 1,
+    borderColor: DIVIDER,
+  },
+  emptyBtnText: {fontSize: 15, fontWeight: '800', color: NAVY},
+
+  /* ── card ── */
+  card: {
+    backgroundColor: CARD,
+    borderRadius: 22,
     marginBottom: 14,
     overflow: 'hidden',
     padding: 18,
-    shadowColor: '#0f172a',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 2,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.10,
+    shadowRadius: 14,
+    elevation: 4,
   },
   cardAccent: {
-    backgroundColor: '#fed7aa',
+    backgroundColor: GOLD,
     borderRadius: 999,
-    height: 8,
+    height: 6,
     marginBottom: 14,
-    width: 64,
+    width: 48,
   },
   cardHeader: {
     alignItems: 'flex-start',
@@ -439,10 +507,10 @@ const styles = StyleSheet.create({
   },
   cardTitleWrap: {
     flex: 1,
-    paddingRight: 16,
+    paddingRight: 14,
   },
   cardEyebrow: {
-    color: '#94a3b8',
+    color: MUTED,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.4,
@@ -450,13 +518,13 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   cardTitle: {
-    color: '#0f172a',
+    color: NAVY,
     fontSize: 18,
     fontWeight: '800',
     lineHeight: 24,
   },
   cardSubTitle: {
-    color: '#64748b',
+    color: MUTED,
     fontSize: 13,
     fontWeight: '600',
     lineHeight: 18,
@@ -467,7 +535,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   statusLabel: {
-    color: '#94a3b8',
+    color: MUTED,
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.4,
@@ -487,24 +555,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   detailsCard: {
-    backgroundColor: '#fffaf0',
-    borderColor: '#ffedd5',
+    backgroundColor: '#f7f9fc',
+    borderColor: DIVIDER,
     borderRadius: 16,
     borderWidth: 1,
     marginBottom: 14,
     padding: 14,
   },
   detailsLabel: {
-    color: '#9a3412',
+    color: NAVY,
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 6,
     textTransform: 'uppercase',
   },
   detailsText: {
-    color: '#334155',
+    color: NAVY,
     fontSize: 14,
     lineHeight: 21,
+    opacity: 0.85,
   },
   reviewCard: {
     backgroundColor: '#fff7ed',
@@ -527,28 +596,60 @@ const styles = StyleSheet.create({
   },
   metaGrid: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
+    marginBottom: 14,
   },
   metaCard: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 16,
+    backgroundColor: '#f7f9fc',
+    borderRadius: 14,
     flex: 1,
     padding: 14,
   },
   metaLabel: {
-    color: '#64748b',
-    fontSize: 12,
+    color: MUTED,
+    fontSize: 11,
     fontWeight: '700',
     marginBottom: 6,
     textTransform: 'uppercase',
   },
   metaValue: {
-    color: '#0f172a',
+    color: NAVY,
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 20,
+  },
+  cardBtn: {
+    backgroundColor: CARD,
+    borderRadius: 28,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: DIVIDER,
+  },
+  cardBtnText: {
     fontSize: 15,
-    fontWeight: '600',
-    lineHeight: 21,
+    fontWeight: '800',
+    color: NAVY,
   },
-  cardButton: {
-    marginTop: 14,
+
+  /* ── bottom nav ── */
+  bottomNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: CARD,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    paddingVertical: 10,
+    paddingBottom: 14,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: -2},
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
   },
+  navItem: {alignItems: 'center', paddingHorizontal: 6},
+  navIcon: {fontSize: 20, marginBottom: 2},
+  navIconActive: {fontSize: 20, marginBottom: 2},
+  navLabel: {fontSize: 11, color: MUTED, fontWeight: '600'},
+  navLabelActive: {fontSize: 11, color: NAVY, fontWeight: '700'},
 });

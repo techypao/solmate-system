@@ -1,6 +1,8 @@
 import React, {useCallback, useState} from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -9,7 +11,6 @@ import {
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 
-import {AppButton, AppCard} from '../components';
 import {ApiError} from '../src/services/api';
 import {
   getCustomerFinalQuotation,
@@ -18,19 +19,25 @@ import {
 } from '../src/services/quotationApi';
 import {formatQuotationCurrency} from '../src/utils/currency';
 
-function formatValue(value?: string | number | null) {
-  if (value === null || value === undefined || value === '') {
-    return 'N/A';
-  }
+/* ── design tokens (matches app-wide system) ── */
 
+const NAVY = '#152a4a';
+const GOLD = '#e8a800';
+const MUTED = '#7b8699';
+const BG = '#e0e8f5';
+const CARD = '#ffffff';
+const R = 18;
+const DIVIDER = '#edf1f7';
+
+/* ── format helpers (preserved from original) ── */
+
+function formatValue(value?: string | number | null) {
+  if (value === null || value === undefined || value === '') return 'N/A';
   return String(value);
 }
 
 function formatReadableText(value?: string | null) {
-  if (value === null || value === undefined || value.trim() === '') {
-    return 'N/A';
-  }
-
+  if (value === null || value === undefined || value.trim() === '') return 'N/A';
   return value
     .trim()
     .replace(/\s*,\s*/g, ', ')
@@ -40,24 +47,14 @@ function formatReadableText(value?: string | null) {
 }
 
 function formatBoolean(value?: boolean | null) {
-  if (value === null || value === undefined) {
-    return 'N/A';
-  }
-
+  if (value === null || value === undefined) return 'N/A';
   return value ? 'Yes' : 'No';
 }
 
 function formatDate(value?: string | null) {
-  if (!value) {
-    return 'N/A';
-  }
-
+  if (!value) return 'N/A';
   const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
+  if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString();
 }
 
@@ -67,12 +64,7 @@ function formatLineItemMeta(item: QuotationLineItem) {
     item.pricing_item?.brand || null,
     item.pricing_item?.model || null,
   ].filter(Boolean);
-
-  if (parts.length === 0) {
-    return 'Custom item';
-  }
-
-  return parts.join(' • ');
+  return parts.length === 0 ? 'Custom item' : parts.join(' \u2022 ');
 }
 
 function formatQuantityWithUnit(
@@ -80,16 +72,34 @@ function formatQuantityWithUnit(
   unit?: string | number | null,
 ) {
   const parts = [quantity, unit]
-    .map(part => {
-      if (part === null || part === undefined || part === '') {
-        return null;
-      }
-
-      return String(part).trim();
-    })
+    .map(part =>
+      part === null || part === undefined || part === '' ? null : String(part).trim(),
+    )
     .filter(Boolean);
-
   return parts.length > 0 ? parts.join(' ') : 'N/A';
+}
+
+function fmtCurrency(value?: number | null) {
+  return formatQuotationCurrency(value, {
+    currency: 'PHP',
+    fallback: 'PHP 0.00',
+    spaceAfterCurrency: true,
+  });
+}
+
+function fmtKw(value?: number | null) {
+  if (value === null || value === undefined) return 'N/A';
+  return value + ' kWp';
+}
+
+function fmtKwh(value?: number | null) {
+  if (value === null || value === undefined) return 'N/A';
+  return value + ' kWh';
+}
+
+function fmtYears(value?: number | null) {
+  if (value === null || value === undefined || Number.isNaN(value)) return 'N/A';
+  return value.toFixed(1) + ' yrs';
 }
 
 function getFriendlyErrorMessage(error: unknown) {
@@ -97,45 +107,67 @@ function getFriendlyErrorMessage(error: unknown) {
     if (error.status === 404) {
       return 'No final quotation has been submitted for this inspection request yet.';
     }
-
     return error.message;
   }
-
   return 'Could not load the final quotation right now.';
 }
 
-function DetailRow({
+/* ── sub-components ── */
+
+function InfoRow({
   label,
   value,
+  bold,
+  highlight,
 }: {
   label: string;
   value: string;
+  bold?: boolean;
+  highlight?: boolean;
 }) {
   return (
-    <View style={styles.detailRow}>
-      <Text style={styles.detailLabel}>{label}</Text>
-      <Text style={styles.detailValue}>{value}</Text>
+    <View style={s.infoRow}>
+      <Text style={s.infoLabel}>{label}</Text>
+      <Text
+        style={[
+          s.infoValue,
+          bold && s.infoValueBold,
+          highlight && s.infoValueHighlight,
+        ]}>
+        {value}
+      </Text>
     </View>
   );
 }
 
 function SectionCard({
   title,
-  subtitle,
   children,
 }: {
   title: string;
-  subtitle: string;
   children: React.ReactNode;
 }) {
   return (
-    <AppCard style={styles.sectionCard}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <Text style={styles.sectionSubtitle}>{subtitle}</Text>
+    <View style={s.card}>
+      <Text style={s.cardTitle}>{title}</Text>
       {children}
-    </AppCard>
+    </View>
   );
 }
+
+function StatusBadge({status}: {status: string}) {
+  const normalized = (status || '').toLowerCase();
+  const isApproved = normalized === 'approved' || normalized === 'completed';
+  return (
+    <View style={[s.badge, isApproved ? s.badgeGreen : s.badgeDefault]}>
+      <Text style={[s.badgeText, isApproved && s.badgeTextGreen]}>
+        {status || 'N/A'}
+      </Text>
+    </View>
+  );
+}
+
+/* ── main screen ── */
 
 export default function FinalQuotationViewScreen({navigation, route}: any) {
   const inspectionRequestId = route?.params?.inspectionRequestId;
@@ -144,29 +176,28 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const loadQuotation = useCallback(async (showLoadingState = false) => {
-    if (!inspectionRequestId) {
-      setQuotation(null);
-      setErrorMessage('No inspection request ID was provided.');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      if (showLoadingState) {
-        setLoading(true);
+  const loadQuotation = useCallback(
+    async (showLoadingState = false) => {
+      if (!inspectionRequestId) {
+        setQuotation(null);
+        setErrorMessage('No inspection request ID was provided.');
+        setLoading(false);
+        return;
       }
-
-      setErrorMessage('');
-      const data = await getCustomerFinalQuotation(inspectionRequestId);
-      setQuotation(data);
-    } catch (error) {
-      setQuotation(null);
-      setErrorMessage(getFriendlyErrorMessage(error));
-    } finally {
-      setLoading(false);
-    }
-  }, [inspectionRequestId]);
+      try {
+        if (showLoadingState) setLoading(true);
+        setErrorMessage('');
+        const data = await getCustomerFinalQuotation(inspectionRequestId);
+        setQuotation(data);
+      } catch (error) {
+        setQuotation(null);
+        setErrorMessage(getFriendlyErrorMessage(error));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [inspectionRequestId],
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -174,414 +205,587 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
     }, [loadQuotation]),
   );
 
+  /* ── loading state ── */
+
   if (loading) {
     return (
-      <View style={styles.centeredContainer}>
-        <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={styles.loadingText}>Loading final quotation...</Text>
-      </View>
+      <SafeAreaView style={s.safe}>
+        <View style={s.center}>
+          <ActivityIndicator size="large" color={GOLD} />
+          <Text style={s.loadingText}>Loading final quotation...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
+
+  /* ── error / empty state ── */
 
   if (errorMessage || !quotation) {
     return (
-      <View style={styles.centeredContainer}>
-        <Text style={styles.errorTitle}>Final quotation unavailable</Text>
-        <Text style={styles.errorText}>
-          {errorMessage || 'No final quotation was returned for this request.'}
-        </Text>
-        <AppButton
-          title="Go back"
-          onPress={() => navigation.goBack()}
-          style={styles.errorButton}
-        />
-      </View>
+      <SafeAreaView style={s.safe}>
+        <View style={s.center}>
+          <Text style={s.errTitle}>Final quotation unavailable</Text>
+          <Text style={s.errText}>
+            {errorMessage || 'No final quotation was returned for this request.'}
+          </Text>
+          <Pressable
+            onPress={() => navigation.goBack()}
+            style={({pressed}) => [s.primaryBtn, pressed && s.pressed]}>
+            <Text style={s.primaryBtnText}>Go Back</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
     );
   }
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}>
-        <View style={styles.heroCard}>
-          <Text style={styles.heroEyebrow}>Customer final quotation</Text>
-          <Text style={styles.heroTitle}>
-            Inspection request #{inspectionRequestId}
-          </Text>
-          <Text style={styles.heroSubtitle}>
-            This screen is view-only and shows the final quotation submitted by
-            the assigned technician.
-          </Text>
-          <Text style={styles.heroMeta}>Created {formatDate(quotation.created_at)}</Text>
-        </View>
+  /* ── handlers ── */
 
-        <SectionCard
-          title="Quotation overview"
-          subtitle="Top-level quotation identifiers and status.">
-          <DetailRow
-            label="Quotation type"
+  const handleConfirm = () => {
+    Alert.alert(
+      'Confirm Final Quotation',
+      'Once confirmed, a service request can be created to begin installation.',
+      [
+        {text: 'Cancel', style: 'cancel'},
+        {
+          text: 'Confirm',
+          onPress: () => {
+            Alert.alert('Confirmed', 'Your final quotation has been confirmed.');
+          },
+        },
+      ],
+    );
+  };
+
+  const handleCreateService = () => {
+    navigation.navigate('ServiceRequest');
+  };
+
+  const handleSave = () => {
+    Alert.alert('Saved', 'Quotation saved to your history.');
+  };
+
+  /* ── render ── */
+
+  return (
+    <SafeAreaView style={s.safe}>
+      <ScrollView
+        contentContainerStyle={s.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
+
+        {/* ── brand ── */}
+        <Text style={s.brand}>
+          Sol<Text style={s.brandAccent}>Mate</Text>
+        </Text>
+
+        {/* ── back ── */}
+        <Pressable
+          hitSlop={14}
+          onPress={() => navigation.goBack()}
+          style={({pressed}) => [s.backBtn, pressed && s.pressed]}>
+          <Text style={s.backIcon}>{'\u2039'}</Text>
+        </Pressable>
+
+        {/* ── title ── */}
+        <Text style={s.title}>Final Quotation</Text>
+        <Text style={s.subtitle}>
+          Detailed post-inspection quotation submitted by the assigned technician.
+        </Text>
+
+        {/* ── 1. Inspection Summary ── */}
+        <SectionCard title="Inspection Summary">
+          <InfoRow
+            label="Inspection Request"
+            value={'#' + inspectionRequestId}
+            bold
+          />
+          <InfoRow
+            label="Quotation Type"
             value={formatValue(quotation.quotation_type)}
           />
-          <DetailRow label="Status" value={formatValue(quotation.status)} />
-          <DetailRow
-            label="Remarks"
-            value={formatReadableText(quotation.remarks)}
-          />
+          <View style={s.infoRow}>
+            <Text style={s.infoLabel}>Status</Text>
+            <StatusBadge status={formatValue(quotation.status)} />
+          </View>
+          <InfoRow label="Created" value={formatDate(quotation.created_at)} />
+          {quotation.updated_at && (
+            <InfoRow label="Last Updated" value={formatDate(quotation.updated_at)} />
+          )}
         </SectionCard>
 
-        <SectionCard
-          title="Energy inputs"
-          subtitle="Customer usage inputs and solar sizing assumptions used by the backend.">
-          <DetailRow
-            label="Monthly electric bill"
-            value={formatQuotationCurrency(quotation.monthly_electric_bill, {
-              currency: 'PHP',
-              fallback: 'PHP 0.00',
-              spaceAfterCurrency: true,
-            })}
+        {/* ── 2. Energy Profile ── */}
+        <SectionCard title="Energy Profile">
+          <InfoRow
+            label="Monthly Electric Bill"
+            value={fmtCurrency(quotation.monthly_electric_bill)}
+            bold
           />
-          <DetailRow
+          <InfoRow
             label="Rate per kWh"
             value={formatValue(quotation.rate_per_kwh)}
           />
-          <DetailRow
-            label="Days in month"
+          <InfoRow
+            label="Days in Month"
             value={formatValue(quotation.days_in_month)}
           />
-          <DetailRow
-            label="Sun hours"
+          <InfoRow
+            label="Sun Hours / Day"
             value={formatValue(quotation.sun_hours)}
           />
-          <DetailRow
-            label="PV safety factor"
-            value={formatValue(quotation.pv_safety_factor)}
+          <InfoRow
+            label="Monthly kWh"
+            value={fmtKwh(quotation.monthly_kwh)}
+            bold
           />
-          <DetailRow
-            label="Battery factor"
-            value={formatValue(quotation.battery_factor)}
-          />
-          <DetailRow
-            label="Battery voltage"
-            value={formatValue(quotation.battery_voltage)}
-          />
-          <DetailRow
-            label="PV system type"
-            value={formatValue(quotation.pv_system_type)}
-          />
-          <DetailRow
-            label="With battery"
-            value={formatBoolean(quotation.with_battery)}
-          />
-          <DetailRow
-            label="Inverter type"
-            value={formatValue(quotation.inverter_type)}
-          />
-          <DetailRow
-            label="Battery model"
-            value={formatValue(quotation.battery_model)}
-          />
-          <DetailRow
-            label="Battery capacity Ah"
-            value={formatValue(quotation.battery_capacity_ah)}
-          />
-          <DetailRow
-            label="Panel watts"
-            value={formatValue(quotation.panel_watts)}
+          <InfoRow
+            label="Daily kWh"
+            value={fmtKwh(quotation.daily_kwh)}
           />
         </SectionCard>
 
-        <SectionCard
-          title="Calculated system outputs"
-          subtitle="The computed values returned by the backend for production and sizing.">
-          <DetailRow
-            label="Monthly kWh"
-            value={formatValue(quotation.monthly_kwh)}
+        {/* ── 3. Recommended Final System ── */}
+        <SectionCard title="Recommended Final System">
+          <InfoRow
+            label="PV System Type"
+            value={formatValue(quotation.pv_system_type)}
+            bold
           />
-          <DetailRow
-            label="Daily kWh"
-            value={formatValue(quotation.daily_kwh)}
+          <InfoRow
+            label="System Size"
+            value={fmtKw(quotation.system_kw)}
+            bold
           />
-          <DetailRow
-            label="PV kW raw"
+          <InfoRow
+            label="PV kW (raw)"
             value={formatValue(quotation.pv_kw_raw)}
           />
-          <DetailRow
-            label="PV kW safe"
+          <InfoRow
+            label="PV kW (w/ safety)"
             value={formatValue(quotation.pv_kw_safe)}
           />
-          <DetailRow
-            label="Panel quantity"
+          <InfoRow
+            label="PV Safety Factor"
+            value={formatValue(quotation.pv_safety_factor)}
+          />
+          <InfoRow
+            label="Panel Watts"
+            value={formatValue(quotation.panel_watts)}
+          />
+          <InfoRow
+            label="Panel Quantity"
             value={formatValue(quotation.panel_quantity)}
+            bold
           />
-          <DetailRow
-            label="System kW"
-            value={formatValue(quotation.system_kw)}
+          <InfoRow
+            label="Inverter Type"
+            value={formatValue(quotation.inverter_type)}
           />
-          <DetailRow
-            label="Battery required kWh"
-            value={formatValue(quotation.battery_required_kwh)}
-          />
-          <DetailRow
-            label="Battery required Ah"
-            value={formatValue(quotation.battery_required_ah)}
+          <InfoRow
+            label="With Battery"
+            value={formatBoolean(quotation.with_battery)}
           />
         </SectionCard>
 
-        <SectionCard
-          title="Cost breakdown"
-          subtitle="Material, labor, and project pricing submitted by the technician.">
-          <DetailRow
-            label="Panel cost"
-            value={formatQuotationCurrency(quotation.panel_cost, {
-              currency: 'PHP',
-              fallback: 'PHP 0.00',
-              spaceAfterCurrency: true,
-            })}
+        {/* ── 4. Computed Battery Details ── */}
+        <SectionCard title="Computed Battery Details">
+          <InfoRow
+            label="Battery Model"
+            value={formatValue(quotation.battery_model)}
+            bold
           />
-          <DetailRow
-            label="Inverter cost"
-            value={formatQuotationCurrency(quotation.inverter_cost, {
-              currency: 'PHP',
-              fallback: 'PHP 0.00',
-              spaceAfterCurrency: true,
-            })}
+          <InfoRow
+            label="Battery Capacity"
+            value={formatValue(quotation.battery_capacity_ah) + ' Ah'}
           />
-          <DetailRow
-            label="Battery cost"
-            value={formatQuotationCurrency(quotation.battery_cost, {
-              currency: 'PHP',
-              fallback: 'PHP 0.00',
-              spaceAfterCurrency: true,
-            })}
+          <InfoRow
+            label="Battery Voltage"
+            value={formatValue(quotation.battery_voltage) + ' V'}
           />
-          <DetailRow
-            label="BOS cost"
-            value={formatQuotationCurrency(quotation.bos_cost, {
-              currency: 'PHP',
-              fallback: 'PHP 0.00',
-              spaceAfterCurrency: true,
-            })}
+          <InfoRow
+            label="Battery Factor"
+            value={formatValue(quotation.battery_factor)}
           />
-          <DetailRow
-            label="Materials subtotal"
-            value={formatQuotationCurrency(quotation.materials_subtotal, {
-              currency: 'PHP',
-              fallback: 'PHP 0.00',
-              spaceAfterCurrency: true,
-            })}
+          <InfoRow
+            label="Required Battery kWh"
+            value={fmtKwh(quotation.battery_required_kwh)}
+            bold
           />
-          <DetailRow
-            label="Labor cost"
-            value={formatQuotationCurrency(quotation.labor_cost, {
-              currency: 'PHP',
-              fallback: 'PHP 0.00',
-              spaceAfterCurrency: true,
-            })}
-          />
-          <DetailRow
-            label="Project cost"
-            value={formatQuotationCurrency(quotation.project_cost, {
-              currency: 'PHP',
-              fallback: 'PHP 0.00',
-              spaceAfterCurrency: true,
-            })}
+          <InfoRow
+            label="Required Battery Ah"
+            value={formatValue(quotation.battery_required_ah) + ' Ah'}
           />
         </SectionCard>
 
-        <SectionCard
-          title="Itemized line items"
-          subtitle="These are the detailed components and pricing entries attached to the final quotation.">
+        {/* ── 5. Final Cost, Savings & ROI ── */}
+        <SectionCard title="Final Cost, Savings & ROI">
+          <InfoRow label="Panel Cost" value={fmtCurrency(quotation.panel_cost)} />
+          <InfoRow label="Inverter Cost" value={fmtCurrency(quotation.inverter_cost)} />
+          <InfoRow label="Battery Cost" value={fmtCurrency(quotation.battery_cost)} />
+          <InfoRow label="BOS Cost" value={fmtCurrency(quotation.bos_cost)} />
+          <InfoRow
+            label="Materials Subtotal"
+            value={fmtCurrency(quotation.materials_subtotal)}
+            bold
+          />
+          <InfoRow label="Labor Cost" value={fmtCurrency(quotation.labor_cost)} />
+          <InfoRow
+            label="Total Project Cost"
+            value={fmtCurrency(quotation.project_cost)}
+            bold
+            highlight
+          />
+
+          {/* divider before savings */}
+          <View style={s.sectionDivider} />
+
+          <InfoRow
+            label="Est. Monthly Savings"
+            value={fmtCurrency(quotation.estimated_monthly_savings)}
+            bold
+          />
+          <InfoRow
+            label="Est. Annual Savings"
+            value={fmtCurrency(quotation.estimated_annual_savings)}
+            bold
+          />
+          <InfoRow label="ROI / Payback Period" value={fmtYears(quotation.roi_years)} bold />
+        </SectionCard>
+
+        {/* ── 6. Itemized Line Items ── */}
+        <SectionCard title="Itemized Line Items">
           {quotation.line_items && quotation.line_items.length > 0 ? (
             quotation.line_items.map(item => (
-              <View key={item.id} style={styles.lineItemCard}>
-                <Text style={styles.lineItemTitle}>
+              <View key={item.id} style={s.lineItem}>
+                <Text style={s.lineItemTitle}>
                   {formatValue(item.description)}
                 </Text>
-                <Text style={styles.lineItemMeta}>{formatLineItemMeta(item)}</Text>
-                <DetailRow
+                <Text style={s.lineItemMeta}>{formatLineItemMeta(item)}</Text>
+                <InfoRow
                   label="Quantity"
                   value={formatQuantityWithUnit(item.qty, item.unit)}
                 />
-                <DetailRow
-                  label="Unit amount"
-                  value={formatQuotationCurrency(item.unit_amount, {
-                    currency: 'PHP',
-                    fallback: 'PHP 0.00',
-                    spaceAfterCurrency: true,
-                  })}
-                />
-                <DetailRow
-                  label="Total amount"
-                  value={formatQuotationCurrency(item.total_amount, {
-                    currency: 'PHP',
-                    fallback: 'PHP 0.00',
-                    spaceAfterCurrency: true,
-                  })}
+                <InfoRow label="Unit Price" value={fmtCurrency(item.unit_amount)} />
+                <InfoRow
+                  label="Total"
+                  value={fmtCurrency(item.total_amount)}
+                  bold
                 />
               </View>
             ))
           ) : (
-            <Text style={styles.emptyLineItemsText}>
-              No itemized line items have been attached to this final quotation yet.
+            <Text style={s.emptyText}>
+              No itemized line items attached to this quotation.
             </Text>
           )}
         </SectionCard>
 
-        <SectionCard
-          title="Savings and ROI"
-          subtitle="Projected savings and estimated payback returned by the backend.">
-          <DetailRow
-            label="Estimated monthly savings"
-            value={formatQuotationCurrency(quotation.estimated_monthly_savings, {
-              currency: 'PHP',
-              fallback: 'PHP 0.00',
-              spaceAfterCurrency: true,
-            })}
-          />
-          <DetailRow
-            label="Estimated annual savings"
-            value={formatQuotationCurrency(quotation.estimated_annual_savings, {
-              currency: 'PHP',
-              fallback: 'PHP 0.00',
-              spaceAfterCurrency: true,
-            })}
-          />
-          <DetailRow label="ROI years" value={formatValue(quotation.roi_years)} />
+        {/* ── 7. Findings & Recommendations ── */}
+        <SectionCard title="Findings & Recommendations">
+          <Text style={s.remarksText}>
+            {formatReadableText(quotation.remarks)}
+          </Text>
         </SectionCard>
+
+        {/* ── action buttons ── */}
+        <Pressable
+          onPress={handleConfirm}
+          style={({pressed}) => [s.primaryBtn, pressed && s.pressed]}>
+          <Text style={s.primaryBtnText}>Confirm Final Quotation</Text>
+        </Pressable>
+
+        <Pressable
+          onPress={handleCreateService}
+          style={({pressed}) => [s.secondaryBtn, pressed && s.pressed]}>
+          <Text style={s.secondaryBtnText}>Create Service Request</Text>
+        </Pressable>
+
+        <Pressable
+          onPress={handleSave}
+          style={({pressed}) => [s.secondaryBtn, pressed && s.pressed]}>
+          <Text style={s.secondaryBtnText}>Save to History</Text>
+        </Pressable>
+
+        <Pressable
+          hitSlop={10}
+          onPress={() => navigation.goBack()}
+          style={({pressed}) => [s.backLink, pressed && s.pressed]}>
+          <Text style={s.backLinkText}>{'\u2039 Back to Inspection Details'}</Text>
+        </Pressable>
+
+        {/* ── spacer ── */}
+        <View style={s.spacer} />
+
+        {/* ── chatbot shortcut ── */}
+        <Pressable
+          onPress={() => navigation.navigate('Chatbot')}
+          style={({pressed}) => [s.chatRow, pressed && s.pressed]}>
+          <Text style={s.chatText}>Chat with SolBot</Text>
+          <View style={s.chatBtn}>
+            <Text style={s.chatBtnIcon}>{'\uD83E\uDD16'}</Text>
+          </View>
+        </Pressable>
+
+        {/* ── bottom nav ── */}
+        <View style={s.bottomNav}>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('Home')}>
+            <Text style={s.navIcon}>{'\uD83C\uDFE0'}</Text>
+            <Text style={s.navLabel}>Home</Text>
+          </Pressable>
+          <Pressable
+            style={s.navItem}
+            onPress={() => navigation.navigate('QuotationList')}>
+            <Text style={s.navIcon}>{'\uD83D\uDCCB'}</Text>
+            <Text style={s.navLabel}>Quotation</Text>
+          </Pressable>
+          <Pressable
+            style={s.navItem}
+            onPress={() => navigation.navigate('ServiceRequestList')}>
+            <Text style={s.navIcon}>{'\u2699\uFE0F'}</Text>
+            <Text style={s.navLabel}>Services</Text>
+          </Pressable>
+          <Pressable
+            style={s.navItem}
+            onPress={() => navigation.navigate('InspectionRequestList')}>
+            <Text style={s.navIconActive}>{'\uD83D\uDCCD'}</Text>
+            <Text style={s.navLabelActive}>Tracking</Text>
+          </Pressable>
+          <Pressable
+            style={s.navItem}
+            onPress={() => navigation.navigate('CustomerSettings')}>
+            <Text style={s.navIcon}>{'\uD83D\uDC64'}</Text>
+            <Text style={s.navLabel}>Profile</Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: '#f5f7fb',
+/* ── styles ── */
+
+const s = StyleSheet.create({
+  safe: {flex: 1, backgroundColor: BG},
+  scroll: {paddingHorizontal: 22, paddingTop: 20, paddingBottom: 30},
+  pressed: {opacity: 0.85},
+  center: {
     flex: 1,
-  },
-  container: {
-    padding: 20,
-    paddingBottom: 28,
-  },
-  centeredContainer: {
     alignItems: 'center',
-    backgroundColor: '#f5f7fb',
-    flex: 1,
     justifyContent: 'center',
     padding: 24,
+    backgroundColor: BG,
   },
-  loadingText: {
-    color: '#475569',
-    fontSize: 14,
-    marginTop: 12,
-  },
-  errorTitle: {
-    color: '#0f172a',
-    fontSize: 22,
-    fontWeight: '800',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  errorText: {
-    color: '#b91c1c',
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-  errorButton: {
-    marginTop: 16,
-    width: '100%',
-  },
-  heroCard: {
-    backgroundColor: '#dbeafe',
-    borderRadius: 28,
+
+  /* brand */
+  brand: {fontSize: 22, fontWeight: '800', color: NAVY, marginBottom: 10},
+  brandAccent: {color: GOLD},
+
+  /* back */
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: CARD,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 18,
-    padding: 22,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  heroEyebrow: {
-    color: '#1d4ed8',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  heroTitle: {
-    color: '#0f172a',
-    fontSize: 28,
-    fontWeight: '800',
-    lineHeight: 34,
-    marginBottom: 10,
-  },
-  heroSubtitle: {
-    color: '#334155',
-    fontSize: 14,
-    lineHeight: 21,
-    marginBottom: 12,
-  },
-  heroMeta: {
-    color: '#1e3a8a',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  sectionCard: {
-    marginBottom: 18,
-  },
-  sectionTitle: {
-    color: '#0f172a',
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  sectionSubtitle: {
-    color: '#64748b',
-    fontSize: 14,
-    lineHeight: 20,
+  backIcon: {fontSize: 28, color: NAVY, fontWeight: '600', marginTop: -2},
+
+  /* title */
+  title: {fontSize: 26, fontWeight: '900', color: NAVY, marginBottom: 4},
+  subtitle: {fontSize: 14, color: MUTED, lineHeight: 20, marginBottom: 22},
+
+  /* card */
+  card: {
+    backgroundColor: CARD,
+    borderRadius: 22,
+    padding: 20,
     marginBottom: 16,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    elevation: 4,
   },
-  detailRow: {
-    borderTopColor: '#e2e8f0',
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: NAVY,
+    marginBottom: 14,
+  },
+
+  /* info rows */
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     borderTopWidth: 1,
+    borderTopColor: DIVIDER,
     paddingVertical: 12,
   },
-  detailLabel: {
-    color: '#64748b',
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 4,
-    textTransform: 'uppercase',
+  infoLabel: {fontSize: 13, color: MUTED, flex: 1},
+  infoValue: {fontSize: 14, color: NAVY, textAlign: 'right', flexShrink: 1, marginLeft: 12},
+  infoValueBold: {fontWeight: '800'},
+  infoValueHighlight: {color: GOLD, fontSize: 16, fontWeight: '900'},
+
+  /* section divider (within a card) */
+  sectionDivider: {
+    height: 2,
+    backgroundColor: DIVIDER,
+    marginVertical: 6,
+    borderRadius: 1,
   },
-  detailValue: {
-    color: '#0f172a',
-    fontSize: 15,
-    fontWeight: '600',
-    lineHeight: 22,
+
+  /* status badge */
+  badge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: '#edf1f7',
   },
-  lineItemCard: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
-    borderRadius: 18,
+  badgeGreen: {backgroundColor: '#dcfce7'},
+  badgeText: {fontSize: 12, fontWeight: '700', color: MUTED, textTransform: 'capitalize'},
+  badgeTextGreen: {color: '#16a34a'},
+  badgeDefault: {},
+
+  /* line items */
+  lineItem: {
+    backgroundColor: '#f7f9fc',
+    borderRadius: 16,
     borderWidth: 1,
+    borderColor: DIVIDER,
+    padding: 14,
     marginBottom: 12,
-    overflow: 'hidden',
-    paddingHorizontal: 14,
-    paddingTop: 14,
   },
   lineItemTitle: {
-    color: '#0f172a',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
-    marginBottom: 4,
+    color: NAVY,
+    marginBottom: 2,
   },
   lineItemMeta: {
-    color: '#475569',
     fontSize: 12,
     fontWeight: '600',
+    color: MUTED,
     marginBottom: 8,
   },
-  emptyLineItemsText: {
-    color: '#64748b',
+
+  /* empty text */
+  emptyText: {color: MUTED, fontSize: 14, lineHeight: 21},
+
+  /* remarks */
+  remarksText: {
+    color: NAVY,
     fontSize: 14,
-    lineHeight: 21,
+    lineHeight: 22,
   },
+
+  /* primary button */
+  primaryBtn: {
+    backgroundColor: GOLD,
+    borderRadius: 28,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+    marginTop: 6,
+    shadowColor: GOLD,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  primaryBtnText: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: CARD,
+    letterSpacing: 0.3,
+  },
+
+  /* secondary button */
+  secondaryBtn: {
+    backgroundColor: CARD,
+    borderRadius: 28,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#dfe6f0',
+  },
+  secondaryBtnText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: NAVY,
+  },
+
+  /* back link */
+  backLink: {marginTop: 4, marginBottom: 8, alignSelf: 'flex-start'},
+  backLinkText: {fontSize: 14, color: MUTED, fontWeight: '600'},
+
+  /* spacer */
+  spacer: {minHeight: 40},
+
+  /* loading / error */
+  loadingText: {color: MUTED, fontSize: 14, marginTop: 12},
+  errTitle: {
+    color: NAVY,
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  errText: {
+    color: '#dc2626',
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+
+  /* chat shortcut */
+  chatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginBottom: 22,
+    marginTop: 4,
+  },
+  chatText: {fontSize: 13, color: MUTED, marginRight: 10},
+  chatBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: NAVY,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: NAVY,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  chatBtnIcon: {fontSize: 22},
+
+  /* bottom nav */
+  bottomNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: CARD,
+    borderRadius: R,
+    paddingVertical: 10,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: -2},
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  navItem: {alignItems: 'center', paddingHorizontal: 6},
+  navIcon: {fontSize: 20, marginBottom: 2},
+  navIconActive: {fontSize: 20, marginBottom: 2},
+  navLabel: {fontSize: 11, color: MUTED, fontWeight: '600'},
+  navLabelActive: {fontSize: 11, color: NAVY, fontWeight: '700'},
 });

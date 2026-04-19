@@ -2,45 +2,44 @@ import React, {useCallback, useState} from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Pressable,
   RefreshControl,
+  SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 
-import {AppButton, StatusBadge} from '../components';
+import {StatusBadge} from '../components';
 import {ApiError} from '../src/services/api';
 import {
   getInspectionRequests,
   InspectionRequest,
 } from '../src/services/inspectionRequestApi';
 
+/* ── design tokens ── */
+
+const NAVY = '#152a4a';
+const GOLD = '#e8a800';
+const MUTED = '#7b8699';
+const BG = '#e0e8f5';
+const CARD = '#ffffff';
+const DIVIDER = '#edf1f7';
+
+/* ── helpers (preserved) ── */
+
 function formatDate(value?: string | null, fallback = 'Not provided') {
-  if (!value) {
-    return fallback;
-  }
-
+  if (!value) return fallback;
   const parsedDate = new Date(value);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return value;
-  }
-
+  if (Number.isNaN(parsedDate.getTime())) return value;
   return parsedDate.toLocaleDateString();
 }
 
 function formatDateTime(value?: string) {
-  if (!value) {
-    return 'Not available';
-  }
-
+  if (!value) return 'Not available';
   const parsedDate = new Date(value);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return value;
-  }
-
+  if (Number.isNaN(parsedDate.getTime())) return value;
   return parsedDate.toLocaleString();
 }
 
@@ -49,12 +48,14 @@ function getFriendlyErrorMessage(error: unknown) {
     if (error.status === 401) {
       return 'Your session has expired. Please log in again.';
     }
-
     return error.message;
   }
-
   return 'Could not load your inspection requests right now.';
 }
+
+/* ════════════════════════════════════════════
+   Main screen
+   ════════════════════════════════════════════ */
 
 export default function InspectionRequestListScreen({navigation}: any) {
   const [inspectionRequests, setInspectionRequests] = useState<
@@ -67,10 +68,7 @@ export default function InspectionRequestListScreen({navigation}: any) {
   const loadInspectionRequests = useCallback(
     async (showLoadingState = false) => {
       try {
-        if (showLoadingState) {
-          setLoading(true);
-        }
-
+        if (showLoadingState) setLoading(true);
         setErrorMessage('');
         const data = await getInspectionRequests();
         setInspectionRequests(Array.isArray(data) ? data : []);
@@ -96,102 +94,140 @@ export default function InspectionRequestListScreen({navigation}: any) {
     loadInspectionRequests(false);
   };
 
+  /* ── card renderer ── */
+
   const renderInspectionRequest = ({item}: {item: InspectionRequest}) => {
     const canOpenFinalQuotation = item.status === 'completed';
 
     return (
-      <View style={styles.card}>
-        <View style={styles.cardAccent} />
+      <View style={s.card}>
+        {/* accent bar */}
+        <View style={s.cardAccent} />
 
-        <View style={styles.cardHeader}>
-          <View style={styles.cardTitleWrap}>
-            <Text style={styles.cardEyebrow}>Inspection request #{item.id}</Text>
-            <Text style={styles.cardTitle}>{item.details}</Text>
+        {/* header row: title + status */}
+        <View style={s.cardHeader}>
+          <View style={s.cardTitleWrap}>
+            <Text style={s.cardEyebrow}>Inspection request #{item.id}</Text>
+            <Text style={s.cardTitle}>{item.details}</Text>
           </View>
 
           <StatusBadge status={item.status} />
         </View>
 
-        <View style={styles.metaGrid}>
-          <View style={styles.metaCard}>
-            <Text style={styles.metaLabel}>Date needed</Text>
-            <Text style={styles.metaValue}>
+        {/* meta grid */}
+        <View style={s.metaGrid}>
+          <View style={s.metaCard}>
+            <Text style={s.metaLabel}>Date needed</Text>
+            <Text style={s.metaValue}>
               {formatDate(item.date_needed, 'Flexible')}
             </Text>
           </View>
-
-          <View style={styles.metaCard}>
-            <Text style={styles.metaLabel}>Submitted</Text>
-            <Text style={styles.metaValue}>{formatDateTime(item.created_at)}</Text>
+          <View style={s.metaCard}>
+            <Text style={s.metaLabel}>Submitted</Text>
+            <Text style={s.metaValue}>{formatDateTime(item.created_at)}</Text>
           </View>
         </View>
 
-        <View style={styles.footerCard}>
-          <AppButton
-            title="View Request Details"
-            variant="outline"
-            style={styles.detailButton}
-            onPress={() =>
-              navigation.navigate('InspectionRequestDetail', {
-                inspectionRequestId: item.id,
-                initialInspectionRequest: item,
-              })
-            }
-          />
-          <Text style={styles.footerTitle}>Final quotation</Text>
-          <Text style={styles.footerText}>
+        {/* view details button */}
+        <Pressable
+          onPress={() =>
+            navigation.navigate('InspectionRequestDetail', {
+              inspectionRequestId: item.id,
+              initialInspectionRequest: item,
+            })
+          }
+          style={({pressed}) => [s.outlineBtn, pressed && s.pressed]}>
+          <Text style={s.outlineBtnText}>View Request Details</Text>
+        </Pressable>
+
+        {/* final quotation section */}
+        <View style={s.quotationSection}>
+          <View style={s.quotationDivider} />
+          <Text style={s.quotationTitle}>Final Quotation</Text>
+          <Text style={s.quotationText}>
             {canOpenFinalQuotation
               ? 'Open the technician-submitted final quotation for this inspection request.'
               : 'The final quotation becomes viewable here after the inspection is completed.'}
           </Text>
-          <AppButton
-            title="View Final Quotation"
-            variant={canOpenFinalQuotation ? 'primary' : 'outline'}
+          <Pressable
             disabled={!canOpenFinalQuotation}
-            style={styles.footerButton}
             onPress={() =>
               navigation.navigate('FinalQuotationView', {
                 inspectionRequestId: item.id,
               })
             }
-          />
+            style={({pressed}) => [
+              canOpenFinalQuotation ? s.primaryBtn : s.disabledBtn,
+              pressed && canOpenFinalQuotation && s.pressed,
+            ]}>
+            <Text
+              style={[
+                canOpenFinalQuotation
+                  ? s.primaryBtnText
+                  : s.disabledBtnText,
+              ]}>
+              View Final Quotation
+            </Text>
+          </Pressable>
         </View>
       </View>
     );
   };
 
+  /* ── loading state ── */
+
   if (loading) {
     return (
-      <View style={styles.centeredContainer}>
-        <ActivityIndicator color="#16a34a" size="large" />
-        <Text style={styles.loadingText}>Loading your inspection requests...</Text>
-      </View>
+      <SafeAreaView style={s.safe}>
+        <View style={s.centered}>
+          <ActivityIndicator color={GOLD} size="large" />
+          <Text style={s.loadingText}>Loading your inspection requests…</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
+  /* ── main render ── */
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>My Inspection Requests</Text>
-      <Text style={styles.subtitle}>
-        Review inspection request progress and open the final quotation when the
-        technician has completed the visit.
-      </Text>
+    <SafeAreaView style={s.safe}>
+      <View style={s.topBar}>
+        {/* brand */}
+        <Text style={s.brand}>
+          Sol<Text style={s.brandAccent}>Mate</Text>
+        </Text>
+
+        {/* back */}
+        <Pressable
+          hitSlop={14}
+          onPress={() => navigation.goBack()}
+          style={({pressed}) => [s.backBtn, pressed && s.pressed]}>
+          <Text style={s.backIcon}>{'\u2039'}</Text>
+        </Pressable>
+
+        {/* title block */}
+        <Text style={s.title}>My Inspection Requests</Text>
+        <Text style={s.subtitle}>
+          Review inspection request progress and open the final quotation when
+          the technician has completed the visit.
+        </Text>
+      </View>
 
       {errorMessage ? (
-        <View style={styles.errorCard}>
-          <Text style={styles.errorTitle}>Something went wrong</Text>
-          <Text style={styles.errorText}>{errorMessage}</Text>
-          <AppButton
+        <View style={s.errorCard}>
+          <Text style={s.errorTitle}>Something went wrong</Text>
+          <Text style={s.errorText}>{errorMessage}</Text>
+          <Pressable
             onPress={() => loadInspectionRequests(true)}
-            style={styles.retryButton}
-            title="Try again"
-          />
+            style={({pressed}) => [s.retryBtn, pressed && s.pressed]}>
+            <Text style={s.retryBtnText}>Try Again</Text>
+          </Pressable>
         </View>
       ) : (
         <FlatList
           contentContainerStyle={[
-            styles.listContent,
-            inspectionRequests.length === 0 ? styles.emptyListContent : null,
+            s.listContent,
+            inspectionRequests.length === 0 ? s.emptyListContent : null,
           ]}
           data={inspectionRequests}
           keyExtractor={item => item.id.toString()}
@@ -200,144 +236,171 @@ export default function InspectionRequestListScreen({navigation}: any) {
             <RefreshControl
               onRefresh={handleRefresh}
               refreshing={refreshing}
-              tintColor="#16a34a"
+              tintColor={GOLD}
             />
           }
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <View style={styles.emptyIcon} />
-              <Text style={styles.emptyTitle}>No inspection requests yet</Text>
-              <Text style={styles.emptyText}>
+            <View style={s.emptyState}>
+              <View style={s.emptyIcon}>
+                <Text style={s.emptyIconText}>{'\uD83D\uDD0D'}</Text>
+              </View>
+              <Text style={s.emptyTitle}>No inspection requests yet</Text>
+              <Text style={s.emptyText}>
                 Submit your first request from the customer dashboard and it
                 will appear here.
               </Text>
-              <AppButton
+              <Pressable
                 onPress={() => navigation.navigate('InspectionRequest')}
-                style={styles.emptyButton}
-                title="Request inspection"
-                variant="outline"
-              />
+                style={({pressed}) => [s.emptyBtn, pressed && s.pressed]}>
+                <Text style={s.emptyBtnText}>Request Inspection</Text>
+              </Pressable>
             </View>
           }
         />
       )}
-    </View>
+
+      {/* ── bottom nav ── */}
+      <View style={s.bottomNav}>
+        <Pressable style={s.navItem} onPress={() => navigation.navigate('Home')}>
+          <Text style={s.navIcon}>{'\uD83C\uDFE0'}</Text>
+          <Text style={s.navLabel}>Home</Text>
+        </Pressable>
+        <Pressable style={s.navItem} onPress={() => navigation.navigate('QuotationList')}>
+          <Text style={s.navIcon}>{'\uD83D\uDCCB'}</Text>
+          <Text style={s.navLabel}>Quotation</Text>
+        </Pressable>
+        <Pressable style={s.navItem} onPress={() => navigation.navigate('ServiceRequestList')}>
+          <Text style={s.navIcon}>{'\u2699\uFE0F'}</Text>
+          <Text style={s.navLabel}>Services</Text>
+        </Pressable>
+        <Pressable style={s.navItem} onPress={() => navigation.navigate('InspectionRequestList')}>
+          <Text style={s.navIconActive}>{'\uD83D\uDCCD'}</Text>
+          <Text style={s.navLabelActive}>Tracking</Text>
+        </Pressable>
+        <Pressable style={s.navItem} onPress={() => navigation.navigate('CustomerSettings')}>
+          <Text style={s.navIcon}>{'\uD83D\uDC64'}</Text>
+          <Text style={s.navLabel}>Profile</Text>
+        </Pressable>
+      </View>
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#f5f7fb',
-    flex: 1,
-    padding: 20,
+/* ── styles ── */
+
+const s = StyleSheet.create({
+  safe: {flex: 1, backgroundColor: BG},
+  pressed: {opacity: 0.85},
+
+  /* top bar */
+  topBar: {paddingHorizontal: 22, paddingTop: 20},
+
+  /* brand */
+  brand: {fontSize: 22, fontWeight: '800', color: NAVY, marginBottom: 10},
+  brandAccent: {color: GOLD},
+
+  /* back */
+  backBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: CARD,
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 18,
+    shadowColor: '#8a9bbd', shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.10, shadowRadius: 6, elevation: 3,
   },
-  centeredContainer: {
-    alignItems: 'center',
-    backgroundColor: '#f5f7fb',
+  backIcon: {fontSize: 28, color: NAVY, fontWeight: '600', marginTop: -2},
+
+  /* title */
+  title: {fontSize: 26, fontWeight: '900', color: NAVY, marginBottom: 4},
+  subtitle: {fontSize: 14, color: MUTED, lineHeight: 20, marginBottom: 16},
+
+  /* centered / loading */
+  centered: {
     flex: 1,
+    alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
   },
-  title: {
-    color: '#0f172a',
-    fontSize: 28,
-    fontWeight: '800',
-    marginBottom: 8,
-  },
-  subtitle: {
-    color: '#64748b',
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 18,
-  },
-  loadingText: {
-    color: '#475569',
-    fontSize: 14,
-    marginTop: 12,
-  },
+  loadingText: {color: MUTED, fontSize: 14, marginTop: 14},
+
+  /* error */
   errorCard: {
-    backgroundColor: '#ffffff',
-    borderColor: '#fecaca',
+    backgroundColor: CARD,
     borderRadius: 22,
     borderWidth: 1,
-    padding: 18,
+    borderColor: '#fecaca',
+    marginHorizontal: 22,
+    padding: 20,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.10, shadowRadius: 14, elevation: 4,
   },
-  errorTitle: {
-    color: '#b91c1c',
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  errorText: {
-    color: '#991b1b',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  retryButton: {
+  errorTitle: {color: '#b91c1c', fontSize: 18, fontWeight: '800', marginBottom: 8},
+  errorText: {color: '#991b1b', fontSize: 14, lineHeight: 20},
+  retryBtn: {
     marginTop: 16,
+    backgroundColor: GOLD,
+    borderRadius: 28,
+    paddingVertical: 14,
+    alignItems: 'center',
   },
-  listContent: {
-    paddingBottom: 24,
-  },
-  emptyListContent: {
-    flexGrow: 1,
-  },
+  retryBtnText: {fontSize: 15, fontWeight: '900', color: CARD, letterSpacing: 0.3},
+
+  /* list */
+  listContent: {paddingHorizontal: 22, paddingBottom: 12},
+  emptyListContent: {flexGrow: 1},
+
+  /* empty state */
   emptyState: {
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
-    borderRadius: 24,
-    borderWidth: 1,
+    backgroundColor: CARD,
+    borderRadius: 22,
     marginTop: 8,
     padding: 28,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.10, shadowRadius: 14, elevation: 4,
   },
   emptyIcon: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: '#f0edff',
     borderRadius: 999,
-    height: 56,
+    height: 56, width: 56,
+    alignItems: 'center', justifyContent: 'center',
     marginBottom: 16,
-    width: 56,
   },
-  emptyTitle: {
-    color: '#0f172a',
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  emptyText: {
-    color: '#64748b',
-    fontSize: 14,
-    lineHeight: 21,
-    textAlign: 'center',
-  },
-  emptyButton: {
-    marginTop: 16,
+  emptyIconText: {fontSize: 26},
+  emptyTitle: {color: NAVY, fontSize: 18, fontWeight: '800', marginBottom: 8},
+  emptyText: {color: MUTED, fontSize: 14, lineHeight: 21, textAlign: 'center'},
+  emptyBtn: {
+    marginTop: 18,
     width: '100%',
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
-    borderRadius: 22,
+    backgroundColor: CARD,
+    borderRadius: 28,
+    paddingVertical: 14,
+    alignItems: 'center',
     borderWidth: 1,
+    borderColor: DIVIDER,
+  },
+  emptyBtnText: {fontSize: 15, fontWeight: '800', color: NAVY},
+
+  /* ── card ── */
+  card: {
+    backgroundColor: CARD,
+    borderRadius: 22,
     marginBottom: 14,
     overflow: 'hidden',
     padding: 18,
-    shadowColor: '#0f172a',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 2,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.10, shadowRadius: 14, elevation: 4,
   },
   cardAccent: {
-    backgroundColor: '#86efac',
+    backgroundColor: GOLD,
     borderRadius: 999,
-    height: 8,
+    height: 6,
     marginBottom: 14,
-    width: 64,
+    width: 48,
   },
   cardHeader: {
     alignItems: 'flex-start',
@@ -345,70 +408,111 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 14,
   },
-  cardTitleWrap: {
-    flex: 1,
-    paddingRight: 14,
-  },
+  cardTitleWrap: {flex: 1, paddingRight: 14},
   cardEyebrow: {
-    color: '#64748b',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-    marginBottom: 4,
+    color: MUTED,
+    fontSize: 12, fontWeight: '700',
+    letterSpacing: 0.4, marginBottom: 4,
     textTransform: 'uppercase',
   },
   cardTitle: {
-    color: '#0f172a',
-    fontSize: 18,
-    fontWeight: '800',
-    lineHeight: 24,
+    color: NAVY,
+    fontSize: 18, fontWeight: '800', lineHeight: 24,
   },
+
+  /* meta grid */
   metaGrid: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
     marginBottom: 14,
   },
   metaCard: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 16,
+    backgroundColor: '#f7f9fc',
+    borderRadius: 14,
     flex: 1,
     padding: 14,
   },
   metaLabel: {
-    color: '#64748b',
-    fontSize: 12,
-    fontWeight: '700',
+    color: MUTED,
+    fontSize: 11, fontWeight: '700',
     marginBottom: 6,
     textTransform: 'uppercase',
   },
   metaValue: {
-    color: '#0f172a',
-    fontSize: 14,
-    fontWeight: '600',
-    lineHeight: 20,
+    color: NAVY,
+    fontSize: 14, fontWeight: '700', lineHeight: 20,
   },
-  footerCard: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
-    borderRadius: 16,
+
+  /* outline button (view details) */
+  outlineBtn: {
+    backgroundColor: CARD,
+    borderRadius: 28,
+    paddingVertical: 14,
+    alignItems: 'center',
     borderWidth: 1,
-    padding: 14,
-  },
-  detailButton: {
+    borderColor: DIVIDER,
     marginBottom: 14,
   },
-  footerTitle: {
-    color: '#0f172a',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 6,
+  outlineBtnText: {fontSize: 15, fontWeight: '800', color: NAVY},
+
+  /* quotation section */
+  quotationSection: {
+    backgroundColor: '#f7f9fc',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: DIVIDER,
+    padding: 16,
   },
-  footerText: {
-    color: '#475569',
-    fontSize: 14,
-    lineHeight: 20,
+  quotationDivider: {
+    backgroundColor: DIVIDER,
+    height: 1,
+    marginBottom: 14,
   },
-  footerButton: {
-    marginTop: 14,
+  quotationTitle: {
+    fontSize: 15, fontWeight: '800', color: NAVY, marginBottom: 6,
   },
+  quotationText: {
+    fontSize: 13, color: MUTED, lineHeight: 19, marginBottom: 14,
+  },
+
+  /* primary button (final quotation available) */
+  primaryBtn: {
+    backgroundColor: GOLD,
+    borderRadius: 28,
+    paddingVertical: 14,
+    alignItems: 'center',
+    shadowColor: GOLD,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.25, shadowRadius: 10, elevation: 4,
+  },
+  primaryBtnText: {fontSize: 15, fontWeight: '900', color: CARD, letterSpacing: 0.3},
+
+  /* disabled button (final quotation not yet available) */
+  disabledBtn: {
+    backgroundColor: DIVIDER,
+    borderRadius: 28,
+    paddingVertical: 14,
+    alignItems: 'center',
+    opacity: 0.6,
+  },
+  disabledBtnText: {fontSize: 15, fontWeight: '800', color: MUTED},
+
+  /* ── bottom nav ── */
+  bottomNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: CARD,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    paddingVertical: 10,
+    paddingBottom: 14,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: -2},
+    shadowOpacity: 0.08, shadowRadius: 8, elevation: 4,
+  },
+  navItem: {alignItems: 'center', paddingHorizontal: 6},
+  navIcon: {fontSize: 20, marginBottom: 2},
+  navIconActive: {fontSize: 20, marginBottom: 2},
+  navLabel: {fontSize: 11, color: MUTED, fontWeight: '600'},
+  navLabelActive: {fontSize: 11, color: NAVY, fontWeight: '700'},
 });
