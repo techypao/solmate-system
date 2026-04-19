@@ -10,48 +10,96 @@ import {
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 
-import { AppButton, AppCard } from '../components';
-import { AuthContext } from '../src/context/AuthContext';
+import {AuthContext} from '../src/context/AuthContext';
 import {ApiError} from '../src/services/api';
 import {getUnreadNotificationCount} from '../src/services/notificationApi';
 
-type QuickActionProps = {
-  title: string;
-  subtitle: string;
-  accentColor: string;
-  onPress: () => void;
-};
+const NAVY = '#152a4a';
+const GOLD = '#e8a800';
+const MUTED = '#7b8699';
+const BG = '#e0e8f5';
+const CARD = '#ffffff';
+const R = 18;
 
-function QuickActionCard({
-  title,
-  subtitle,
-  accentColor,
+/* ── tiny presentational helpers ────────────────────────────── */
+
+function SummaryCard({
+  icon,
+  label,
+  value,
   onPress,
-}: QuickActionProps) {
+}: {
+  icon: string;
+  label: string;
+  value: string;
+  onPress?: () => void;
+}) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [pressed && styles.pressed]}
-    >
-      <View style={styles.quickActionCard}>
-        <View style={styles.quickActionHeader}>
-          <View
-            style={[styles.quickActionAccent, { backgroundColor: accentColor }]}
-          />
-          <Text style={styles.quickActionBadge}>Open</Text>
-        </View>
-        <Text style={styles.quickActionTitle}>{title}</Text>
-        <Text style={styles.quickActionSubtitle}>{subtitle}</Text>
-        <View style={styles.quickActionFooter}>
-          <Text style={styles.quickActionFooterText}>Tap to continue</Text>
-        </View>
-      </View>
+      style={({pressed}) => [s.summaryCard, pressed && onPress && s.pressed]}>
+      <Text style={s.summaryIcon}>{icon}</Text>
+      <Text style={s.summaryLabel}>{label}</Text>
+      <Text style={s.summaryValue}>{value}</Text>
     </Pressable>
   );
 }
 
-export default function HomeScreen({ navigation }: any) {
-  const { user } = useContext(AuthContext);
+function InfoCard({
+  icon,
+  title,
+  subtitle,
+  onPress,
+}: {
+  icon: string;
+  title: string;
+  subtitle: string;
+  onPress?: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({pressed}) => [s.infoCard, pressed && onPress && s.pressed]}>
+      <View style={s.infoIconWrap}>
+        <Text style={s.infoIcon}>{icon}</Text>
+      </View>
+      <View style={s.infoTextWrap}>
+        <Text style={s.infoTitle}>{title}</Text>
+        <Text style={s.infoSub}>{subtitle}</Text>
+      </View>
+      <Text style={s.chevron}>{'>'}</Text>
+    </Pressable>
+  );
+}
+
+function ActionCard({
+  icon,
+  title,
+  subtitle,
+  onPress,
+}: {
+  icon: string;
+  title: string;
+  subtitle: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({pressed}) => [s.actionCard, pressed && s.pressed]}>
+      <View style={s.actionIconWrap}>
+        <Text style={s.actionIcon}>{icon}</Text>
+      </View>
+      <Text style={s.actionTitle}>{title}</Text>
+      <Text style={s.actionSub}>{subtitle}</Text>
+    </Pressable>
+  );
+}
+
+/* ── main screen ────────────────────────────────────────────── */
+
+export default function HomeScreen({navigation}: any) {
+  const {user} = useContext(AuthContext);
   const customerName = user?.name || 'Customer';
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationsLoading, setNotificationsLoading] = useState(true);
@@ -77,518 +125,349 @@ export default function HomeScreen({ navigation }: any) {
     }, [loadUnreadCount]),
   );
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.heroCard}>
-          <View style={styles.heroTextWrap}>
-            <Text style={styles.eyebrow}>Customer dashboard</Text>
-            <Text style={styles.heroTitle}>Welcome back, {customerName}</Text>
-            <Text style={styles.heroSubtitle}>
-              Manage quotations, request inspections, submit service requests,
-              and stay updated in one place.
-            </Text>
-          </View>
+  const initial = customerName.charAt(0).toUpperCase();
 
-          <View style={styles.heroBadge}>
-            <Text style={styles.heroBadgeLabel}>Account</Text>
-            <Text style={styles.heroBadgeValue}>Active</Text>
+  return (
+    <SafeAreaView style={s.safe}>
+      <ScrollView
+        contentContainerStyle={s.scroll}
+        showsVerticalScrollIndicator={false}>
+        {/* ── header ─────────────────────────────────── */}
+        <View style={s.header}>
+          <View>
+            <View style={s.brandRow}>
+              <Text style={s.brandSol}>Sol</Text>
+              <Text style={s.brandMate}>Mate</Text>
+            </View>
           </View>
+          <Pressable
+            onPress={() => navigation.navigate('CustomerSettings')}
+            style={s.avatar}>
+            <Text style={s.avatarText}>{initial}</Text>
+          </Pressable>
         </View>
 
-        <Pressable
-          onPress={() => navigation.navigate('CustomerNotifications')}
-          style={({pressed}) => [
-            styles.notificationCard,
-            pressed ? styles.pressed : null,
-          ]}>
-          <View style={styles.notificationCardTextWrap}>
-            <Text style={styles.notificationEyebrow}>Notifications</Text>
-            <Text style={styles.notificationTitle}>Open your latest updates</Text>
-            <Text style={styles.notificationSubtitle}>
-              Review request updates, schedule changes, and final quotation alerts.
-            </Text>
-          </View>
+        {/* ── welcome ────────────────────────────────── */}
+        <Text style={s.welcomeTitle}>Welcome back,{' '}
+          <Text>{customerName}</Text>
+        </Text>
+        <Text style={s.welcomeSub}>Your solar overview at a glance.</Text>
 
-          <View style={styles.notificationBadge}>
-            {notificationsLoading ? (
-              <ActivityIndicator color="#1d4ed8" size="small" />
-            ) : (
-              <>
-                <Text style={styles.notificationBadgeValue}>{unreadCount}</Text>
-                <Text style={styles.notificationBadgeLabel}>Unread</Text>
-              </>
-            )}
+        {/* ── summary ────────────────────────────────── */}
+        <Text style={s.sectionTitle}>Summary</Text>
+        <View style={s.summaryRow}>
+          <SummaryCard
+            icon={'\ud83d\udccb'}
+            label="Latest Quote"
+            value="Ready"
+            onPress={() => navigation.navigate('QuotationList')}
+          />
+          <SummaryCard
+            icon={'\ud83d\udcca'}
+            label="Notifications"
+            value={
+              notificationsLoading
+                ? '...'
+                : unreadCount > 0
+                ? unreadCount + ' unread'
+                : 'All read'
+            }
+            onPress={() => navigation.navigate('CustomerNotifications')}
+          />
+        </View>
+
+        {/* ── info cards ─────────────────────────────── */}
+        <InfoCard
+          icon={'\ud83d\udee0'}
+          title="Service Request"
+          subtitle={'Installation \u2022 Maintenance \u2022 Support'}
+          onPress={() => navigation.navigate('ServiceRequestList')}
+        />
+        <InfoCard
+          icon={'\ud83d\udcc5'}
+          title="Next Schedule"
+          subtitle="Check your inspections"
+          onPress={() => navigation.navigate('InspectionRequestList')}
+        />
+
+        {/* ── quick actions ──────────────────────────── */}
+        <Text style={s.sectionTitle}>Quick Actions</Text>
+        <View style={s.actionGrid}>
+          <ActionCard
+            icon={'\ud83d\udcdd'}
+            title="Generate"
+            subtitle="Quotation"
+            onPress={() => navigation.navigate('Quotations')}
+          />
+          <ActionCard
+            icon={'\u2705'}
+            title="Request"
+            subtitle="Inspection"
+            onPress={() => navigation.navigate('InspectionRequest')}
+          />
+          <ActionCard
+            icon={'\ud83d\udee0'}
+            title="Request"
+            subtitle="Service"
+            onPress={() => navigation.navigate('ServiceRequest')}
+          />
+          <ActionCard
+            icon={'\u2b50'}
+            title="Create"
+            subtitle="Testimony"
+            onPress={() => navigation.navigate('CreateTestimony')}
+          />
+        </View>
+
+        {/* ── more actions ───────────────────────────── */}
+        <View style={s.moreRow}>
+          <Pressable
+            onPress={() => navigation.navigate('MyTestimonies')}
+            style={({pressed}) => [s.moreBtn, pressed && s.pressed]}>
+            <Text style={s.moreBtnText}>My Testimonies</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => navigation.navigate('QuotationList')}
+            style={({pressed}) => [s.moreBtn, pressed && s.pressed]}>
+            <Text style={s.moreBtnText}>My Quotations</Text>
+          </Pressable>
+        </View>
+
+        {/* ── chatbot shortcut ───────────────────────── */}
+        <Pressable
+          onPress={() => navigation.navigate('Chatbot')}
+          style={({pressed}) => [s.chatRow, pressed && s.pressed]}>
+          <Text style={s.chatText}>Need help? Chat with SolBot</Text>
+          <View style={s.chatBtn}>
+            <Text style={s.chatBtnIcon}>{'\ud83e\udd16'}</Text>
           </View>
         </Pressable>
 
-        <AppCard style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Quick actions</Text>
-          <Text style={styles.sectionSubtitle}>
-            Jump into the tasks customers use most often.
-          </Text>
-
-          <View style={styles.highlightStrip}>
-            <View>
-              <Text style={styles.highlightTitle}>Customer tools</Text>
-              <Text style={styles.highlightText}>
-                Create quotations, submit inspection and service requests, and
-                review everything tied to your account.
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.quickActionGrid}>
-            <QuickActionCard
-              title="SolMate Assistant"
-              subtitle="Open the customer chatbot UI for guidance and common questions."
-              accentColor="#38bdf8"
-              onPress={() => navigation.navigate('Chatbot')}
-            />
-            <QuickActionCard
-              title="Create Initial Quotation"
-              subtitle="Start a new customer quotation request for your account."
-              accentColor="#93c5fd"
-              // Use the stack navigator to open the quotation form screen.
-              onPress={() => navigation.navigate('Quotations')}
-            />
-            <QuickActionCard
-              title="My Quotations"
-              subtitle="View the quotations already submitted on your account."
-              accentColor="#fdba74"
-              // Open the list screen that shows all quotations for this user.
-              onPress={() => navigation.navigate('QuotationList')}
-            />
-            <QuickActionCard
-              title="Request Inspection"
-              subtitle="Submit a new inspection request for your property."
-              accentColor="#86efac"
-              onPress={() => navigation.navigate('InspectionRequest')}
-            />
-            <QuickActionCard
-              title="My Inspection Requests"
-              subtitle="Review inspection progress and open final quotations when available."
-              accentColor="#4ade80"
-              onPress={() => navigation.navigate('InspectionRequestList')}
-            />
-            <QuickActionCard
-              title="Request Service"
-              subtitle="Send a support or maintenance request for your system."
-              accentColor="#fbbf24"
-              onPress={() => navigation.navigate('ServiceRequest')}
-            />
-            <QuickActionCard
-              title="My Service Requests"
-              subtitle="Track service requests and check their latest status."
-              accentColor="#fb923c"
-              onPress={() => navigation.navigate('ServiceRequestList')}
-            />
-            <QuickActionCard
-              title="My Testimonies"
-              subtitle="Review your submitted testimonies and their moderation status."
-              accentColor="#60a5fa"
-              onPress={() => navigation.navigate('MyTestimonies')}
-            />
-          </View>
-
-          <View style={styles.buttonStack}>
-            {/* These buttons mirror the same navigation actions as the cards. */}
-            <AppButton
-              style={styles.buttonSpacing}
-              title="Open SolMate Assistant"
-              variant="secondary"
-              onPress={() => navigation.navigate('Chatbot')}
-            />
-            <AppButton
-              title="Create Initial Quotation"
-              onPress={() => navigation.navigate('Quotations')}
-            />
-            <AppButton
-              style={styles.buttonSpacing}
-              title="My Quotations"
-              variant="secondary"
-              onPress={() => navigation.navigate('QuotationList')}
-            />
-            <AppButton
-              style={styles.buttonSpacing}
-              title="Request Inspection"
-              variant="outline"
-              onPress={() => navigation.navigate('InspectionRequest')}
-            />
-            <AppButton
-              style={styles.buttonSpacing}
-              title="My Inspection Requests"
-              variant="secondary"
-              onPress={() => navigation.navigate('InspectionRequestList')}
-            />
-            <AppButton
-              style={styles.buttonSpacing}
-              title="Request Service"
-              variant="outline"
-              onPress={() => navigation.navigate('ServiceRequest')}
-            />
-            <AppButton
-              style={styles.buttonSpacing}
-              title="View My Service Requests"
-              variant="secondary"
-              onPress={() => navigation.navigate('ServiceRequestList')}
-            />
-            <AppButton
-              style={styles.buttonSpacing}
-              title="My Testimonies"
-              variant="outline"
-              onPress={() => navigation.navigate('MyTestimonies')}
-            />
-          </View>
-        </AppCard>
-
-        <AppCard style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Service summary</Text>
-          <Text style={styles.sectionSubtitle}>
-            A simple overview of what you can manage from your dashboard.
-          </Text>
-
-          <View style={styles.summaryGrid}>
-            <View style={[styles.summaryCard, styles.summaryCardBlue]}>
-              <Text style={styles.summaryLabel}>Quotations</Text>
-              <Text style={styles.summaryValue}>Ready to review</Text>
-              <Text style={styles.summaryNote}>
-                Check pricing details and next steps.
-              </Text>
-            </View>
-
-            <View style={[styles.summaryCard, styles.summaryCardGreen]}>
-              <Text style={styles.summaryLabel}>Inspections</Text>
-              <Text style={styles.summaryValue}>Ready to request</Text>
-              <Text style={styles.summaryNote}>
-                Submit site inspections and follow their current status.
-              </Text>
-            </View>
-
-            <View style={[styles.summaryCard, styles.summaryCardAmber]}>
-              <Text style={styles.summaryLabel}>Service requests</Text>
-              <Text style={styles.summaryValue}>Maintenance made simple</Text>
-              <Text style={styles.summaryNote}>
-                Book battery checks, inverter support, and system servicing.
-              </Text>
-            </View>
-
-            <View style={[styles.summaryCard, styles.summaryCardCream]}>
-              <Text style={styles.summaryLabel}>Support</Text>
-              <Text style={styles.summaryValue}>Customer account active</Text>
-              <Text style={styles.summaryNote}>
-                Your dashboard is ready whenever you need it.
-              </Text>
-            </View>
-          </View>
-        </AppCard>
-
-        <AppCard style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Recent activity</Text>
-          <Text style={styles.sectionSubtitle}>
-            Activity will appear here as you submit service requests, book
-            inspections, and receive quotations.
-          </Text>
-
-          <View style={styles.activityPlaceholder}>
-            <Text style={styles.activityTitle}>No recent activity yet</Text>
-            <Text style={styles.activityText}>
-              Start by submitting a service request, booking an inspection, or
-              checking your quotations to build your dashboard history.
-            </Text>
-          </View>
-        </AppCard>
-
-        <AppCard style={styles.accountCard}>
-          <Text style={styles.sectionTitle}>Settings and account</Text>
-          <Text style={styles.sectionSubtitle}>
-            Open your customer settings page to review account details and
-            manage your session.
-          </Text>
-
-          <AppButton
-            style={styles.buttonSpacing}
-            title="Open Settings"
-            variant="secondary"
-            onPress={() => navigation.navigate('CustomerSettings')}
-          />
-        </AppCard>
+        {/* ── bottom nav row ─────────────────────────── */}
+        <View style={s.bottomNav}>
+          <Pressable style={s.navItem} onPress={() => {}}>
+            <Text style={s.navIconActive}>{'\ud83c\udfe0'}</Text>
+            <Text style={s.navLabelActive}>Home</Text>
+          </Pressable>
+          <Pressable
+            style={s.navItem}
+            onPress={() => navigation.navigate('QuotationList')}>
+            <Text style={s.navIcon}>{'\ud83d\udccb'}</Text>
+            <Text style={s.navLabel}>Quotation</Text>
+          </Pressable>
+          <Pressable
+            style={s.navItem}
+            onPress={() => navigation.navigate('ServiceRequestList')}>
+            <Text style={s.navIcon}>{'\u2699\ufe0f'}</Text>
+            <Text style={s.navLabel}>Services</Text>
+          </Pressable>
+          <Pressable
+            style={s.navItem}
+            onPress={() => navigation.navigate('InspectionRequestList')}>
+            <Text style={s.navIcon}>{'\ud83d\udccd'}</Text>
+            <Text style={s.navLabel}>Tracking</Text>
+          </Pressable>
+          <Pressable
+            style={s.navItem}
+            onPress={() => navigation.navigate('CustomerSettings')}>
+            <Text style={s.navIcon}>{'\ud83d\udc64'}</Text>
+            <Text style={s.navLabel}>Profile</Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: '#f5f7fb',
-    flex: 1,
-  },
-  contentContainer: {
-    padding: 20,
-    paddingBottom: 28,
-  },
-  heroCard: {
-    backgroundColor: '#dbeafe',
-    borderRadius: 28,
-    marginBottom: 18,
-    overflow: 'hidden',
-    padding: 22,
-  },
-  heroTextWrap: {
-    marginBottom: 18,
-    paddingRight: 28,
-  },
-  eyebrow: {
-    color: '#1d4ed8',
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  heroTitle: {
-    color: '#0f172a',
-    fontSize: 28,
-    fontWeight: '800',
-    lineHeight: 34,
-    marginBottom: 10,
-  },
-  heroSubtitle: {
-    color: '#334155',
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  heroBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#ffffff',
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  heroBadgeLabel: {
-    color: '#64748b',
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 2,
-    textTransform: 'uppercase',
-  },
-  heroBadgeValue: {
-    color: '#0f172a',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  notificationCard: {
-    backgroundColor: '#ffffff',
-    borderColor: '#bfdbfe',
-    borderRadius: 24,
-    borderWidth: 1,
+/* ── styles ─────────────────────────────────────────────────── */
+
+const s = StyleSheet.create({
+  safe: {flex: 1, backgroundColor: BG},
+  scroll: {paddingHorizontal: 20, paddingTop: 18, paddingBottom: 30},
+  pressed: {opacity: 0.85},
+
+  /* header */
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 18,
-    padding: 20,
+    marginBottom: 10,
   },
-  notificationCardTextWrap: {
-    flex: 1,
-    paddingRight: 16,
-  },
-  notificationEyebrow: {
-    color: '#2563eb',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  notificationTitle: {
-    color: '#0f172a',
-    fontSize: 20,
-    fontWeight: '800',
-    marginBottom: 8,
-  },
-  notificationSubtitle: {
-    color: '#475569',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  notificationBadge: {
+  brandRow: {flexDirection: 'row'},
+  brandSol: {fontSize: 22, fontWeight: '800', color: NAVY},
+  brandMate: {fontSize: 22, fontWeight: '800', color: GOLD},
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: NAVY,
     alignItems: 'center',
-    backgroundColor: '#dbeafe',
-    borderRadius: 18,
     justifyContent: 'center',
-    minHeight: 78,
-    minWidth: 86,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
   },
-  notificationBadgeValue: {
-    color: '#1d4ed8',
+  avatarText: {color: '#fff', fontSize: 17, fontWeight: '700'},
+
+  /* welcome */
+  welcomeTitle: {
     fontSize: 26,
     fontWeight: '800',
+    color: NAVY,
+    marginBottom: 4,
   },
-  notificationBadgeLabel: {
-    color: '#1e40af',
-    fontSize: 11,
-    fontWeight: '700',
-    marginTop: 2,
-    textTransform: 'uppercase',
-  },
-  sectionCard: {
-    marginBottom: 18,
-  },
+  welcomeSub: {fontSize: 14, color: MUTED, marginBottom: 18},
+
+  /* section */
   sectionTitle: {
-    color: '#0f172a',
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  sectionSubtitle: {
-    color: '#64748b',
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 16,
-  },
-  quickActionGrid: {
-    marginBottom: 18,
-  },
-  quickActionCard: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
-    borderRadius: 20,
-    borderWidth: 1,
+    fontSize: 18,
+    fontWeight: '800',
+    color: NAVY,
     marginBottom: 12,
-    padding: 16,
+    marginTop: 6,
   },
-  quickActionHeader: {
-    alignItems: 'center',
+
+  /* summary */
+  summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 14,
   },
-  quickActionAccent: {
-    borderRadius: 999,
-    height: 10,
-    width: 56,
-  },
-  quickActionBadge: {
-    backgroundColor: '#ffffff',
-    borderRadius: 999,
-    color: '#64748b',
-    fontSize: 11,
-    fontWeight: '700',
-    overflow: 'hidden',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    textTransform: 'uppercase',
-  },
-  quickActionTitle: {
-    color: '#0f172a',
-    fontSize: 17,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  quickActionSubtitle: {
-    color: '#475569',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  quickActionFooter: {
-    borderTopColor: '#e2e8f0',
-    borderTopWidth: 1,
-    marginTop: 14,
-    paddingTop: 12,
-  },
-  quickActionFooterText: {
-    color: '#2563eb',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  buttonStack: {
-    marginTop: 2,
-  },
-  buttonSpacing: {
-    marginTop: 12,
-  },
-  highlightStrip: {
-    backgroundColor: '#eff6ff',
-    borderRadius: 18,
-    marginBottom: 16,
-    padding: 16,
-  },
-  highlightTitle: {
-    color: '#1d4ed8',
-    fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  highlightText: {
-    color: '#334155',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  summaryGrid: {
-    gap: 12,
-  },
   summaryCard: {
-    borderRadius: 20,
+    flex: 1,
+    backgroundColor: CARD,
+    borderRadius: R,
     padding: 16,
+    marginHorizontal: 4,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
   },
-  summaryCardBlue: {
-    backgroundColor: '#eff6ff',
+  summaryIcon: {fontSize: 18, marginBottom: 8},
+  summaryLabel: {fontSize: 13, color: MUTED, marginBottom: 4},
+  summaryValue: {fontSize: 16, fontWeight: '800', color: NAVY},
+
+  /* info card */
+  infoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: CARD,
+    borderRadius: R,
+    padding: 16,
+    marginBottom: 10,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
   },
-  summaryCardGreen: {
-    backgroundColor: '#f0fdf4',
+  infoIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: '#eaf0fb',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
   },
-  summaryCardAmber: {
-    backgroundColor: '#fff7ed',
+  infoIcon: {fontSize: 20},
+  infoTextWrap: {flex: 1},
+  infoTitle: {fontSize: 15, fontWeight: '800', color: NAVY, marginBottom: 3},
+  infoSub: {fontSize: 13, color: MUTED},
+  chevron: {fontSize: 18, color: '#bcc5d3', fontWeight: '600'},
+
+  /* action grid */
+  actionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 14,
   },
-  summaryCardCream: {
-    backgroundColor: '#fff7ed',
+  actionCard: {
+    width: '48%',
+    backgroundColor: CARD,
+    borderRadius: R,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  summaryLabel: {
-    color: '#64748b',
-    fontSize: 13,
-    fontWeight: '700',
-    marginBottom: 8,
-    textTransform: 'uppercase',
+  actionIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#eaf0fb',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
   },
-  summaryValue: {
-    color: '#0f172a',
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 6,
+  actionIcon: {fontSize: 18},
+  actionTitle: {fontSize: 15, fontWeight: '800', color: NAVY, marginBottom: 2},
+  actionSub: {fontSize: 13, color: MUTED},
+
+  /* more actions */
+  moreRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 14,
   },
-  summaryNote: {
-    color: '#475569',
-    fontSize: 14,
-    lineHeight: 20,
+  moreBtn: {
+    flex: 1,
+    backgroundColor: CARD,
+    borderRadius: R,
+    paddingVertical: 14,
+    marginHorizontal: 4,
+    alignItems: 'center',
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  activityPlaceholder: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
-    borderRadius: 20,
-    borderStyle: 'dashed',
-    borderWidth: 1,
-    padding: 18,
+  moreBtnText: {fontSize: 13, fontWeight: '700', color: NAVY},
+
+  /* chat shortcut */
+  chatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginBottom: 22,
+    marginTop: 4,
   },
-  activityTitle: {
-    color: '#0f172a',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 8,
+  chatText: {fontSize: 13, color: MUTED, marginRight: 10},
+  chatBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: NAVY,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: NAVY,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  activityText: {
-    color: '#64748b',
-    fontSize: 14,
-    lineHeight: 20,
+  chatBtnIcon: {fontSize: 22},
+
+  /* bottom nav */
+  bottomNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: CARD,
+    borderRadius: R,
+    paddingVertical: 10,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: -2},
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  accountCard: {
-    marginBottom: 8,
-  },
-  pressed: {
-    opacity: 0.88,
-  },
+  navItem: {alignItems: 'center', paddingHorizontal: 6},
+  navIcon: {fontSize: 20, marginBottom: 2},
+  navIconActive: {fontSize: 20, marginBottom: 2},
+  navLabel: {fontSize: 11, color: MUTED, fontWeight: '600'},
+  navLabelActive: {fontSize: 11, color: NAVY, fontWeight: '700'},
 });

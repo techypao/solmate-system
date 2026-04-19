@@ -1,8 +1,10 @@
 import React, {useContext, useState} from 'react';
 import {
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -10,6 +12,7 @@ import {
 } from 'react-native';
 import {AuthContext} from '../src/context/AuthContext';
 import {ApiError, apiPost} from '../src/services/api';
+import {authColors, authStyles} from './authStyles';
 
 type RegisterScreenProps = {
   navigation?: {
@@ -25,8 +28,15 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleRegister = async () => {
+    if (submitting) {
+      return;
+    }
+
     if (
       !name.trim() ||
       !email.trim() ||
@@ -52,6 +62,7 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
     };
 
     try {
+      setSubmitting(true);
       const data = await apiPost<{token: string}>(
         '/register',
         registerData,
@@ -71,6 +82,8 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
       }
 
       setErrorMessage('Registration failed.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -79,131 +92,127 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.scrollContent}
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Create Account</Text>
+    <KeyboardAvoidingView
+      style={{flex: 1, backgroundColor: authColors.screenBg}}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView
+        contentContainerStyle={authStyles.screenScroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
+        <View style={authStyles.brandRow}>
+          <Text style={authStyles.brandSol}>Sol</Text>
+          <Text style={authStyles.brandMate}>Mate</Text>
+        </View>
 
-        {errorMessage ? (
-          <Text style={styles.errorText}>{errorMessage}</Text>
-        ) : null}
+        <Text style={authStyles.pageTitle}>Register</Text>
 
-        <TextInput
-          onChangeText={setName}
-          placeholder="Full Name"
-          placeholderTextColor="#94a3b8"
-          style={styles.input}
-          value={name}
-        />
+        <View style={authStyles.card}>
+          {errorMessage ? (
+            <Text style={authStyles.errorText}>{errorMessage}</Text>
+          ) : null}
 
-        <TextInput
-          autoCapitalize="none"
-          keyboardType="email-address"
-          onChangeText={setEmail}
-          placeholder="Email"
-          placeholderTextColor="#94a3b8"
-          style={styles.input}
-          value={email}
-        />
+          <Text style={authStyles.label}>Fullname</Text>
+          <TextInput
+            onChangeText={value => {
+              setName(value);
+              if (errorMessage) {
+                setErrorMessage('');
+              }
+            }}
+            placeholderTextColor={authColors.placeholderText}
+            style={authStyles.input}
+            value={name}
+          />
 
-        <TextInput
-          onChangeText={setPassword}
-          placeholder="Password"
-          placeholderTextColor="#94a3b8"
-          secureTextEntry={true}
-          style={styles.input}
-          value={password}
-        />
+          <Text style={authStyles.label}>Email</Text>
+          <TextInput
+            autoCapitalize="none"
+            keyboardType="email-address"
+            onChangeText={value => {
+              setEmail(value);
+              if (errorMessage) {
+                setErrorMessage('');
+              }
+            }}
+            placeholderTextColor={authColors.placeholderText}
+            style={authStyles.input}
+            value={email}
+          />
 
-        <TextInput
-          onChangeText={setConfirmPassword}
-          placeholder="Confirm Password"
-          placeholderTextColor="#94a3b8"
-          secureTextEntry={true}
-          style={styles.input}
-          value={confirmPassword}
-        />
+          <Text style={authStyles.label}>Password</Text>
+          <View style={authStyles.passwordWrap}>
+            <TextInput
+              onChangeText={value => {
+                setPassword(value);
+                if (errorMessage) {
+                  setErrorMessage('');
+                }
+              }}
+              placeholderTextColor={authColors.placeholderText}
+              secureTextEntry={!showPassword}
+              style={[authStyles.input, authStyles.passwordInput]}
+              value={password}
+            />
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setShowPassword(c => !c)}
+              style={authStyles.eyeBtn}>
+              <View style={authStyles.eyeShape}>
+                <View style={authStyles.eyePupil} />
+              </View>
+              {!showPassword && <View style={authStyles.eyeSlash} />}
+            </Pressable>
+          </View>
 
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={handleRegister}
-          style={styles.registerButton}>
-          <Text style={styles.registerButtonText}>Register</Text>
-        </TouchableOpacity>
+          <Text style={authStyles.label}>Confirm Password</Text>
+          <View style={authStyles.passwordWrap}>
+            <TextInput
+              onChangeText={value => {
+                setConfirmPassword(value);
+                if (errorMessage) {
+                  setErrorMessage('');
+                }
+              }}
+              placeholderTextColor={authColors.placeholderText}
+              secureTextEntry={!showConfirmPassword}
+              style={[authStyles.input, authStyles.passwordInput]}
+              value={confirmPassword}
+            />
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setShowConfirmPassword(c => !c)}
+              style={authStyles.eyeBtn}>
+              <View style={authStyles.eyeShape}>
+                <View style={authStyles.eyePupil} />
+              </View>
+              {!showConfirmPassword && <View style={authStyles.eyeSlash} />}
+            </Pressable>
+          </View>
 
-        <TouchableOpacity
-          activeOpacity={0.75}
-          onPress={handleLoginPress}
-          style={styles.loginButton}>
-          <Text style={styles.loginText}>Already have an account? Login</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            disabled={submitting}
+            onPress={handleRegister}
+            style={[
+              authStyles.primaryBtn,
+              submitting ? authStyles.primaryBtnDisabled : null,
+            ]}>
+            <Text style={authStyles.primaryBtnText}>
+              {submitting ? 'Registering...' : 'Register'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.75}
+            onPress={handleLoginPress}
+            style={authStyles.bottomLink}>
+            <Text style={authStyles.bottomLinkText}>
+              Have an account?{' '}
+              <Text style={authStyles.bottomLinkBold}>Login Here</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 32,
-    backgroundColor: '#f8fafc',
-  },
-  card: {
-    width: '100%',
-    maxWidth: 380,
-    alignSelf: 'center',
-    padding: 24,
-    borderRadius: 24,
-    backgroundColor: '#ffffff',
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: '700',
-    color: '#0f172a',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  errorText: {
-    color: '#dc2626',
-    fontSize: 14,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  input: {
-    height: 54,
-    borderRadius: 16,
-    backgroundColor: '#f1f5f9',
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#0f172a',
-    marginBottom: 14,
-  },
-  registerButton: {
-    marginTop: 8,
-    height: 54,
-    borderRadius: 16,
-    backgroundColor: '#2563eb',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  registerButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  loginButton: {
-    marginTop: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loginText: {
-    color: '#475569',
-    fontSize: 14,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-});

@@ -1,7 +1,9 @@
 import React, {useContext, useState} from 'react';
 import {
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
-  StyleSheet,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -9,6 +11,7 @@ import {
 } from 'react-native';
 import {AuthContext} from '../src/context/AuthContext';
 import {ApiError, apiPost} from '../src/services/api';
+import {authColors, authStyles} from './authStyles';
 
 type LoginScreenProps = {
   navigation?: {
@@ -72,212 +75,111 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Login</Text>
+    <KeyboardAvoidingView
+      style={{flex: 1, backgroundColor: authColors.screenBg}}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView
+        contentContainerStyle={authStyles.screenScroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
+        <View style={authStyles.brandRow}>
+          <Text style={authStyles.brandSol}>Sol</Text>
+          <Text style={authStyles.brandMate}>Mate</Text>
+        </View>
 
-        {errorMessage ? (
-          <Text style={styles.errorText}>{errorMessage}</Text>
-        ) : null}
+        <Text style={authStyles.pageTitle}>Login</Text>
 
-        <TextInput
-          autoCapitalize="none"
-          keyboardType="email-address"
-          onChangeText={value => {
-            setEmail(value);
-            if (errorMessage) {
-              setErrorMessage('');
-            }
-          }}
-          placeholder="Email"
-          placeholderTextColor="#94a3b8"
-          style={styles.input}
-          value={email}
-        />
+        <View style={authStyles.card}>
+          {errorMessage ? (
+            <Text style={authStyles.errorText}>{errorMessage}</Text>
+          ) : null}
 
-        <View style={styles.passwordWrap}>
+          <Text style={authStyles.label}>Email</Text>
           <TextInput
+            autoCapitalize="none"
+            keyboardType="email-address"
             onChangeText={value => {
-              setPassword(value);
+              setEmail(value);
               if (errorMessage) {
                 setErrorMessage('');
               }
             }}
-            placeholder="Password"
-            placeholderTextColor="#94a3b8"
-            secureTextEntry={!showPassword}
-            style={[styles.input, styles.passwordInput]}
-            value={password}
+            placeholderTextColor={authColors.placeholderText}
+            style={authStyles.input}
+            value={email}
           />
 
+          <Text style={authStyles.label}>Password</Text>
+          <View style={authStyles.passwordWrap}>
+            <TextInput
+              onChangeText={value => {
+                setPassword(value);
+                if (errorMessage) {
+                  setErrorMessage('');
+                }
+              }}
+              placeholderTextColor={authColors.placeholderText}
+              secureTextEntry={!showPassword}
+              style={[authStyles.input, authStyles.passwordInput]}
+              value={password}
+            />
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setShowPassword(c => !c)}
+              style={authStyles.eyeBtn}>
+              <View style={authStyles.eyeShape}>
+                <View style={authStyles.eyePupil} />
+              </View>
+              {!showPassword && <View style={authStyles.eyeSlash} />}
+            </Pressable>
+          </View>
+
           <Pressable
-            accessibilityRole="button"
-            onPress={() => setShowPassword(current => !current)}
-            style={styles.passwordToggle}>
-            <Text style={styles.passwordToggleText}>
-              {showPassword ? 'Hide' : 'Show'}
-            </Text>
+            accessibilityRole="checkbox"
+            accessibilityState={{checked: rememberSession}}
+            onPress={() => setRememberSession(c => !c)}
+            style={authStyles.rememberRow}>
+            <View
+              style={[
+                authStyles.checkbox,
+                rememberSession ? authStyles.checkboxChecked : null,
+              ]}>
+              {rememberSession ? (
+                <Text style={authStyles.checkboxMark}>{'✓'}</Text>
+              ) : null}
+            </View>
+            <View style={authStyles.rememberTextWrap}>
+              <Text style={authStyles.rememberLabel}>Remember me</Text>
+              <Text style={authStyles.rememberHint}>
+                Keep this account signed in on this device.
+              </Text>
+            </View>
           </Pressable>
-        </View>
 
-        <Pressable
-          accessibilityRole="checkbox"
-          accessibilityState={{checked: rememberSession}}
-          onPress={() => setRememberSession(current => !current)}
-          style={styles.rememberRow}>
-          <View
+          <TouchableOpacity
+            activeOpacity={0.85}
+            disabled={submitting}
+            onPress={handleLogin}
             style={[
-              styles.checkbox,
-              rememberSession ? styles.checkboxChecked : null,
+              authStyles.primaryBtn,
+              submitting ? authStyles.primaryBtnDisabled : null,
             ]}>
-            {rememberSession ? <Text style={styles.checkboxMark}>✓</Text> : null}
-          </View>
-          <View style={styles.rememberTextWrap}>
-            <Text style={styles.rememberLabel}>Remember me</Text>
-            <Text style={styles.rememberHint}>
-              Keep this account signed in on this device.
+            <Text style={authStyles.primaryBtnText}>
+              {submitting ? 'Logging in...' : 'Login'}
             </Text>
-          </View>
-        </Pressable>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          activeOpacity={0.85}
-          disabled={submitting}
-          onPress={handleLogin}
-          style={[styles.loginButton, submitting ? styles.loginButtonDisabled : null]}>
-          <Text style={styles.loginButtonText}>
-            {submitting ? 'Logging in...' : 'Login'}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.75}
-          onPress={handleRegisterPress}
-          style={styles.registerButton}>
-          <Text style={styles.registerText}>Don't have an account? Register</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+          <TouchableOpacity
+            activeOpacity={0.75}
+            onPress={handleRegisterPress}
+            style={authStyles.bottomLink}>
+            <Text style={authStyles.bottomLinkText}>
+              Don't have an account?{' '}
+              <Text style={authStyles.bottomLinkBold}>Create Account</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 32,
-    backgroundColor: '#f8fafc',
-  },
-  card: {
-    width: '100%',
-    maxWidth: 380,
-    alignSelf: 'center',
-    padding: 24,
-    borderRadius: 24,
-    backgroundColor: '#ffffff',
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: '700',
-    color: '#0f172a',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  errorText: {
-    color: '#dc2626',
-    fontSize: 14,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  input: {
-    height: 54,
-    borderRadius: 16,
-    backgroundColor: '#f1f5f9',
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#0f172a',
-    marginBottom: 14,
-  },
-  passwordWrap: {
-    position: 'relative',
-  },
-  passwordInput: {
-    paddingRight: 72,
-  },
-  passwordToggle: {
-    position: 'absolute',
-    right: 16,
-    top: 17,
-  },
-  passwordToggleText: {
-    color: '#2563eb',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  rememberRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  checkboxChecked: {
-    backgroundColor: '#2563eb',
-    borderColor: '#2563eb',
-  },
-  checkboxMark: {
-    color: '#ffffff',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  rememberTextWrap: {
-    flex: 1,
-  },
-  rememberLabel: {
-    color: '#0f172a',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  rememberHint: {
-    color: '#64748b',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  loginButton: {
-    marginTop: 8,
-    height: 54,
-    borderRadius: 16,
-    backgroundColor: '#2563eb',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loginButtonDisabled: {
-    opacity: 0.7,
-  },
-  loginButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  registerButton: {
-    marginTop: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  registerText: {
-    color: '#475569',
-    fontSize: 14,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-});

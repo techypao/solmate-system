@@ -36,7 +36,7 @@ export default function CustomerStack() {
       <Stack.Screen
         name="Home"
         component={HomeScreen}
-        options={{ title: 'Customer Dashboard' }}
+        options={{ headerShown: false }}
       />
 
       <Stack.Screen
