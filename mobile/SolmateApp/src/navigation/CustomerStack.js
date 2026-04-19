@@ -54,7 +54,7 @@ export default function CustomerStack() {
       <Stack.Screen
         name="Chatbot"
         component={ChatbotScreen}
-        options={{ title: 'SolMate Assistant' }}
+        options={{ headerShown: false }}
       />
 
       {/* Quotation creation form */}

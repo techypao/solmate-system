@@ -145,7 +145,7 @@ function buildRequestBody(message: string) {
     ],
     generationConfig: {
       temperature: 0.4,
-      maxOutputTokens: 220,
+      maxOutputTokens: 1024,
     },
     store: false,
   };
