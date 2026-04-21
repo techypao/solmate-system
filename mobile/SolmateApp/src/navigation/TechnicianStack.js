@@ -24,7 +24,7 @@ export default function TechnicianStack() {
       <Stack.Screen
         name="TechnicianDashboard"
         component={TechnicianDashboardScreen}
-        options={{title: 'Technician Dashboard'}}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="TechnicianSettings"
@@ -39,7 +39,7 @@ export default function TechnicianStack() {
       <Stack.Screen
         name="AssignedInspectionRequests"
         component={AssignedTasksScreen}
-        options={{title: 'Assigned Inspection Requests'}}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="TechnicianServiceRequests"
@@ -50,7 +50,7 @@ export default function TechnicianStack() {
       <Stack.Screen
         name="InspectionDetails"
         component={RequestDetailsScreen}
-        options={{title: 'Inspection Details'}}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="FinalQuotationForm"

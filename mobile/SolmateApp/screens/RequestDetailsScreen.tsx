@@ -1,4 +1,4 @@
-import React, {useCallback, useContext, useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -11,9 +11,7 @@ import {
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 
-import {AppButton, AppCard} from '../components';
 import StatusBadge from '../components/StatusBadge';
-import {AuthContext} from '../src/context/AuthContext';
 import {ApiError} from '../src/services/api';
 import {
   getAssignedInspectionRequestById,
@@ -23,101 +21,148 @@ import {
 } from '../src/services/technicianApi';
 import {
   canCreateFinalQuotation,
-  formatDate,
   formatDateTime,
-  getCustomerEmail,
   getCustomerName,
 } from '../src/utils/technicianRequests';
 
-function getFriendlyErrorMessage(error: unknown) {
-  if (error instanceof ApiError) {
-    return error.message;
-  }
+// ─── colour tokens ────────────────────────────────────────────────────────────
+const NAVY   = '#152a4a';
+const GOLD   = '#d4a017';
+const BG     = '#dde5f4';
+const CARD   = '#ffffff';
+const MUTED  = '#64748b';
+const SHADOW = '#8a9bbd';
 
+// ─── helpers ─────────────────────────────────────────────────────────────────
+function getFriendlyErrorMessage(error: unknown) {
+  if (error instanceof ApiError) {return error.message;}
   return 'Could not load the inspection request details.';
 }
 
-function DetailRow({
-  label,
-  value,
-}: {
-  label: string;
-  value?: string | null;
-}) {
+function formatIRQId(id: number) {
+  return `IRQ-${String(id).padStart(4, '0')}`;
+}
+
+function formatSchedule(dateNeeded?: string | null) {
+  if (!dateNeeded) {return 'Not specified';}
+  const d = new Date(dateNeeded);
+  if (isNaN(d.getTime())) {return dateNeeded;}
   return (
-    <View style={styles.detailRow}>
-      <Text style={styles.detailLabel}>{label}</Text>
-      <Text style={styles.detailValue}>{value || 'Not available'}</Text>
+    d.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'}) +
+    ' • ' +
+    d.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'})
+  );
+}
+
+// ─── InfoRow ──────────────────────────────────────────────────────────────────
+function InfoRow({label, value}: {label: string; value?: string | null}) {
+  return (
+    <View style={s.infoRow}>
+      <Text style={s.infoLabel}>{label}</Text>
+      <Text style={s.infoValue}>{value || 'Not available'}</Text>
     </View>
   );
 }
 
-function StatusActionButton({
-  label,
-  selected,
-  disabled,
-  onPress,
-}: {
-  label: string;
-  selected: boolean;
-  disabled: boolean;
-  onPress: () => void;
-}) {
+// ─── bottom nav icons ─────────────────────────────────────────────────────────
+type Tab = 'Home' | 'Inspections' | 'Services' | 'Profile';
+
+function HomeIcon({active}: {active?: boolean}) {
+  const c = active ? NAVY : MUTED;
   return (
-    <Pressable
-      disabled={disabled}
-      onPress={onPress}
-      style={({pressed}) => [
-        styles.statusButton,
-        selected ? styles.statusButtonSelected : null,
-        pressed && !disabled ? styles.statusButtonPressed : null,
-        disabled ? styles.statusButtonDisabled : null,
-      ]}>
-      <Text
-        style={[
-          styles.statusButtonText,
-          selected ? styles.statusButtonTextSelected : null,
-        ]}>
-        {label}
-      </Text>
-    </Pressable>
+    <View style={nav.iconWrap}>
+      <View style={[nav.roof, {borderBottomColor: c}]} />
+      <View style={[nav.houseBody, {backgroundColor: c}]} />
+    </View>
+  );
+}
+function InspectIcon({active}: {active?: boolean}) {
+  const c = active ? NAVY : MUTED;
+  return (
+    <View style={nav.iconWrap}>
+      <View style={[nav.listBox, {backgroundColor: c}]}>
+        <View style={nav.listLine} />
+        <View style={[nav.listLine, {width: 12}]} />
+        <View style={nav.listLine} />
+      </View>
+    </View>
+  );
+}
+function ServicesIcon({active}: {active?: boolean}) {
+  const c = active ? NAVY : MUTED;
+  return (
+    <View style={nav.iconWrap}>
+      <View style={[nav.gear, {borderColor: c}]}>
+        <View style={[nav.gearInner, {backgroundColor: c}]} />
+      </View>
+    </View>
+  );
+}
+function ProfileIcon({active}: {active?: boolean}) {
+  const c = active ? NAVY : MUTED;
+  return (
+    <View style={nav.iconWrap}>
+      <View style={[nav.profileHead, {backgroundColor: c}]} />
+      <View style={[nav.profileBody, {backgroundColor: c}]} />
+    </View>
+  );
+}
+function BottomNav({onPress}: {onPress: (t: Tab) => void}) {
+  const tabs: {key: Tab; label: string; Icon: React.FC<{active?: boolean}>}[] = [
+    {key: 'Home',        label: 'Home',        Icon: HomeIcon},
+    {key: 'Inspections', label: 'Inspections', Icon: InspectIcon},
+    {key: 'Services',    label: 'Services',    Icon: ServicesIcon},
+    {key: 'Profile',     label: 'Profile',     Icon: ProfileIcon},
+  ];
+  return (
+    <View style={nav.bar}>
+      {tabs.map(({key, label, Icon}) => (
+        <Pressable key={key} style={nav.tab} onPress={() => onPress(key)}>
+          <Icon active={key === 'Inspections'} />
+          <Text style={[nav.label, key === 'Inspections' && nav.labelActive]}>
+            {label}
+          </Text>
+        </Pressable>
+      ))}
+    </View>
   );
 }
 
-const STATUS_OPTIONS: Array<{
-  label: string;
-  value: TechnicianUpdatableStatus;
-  successMessage: string;
-}> = [
-  {
-    label: 'Assigned',
-    value: 'assigned',
-    successMessage: 'The inspection request has been moved back to assigned.',
-  },
-  {
-    label: 'In Progress',
-    value: 'in_progress',
-    successMessage: 'The inspection request is now in progress.',
-  },
-  {
-    label: 'Completed',
-    value: 'completed',
-    successMessage: 'The inspection request has been marked as completed.',
-  },
+// ─── status options ───────────────────────────────────────────────────────────
+const STATUS_OPTIONS: {label: string; value: TechnicianUpdatableStatus}[] = [
+  {label: 'Assigned',    value: 'assigned'},
+  {label: 'In Progress', value: 'in_progress'},
+  {label: 'Completed',   value: 'completed'},
 ];
 
+// ─── shared header skeleton ───────────────────────────────────────────────────
+function ScreenHeader({onBack}: {onBack: () => void}) {
+  return (
+    <View style={s.headerRow}>
+      <Pressable style={s.backBtn} onPress={onBack} hitSlop={10}>
+        <Text style={s.backArrow}>‹</Text>
+      </Pressable>
+      <Text style={s.headerTitle}>Inspection Details</Text>
+      {/* spacer keeps title centered */}
+      <View style={s.backBtn} />
+    </View>
+  );
+}
+
+// ─── main screen ──────────────────────────────────────────────────────────────
 export default function RequestDetailsScreen({navigation, route}: any) {
-  const {user} = useContext(AuthContext);
   const inspectionRequestId = route?.params?.inspectionRequestId;
   const initialInspectionRequest = route?.params?.initialInspectionRequest as
     | TechnicianInspectionRequest
     | undefined;
 
   const [inspectionRequest, setInspectionRequest] =
-    useState<TechnicianInspectionRequest | null>(initialInspectionRequest || null);
+    useState<TechnicianInspectionRequest | null>(initialInspectionRequest ?? null);
   const [loading, setLoading] = useState(!initialInspectionRequest);
   const [errorMessage, setErrorMessage] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [selectedStatus, setSelectedStatus] =
+    useState<TechnicianUpdatableStatus | null>(null);
 
   const loadInspectionRequest = useCallback(
     async (showLoadingState = false) => {
@@ -127,23 +172,15 @@ export default function RequestDetailsScreen({navigation, route}: any) {
         setLoading(false);
         return;
       }
-
       try {
-        if (showLoadingState) {
-          setLoading(true);
-        }
-
+        if (showLoadingState) {setLoading(true);}
         setErrorMessage('');
         const request = await getAssignedInspectionRequestById(inspectionRequestId);
-
         if (!request) {
           setInspectionRequest(null);
-          setErrorMessage(
-            'This inspection request was not found in your assigned list.',
-          );
+          setErrorMessage('This inspection request was not found in your assigned list.');
           return;
         }
-
         setInspectionRequest(request);
       } catch (error) {
         setInspectionRequest(null);
@@ -161,387 +198,421 @@ export default function RequestDetailsScreen({navigation, route}: any) {
     }, [inspectionRequest, loadInspectionRequest]),
   );
 
-  const handleStatusUpdate = async (
-    nextStatus: TechnicianUpdatableStatus,
-    successMessage: string,
-  ) => {
-    if (!inspectionRequest) {
+  // Save = apply the selected status pill (if changed), then stay on screen
+  const handleSave = async () => {
+    if (!inspectionRequest) {navigation.goBack(); return;}
+    const statusToSave = selectedStatus;
+    if (!statusToSave || statusToSave === inspectionRequest.status) {
+      Alert.alert('No changes', 'Select a new status before saving.');
       return;
     }
-
     try {
       setActionLoading(true);
-
-      const updatedRequest = await updateInspectionRequestStatus(
+      const updated = await updateInspectionRequestStatus(
         inspectionRequest.id,
-        nextStatus,
+        statusToSave,
       );
-
-      setInspectionRequest(updatedRequest);
-      await loadInspectionRequest(false);
-
-      Alert.alert('Success', successMessage);
+      setInspectionRequest(updated);
+      setSelectedStatus(null);
+      Alert.alert('Saved', 'Status updated successfully.');
     } catch (error) {
-      if (error instanceof ApiError) {
-        Alert.alert('Update failed', error.message);
-      } else {
-        Alert.alert(
-          'Update failed',
-          'Could not update the inspection request status.',
-        );
-      }
+      Alert.alert(
+        'Save failed',
+        error instanceof ApiError ? error.message : 'Could not update status.',
+      );
     } finally {
       setActionLoading(false);
     }
   };
 
+  function handleTabPress(tab: Tab) {
+    if (tab === 'Home')        {navigation.navigate('TechnicianDashboard');}
+    if (tab === 'Inspections') {navigation.navigate('AssignedInspectionRequests');}
+    if (tab === 'Services')    {navigation.navigate('TechnicianServiceRequests');}
+    if (tab === 'Profile')     {navigation.navigate('TechnicianSettings');}
+  }
+
+  // ── loading state ─────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <View style={styles.centeredContainer}>
-        <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={styles.loadingText}>Loading inspection details...</Text>
+      <View style={s.root}>
+        <SafeAreaView style={s.safe}>
+          <ScreenHeader onBack={() => navigation.goBack()} />
+          <View style={s.centered}>
+            <ActivityIndicator size="large" color={NAVY} />
+            <Text style={s.loadingText}>Loading inspection details…</Text>
+          </View>
+        </SafeAreaView>
+        <BottomNav onPress={handleTabPress} />
       </View>
     );
   }
 
+  // ── error state ───────────────────────────────────────────────────────────
   if (errorMessage || !inspectionRequest) {
     return (
-      <View style={styles.centeredContainer}>
-        <Text style={styles.errorTitle}>Inspection details unavailable</Text>
-        <Text style={styles.errorText}>
-          {errorMessage || 'No inspection request details were found.'}
-        </Text>
-        <AppButton
-          title="Back to requests"
-          onPress={() => navigation.goBack()}
-          style={styles.errorButton}
-        />
+      <View style={s.root}>
+        <SafeAreaView style={s.safe}>
+          <ScreenHeader onBack={() => navigation.goBack()} />
+          <View style={s.centered}>
+            <Text style={s.errorTitle}>Details unavailable</Text>
+            <Text style={s.errorText}>
+              {errorMessage || 'No inspection request details were found.'}
+            </Text>
+            <Pressable
+              style={s.retryBtn}
+              onPress={() => loadInspectionRequest(true)}>
+              <Text style={s.retryBtnText}>Try Again</Text>
+            </Pressable>
+            <Pressable
+              style={[s.retryBtn, s.retryBtnOutline]}
+              onPress={() => navigation.goBack()}>
+              <Text style={[s.retryBtnText, {color: NAVY}]}>Go Back</Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+        <BottomNav onPress={handleTabPress} />
       </View>
     );
   }
 
+  const activeStatus = selectedStatus ?? (inspectionRequest.status as TechnicianUpdatableStatus);
+  const canQuote = canCreateFinalQuotation(inspectionRequest.status);
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}>
-        <View style={styles.heroCard}>
-          <Text style={styles.eyebrow}>
-            Inspection request #{inspectionRequest.id}
-          </Text>
-          <Text style={styles.heroTitle}>{getCustomerName(inspectionRequest)}</Text>
-          <Text style={styles.heroSubtitle}>
-            Review the assigned inspection, update its status, and submit the
-            final quotation after the visit is completed.
-          </Text>
+    <View style={s.root}>
+      <SafeAreaView style={s.safe}>
+        {/* ── custom header ── */}
+        <ScreenHeader onBack={() => navigation.goBack()} />
 
-          <StatusBadge status={inspectionRequest.status} />
-        </View>
+        <ScrollView
+          contentContainerStyle={s.scroll}
+          showsVerticalScrollIndicator={false}>
 
-        <AppCard style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Customer information</Text>
-          <Text style={styles.sectionSubtitle}>
-            The customer connected to this assigned inspection request.
-          </Text>
-
-          <DetailRow
-            label="Customer name"
-            value={getCustomerName(inspectionRequest)}
-          />
-          <DetailRow
-            label="Customer email"
-            value={getCustomerEmail(inspectionRequest)}
-          />
-          <DetailRow
-            label="Customer contact number"
-            value={inspectionRequest.contact_number || 'Not provided'}
-          />
-        </AppCard>
-
-        <AppCard style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Inspection request details</Text>
-          <Text style={styles.sectionSubtitle}>
-            Core details captured by the customer for this visit.
-          </Text>
-
-          <DetailRow label="Inspection request ID" value={`${inspectionRequest.id}`} />
-          <DetailRow
-            label="Contact number"
-            value={inspectionRequest.contact_number || 'Not provided'}
-          />
-          <DetailRow
-            label="Date needed"
-            value={formatDate(inspectionRequest.date_needed)}
-          />
-          <DetailRow
-            label="Created"
-            value={formatDateTime(inspectionRequest.created_at)}
-          />
-
-          <View style={styles.detailsBlock}>
-            <Text style={styles.detailLabel}>Details</Text>
-            <Text style={styles.detailsText}>{inspectionRequest.details}</Text>
+          {/* ── status badge (top-right) ── */}
+          <View style={s.badgeRow}>
+            <StatusBadge status={inspectionRequest.status} />
           </View>
-        </AppCard>
 
-        <AppCard style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Technician assignment context</Text>
-          <Text style={styles.sectionSubtitle}>
-            This inspection request is currently assigned to your account.
-          </Text>
-
-          <DetailRow label="Technician name" value={user?.name || 'Technician'} />
-          <DetailRow
-            label="Technician email"
-            value={user?.email || 'No email available'}
-          />
-          <DetailRow label="Technician role" value={user?.role || 'technician'} />
-        </AppCard>
-
-        <AppCard style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Update status</Text>
-          <Text style={styles.sectionSubtitle}>
-            Choose the current inspection progress state. Buttons are disabled
-            while the update request is being submitted.
-          </Text>
-
-          <View style={styles.statusButtonRow}>
-            {STATUS_OPTIONS.map(option => (
-              <StatusActionButton
-                key={option.value}
-                label={option.label}
-                selected={inspectionRequest.status === option.value}
-                disabled={
-                  actionLoading || inspectionRequest.status === option.value
-                }
-                onPress={() =>
-                  handleStatusUpdate(option.value, option.successMessage)
-                }
-              />
-            ))}
+          {/* ── Customer Information ── */}
+          <View style={s.card}>
+            <Text style={s.cardTitle}>Customer Information</Text>
+            <InfoRow label="Name"       value={getCustomerName(inspectionRequest)} />
+            <InfoRow label="Contact No." value={inspectionRequest.contact_number} />
+            <InfoRow label="Address"    value={null} />
           </View>
-        </AppCard>
 
-        <AppCard style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Final quotation</Text>
-          <Text style={styles.sectionSubtitle}>
-            Only completed inspection requests can proceed to final quotation
-            submission.
-          </Text>
+          {/* ── Request Information ── */}
+          <View style={s.card}>
+            <Text style={s.cardTitle}>Request Information</Text>
+            <InfoRow
+              label="Inspection Request ID"
+              value={formatIRQId(inspectionRequest.id)}
+            />
+            <InfoRow
+              label="Schedule Date/Time"
+              value={formatSchedule(inspectionRequest.date_needed)}
+            />
+            <InfoRow
+              label="Created At"
+              value={formatDateTime(inspectionRequest.created_at)}
+            />
+            <InfoRow label="Related Initial Quote ID" value={null} />
+          </View>
 
-          {canCreateFinalQuotation(inspectionRequest.status) ? (
-            <View style={styles.completedStateCard}>
-              <Text style={styles.completedStateTitle}>
-                Ready for final quotation
-              </Text>
-              <Text style={styles.completedStateText}>
-                The inspection is completed and the quotation form is now
-                available.
-              </Text>
+          {/* ── Notes ── */}
+          <View style={s.card}>
+            <Text style={s.cardTitle}>Notes</Text>
+            <Text style={s.notesText}>
+              {inspectionRequest.details ||
+                'No notes provided for this inspection request.'}
+            </Text>
+          </View>
+
+          {/* ── Update Status ── */}
+          <View style={s.card}>
+            <Text style={s.cardTitle}>Update Status</Text>
+            <View style={s.statusRow}>
+              {STATUS_OPTIONS.map(opt => {
+                const isActive = activeStatus === opt.value;
+                return (
+                  <Pressable
+                    key={opt.value}
+                    style={[s.statusPill, isActive && s.statusPillActive]}
+                    onPress={() => setSelectedStatus(opt.value)}
+                    disabled={actionLoading}>
+                    <Text
+                      style={[s.statusPillText, isActive && s.statusPillTextActive]}>
+                      {opt.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
-          ) : (
-            <View style={styles.waitingStateCard}>
-              <Text style={styles.waitingStateTitle}>
-                Complete the inspection first
-              </Text>
-              <Text style={styles.waitingStateText}>
-                Mark this request as completed before opening the final
-                quotation form.
-              </Text>
-            </View>
-          )}
+          </View>
 
-          <AppButton
-            title="Open Final Quotation Form"
-            disabled={!canCreateFinalQuotation(inspectionRequest.status)}
-            onPress={() =>
+          {/* ── Action Buttons ── */}
+          <Pressable
+            style={({pressed}) => [
+              s.btnPrimary,
+              !canQuote && s.btnDisabled,
+              pressed && s.pressed,
+            ]}
+            onPress={() => {
+              if (!canQuote) {
+                Alert.alert(
+                  'Not Ready',
+                  'Mark this inspection as Completed before creating the final quotation.',
+                );
+                return;
+              }
               navigation.navigate('FinalQuotationForm', {
                 inspectionRequestId: inspectionRequest.id,
                 inspectionRequest,
-              })
-            }
-          />
-        </AppCard>
-      </ScrollView>
-    </SafeAreaView>
+              });
+            }}>
+            <Text style={s.btnPrimaryText}>Confirm Final Quotation</Text>
+          </Pressable>
+
+          <Pressable
+            style={({pressed}) => [
+              s.btnSecondary,
+              actionLoading && s.btnDisabled,
+              pressed && s.pressed,
+            ]}
+            onPress={handleSave}
+            disabled={actionLoading}>
+            <Text style={s.btnSecondaryText}>
+              {actionLoading ? 'Saving…' : 'Save'}
+            </Text>
+          </Pressable>
+
+        </ScrollView>
+      </SafeAreaView>
+
+      {/* ── bottom nav ── */}
+      <BottomNav onPress={handleTabPress} />
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: '#f5f7fb',
-    flex: 1,
+// ─── nav styles ───────────────────────────────────────────────────────────────
+const nav = StyleSheet.create({
+  bar: {
+    flexDirection: 'row',
+    backgroundColor: '#f2f4f8',
+    borderTopWidth: 1,
+    borderTopColor: '#dde2ec',
+    paddingBottom: 8,
+    paddingTop: 8,
   },
-  contentContainer: {
-    padding: 20,
-    paddingBottom: 28,
+  tab:        {flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3},
+  label:      {fontSize: 10, color: MUTED, fontWeight: '500'},
+  labelActive:{color: NAVY, fontWeight: '700'},
+  iconWrap:   {width: 24, height: 22, alignItems: 'center', justifyContent: 'flex-end'},
+  roof: {
+    width: 0, height: 0,
+    borderLeftWidth: 10, borderRightWidth: 10, borderBottomWidth: 8,
+    borderLeftColor: 'transparent', borderRightColor: 'transparent',
+    borderBottomColor: MUTED,
   },
-  centeredContainer: {
+  houseBody:   {width: 14, height: 9, borderRadius: 1},
+  listBox: {
+    width: 18, height: 20, borderRadius: 3,
+    alignItems: 'flex-start', justifyContent: 'center',
+    paddingHorizontal: 3, gap: 3,
+  },
+  listLine:    {height: 2, width: 10, backgroundColor: '#f2f4f8', borderRadius: 1},
+  gear: {
+    width: 20, height: 20, borderRadius: 10,
+    borderWidth: 3, alignItems: 'center', justifyContent: 'center',
+  },
+  gearInner:   {width: 8, height: 8, borderRadius: 4},
+  profileHead: {width: 10, height: 10, borderRadius: 5, marginBottom: 2},
+  profileBody: {width: 16, height: 8, borderTopLeftRadius: 8, borderTopRightRadius: 8},
+});
+
+// ─── screen styles ────────────────────────────────────────────────────────────
+const s = StyleSheet.create({
+  root: {flex: 1, backgroundColor: BG},
+  safe: {flex: 1, backgroundColor: BG},
+
+  // header
+  headerRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f7fb',
-    flex: 1,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: BG,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
   },
-  loadingText: {
-    color: '#475569',
-    fontSize: 14,
-    marginTop: 12,
-  },
-  errorTitle: {
-    color: '#0f172a',
-    fontSize: 22,
-    fontWeight: '800',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  errorText: {
-    color: '#b91c1c',
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-  errorButton: {
-    marginTop: 16,
-    width: '100%',
-  },
-  heroCard: {
-    backgroundColor: '#e0f2fe',
-    borderRadius: 28,
-    marginBottom: 18,
-    padding: 22,
-  },
-  eyebrow: {
-    color: '#0369a1',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  heroTitle: {
-    color: '#0f172a',
+  backArrow: {
     fontSize: 28,
+    color: NAVY,
+    fontWeight: '600',
+    lineHeight: 32,
+  },
+  headerTitle: {
+    fontSize: 18,
     fontWeight: '800',
-    lineHeight: 34,
+    color: NAVY,
+  },
+
+  // scroll
+  scroll: {
+    paddingHorizontal: 18,
+    paddingBottom: 28,
+    paddingTop: 4,
+  },
+
+  // status badge row
+  badgeRow: {
+    alignItems: 'flex-end',
+    marginBottom: 12,
+  },
+
+  // cards
+  card: {
+    backgroundColor: CARD,
+    borderRadius: 20,
+    marginBottom: 14,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 6,
+    shadowColor: SHADOW,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.10,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: NAVY,
     marginBottom: 10,
   },
-  heroSubtitle: {
+
+  // info rows
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#edf1f7',
+  },
+  infoLabel: {
+    fontSize: 13,
+    color: MUTED,
+    flex: 1,
+  },
+  infoValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: NAVY,
+    flex: 1,
+    textAlign: 'right',
+  },
+
+  // notes
+  notesText: {
+    fontSize: 14,
     color: '#334155',
-    fontSize: 14,
-    lineHeight: 21,
-    marginBottom: 16,
-  },
-  sectionCard: {
-    marginBottom: 18,
-  },
-  sectionTitle: {
-    color: '#0f172a',
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  sectionSubtitle: {
-    color: '#64748b',
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 16,
-  },
-  detailRow: {
-    borderTopColor: '#e2e8f0',
-    borderTopWidth: 1,
-    paddingVertical: 12,
-  },
-  detailLabel: {
-    color: '#64748b',
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 4,
-    textTransform: 'uppercase',
-  },
-  detailValue: {
-    color: '#0f172a',
-    fontSize: 15,
-    fontWeight: '600',
     lineHeight: 22,
-  },
-  detailsBlock: {
-    borderTopColor: '#e2e8f0',
+    paddingVertical: 10,
     borderTopWidth: 1,
-    paddingTop: 12,
+    borderTopColor: '#edf1f7',
   },
-  detailsText: {
-    color: '#0f172a',
-    fontSize: 15,
-    lineHeight: 23,
-  },
-  statusButtonRow: {
+
+  // status pills
+  statusRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#edf1f7',
   },
-  statusButton: {
-    backgroundColor: '#eff6ff',
-    borderColor: '#bfdbfe',
+  statusPill: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#b8c4d8',
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    backgroundColor: CARD,
+  },
+  statusPillActive: {
+    backgroundColor: NAVY,
+    borderColor: NAVY,
+  },
+  statusPillText:       {fontSize: 13, color: NAVY, fontWeight: '600'},
+  statusPillTextActive: {color: CARD},
+
+  // action buttons
+  btnPrimary: {
+    backgroundColor: GOLD,
     borderRadius: 14,
-    borderWidth: 1,
-    minWidth: 110,
-    paddingHorizontal: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: 10,
+    shadowColor: GOLD,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.30,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  btnPrimaryText: {
+    color: CARD,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  btnSecondary: {
+    backgroundColor: CARD,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#b8c4d8',
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  btnSecondaryText: {
+    color: NAVY,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  btnDisabled: {
+    opacity: 0.45,
+  },
+  pressed: {opacity: 0.80},
+
+  // loading / error
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
+  loadingText:  {color: MUTED, fontSize: 14, marginTop: 10},
+  errorTitle:   {color: NAVY, fontSize: 20, fontWeight: '800', marginBottom: 8, textAlign: 'center'},
+  errorText:    {color: '#b91c1c', fontSize: 14, lineHeight: 20, textAlign: 'center', marginBottom: 16},
+  retryBtn: {
+    backgroundColor: NAVY,
+    borderRadius: 12,
     paddingVertical: 12,
+    paddingHorizontal: 28,
+    marginBottom: 8,
   },
-  statusButtonSelected: {
-    backgroundColor: '#2563eb',
-    borderColor: '#2563eb',
+  retryBtnOutline: {
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: NAVY,
   },
-  statusButtonPressed: {
-    opacity: 0.88,
-  },
-  statusButtonDisabled: {
-    opacity: 0.65,
-  },
-  statusButtonText: {
-    color: '#1d4ed8',
-    fontSize: 14,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  statusButtonTextSelected: {
-    color: '#ffffff',
-  },
-  completedStateCard: {
-    backgroundColor: '#dcfce7',
-    borderRadius: 16,
-    marginBottom: 16,
-    padding: 16,
-  },
-  completedStateTitle: {
-    color: '#166534',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  completedStateText: {
-    color: '#166534',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  waitingStateCard: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
-    borderRadius: 16,
-    borderWidth: 1,
-    marginBottom: 16,
-    padding: 16,
-  },
-  waitingStateTitle: {
-    color: '#0f172a',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  waitingStateText: {
-    color: '#475569',
-    fontSize: 14,
-    lineHeight: 20,
-  },
+  retryBtnText: {color: CARD, fontSize: 14, fontWeight: '700'},
 });
