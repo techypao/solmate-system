@@ -69,13 +69,9 @@ function CalendarIcon() {
 }
 
 function HomeIcon({active}: {active?: boolean}) {
+  const c = active ? NAVY : MUTED;
   return (
-    <View style={[nav.iconWrap]}>
-      {/* roof */}
-      <View style={[nav.roof, active && nav.activeShape]} />
-      {/* body */}
-      <View style={[nav.houseBody, active && nav.activeShape]} />
-    </View>
+    <Text style={{fontSize: 20, color: c, lineHeight: 22, textAlign: 'center'}}>{'\u2302'}</Text>
   );
 }
 
@@ -418,9 +414,9 @@ const nav = StyleSheet.create({
   roof: {
     width: 0,
     height: 0,
-    borderLeftWidth: 10,
-    borderRightWidth: 10,
-    borderBottomWidth: 8,
+    borderLeftWidth: 8,
+    borderRightWidth: 8,
+    borderBottomWidth: 10,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
     borderBottomColor: MUTED,

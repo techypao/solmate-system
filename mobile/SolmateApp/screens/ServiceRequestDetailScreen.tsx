@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 
+import {AppButton} from '../components';
 import {ApiError} from '../src/services/api';
 import {
   getServiceRequestById,
@@ -25,58 +26,94 @@ import {
   getServiceRequestStatusColors,
 } from '../src/utils/technicianRequests';
 
-/* \u2500\u2500 design tokens \u2500\u2500 */
-
-const NAVY = '#152a4a';
-const GOLD = '#e8a800';
-const MUTED = '#7b8699';
-const BG = '#e0e8f5';
-const CARD = '#ffffff';
-const DIVIDER = '#edf1f7';
-
-/* \u2500\u2500 helpers (preserved) \u2500\u2500 */
-
 function formatDate(value?: string | null, fallback = 'Flexible') {
-  if (!value) return fallback;
+  if (!value) {
+    return fallback;
+  }
   const parsedDate = new Date(value);
-  if (Number.isNaN(parsedDate.getTime())) return value;
-  return parsedDate.toLocaleDateString();
+  if (Number.isNaN(parsedDate.getTime())) {
+    return value;
+  }
+  return parsedDate.toLocaleDateString('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+  });
 }
 
 function formatDateTime(value?: string | null, fallback = 'Not available') {
-  if (!value) return fallback;
+  if (!value) {
+    return fallback;
+  }
   const parsedDate = new Date(value);
-  if (Number.isNaN(parsedDate.getTime())) return value;
-  return parsedDate.toLocaleString();
+  if (Number.isNaN(parsedDate.getTime())) {
+    return value;
+  }
+  const datePart = parsedDate.toLocaleDateString('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+  });
+  const timePart = parsedDate.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return `${datePart} • ${timePart}`;
 }
 
 function getFriendlyErrorMessage(error: unknown) {
-  if (error instanceof ApiError) return error.message;
+  if (error instanceof ApiError) {
+    return error.message;
+  }
   return 'Could not load the service request details.';
 }
 
-/* \u2500\u2500 DetailRow \u2500\u2500 */
-
-function DetailRow({
-  label,
-  value,
-  bold,
-}: {
-  label: string;
-  value?: string | null;
-  bold?: boolean;
-}) {
+function InlineRow({label, value}: {label: string; value?: string | null}) {
   return (
-    <View style={s.detailRow}>
-      <Text style={s.detailLabel}>{label}</Text>
-      <Text style={[s.detailValue, bold && s.detailValueBold]}>
-        {value || 'Not available'}
-      </Text>
+    <View style={styles.inlineRow}>
+      <Text style={styles.inlineLabel}>{label}</Text>
+      <Text style={styles.inlineValue}>{value || 'Not available'}</Text>
     </View>
   );
 }
 
-/* \u2500\u2500 technician status actions (preserved) \u2500\u2500 */
+function TimelineItem({
+  datetime,
+  status,
+  description,
+  isLast,
+}: {
+  datetime: string;
+  status: string;
+  description: string;
+  isLast: boolean;
+}) {
+  const colors = getServiceRequestStatusColors(status);
+  return (
+    <View style={styles.timelineItem}>
+      <View style={styles.timelineDotCol}>
+        <View style={styles.timelineDot} />
+        {!isLast ? <View style={styles.timelineConnector} /> : null}
+      </View>
+      <View style={styles.timelineBody}>
+        <Text style={styles.timelineDatetime}>{datetime}</Text>
+        <View style={styles.timelineRow}>
+          <View
+            style={[
+              styles.timelineBadge,
+              {backgroundColor: colors.backgroundColor},
+            ]}>
+            <Text
+              style={[styles.timelineBadgeText, {color: colors.textColor}]}>
+              {formatServiceRequestStatus(status)}
+            </Text>
+          </View>
+          <Text style={styles.timelineDesc}>{description}</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
 
 const TECHNICIAN_STATUS_ACTIONS: Array<{
   label: string;
@@ -97,10 +134,6 @@ const TECHNICIAN_STATUS_ACTIONS: Array<{
     successMessage: 'The admin has been notified that the service is done.',
   },
 ];
-
-/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-   Main screen
-   \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
 
 export default function ServiceRequestDetailScreen({navigation, route}: any) {
   const serviceRequestId = route?.params?.serviceRequestId;
@@ -126,7 +159,10 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
       }
 
       try {
-        if (showLoadingState) setLoading(true);
+        if (showLoadingState) {
+          setLoading(true);
+        }
+
         setErrorMessage('');
         const request =
           mode === 'technician'
@@ -158,15 +194,21 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
 
   const availableActions = useMemo(() => {
     const currentStatus = (serviceRequest?.status || '').toLowerCase();
-    const alreadyRequestedCompletion =
-      !!serviceRequest?.technician_marked_done_at;
+    const alreadyRequestedCompletion = !!serviceRequest?.technician_marked_done_at;
 
-    if (mode !== 'technician') return [];
+    if (mode !== 'technician') {
+      return [];
+    }
 
     return TECHNICIAN_STATUS_ACTIONS.filter(action => {
-      if (!action.currentStatuses.includes(currentStatus)) return false;
-      if (action.value === 'notify_admin_done' && alreadyRequestedCompletion)
+      if (!action.currentStatuses.includes(currentStatus)) {
         return false;
+      }
+
+      if (action.value === 'notify_admin_done' && alreadyRequestedCompletion) {
+        return false;
+      }
+
       return true;
     });
   }, [mode, serviceRequest?.status, serviceRequest?.technician_marked_done_at]);
@@ -175,7 +217,9 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
     nextStatus: TechnicianServiceRequestStatus | 'notify_admin_done',
     successMessage: string,
   ) => {
-    if (!serviceRequest || actionLoading) return;
+    if (!serviceRequest || actionLoading) {
+      return;
+    }
 
     try {
       setActionLoading(true);
@@ -219,35 +263,88 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
     }
   };
 
-  /* \u2500\u2500 loading \u2500\u2500 */
+  const timelineEvents = useMemo(() => {
+    if (!serviceRequest) {
+      return [];
+    }
+    const events: {datetime: string; status: string; description: string}[] =
+      [];
+    if (serviceRequest.created_at) {
+      events.push({
+        datetime: formatDateTime(serviceRequest.created_at),
+        status: 'pending',
+        description: 'Request submitted',
+      });
+    }
+    const s = (serviceRequest.status || '').toLowerCase();
+    if (['assigned', 'in_progress', 'completed'].includes(s)) {
+      events.push({
+        datetime: formatDateTime(serviceRequest.updated_at),
+        status: 'assigned',
+        description: 'Assigned to technician',
+      });
+    }
+    if (['in_progress', 'completed'].includes(s)) {
+      events.push({
+        datetime: formatDateTime(serviceRequest.updated_at),
+        status: 'in_progress',
+        description: 'Job started',
+      });
+    }
+    if (serviceRequest.technician_marked_done_at) {
+      events.push({
+        datetime: formatDateTime(serviceRequest.technician_marked_done_at),
+        status: 'in_progress',
+        description: 'Technician marked done',
+      });
+    }
+    if (s === 'completed') {
+      events.push({
+        datetime: formatDateTime(serviceRequest.updated_at),
+        status: 'completed',
+        description: 'Service completed',
+      });
+    }
+    return events;
+  }, [serviceRequest]);
 
   if (loading) {
     return (
-      <SafeAreaView style={s.safe}>
-        <View style={s.centered}>
-          <ActivityIndicator size="large" color={GOLD} />
-          <Text style={s.loadingText}>Loading service request\u2026</Text>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.centeredContainer}>
+          <ActivityIndicator size="large" color={NAVY} />
+          <Text style={styles.loadingText}>Loading service request...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  /* \u2500\u2500 error / missing \u2500\u2500 */
-
   if (errorMessage || !serviceRequest) {
     return (
-      <SafeAreaView style={s.safe}>
-        <View style={s.centered}>
-          <Text style={s.errorTitle}>Service request unavailable</Text>
-          <Text style={s.errorText}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <Pressable
+            hitSlop={12}
+            onPress={() => navigation.goBack()}
+            style={({pressed}) => [styles.backBtn, pressed && styles.backBtnPressed]}>
+            <Text style={styles.backIcon}>{'‹'}</Text>
+          </Pressable>
+          <Text style={styles.headerTitle}>Service Details</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+        <View style={styles.centeredContainer}>
+          <Text style={styles.errorTitle}>Service request unavailable</Text>
+          <Text style={styles.errorText}>
             {errorMessage || 'No service request details were found.'}
           </Text>
-          <Pressable
+          <AppButton
+            title="Try again"
             onPress={() => loadServiceRequest(true)}
-            style={({pressed}) => [s.goldBtn, pressed && s.pressed]}>
-            <Text style={s.goldBtnText}>Try Again</Text>
-          </Pressable>
-          <Pressable
+            style={styles.actionBtn}
+          />
+          <AppButton
+            title="Back to requests"
+            variant="outline"
             onPress={() =>
               navigation.navigate(
                 mode === 'technician'
@@ -255,277 +352,324 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
                   : 'ServiceRequestList',
               )
             }
-            style={({pressed}) => [s.outlineBtn, pressed && s.pressed]}>
-            <Text style={s.outlineBtnText}>Back to Requests</Text>
-          </Pressable>
+            style={[styles.actionBtn, {marginTop: 10}]}
+          />
         </View>
       </SafeAreaView>
     );
   }
 
-  /* \u2500\u2500 main \u2500\u2500 */
-
   const statusColors = getServiceRequestStatusColors(serviceRequest.status);
-  const awaitingAdminConfirmation =
-    !!serviceRequest.technician_marked_done_at &&
-    serviceRequest.status !== 'completed';
-  const adminConfirmedCompletion = serviceRequest.status === 'completed';
 
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={styles.safeArea}>
+      {/* ── header ── */}
+      <View style={styles.header}>
+        <Pressable
+          hitSlop={12}
+          onPress={() => navigation.goBack()}
+          style={({pressed}) => [
+            styles.backBtn,
+            pressed && styles.backBtnPressed,
+          ]}>
+          <Text style={styles.backIcon}>{'‹'}</Text>
+        </Pressable>
+        <Text style={styles.headerTitle}>Service Details</Text>
+        <View
+          style={[
+            styles.statusPill,
+            {backgroundColor: statusColors.backgroundColor},
+          ]}>
+          <Text
+            style={[styles.statusPillText, {color: statusColors.textColor}]}>
+            {formatServiceRequestStatus(serviceRequest.status)}
+          </Text>
+        </View>
+      </View>
+
       <ScrollView
-        contentContainerStyle={s.scroll}
+        contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}>
 
-        {/* \u2500\u2500 brand \u2500\u2500 */}
-        <Text style={s.brand}>
-          Sol<Text style={s.brandAccent}>Mate</Text>
-        </Text>
-
-        {/* \u2500\u2500 back \u2500\u2500 */}
-        <Pressable
-          hitSlop={14}
-          onPress={() => navigation.goBack()}
-          style={({pressed}) => [s.backBtn, pressed && s.pressed]}>
-          <Text style={s.backIcon}>{'\u2039'}</Text>
-        </Pressable>
-
-        {/* \u2500\u2500 title \u2500\u2500 */}
-        <Text style={s.title}>Service Details</Text>
-        <Text style={s.subtitle}>
-          {mode === 'technician'
-            ? 'Review the assigned service request, update its work progress, and notify the admin when the job is done.'
-            : 'Review the current official status and details of your submitted service request.'}
-        </Text>
-
-        {/* \u2500\u2500 badges row \u2500\u2500 */}
-        <View style={s.badgeRow}>
-          <View style={s.typeBadge}>
-            <Text style={s.typeBadgeText}>{serviceRequest.request_type}</Text>
-          </View>
-          <View
-            style={[
-              s.statusBadge,
-              {backgroundColor: statusColors.backgroundColor},
-            ]}>
-            <Text
-              style={[s.statusBadgeText, {color: statusColors.textColor}]}>
-              {formatServiceRequestStatus(serviceRequest.status)}
-            </Text>
-          </View>
-        </View>
-
-        {/* \u2500\u2500 Service Information \u2500\u2500 */}
-        <View style={s.card}>
-          <Text style={s.cardTitle}>Service Information</Text>
-
-          <DetailRow
+        {/* ── Service Information ── */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Service Information</Text>
+          <InlineRow
             label="Service Request ID"
-            value={'SR-' + serviceRequest.id}
-            bold
+            value={`SR-${serviceRequest.id}`}
           />
-          <DetailRow label="Type" value={serviceRequest.request_type} />
-          <DetailRow
+          <InlineRow label="Type" value={serviceRequest.request_type} />
+          <InlineRow
             label="Status"
             value={formatServiceRequestStatus(serviceRequest.status)}
-            bold
           />
-          <DetailRow
+          <InlineRow
             label="Created At"
             value={formatDateTime(serviceRequest.created_at)}
           />
-          <DetailRow
-            label="Schedule Date"
+          <InlineRow
+            label="Scheduled Date"
             value={formatDate(serviceRequest.date_needed)}
           />
-          <DetailRow
-            label={mode === 'technician' ? 'Customer' : 'Technician Assigned'}
-            value={
-              mode === 'technician'
-                ? serviceRequest.customer?.name || 'Customer not available'
-                : serviceRequest.technician?.name || 'Pending assignment'
-            }
-            bold
+          <InlineRow
+            label="Technician Assigned"
+            value={serviceRequest.technician?.name || 'Not assigned'}
           />
         </View>
 
-        {/* \u2500\u2500 Request Details \u2500\u2500 */}
-        <View style={s.card}>
-          <Text style={s.cardTitle}>Request Details</Text>
-
-          <DetailRow
-            label={
-              mode === 'technician' ? 'Customer email' : 'Technician email'
-            }
-            value={
-              mode === 'technician'
-                ? serviceRequest.customer?.email || 'No email available'
-                : serviceRequest.technician?.email || 'Not available yet'
-            }
-          />
-          <DetailRow
-            label="Contact Number"
-            value={serviceRequest.contact_number || 'Not provided'}
-          />
-          {mode === 'technician' ? (
-            <DetailRow
-              label="Customer contact number"
-              value={serviceRequest.contact_number || 'Not provided'}
-            />
-          ) : null}
-
-          <View style={s.descBlock}>
-            <Text style={s.descLabel}>Problem Description</Text>
-            <Text style={s.descText}>{serviceRequest.details}</Text>
-          </View>
-        </View>
-
-        {/* \u2500\u2500 Completion Report \u2500\u2500 */}
-        <View style={s.card}>
-          <Text style={s.cardTitle}>Completion Report</Text>
-
-          {awaitingAdminConfirmation ? (
-            <View style={s.infoCard}>
-              <Text style={s.infoTitle}>Awaiting admin confirmation</Text>
-              <Text style={s.infoText}>
-                {mode === 'technician'
-                  ? 'You already marked this service as done. Wait for the admin to review and finalize the official status.'
-                  : 'The technician reported that the service work is done. The admin still needs to confirm the final official status.'}
-              </Text>
-              <View style={s.infoMeta}>
-                <Text style={s.infoMetaLabel}>Technician marked done</Text>
-                <Text style={s.infoMetaValue}>
-                  {formatDateTime(serviceRequest.technician_marked_done_at)}
-                </Text>
-              </View>
-            </View>
-          ) : adminConfirmedCompletion ? (
-            <View style={s.successCard}>
-              <Text style={s.successTitle}>Admin confirmed completion</Text>
-              <Text style={s.successText}>
-                This service request is officially completed.
-              </Text>
-              {serviceRequest.technician_marked_done_at ? (
-                <View style={s.successMeta}>
-                  <Text style={s.successMetaLabel}>Technician marked done</Text>
-                  <Text style={s.successMetaValue}>
-                    {formatDateTime(serviceRequest.technician_marked_done_at)}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
+        {/* ── Updates Timeline ── */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Updates Timeline</Text>
+          {timelineEvents.length === 0 ? (
+            <Text style={styles.emptyText}>No updates yet.</Text>
           ) : (
-            <View style={s.infoCard}>
-              <Text style={s.infoTitle}>No completion request yet</Text>
-              <Text style={s.infoText}>
-                {mode === 'technician'
-                  ? 'When the job is finished, use the button below to notify the admin for final review.'
-                  : 'The completed status will appear here after the technician finishes the work and the admin confirms it.'}
-              </Text>
-            </View>
+            timelineEvents.map((event, index) => (
+              <TimelineItem
+                key={index}
+                datetime={event.datetime}
+                status={event.status}
+                description={event.description}
+                isLast={index === timelineEvents.length - 1}
+              />
+            ))
           )}
         </View>
 
-        {/* \u2500\u2500 Progress Updates (technician only) \u2500\u2500 */}
-        {mode === 'technician' ? (
-          <View style={s.card}>
-            <Text style={s.cardTitle}>Progress Updates</Text>
-            <Text style={s.cardSubtitle}>
-              Move the service into progress, then notify the admin when the
-              work is done.
-            </Text>
-
-            {availableActions.length === 0 ? (
-              <View style={s.infoCard}>
-                <Text style={s.infoTitle}>
-                  No further technician updates available
-                </Text>
-                <Text style={s.infoText}>
-                  {awaitingAdminConfirmation
-                    ? 'This request is waiting for admin review.'
-                    : 'This request is already in its latest technician-managed state.'}
-                </Text>
-              </View>
-            ) : null}
-
-            {availableActions.map(action => (
-              <Pressable
-                key={action.value}
-                disabled={actionLoading}
-                onPress={() =>
-                  handleStatusUpdate(action.value, action.successMessage)
-                }
-                style={({pressed}) => [
-                  s.goldBtn,
-                  actionLoading && s.btnDisabled,
-                  pressed && s.pressed,
-                ]}>
-                <Text style={s.goldBtnText}>
-                  {actionLoading ? 'Saving update\u2026' : action.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        ) : null}
-
-        {/* \u2500\u2500 bottom button \u2500\u2500 */}
-        <Pressable
-          onPress={() => navigation.goBack()}
-          style={({pressed}) => [s.outlineBtn, pressed && s.pressed]}>
-          <Text style={s.outlineBtnText}>Back</Text>
-        </Pressable>
-
-        <View style={s.spacer} />
+        {/* ── Action Buttons ── */}
+        <View style={styles.actionsBlock}>
+          {mode === 'technician'
+            ? availableActions.map((action, index) => (
+                <AppButton
+                  key={action.value}
+                  title={actionLoading ? 'Saving...' : action.label}
+                  disabled={actionLoading}
+                  onPress={() =>
+                    handleStatusUpdate(action.value, action.successMessage)
+                  }
+                  style={[
+                    styles.actionBtn,
+                    index === 0
+                      ? {backgroundColor: GOLD, borderColor: GOLD}
+                      : {
+                          backgroundColor: CARD,
+                          borderColor: NAVY,
+                          borderWidth: 1.5,
+                        },
+                  ]}
+                  textStyle={
+                    index === 0 ? {color: NAVY} : {color: NAVY}
+                  }
+                />
+              ))
+            : null}
+          <AppButton
+            title="Back"
+            variant="outline"
+            onPress={() => navigation.goBack()}
+            style={[
+              styles.actionBtn,
+              {backgroundColor: CARD, borderColor: NAVY, borderWidth: 1.5},
+            ]}
+            textStyle={{color: NAVY}}
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-/* \u2500\u2500 styles \u2500\u2500 */
+/* ── design tokens ── */
+const NAVY = '#1a2f5e';
+const GOLD = '#e8a800';
+const BG   = '#edf2fb';
+const CARD = '#ffffff';
+const MUTED = '#8a9ab5';
+const DIVIDER = '#e4eaf5';
 
-const s = StyleSheet.create({
-  safe: {flex: 1, backgroundColor: BG},
-  scroll: {paddingHorizontal: 22, paddingTop: 20, paddingBottom: 30},
-  pressed: {opacity: 0.85},
+const styles = StyleSheet.create({
+  safeArea: {
+    backgroundColor: BG,
+    flex: 1,
+  },
 
-  /* brand */
-  brand: {fontSize: 22, fontWeight: '800', color: NAVY, marginBottom: 10},
-  brandAccent: {color: GOLD},
-
-  /* back */
+  /* ── header ── */
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: BG,
+  },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: CARD,
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 18,
+  },
+  backBtnPressed: {
+    opacity: 0.55,
+  },
+  backIcon: {
+    fontSize: 30,
+    color: NAVY,
+    lineHeight: 34,
+    fontWeight: '400',
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '700',
+    color: NAVY,
+  },
+  statusPill: {
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  statusPillText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  headerSpacer: {
+    width: 36,
+  },
+
+  /* ── scroll content ── */
+  content: {
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 32,
+  },
+
+  /* ── cards ── */
+  card: {
+    backgroundColor: CARD,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: DIVIDER,
+    padding: 16,
+    marginBottom: 12,
     shadowColor: '#8a9bbd',
     shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  backIcon: {fontSize: 28, color: NAVY, fontWeight: '600', marginTop: -2},
+  cardTitle: {
+    color: NAVY,
+    fontSize: 15,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
 
-  /* title */
-  title: {fontSize: 26, fontWeight: '900', color: NAVY, marginBottom: 4},
-  subtitle: {fontSize: 14, color: MUTED, lineHeight: 20, marginBottom: 18},
-
-  /* centered / loading */
-  centered: {
+  /* ── inline rows (label left, value right) ── */
+  inlineRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingVertical: 9,
+    borderTopWidth: 1,
+    borderTopColor: DIVIDER,
+  },
+  inlineLabel: {
+    color: MUTED,
+    fontSize: 12,
     flex: 1,
+  },
+  inlineValue: {
+    color: NAVY,
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'right',
+    flex: 1,
+    flexShrink: 1,
+  },
+
+  /* ── timeline ── */
+  timelineItem: {
+    flexDirection: 'row',
+    marginTop: 12,
+  },
+  timelineDotCol: {
     alignItems: 'center',
+    width: 18,
+    marginRight: 10,
+  },
+  timelineDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: NAVY,
+    zIndex: 1,
+  },
+  timelineConnector: {
+    flex: 1,
+    width: 2,
+    backgroundColor: DIVIDER,
+    marginTop: 3,
+    marginBottom: -6,
+  },
+  timelineBody: {
+    flex: 1,
+    paddingBottom: 10,
+  },
+  timelineDatetime: {
+    color: MUTED,
+    fontSize: 12,
+    marginBottom: 5,
+  },
+  timelineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  timelineBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+  },
+  timelineBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  timelineDesc: {
+    color: NAVY,
+    fontSize: 13,
+    flex: 1,
+  },
+  emptyText: {
+    color: MUTED,
+    fontSize: 13,
+    fontStyle: 'italic',
+    marginTop: 8,
+  },
+
+  /* ── action buttons ── */
+  actionsBlock: {
+    gap: 10,
+    marginTop: 4,
+  },
+  actionBtn: {
+    borderRadius: 12,
+  },
+
+  /* ── loading / error ── */
+  centeredContainer: {
+    alignItems: 'center',
+    flex: 1,
     justifyContent: 'center',
     padding: 24,
   },
-  loadingText: {color: MUTED, fontSize: 14, marginTop: 14},
-
-  /* error */
+  loadingText: {
+    color: MUTED,
+    fontSize: 14,
+    marginTop: 12,
+  },
   errorTitle: {
     color: NAVY,
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
     marginBottom: 8,
     textAlign: 'center',
@@ -537,156 +681,4 @@ const s = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 16,
   },
-
-  /* badges row */
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 18,
-  },
-  typeBadge: {
-    backgroundColor: '#e8ecf4',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-  },
-  typeBadgeText: {color: NAVY, fontSize: 12, fontWeight: '700'},
-  statusBadge: {
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-  },
-  statusBadgeText: {fontSize: 12, fontWeight: '700'},
-
-  /* card */
-  card: {
-    backgroundColor: CARD,
-    borderRadius: 22,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#8a9bbd',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.1,
-    shadowRadius: 14,
-    elevation: 4,
-  },
-  cardTitle: {fontSize: 18, fontWeight: '900', color: NAVY, marginBottom: 14},
-  cardSubtitle: {
-    fontSize: 14,
-    color: MUTED,
-    lineHeight: 20,
-    marginBottom: 14,
-  },
-
-  /* detail row (horizontal label-value) */
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingVertical: 11,
-    borderTopColor: DIVIDER,
-    borderTopWidth: 1,
-  },
-  detailLabel: {color: MUTED, fontSize: 13, fontWeight: '600', flex: 1},
-  detailValue: {
-    color: NAVY,
-    fontSize: 14,
-    fontWeight: '600',
-    flex: 1,
-    textAlign: 'right',
-  },
-  detailValueBold: {fontWeight: '800'},
-
-  /* description block */
-  descBlock: {paddingTop: 14, borderTopColor: DIVIDER, borderTopWidth: 1},
-  descLabel: {
-    color: MUTED,
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    marginBottom: 8,
-  },
-  descText: {color: NAVY, fontSize: 14, lineHeight: 22, opacity: 0.85},
-
-  /* info card (awaiting / pending) */
-  infoCard: {
-    backgroundColor: '#fffbeb',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#fde68a',
-    padding: 16,
-    marginBottom: 8,
-  },
-  infoTitle: {color: '#92400e', fontSize: 15, fontWeight: '700', marginBottom: 6},
-  infoText: {color: '#a16207', fontSize: 13, lineHeight: 19},
-  infoMeta: {marginTop: 12},
-  infoMetaLabel: {
-    color: '#a16207',
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  infoMetaValue: {color: '#92400e', fontSize: 14, fontWeight: '700'},
-
-  /* success card */
-  successCard: {
-    backgroundColor: '#f0fdf4',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#bbf7d0',
-    padding: 16,
-    marginBottom: 8,
-  },
-  successTitle: {
-    color: '#166534',
-    fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  successText: {color: '#166534', fontSize: 13, lineHeight: 19},
-  successMeta: {marginTop: 12},
-  successMetaLabel: {
-    color: '#166534',
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  successMetaValue: {color: '#166534', fontSize: 14, fontWeight: '700'},
-
-  /* buttons */
-  goldBtn: {
-    backgroundColor: GOLD,
-    borderRadius: 28,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 12,
-    shadowColor: GOLD,
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  goldBtnText: {
-    fontSize: 15,
-    fontWeight: '900',
-    color: CARD,
-    letterSpacing: 0.3,
-  },
-  outlineBtn: {
-    backgroundColor: CARD,
-    borderRadius: 28,
-    paddingVertical: 14,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: DIVIDER,
-    marginTop: 12,
-  },
-  outlineBtnText: {fontSize: 15, fontWeight: '800', color: NAVY},
-  btnDisabled: {opacity: 0.5},
-
-  /* spacer */
-  spacer: {minHeight: 20},
 });

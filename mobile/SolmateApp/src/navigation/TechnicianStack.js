@@ -7,7 +7,7 @@ import FinalQuotationScreen from '../../screens/FinalQuotationScreen';
 import QuotationDetailScreen from '../../screens/QuotationDetailScreen';
 import RequestDetailsScreen from '../../screens/RequestDetailsScreen';
 import ServiceRequestDetailScreen from '../../screens/ServiceRequestDetailScreen';
-import ServiceRequestListScreen from '../../screens/ServiceRequestListScreen';
+import TechnicianServiceRequestListScreen from '../../screens/TechnicianServiceRequestListScreen';
 import TechnicianDashboardScreen from '../../screens/TechnicianDashboardScreen';
 import TechnicianNotificationsScreen from '../../screens/TechnicianNotificationsScreen';
 import TechnicianSettingsScreen from '../../screens/TechnicianSettingsScreen';
@@ -29,7 +29,7 @@ export default function TechnicianStack() {
       <Stack.Screen
         name="TechnicianSettings"
         component={TechnicianSettingsScreen}
-        options={{title: 'Settings'}}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="TechnicianNotifications"
@@ -43,9 +43,8 @@ export default function TechnicianStack() {
       />
       <Stack.Screen
         name="TechnicianServiceRequests"
-        component={ServiceRequestListScreen}
-        initialParams={{mode: 'technician'}}
-        options={{title: 'Service Requests'}}
+        component={TechnicianServiceRequestListScreen}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="InspectionDetails"
@@ -55,7 +54,7 @@ export default function TechnicianStack() {
       <Stack.Screen
         name="FinalQuotationForm"
         component={FinalQuotationScreen}
-        options={{title: 'Final Quotation Form'}}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="TechnicianQuotationDetail"
@@ -66,7 +65,7 @@ export default function TechnicianStack() {
         name="TechnicianServiceRequestDetail"
         component={ServiceRequestDetailScreen}
         initialParams={{mode: 'technician'}}
-        options={{title: 'Service Request Details'}}
+        options={{headerShown: false}}
       />
     </Stack.Navigator>
   );

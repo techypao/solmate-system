@@ -75,10 +75,7 @@ type Tab = 'Home' | 'Inspections' | 'Services' | 'Profile';
 function HomeIcon({active}: {active?: boolean}) {
   const c = active ? NAVY : MUTED;
   return (
-    <View style={nav.iconWrap}>
-      <View style={[nav.roof, {borderBottomColor: c}]} />
-      <View style={[nav.houseBody, {backgroundColor: c}]} />
-    </View>
+    <Text style={{fontSize: 20, color: c, lineHeight: 22, textAlign: 'center'}}>{'\u2302'}</Text>
   );
 }
 function InspectIcon({active}: {active?: boolean}) {
@@ -324,7 +321,7 @@ const nav = StyleSheet.create({
   iconWrap:   {width: 24, height: 22, alignItems: 'center', justifyContent: 'flex-end'},
   roof: {
     width: 0, height: 0,
-    borderLeftWidth: 10, borderRightWidth: 10, borderBottomWidth: 8,
+    borderLeftWidth: 8, borderRightWidth: 8, borderBottomWidth: 10,
     borderLeftColor: 'transparent', borderRightColor: 'transparent',
     borderBottomColor: MUTED,
   },

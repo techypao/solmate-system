@@ -1,4 +1,4 @@
-import React, {useCallback, useMemo, useState} from 'react';
+import React, {useCallback, useMemo, useRef, useState} from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -91,6 +91,13 @@ type SizingPreview = {
   requiredBatteryKwh: number;
   requiredBatteryAh: number;
 };
+
+/* ── design tokens (matches newer technician theme) ── */
+const NAVY = '#152a4a';
+const GOLD = '#e8a800';
+const MUTED = '#7b8699';
+const BG = '#e0e8f5';
+const DIVIDER = '#edf1f7';
 
 const STATUS_OPTIONS: QuotationStatus[] = [
   'pending',
@@ -395,6 +402,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
   const [form, setForm] = useState<FinalQuotationFormState>(() =>
     buildInitialFormState(),
   );
+  const scrollViewRef = useRef<ScrollView>(null);
   const [currentStep, setCurrentStep] = useState(1);
 
   const loadInspectionRequest = useCallback(
@@ -983,6 +991,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     }
 
     setCurrentStep(current => Math.min(current + 1, WIZARD_STEPS.length));
+    scrollViewRef.current?.scrollTo({y: 0, animated: true});
   };
 
   const handlePreviousStep = () => {
@@ -1064,10 +1073,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         })),
       });
 
-      navigation.replace('TechnicianQuotationDetail', {
-        quotationId: syncedQuotation.id || createdQuotation.id,
-        initialQuotation: syncedQuotation.id ? syncedQuotation : createdQuotation,
-      });
+      navigation.replace('AssignedInspectionRequests');
     } catch (error) {
       if (createdQuotationId) {
         const syncErrorMessage =
@@ -1084,9 +1090,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           `Final quotation #${createdQuotationId} was created, but the itemized pricing sync did not complete.\n\n${syncErrorMessage}`,
         );
 
-        navigation.replace('TechnicianQuotationDetail', {
-          quotationId: createdQuotationId,
-        });
+        navigation.replace('AssignedInspectionRequests');
       } else if (error instanceof ApiError) {
         const message = formatLaravelErrors(error);
         setSubmitError(message);
@@ -1102,10 +1106,10 @@ export default function FinalQuotationScreen({navigation, route}: any) {
 
   if (loading || optionsLoading || catalogLoading) {
     return (
-      <View style={styles.centeredContainer}>
-        <ActivityIndicator size="large" color="#2563eb" />
+      <SafeAreaView style={styles.centeredContainer}>
+        <ActivityIndicator size="large" color={GOLD} />
         <Text style={styles.loadingText}>Loading final quotation form...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -1117,7 +1121,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     !finalQuotationOptions
   ) {
     return (
-      <View style={styles.centeredContainer}>
+      <SafeAreaView style={styles.centeredContainer}>
         <Text style={styles.errorTitle}>Final quotation unavailable</Text>
         <Text style={styles.errorText}>
           {errorMessage ||
@@ -1136,7 +1140,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           onPress={() => navigation.goBack()}
           style={styles.secondaryButton}
         />
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -1265,8 +1269,8 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         </View>
         <Switch
           disabled={form.pv_system_type === 'on-grid'}
-          trackColor={{false: '#cbd5e1', true: '#93c5fd'}}
-          thumbColor={form.with_battery ? '#2563eb' : '#f8fafc'}
+          trackColor={{false: '#cbd5e1', true: '#fde68a'}}
+          thumbColor={form.with_battery ? '#e8a800' : '#f8fafc'}
           value={form.with_battery}
           onValueChange={handleBatteryToggle}
         />
@@ -1355,54 +1359,59 @@ export default function FinalQuotationScreen({navigation, route}: any) {
   const computedRequirementSection = (
     <FormSection
       title="Calculated system outputs"
-      subtitle="These values mirror the current backend sizing formula and update automatically when Step 1 changes.">
-      <View style={styles.totalsGrid}>
-        <View style={styles.totalCard}>
-          <Text style={styles.totalLabel}>Required PV size</Text>
-          <Text style={styles.totalValue}>
+      subtitle="Auto-computed from your Step 1 inputs. Go back anytime to refine."
+    >
+      <View style={styles.outputGrid}>
+        <View style={styles.outputTile}>
+          <Text style={styles.outputTileLabel}>Required PV size</Text>
+          <Text style={styles.outputTileValue}>
             {sizingPreview
               ? `${sizingPreview.requiredSystemKw.toFixed(2)} kW`
-              : 'Enter bill'}
+              : '—'}
           </Text>
         </View>
-        <View style={styles.totalCard}>
-          <Text style={styles.totalLabel}>Projected system size</Text>
-          <Text style={styles.totalValue}>
+
+        <View style={styles.outputTile}>
+          <Text style={styles.outputTileLabel}>Projected system size</Text>
+          <Text style={styles.outputTileValue}>
             {sizingPreview
               ? `${sizingPreview.suggestedSystemKw.toFixed(2)} kW`
-              : 'Enter bill'}
+              : '—'}
           </Text>
         </View>
-        <View style={styles.totalCard}>
-          <Text style={styles.totalLabel}>Baseline panel qty</Text>
-          <Text style={styles.totalValue}>
-            {sizingPreview ? String(sizingPreview.panelQuantityBaseline) : '0'}
+
+        <View style={styles.outputTile}>
+          <Text style={styles.outputTileLabel}>Baseline panel qty</Text>
+          <Text style={styles.outputTileValue}>
+            {sizingPreview ? String(sizingPreview.panelQuantityBaseline) : '—'}
           </Text>
         </View>
-        <View style={styles.totalCard}>
-          <Text style={styles.totalLabel}>Required battery</Text>
-          <Text style={styles.totalValue}>
+
+        <View style={styles.outputTile}>
+          <Text style={styles.outputTileLabel}>Required battery</Text>
+          <Text style={styles.outputTileValue}>
             {supportsBatteryFlow && sizingPreview
               ? `${sizingPreview.requiredBatteryKwh.toFixed(2)} kWh`
               : 'N/A'}
           </Text>
-          <Text style={styles.totalSubValue}>
-            {supportsBatteryFlow && sizingPreview
-              ? `${sizingPreview.requiredBatteryAh.toFixed(2)} Ah`
-              : 'Battery hidden for on-grid'}
-          </Text>
+          {supportsBatteryFlow && sizingPreview ? (
+            <Text style={styles.outputTileSub}>
+              {sizingPreview.requiredBatteryAh.toFixed(2)} Ah
+            </Text>
+          ) : null}
         </View>
-        <View style={styles.totalCard}>
-          <Text style={styles.totalLabel}>Suggested inverter</Text>
-          <Text style={styles.totalValue}>
-            {suggestedInverterItem?.name || form.inverter_type.trim() || 'Select from catalog'}
-          </Text>
-          <Text style={styles.totalSubValue}>
-            {suggestedInverterItem
-              ? 'Nearest suitable inverter from catalog'
-              : 'Updates after catalog loads and bill is entered'}
-          </Text>
-        </View>
+      </View>
+
+      <View style={styles.outputTileWide}>
+        <Text style={styles.outputTileLabel}>Suggested inverter</Text>
+        <Text style={styles.outputTileValue}>
+          {suggestedInverterItem?.name || form.inverter_type.trim() || 'Select from catalog'}
+        </Text>
+        <Text style={styles.outputTileSub}>
+          {suggestedInverterItem
+            ? 'Nearest suitable match from catalog'
+            : 'Updates after catalog loads and bill is entered'}
+        </Text>
       </View>
     </FormSection>
   );
@@ -1428,7 +1437,6 @@ export default function FinalQuotationScreen({navigation, route}: any) {
               </View>
               <AppButton
                 title="Remove"
-                variant="outline"
                 onPress={() => clearCatalogItem(item.pricing_item_id)}
                 style={styles.removeButton}
                 textStyle={styles.removeButtonText}
@@ -1521,7 +1529,6 @@ export default function FinalQuotationScreen({navigation, route}: any) {
                 {(effectiveCatalogQuantities[item.id] || '').trim() ? (
                   <AppButton
                     title="Clear"
-                    variant="outline"
                     onPress={() => clearCatalogItem(item.id)}
                     style={styles.clearButton}
                     textStyle={styles.clearButtonText}
@@ -1621,33 +1628,6 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     </FormSection>
   );
 
-  const notesSection = (
-    <FormSection
-      title="Remarks"
-      subtitle="Set the quotation status and add any final technician remarks for the customer.">
-      <Text style={styles.optionLabel}>Quotation status</Text>
-      <View style={styles.optionRow}>
-        {STATUS_OPTIONS.map(option => (
-          <OptionChip
-            key={option}
-            label={option}
-            selected={form.status === option}
-            onPress={() => updateField('status', option)}
-          />
-        ))}
-      </View>
-
-      <AppInput
-        label="Remarks"
-        multiline={true}
-        numberOfLines={5}
-        onChangeText={value => updateField('remarks', value)}
-        style={styles.textArea}
-        value={form.remarks}
-      />
-    </FormSection>
-  );
-
   const reviewSection = (
     <>
       <FormSection
@@ -1693,7 +1673,6 @@ export default function FinalQuotationScreen({navigation, route}: any) {
       {computedRequirementSection}
       {selectedLineItemsSection}
       {computedTotalsSection}
-      {notesSection}
     </>
   );
 
@@ -1709,14 +1688,6 @@ export default function FinalQuotationScreen({navigation, route}: any) {
       case 2:
         return (
           <>
-            <AppCard style={styles.infoCard}>
-              <Text style={styles.infoTitle}>Live sizing preview</Text>
-              <Text style={styles.infoText}>
-                Step 2 updates automatically from the values in Step 1, so you
-                can go back anytime and refine the system inputs without losing
-                your work.
-              </Text>
-            </AppCard>
             {computedRequirementSection}
           </>
         );
@@ -1745,17 +1716,30 @@ export default function FinalQuotationScreen({navigation, route}: any) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
+        ref={scrollViewRef}
         contentContainerStyle={styles.contentContainer}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>
+        <View style={styles.topRow}>
+          <Text style={styles.brand}>
+            Sol<Text style={styles.brandAccent}>Mate</Text>
+          </Text>
+          <Pressable
+            hitSlop={12}
+            onPress={() => navigation.goBack()}
+            style={({pressed}) => [styles.cancelBtn, pressed && styles.cancelBtnPressed]}>
+            <Text style={styles.cancelBtnText}>Cancel</Text>
+          </Pressable>
+        </View>
+
         <View style={styles.heroCard}>
-          <Text style={styles.eyebrow}>Technician final quotation</Text>
+          <Text style={styles.eyebrow}>Final Quotation</Text>
           <Text style={styles.heroTitle}>
-            Inspection request #{inspectionRequest.id}
+            Inspection #{inspectionRequest.id}
           </Text>
           <Text style={styles.heroSubtitle}>
-            Submit the final quotation based on the completed site inspection for{' '}
-            {getCustomerName(inspectionRequest)}.
+            Build and submit the final solar quotation for{' '}
+            {getCustomerName(inspectionRequest)} based on the completed site inspection.
           </Text>
         </View>
 
@@ -1863,9 +1847,9 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           {currentStep > 1 ? (
             <AppButton
               title="Back"
-              variant="outline"
               onPress={handlePreviousStep}
-              style={styles.footerActionButton}
+              style={[styles.footerActionButton, styles.backButton]}
+              textStyle={styles.backButtonText}
             />
           ) : null}
 
@@ -1873,18 +1857,16 @@ export default function FinalQuotationScreen({navigation, route}: any) {
             <AppButton
               title="Next"
               onPress={handleNextStep}
-              style={styles.footerActionButton}
+              style={[styles.footerActionButton, styles.submitButton]}
+              textStyle={styles.submitButtonText}
             />
           ) : (
             <AppButton
-              title={
-                submitting
-                  ? 'Submitting final quotation...'
-                  : 'Submit Final Quotation'
-              }
+              title={submitting ? 'Submitting...' : 'Submit'}
               disabled={submitting || !completed}
               onPress={handleSubmit}
-              style={styles.footerActionButton}
+              style={[styles.footerActionButton, styles.submitButton]}
+              textStyle={styles.submitButtonText}
             />
           )}
         </View>
@@ -1895,7 +1877,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: '#f5f7fb',
+    backgroundColor: BG,
     flex: 1,
   },
   contentContainer: {
@@ -1904,18 +1886,18 @@ const styles = StyleSheet.create({
   },
   centeredContainer: {
     alignItems: 'center',
-    backgroundColor: '#f5f7fb',
+    backgroundColor: BG,
     flex: 1,
     justifyContent: 'center',
     padding: 24,
   },
   loadingText: {
-    color: '#475569',
+    color: MUTED,
     fontSize: 14,
     marginTop: 12,
   },
   errorTitle: {
-    color: '#0f172a',
+    color: NAVY,
     fontSize: 22,
     fontWeight: '800',
     marginBottom: 8,
@@ -1935,14 +1917,44 @@ const styles = StyleSheet.create({
     marginTop: 12,
     width: '100%',
   },
+  topRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  brand: {
+    color: NAVY,
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  brandAccent: {
+    color: GOLD,
+  },
+  cancelBtn: {
+    backgroundColor: '#ffffff',
+    borderColor: DIVIDER,
+    borderRadius: 20,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  cancelBtnPressed: {
+    opacity: 0.75,
+  },
+  cancelBtnText: {
+    color: MUTED,
+    fontSize: 14,
+    fontWeight: '700',
+  },
   heroCard: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: '#eaf2ff',
     borderRadius: 28,
     marginBottom: 18,
     padding: 22,
   },
   eyebrow: {
-    color: '#15803d',
+    color: '#2563eb',
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.4,
@@ -1950,14 +1962,14 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   heroTitle: {
-    color: '#0f172a',
+    color: NAVY,
     fontSize: 28,
     fontWeight: '800',
     lineHeight: 34,
     marginBottom: 10,
   },
   heroSubtitle: {
-    color: '#334155',
+    color: MUTED,
     fontSize: 14,
     lineHeight: 21,
   },
@@ -1973,13 +1985,13 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   stepHeaderTitle: {
-    color: '#0f172a',
+    color: NAVY,
     fontSize: 24,
     fontWeight: '800',
     marginBottom: 6,
   },
   stepHeaderSubtitle: {
-    color: '#64748b',
+    color: MUTED,
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 16,
@@ -1999,76 +2011,77 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   stepPillActive: {
-    backgroundColor: '#dbeafe',
-    borderColor: '#2563eb',
+    backgroundColor: '#fffbeb',
+    borderColor: GOLD,
   },
   stepPillComplete: {
     backgroundColor: '#dcfce7',
     borderColor: '#22c55e',
   },
   stepPillNumber: {
-    color: '#64748b',
+    color: MUTED,
     fontSize: 12,
     fontWeight: '800',
     marginBottom: 4,
   },
   stepPillNumberActive: {
-    color: '#1d4ed8',
+    color: '#7a5700',
   },
   stepPillLabel: {
-    color: '#334155',
+    color: '#475569',
     fontSize: 14,
     fontWeight: '700',
   },
   stepPillLabelActive: {
-    color: '#0f172a',
+    color: NAVY,
   },
   sectionCard: {
     marginBottom: 18,
   },
   sectionTitle: {
-    color: '#0f172a',
+    color: NAVY,
     fontSize: 20,
     fontWeight: '700',
     marginBottom: 6,
   },
   sectionSubtitle: {
-    color: '#64748b',
+    color: MUTED,
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 16,
   },
   summaryRow: {
     alignItems: 'center',
-    borderTopColor: '#e2e8f0',
+    borderTopColor: DIVIDER,
     borderTopWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 12,
   },
   summaryLabel: {
-    color: '#64748b',
+    color: MUTED,
     fontSize: 12,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
   summaryValue: {
-    color: '#0f172a',
+    color: NAVY,
     fontSize: 15,
     fontWeight: '600',
     maxWidth: '55%',
     textAlign: 'right',
   },
   summaryDetails: {
-    borderTopColor: '#e2e8f0',
+    borderTopColor: DIVIDER,
     borderTopWidth: 1,
     paddingTop: 12,
   },
   summaryDetailsText: {
-    color: '#0f172a',
+    color: NAVY,
     fontSize: 15,
     lineHeight: 22,
     marginTop: 6,
+    opacity: 0.85,
   },
   warningCard: {
     backgroundColor: '#fff7ed',
@@ -2122,7 +2135,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   optionLabel: {
-    color: '#475569',
+    color: MUTED,
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 10,
@@ -2143,23 +2156,25 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   optionChipSelected: {
-    backgroundColor: '#dbeafe',
-    borderColor: '#2563eb',
+    backgroundColor: '#fffbeb',
+    borderColor: GOLD,
   },
   optionChipPressed: {
     opacity: 0.85,
   },
   optionChipText: {
-    color: '#334155',
+    color: '#475569',
     fontSize: 14,
     fontWeight: '600',
   },
   optionChipTextSelected: {
-    color: '#1d4ed8',
+    color: '#7a5700',
+    fontWeight: '700',
   },
   switchRow: {
     alignItems: 'center',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#ffffff',
+    borderColor: DIVIDER,
     borderRadius: 18,
     borderWidth: 1,
     flexDirection: 'row',
@@ -2167,25 +2182,30 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 1,
   },
   switchTextWrap: {
     flex: 1,
     paddingRight: 14,
   },
   switchLabel: {
-    color: '#0f172a',
+    color: NAVY,
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 4,
   },
   switchHint: {
-    color: '#64748b',
+    color: MUTED,
     fontSize: 13,
     lineHeight: 19,
   },
   selectedItemCard: {
     backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+    borderColor: DIVIDER,
     borderRadius: 18,
     borderWidth: 1,
     marginBottom: 12,
@@ -2202,45 +2222,55 @@ const styles = StyleSheet.create({
     paddingRight: 12,
   },
   selectedItemName: {
-    color: '#0f172a',
+    color: NAVY,
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 4,
   },
   selectedItemMeta: {
-    color: '#64748b',
+    color: MUTED,
     fontSize: 13,
     lineHeight: 18,
   },
   selectedItemTotalsRow: {
     alignItems: 'center',
-    borderTopColor: '#e2e8f0',
+    borderTopColor: DIVIDER,
     borderTopWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingTop: 12,
   },
   selectedItemTotalsLabel: {
-    color: '#475569',
+    color: MUTED,
     fontSize: 13,
     fontWeight: '600',
   },
   selectedItemTotalsValue: {
-    color: '#0f172a',
+    color: NAVY,
     fontSize: 16,
     fontWeight: '800',
   },
   removeButton: {
+    backgroundColor: GOLD,
+    borderColor: GOLD,
+    borderRadius: 28,
     minHeight: 42,
     minWidth: 92,
     paddingHorizontal: 12,
     paddingVertical: 10,
+    shadowColor: GOLD,
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 2,
   },
   removeButtonText: {
+    color: '#ffffff',
     fontSize: 13,
+    fontWeight: '900',
   },
   emptyCatalogText: {
-    color: '#64748b',
+    color: MUTED,
     fontSize: 14,
     lineHeight: 21,
   },
@@ -2248,14 +2278,14 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   catalogGroupTitle: {
-    color: '#0f172a',
+    color: NAVY,
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 10,
   },
   catalogItemCard: {
     backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+    borderColor: DIVIDER,
     borderRadius: 18,
     borderWidth: 1,
     marginBottom: 10,
@@ -2265,18 +2295,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   catalogItemName: {
-    color: '#0f172a',
+    color: NAVY,
     fontSize: 15,
     fontWeight: '700',
     marginBottom: 4,
   },
   catalogItemMeta: {
-    color: '#64748b',
+    color: MUTED,
     fontSize: 13,
     lineHeight: 18,
   },
   catalogSuggestionText: {
-    color: '#1d4ed8',
+    color: '#2563eb',
     fontSize: 12,
     fontWeight: '600',
     lineHeight: 18,
@@ -2300,14 +2330,90 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   clearButton: {
+    backgroundColor: GOLD,
+    borderColor: GOLD,
+    borderRadius: 28,
     minHeight: 48,
     minWidth: 84,
     paddingHorizontal: 12,
     paddingVertical: 10,
+    shadowColor: GOLD,
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 2,
   },
   clearButtonText: {
+    color: '#ffffff',
     fontSize: 13,
+    fontWeight: '900',
   },
+  outputGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 12,
+  },
+  outputTile: {
+    backgroundColor: '#f8fafc',
+    borderColor: DIVIDER,
+    borderRadius: 20,
+    borderWidth: 1,
+    flex: 1,
+    minWidth: '47%',
+    padding: 16,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    elevation: 1,
+  },
+  outputTileWide: {
+    backgroundColor: '#f8fafc',
+    borderColor: DIVIDER,
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 16,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    elevation: 1,
+  },
+  outputTileLabel: {
+    color: MUTED,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  outputTileValue: {
+    color: NAVY,
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  outputTileSub: {
+    color: MUTED,
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  backButton: {
+    backgroundColor: '#ffffff',
+    borderColor: '#cbd5e1',
+    borderRadius: 28,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  backButtonText: {
+    color: '#475569',
+    fontWeight: '700',
+  },
+  /* cost breakdown grid (Step 3) */
   totalsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -2315,53 +2421,48 @@ const styles = StyleSheet.create({
   },
   totalCard: {
     backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+    borderColor: DIVIDER,
     borderRadius: 18,
     borderWidth: 1,
+    flex: 1,
     minWidth: '47%',
     padding: 14,
   },
   totalLabel: {
-    color: '#64748b',
+    color: MUTED,
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 6,
     textTransform: 'uppercase',
   },
   totalValue: {
-    color: '#0f172a',
+    color: NAVY,
     fontSize: 16,
     fontWeight: '800',
   },
-  totalSubValue: {
-    color: '#64748b',
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 6,
-  },
   projectTotalCard: {
-    backgroundColor: '#dcfce7',
-    borderColor: '#86efac',
+    backgroundColor: '#fffbeb',
+    borderColor: GOLD,
     borderRadius: 22,
     borderWidth: 1,
     marginTop: 16,
     padding: 18,
   },
   projectTotalLabel: {
-    color: '#166534',
+    color: '#7a5700',
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 6,
     textTransform: 'uppercase',
   },
   projectTotalValue: {
-    color: '#14532d',
+    color: NAVY,
     fontSize: 28,
     fontWeight: '800',
     marginBottom: 6,
   },
   projectTotalHint: {
-    color: '#166534',
+    color: MUTED,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -2375,5 +2476,19 @@ const styles = StyleSheet.create({
   },
   footerActionButton: {
     flex: 1,
+  },
+  submitButton: {
+    backgroundColor: GOLD,
+    borderColor: GOLD,
+    borderRadius: 28,
+    shadowColor: GOLD,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  submitButtonText: {
+    color: '#ffffff',
+    fontWeight: '900',
   },
 });
