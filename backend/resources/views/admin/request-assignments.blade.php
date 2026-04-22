@@ -7,8 +7,8 @@
         'scheduled' => 'badge badge-primary',
         'assigned' => 'badge badge-info',
         'in_progress' => 'badge badge-primary',
-        'cancelled' => 'badge badge-neutral',
-        'declined' => 'badge badge-neutral',
+        'cancelled' => 'badge badge-danger',
+        'declined' => 'badge badge-danger',
         'completed' => 'badge badge-success',
     ];
 
@@ -47,9 +47,31 @@
 @endphp
 
 @section('content')
-    <div class="card">
+    <style>
+        .assignment-page {
+            display: grid;
+            gap: 24px;
+        }
+
+        .assignment-page .request-card .info-box {
+            background: #f8fbff;
+        }
+
+        .assignment-page .request-card form + form {
+            padding-top: 16px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .assignment-page .request-card .stack {
+            gap: 16px;
+        }
+    </style>
+
+    <div class="assignment-page">
+    <div class="card admin-hero-card">
         <div class="section-header">
             <div>
+                <p class="admin-page-eyebrow">Admin Operations</p>
                 <h1 class="page-title">Admin Request Assignments</h1>
                 <p class="page-copy">Review request details, assign technicians, and keep the official service request status under admin control.</p>
             </div>
@@ -85,10 +107,10 @@
         <div id="assignment-error" class="error-box" style="display: none; margin-top: 16px; margin-bottom: 0;"></div>
     </div>
 
-    <div class="card">
+    <div class="card admin-section-surface">
         <div class="section-header">
             <div>
-                <h2 style="margin: 0;">Service Requests</h2>
+                <h2 class="admin-section-title">Service Requests</h2>
                 <p class="page-copy" style="margin-bottom: 0;">Technicians can mark a service as done for review, while admin keeps the official preferred date, assignment, and status under control here.</p>
             </div>
             <span class="badge badge-neutral">{{ $serviceRequests->count() }} total</span>
@@ -277,10 +299,10 @@
         @endif
     </div>
 
-    <div class="card">
+    <div class="card admin-section-surface">
         <div class="section-header">
             <div>
-                <h2 style="margin: 0;">Inspection Requests</h2>
+                <h2 class="admin-section-title">Inspection Requests</h2>
                 <p class="page-copy" style="margin-bottom: 0;">Inspection requests stay grouped here with customer details, the official preferred date, current status, and technician assignment in one place.</p>
             </div>
             <span class="badge badge-neutral">{{ $inspectionRequests->count() }} total</span>
@@ -407,6 +429,7 @@
             </div>
         @endif
     </div>
+    </div>
 @endsection
 
 @push('scripts')
@@ -486,7 +509,7 @@
                     return 'badge badge-primary';
                 case 'cancelled':
                 case 'declined':
-                    return 'badge badge-neutral';
+                    return 'badge badge-danger';
                 case 'completed':
                     return 'badge badge-success';
                 default:

@@ -1,3 +1,11 @@
+@php
+    $authUser = auth()->user();
+    $isCustomerShell = $authUser && $authUser->role === \App\Models\User::ROLE_CUSTOMER;
+    $isAdminShell = $authUser && in_array($authUser->role, [\App\Models\User::ROLE_ADMIN, \App\Models\User::ROLE_TECHNICIAN], true);
+    $isAdminUser = $authUser && $authUser->role === \App\Models\User::ROLE_ADMIN;
+    $isTechnicianUser = $authUser && $authUser->role === \App\Models\User::ROLE_TECHNICIAN;
+@endphp
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -8,10 +16,26 @@
     <style>
         :root {
             color-scheme: light;
-            font-family: Arial, sans-serif;
+            font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
             line-height: 1.5;
-            background: #f4f6f8;
+            background: #f6f8fb;
             color: #1f2933;
+            --solmate-blue-900: #102a43;
+            --solmate-blue-800: #1e4068;
+            --solmate-blue-700: #29527a;
+            --solmate-blue-100: #eaf2fb;
+            --solmate-blue-50: #f7fbff;
+            --solmate-gold-500: #d4a017;
+            --solmate-gold-400: #f4c542;
+            --solmate-gold-100: #fef3c7;
+            --solmate-surface: #ffffff;
+            --solmate-surface-muted: #f8fbff;
+            --solmate-border: #dbe7f3;
+            --solmate-border-strong: #c7d7e7;
+            --solmate-text: #102a43;
+            --solmate-copy: #52606d;
+            --solmate-shadow: 0 18px 42px rgba(15, 23, 42, 0.07);
+            --solmate-shadow-soft: 0 8px 24px rgba(15, 23, 42, 0.05);
         }
 
         * {
@@ -20,7 +44,10 @@
 
         body {
             margin: 0;
-            background: #f4f6f8;
+            background:
+                radial-gradient(circle at top left, rgba(234, 242, 251, 0.95), transparent 28%),
+                linear-gradient(180deg, #f8fbff 0%, #f5f7fb 28%, #f8fafc 100%);
+            color: var(--solmate-text);
         }
 
         a {
@@ -33,9 +60,14 @@
         }
 
         .shell {
-            max-width: 1040px;
+            max-width: 1120px;
             margin: 0 auto;
-            padding: 24px 16px 48px;
+            padding: 28px 18px 56px;
+        }
+
+        .solmate-admin-shell .shell {
+            max-width: 1280px;
+            padding-top: 30px;
         }
 
         .nav {
@@ -81,19 +113,26 @@
 
         .brand {
             font-weight: 700;
-            color: #102a43;
+            color: var(--solmate-blue-900);
         }
 
         .card {
-            background: #ffffff;
-            border: 1px solid #d9e2ec;
-            border-radius: 12px;
+            background: var(--solmate-surface);
+            border: 1px solid var(--solmate-border);
+            border-radius: 20px;
             padding: 24px;
-            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+            box-shadow: var(--solmate-shadow-soft);
+            overflow: hidden;
         }
 
         .card + .card {
-            margin-top: 16px;
+            margin-top: 20px;
+        }
+
+        .solmate-admin-shell .card {
+            border-radius: 22px;
+            border-color: var(--solmate-border);
+            box-shadow: var(--solmate-shadow);
         }
 
         .narrow {
@@ -102,46 +141,63 @@
         }
 
         .page-title {
-            margin: 0 0 8px;
-            font-size: 28px;
-            color: #102a43;
+            margin: 0 0 10px;
+            font-size: 30px;
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+            font-weight: 800;
+            color: var(--solmate-blue-900);
+        }
+
+        .solmate-admin-shell .page-title {
+            margin-bottom: 12px;
+            font-size: 32px;
         }
 
         .page-copy {
             margin: 0 0 20px;
-            color: #52606d;
+            color: var(--solmate-copy);
+            font-size: 15px;
+            line-height: 1.7;
+            max-width: 760px;
+        }
+
+        .solmate-admin-shell .page-copy {
+            margin-bottom: 22px;
         }
 
         .status,
         .error-box,
         .info-box {
             margin-bottom: 16px;
-            padding: 12px 14px;
-            border-radius: 10px;
+            padding: 14px 16px;
+            border-radius: 14px;
             font-size: 14px;
+            line-height: 1.6;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
         }
 
         .status {
-            background: #e3f9e5;
+            background: #ecfdf3;
             color: #1f5132;
             border: 1px solid #b7e6be;
         }
 
         .error-box {
-            background: #fde8e8;
+            background: #fff1f2;
             color: #8a1c1c;
-            border: 1px solid #f8b4b4;
+            border: 1px solid #fecdd3;
         }
 
         .info-box {
-            background: #e8f1fb;
+            background: #eff6ff;
             color: #124e78;
-            border: 1px solid #bfd8f4;
+            border: 1px solid #bfdbfe;
         }
 
         .form-grid {
             display: grid;
-            gap: 16px;
+            gap: 18px;
         }
 
         .form-grid.two-columns {
@@ -150,40 +206,74 @@
 
         label {
             display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: #243b53;
-            margin-bottom: 6px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #52606d;
+            margin-bottom: 8px;
         }
 
         input {
             width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #bcccdc;
-            border-radius: 8px;
+            padding: 12px 14px;
+            border: 1.5px solid #c9d6e3;
+            border-radius: 12px;
             font-size: 14px;
             background: #fff;
+            color: #102a43;
+            transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
         }
 
         select,
         textarea {
             width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #bcccdc;
-            border-radius: 8px;
+            padding: 12px 14px;
+            border: 1.5px solid #c9d6e3;
+            border-radius: 12px;
             font-size: 14px;
             background: #fff;
+            color: #102a43;
+            transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+        }
+
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 40px;
+        }
+
+        textarea {
+            min-height: 112px;
+            resize: vertical;
+        }
+
+        .solmate-admin-shell input:hover,
+        .solmate-admin-shell select:hover,
+        .solmate-admin-shell textarea:hover {
+            border-color: #b7c9dc;
+        }
+
+        .solmate-admin-shell input,
+        .solmate-admin-shell select,
+        .solmate-admin-shell textarea {
+            background-color: #fcfdff;
         }
 
         input:focus {
-            outline: 2px solid #9bd0ff;
-            border-color: #0f5f9c;
+            outline: none;
+            border-color: var(--solmate-gold-500);
+            box-shadow: 0 0 0 4px rgba(212, 160, 23, 0.12);
         }
 
         select:focus,
         textarea:focus {
-            outline: 2px solid #9bd0ff;
-            border-color: #0f5f9c;
+            outline: none;
+            border-color: var(--solmate-gold-500);
+            box-shadow: 0 0 0 4px rgba(212, 160, 23, 0.12);
         }
 
         .password-field {
@@ -200,7 +290,7 @@
             right: 12px;
             border: 0;
             background: transparent;
-            color: #0f5f9c;
+            color: var(--solmate-blue-800);
             font-size: 13px;
             font-weight: 700;
             padding: 0;
@@ -218,6 +308,11 @@
             gap: 10px;
             margin: 0;
             cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--solmate-blue-900);
+            text-transform: none;
+            letter-spacing: 0;
         }
 
         .checkbox-inline input {
@@ -237,7 +332,7 @@
             gap: 12px;
             align-items: center;
             flex-wrap: wrap;
-            margin-top: 8px;
+            margin-top: 10px;
         }
 
         button,
@@ -246,34 +341,144 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            padding: 10px 16px;
-            border-radius: 8px;
-            border: 1px solid #0f5f9c;
-            background: #0f5f9c;
+            padding: 11px 18px;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            background: linear-gradient(135deg, var(--solmate-gold-400), var(--solmate-gold-500));
             color: #ffffff;
             font-size: 14px;
+            font-weight: 700;
             cursor: pointer;
+            box-shadow: 0 10px 24px rgba(212, 160, 23, 0.18);
+            transition: transform 0.16s, box-shadow 0.16s, opacity 0.16s, background 0.16s, color 0.16s, border-color 0.16s;
+            text-decoration: none;
         }
 
         button.secondary,
         .button-link.secondary {
+            background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+            color: var(--solmate-blue-800);
+            border-color: var(--solmate-border-strong);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+        }
+
+        button.neutral,
+        .button-link.neutral {
+            background: #f8fafc;
+            color: var(--solmate-blue-800);
+            border-color: #d7e1ea;
+            box-shadow: none;
+        }
+
+        button.danger,
+        .button-link.danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #ffffff;
+            border-color: transparent;
+            box-shadow: 0 10px 24px rgba(220, 38, 38, 0.18);
+        }
+
+        button:hover,
+        .button-link:hover {
+            transform: translateY(-1px);
+            opacity: 0.97;
+            text-decoration: none;
+        }
+
+        button.secondary:hover,
+        .button-link.secondary:hover,
+        button.neutral:hover,
+        .button-link.neutral:hover {
+            color: var(--solmate-blue-900);
+            border-color: #b8c8da;
             background: #ffffff;
-            color: #0f5f9c;
+        }
+
+        button:focus-visible,
+        .button-link:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(212, 160, 23, 0.18);
         }
 
         button[disabled] {
             opacity: 0.6;
             cursor: wait;
+            transform: none;
         }
 
         .muted {
             color: #52606d;
             font-size: 14px;
+            line-height: 1.65;
         }
 
         .stack {
             display: grid;
+            gap: 14px;
+        }
+
+        .admin-page-stack {
+            display: grid;
+            gap: 24px;
+        }
+
+        .admin-hero-card {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #f8fbff 0%, #eef6ff 55%, #e3efff 100%);
+            border-color: #d7e5f3;
+        }
+
+        .admin-hero-card::after {
+            content: '';
+            position: absolute;
+            right: -48px;
+            top: -44px;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: rgba(212, 160, 23, 0.11);
+            pointer-events: none;
+        }
+
+        .admin-hero-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .admin-page-eyebrow {
+            margin: 0 0 8px;
+            color: var(--solmate-gold-500);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .admin-section-title {
+            margin: 0;
+            font-size: 21px;
+            line-height: 1.2;
+            color: var(--solmate-blue-900);
+            font-weight: 800;
+        }
+
+        .admin-section-copy {
+            margin: 6px 0 0;
+            color: var(--solmate-copy);
+            font-size: 14px;
+            line-height: 1.65;
+        }
+
+        .admin-section-surface {
+            background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+        }
+
+        .admin-inline-actions {
+            display: flex;
             gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
         }
 
         .section-header {
@@ -282,32 +487,52 @@
             align-items: flex-start;
             gap: 16px;
             flex-wrap: wrap;
-            margin-bottom: 20px;
+            margin-bottom: 22px;
+        }
+
+        .section-header > div:first-child {
+            min-width: 0;
+            flex: 1;
         }
 
         .summary-grid {
             display: grid;
-            gap: 12px;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         }
 
         .summary-card {
-            padding: 16px;
-            border: 1px solid #d9e2ec;
-            border-radius: 12px;
-            background: #f8fbff;
+            padding: 18px;
+            border: 1px solid #dbe7f3;
+            border-radius: 16px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+            position: relative;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 4px;
+            border-radius: 16px 0 0 16px;
+            background: linear-gradient(180deg, var(--solmate-gold-400), var(--solmate-blue-800));
+            opacity: 0.9;
         }
 
         .summary-label {
-            color: #52606d;
-            font-size: 13px;
-            margin-bottom: 8px;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
         }
 
         .summary-value {
             color: #102a43;
-            font-size: 28px;
-            font-weight: 700;
+            font-size: 30px;
+            font-weight: 800;
             line-height: 1;
         }
 
@@ -317,16 +542,17 @@
         }
 
         .request-card {
-            padding: 18px;
-            border: 1px solid #d9e2ec;
-            border-radius: 12px;
-            background: #fbfcfe;
+            padding: 20px;
+            border: 1px solid #dbe7f3;
+            border-radius: 18px;
+            background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.04);
             scroll-margin-top: 24px;
         }
 
         .request-card:target {
-            border-color: #7cc4fa;
-            box-shadow: 0 0 0 3px rgba(124, 196, 250, 0.25);
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.18);
         }
 
         .request-header {
@@ -341,7 +567,7 @@
         .request-title {
             color: #102a43;
             font-size: 18px;
-            font-weight: 700;
+            font-weight: 800;
         }
 
         .request-badges {
@@ -357,9 +583,9 @@
         }
 
         .detail-item {
-            padding: 12px 14px;
-            border: 1px solid #e4e7eb;
-            border-radius: 10px;
+            padding: 14px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
             background: #ffffff;
         }
 
@@ -367,9 +593,9 @@
             display: block;
             margin-bottom: 4px;
             color: #7b8794;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.04em;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
             text-transform: uppercase;
         }
 
@@ -384,42 +610,49 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 5px 10px;
+            padding: 5px 11px;
             border-radius: 999px;
             border: 1px solid transparent;
-            font-size: 12px;
-            font-weight: 700;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
             text-transform: capitalize;
         }
 
         .badge-neutral {
-            background: #f0f4f8;
-            color: #334e68;
-            border-color: #d9e2ec;
+            background: #f8fafc;
+            color: #475569;
+            border-color: #dbe4ee;
         }
 
         .badge-warning {
-            background: #fff7d6;
-            color: #8d5d00;
-            border-color: #f6d776;
+            background: #fef3c7;
+            color: #a16207;
+            border-color: #fde68a;
         }
 
         .badge-info {
-            background: #e8f1fb;
-            color: #124e78;
-            border-color: #bfd8f4;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-color: #bfdbfe;
         }
 
         .badge-primary {
-            background: #e0f2fe;
-            color: #075985;
+            background: #dbeafe;
+            color: #1d4ed8;
             border-color: #93c5fd;
         }
 
         .badge-success {
-            background: #e3f9e5;
-            color: #1f5132;
-            border-color: #b7e6be;
+            background: #dcfce7;
+            color: #15803d;
+            border-color: #bbf7d0;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #dc2626;
+            border-color: #fecaca;
         }
 
         .list-row {
@@ -428,10 +661,58 @@
             align-items: center;
             gap: 12px;
             flex-wrap: wrap;
-            padding: 12px 14px;
-            border: 1px solid #e4e7eb;
-            border-radius: 10px;
+            padding: 14px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
             background: #ffffff;
+        }
+
+        .solmate-admin-shell table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: #ffffff;
+            border: 1px solid #dbe7f3;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+        }
+
+        .solmate-admin-shell th,
+        .solmate-admin-shell td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .solmate-admin-shell th {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #64748b;
+            background: #f8fbff;
+        }
+
+        .solmate-admin-shell thead th:first-child {
+            border-top-left-radius: 18px;
+        }
+
+        .solmate-admin-shell thead th:last-child {
+            border-top-right-radius: 18px;
+        }
+
+        .solmate-admin-shell tbody tr:nth-child(even) td {
+            background: #fcfdff;
+        }
+
+        .solmate-admin-shell tbody tr:hover td {
+            background: #fbfdff;
+        }
+
+        .solmate-admin-shell tbody tr:last-child td {
+            border-bottom: none;
         }
 
         @media (max-width: 720px) {
@@ -439,42 +720,813 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* ===== CUSTOMER HEADER ===== */
+        .solmate-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            height: 68px;
+            background: #f8f4ec;
+            border-radius: 18px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+            border: 1px solid rgba(212, 160, 23, 0.10);
+        }
+
+        .solmate-nav-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 160px;
+        }
+
+        .solmate-hamburger {
+            background: none;
+            border: none;
+            padding: 7px 8px;
+            cursor: pointer;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            line-height: 0;
+            transition: background 0.15s;
+        }
+
+        .solmate-hamburger:hover {
+            background: rgba(0, 0, 0, 0.06);
+            color: #374151;
+        }
+
+        .solmate-brand-link {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: baseline;
+            line-height: 1;
+        }
+
+        .solmate-brand-link:hover {
+            text-decoration: none;
+        }
+
+        .solmate-brand-sol {
+            font-size: 22px;
+            font-weight: 700;
+            color: #102a43;
+            letter-spacing: -0.3px;
+        }
+
+        .solmate-brand-mate {
+            font-size: 22px;
+            font-weight: 700;
+            color: #d4a017;
+            letter-spacing: -0.3px;
+        }
+
+        .solmate-nav-center {
+            display: flex;
+            align-items: center;
+            gap: 36px;
+        }
+
+        .solmate-nav-center--admin {
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .solmate-nav--admin {
+            min-height: 82px;
+            height: auto;
+            padding: 18px 22px;
+            background: linear-gradient(135deg, #f8fbff 0%, #eef6ff 58%, #e8f1fb 100%);
+            border: 1px solid #dbe7f3;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .solmate-nav--admin::after {
+            content: '';
+            position: absolute;
+            right: -40px;
+            top: -40px;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: rgba(212, 160, 23, 0.10);
+            pointer-events: none;
+        }
+
+        .solmate-nav--admin > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .solmate-brand-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .solmate-admin-kicker {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--solmate-blue-800);
+            border: 1px solid rgba(30, 64, 104, 0.08);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .solmate-nav-link-with-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .solmate-nav-link {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4b5563;
+            text-decoration: none;
+            padding: 4px 0;
+            border-bottom: 2px solid transparent;
+            transition: color 0.15s, border-color 0.15s;
+            white-space: nowrap;
+        }
+
+        .solmate-nav--admin .solmate-nav-link {
+            padding: 10px 14px;
+            border: 1px solid transparent;
+            border-radius: 999px;
+            border-bottom-width: 1px;
+            background: rgba(255, 255, 255, 0.62);
+            color: var(--solmate-blue-800);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+        }
+
+        .solmate-nav-link:hover {
+            color: #102a43;
+            text-decoration: none;
+            border-bottom-color: #d4a017;
+        }
+
+        .solmate-nav--admin .solmate-nav-link:hover {
+            border-bottom-color: transparent;
+            border-color: #c7d7e7;
+            background: #ffffff;
+        }
+
+        .solmate-nav-link.active {
+            color: #102a43;
+            font-weight: 600;
+            border-bottom-color: #102a43;
+        }
+
+        .solmate-nav--admin .solmate-nav-link.active {
+            border-color: rgba(16, 42, 67, 0.10);
+            background: linear-gradient(135deg, #102a43, #1e4068);
+            color: #ffffff;
+            box-shadow: 0 10px 20px rgba(16, 42, 67, 0.20);
+        }
+
+        .solmate-nav-right {
+            display: flex;
+            align-items: center;
+            min-width: 160px;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .solmate-admin-nav-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .solmate-admin-logout-form {
+            margin: 0;
+        }
+
+        .solmate-admin-logout-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid #dbe7f3;
+            background: rgba(255, 255, 255, 0.82);
+            color: var(--solmate-blue-800);
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+        }
+
+        .solmate-admin-logout-btn:hover {
+            background: #ffffff;
+            color: var(--solmate-blue-900);
+            border-color: #bfd0e2;
+        }
+
+        .solmate-profile-wrapper {
+            position: relative;
+        }
+
+        .solmate-profile-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #d4a017;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: background 0.15s, transform 0.1s;
+            color: #ffffff;
+            line-height: 0;
+        }
+
+        .solmate-profile-btn:hover {
+            background: #c49215;
+            transform: scale(1.04);
+        }
+
+        .solmate-profile-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 10px);
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.14);
+            min-width: 200px;
+            z-index: 200;
+            overflow: hidden;
+        }
+
+        .solmate-profile-dropdown.open {
+            display: block;
+        }
+
+        .solmate-profile-dropdown-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        }
+
+        .solmate-profile-dropdown-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1f2937;
+            margin: 0 0 2px;
+        }
+
+        .solmate-profile-dropdown-email {
+            font-size: 12px;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        .solmate-profile-dropdown-actions {
+            padding: 8px;
+        }
+
+        .solmate-logout-btn {
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            padding: 9px 10px;
+            font-size: 14px;
+            color: #374151;
+            cursor: pointer;
+            border-radius: 6px;
+            display: block;
+            transition: background 0.12s;
+        }
+
+        .solmate-logout-btn:hover {
+            background: #f9fafb;
+            color: #111827;
+        }
+
+        /* ===== SERVICES DROPDOWN ===== */
+        .solmate-services-wrapper {
+            position: relative;
+        }
+
+        .solmate-services-trigger {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #4b5563;
+            background: none;
+            border: none;
+            padding: 4px 0;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: color 0.15s, border-color 0.15s;
+            white-space: nowrap;
+            line-height: inherit;
+        }
+
+        .solmate-services-trigger:hover {
+            color: #102a43;
+            border-bottom-color: #d4a017;
+        }
+
+        .solmate-services-trigger.active {
+            color: #102a43;
+            font-weight: 600;
+            border-bottom-color: #102a43;
+        }
+
+        .solmate-services-chevron {
+            transition: transform 0.18s ease;
+            flex-shrink: 0;
+            color: #94a3b8;
+        }
+
+        .solmate-services-trigger[aria-expanded="true"] .solmate-services-chevron {
+            transform: rotate(180deg);
+        }
+
+        .solmate-services-trigger[aria-expanded="true"] .solmate-services-chevron {
+            color: #d4a017;
+        }
+
+        .solmate-services-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 14px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.09);
+            min-width: 188px;
+            z-index: 300;
+            overflow: hidden;
+            padding: 6px;
+        }
+
+        .solmate-services-dropdown.open {
+            display: block;
+        }
+
+        .solmate-services-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            text-decoration: none;
+            transition: background 0.12s, color 0.12s;
+            white-space: nowrap;
+        }
+
+        .solmate-services-item:hover {
+            background: #f8f4ec;
+            color: #102a43;
+            text-decoration: none;
+        }
+
+        .solmate-services-item.active {
+            color: #102a43;
+            font-weight: 600;
+            background: #fef9ec;
+        }
+
+        .solmate-services-item-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            background: linear-gradient(135deg, #102a43, #1e4068);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .solmate-services-item-soon {
+            margin-left: auto;
+            font-size: 10px;
+            font-weight: 700;
+            color: #94a3b8;
+            background: #f1f5f9;
+            border-radius: 4px;
+            padding: 1px 6px;
+            letter-spacing: .3px;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 680px) {
+            .solmate-nav-center {
+                display: none;
+            }
+
+            .solmate-nav {
+                padding: 0 16px;
+            }
+
+            .solmate-admin-nav-actions {
+                display: none;
+            }
+        }
+
+        .admin-main {
+            display: grid;
+            gap: 24px;
+        }
+
+        .solmate-admin-shell .solmate-footer {
+            margin-top: 72px;
+        }
+
+        /* ===== FOOTER ===== */
+        .solmate-footer {
+            background: #0f1729;
+            color: #cbd5e1;
+            margin-top: 48px;
+            font-family: Arial, sans-serif;
+        }
+
+        .solmate-footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 56px 32px 0;
+        }
+
+        .solmate-footer-upper {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 0.6fr;
+            gap: 48px;
+            padding-bottom: 48px;
+        }
+
+        .solmate-footer-brand-sol {
+            font-size: 28px;
+            font-weight: 700;
+            color: #7dd3fc;
+            letter-spacing: -0.3px;
+        }
+
+        .solmate-footer-brand-mate {
+            font-size: 28px;
+            font-weight: 700;
+            color: #d4a017;
+            letter-spacing: -0.3px;
+        }
+
+        .solmate-footer-brand-link {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: baseline;
+            margin-bottom: 16px;
+        }
+
+        .solmate-footer-brand-link:hover {
+            text-decoration: none;
+        }
+
+        .solmate-footer-desc {
+            font-size: 13.5px;
+            line-height: 1.75;
+            color: #94a3b8;
+            max-width: 300px;
+            margin: 0;
+        }
+
+        .solmate-footer-col-heading {
+            font-size: 13px;
+            font-weight: 700;
+            color: #e2e8f0;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin: 0 0 18px;
+        }
+
+        .solmate-footer-links {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+        }
+
+        .solmate-footer-links a {
+            font-size: 13.5px;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+
+        .solmate-footer-links a:hover {
+            color: #e2e8f0;
+            text-decoration: none;
+        }
+
+        .solmate-footer-socials {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .solmate-footer-social-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: background 0.15s, color 0.15s;
+            line-height: 0;
+        }
+
+        .solmate-footer-social-btn:hover {
+            background: rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .solmate-footer-divider {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+            margin: 0;
+        }
+
+        .solmate-footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .solmate-footer-copyright {
+            font-size: 12.5px;
+            color: #64748b;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .solmate-footer-contact-items {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+
+        .solmate-footer-contact-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12.5px;
+            color: #94a3b8;
+        }
+
+        .solmate-footer-contact-item svg {
+            flex-shrink: 0;
+            color: #7dd3fc;
+        }
+
+        @media (max-width: 900px) {
+            .solmate-footer-upper {
+                grid-template-columns: 1fr 1fr;
+                gap: 36px;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .solmate-footer-upper {
+                grid-template-columns: 1fr;
+                gap: 28px;
+            }
+
+            .solmate-footer-inner {
+                padding: 40px 20px 0;
+            }
+
+            .solmate-footer-bottom {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 20px;
+                gap: 14px;
+            }
+
+            .solmate-footer-contact-items {
+                gap: 16px;
+            }
+        }
     </style>
 </head>
-<body>
+<body class="{{ $isAdminShell ? 'solmate-admin-shell' : 'solmate-site-shell' }} {{ $isAdminUser ? 'solmate-role-admin' : '' }} {{ $isTechnicianUser ? 'solmate-role-technician' : '' }}">
     <div class="shell">
         @auth
-            <div class="nav">
-                <div>
-                    <div class="brand">Solmate Website</div>
-                    <div class="muted">Logged in as {{ auth()->user()->name }} ({{ auth()->user()->role }})</div>
-                </div>
-                <div class="nav-links">
-                    <a href="{{ route('dashboard') }}">Dashboard</a>
-                    @if (auth()->user()->role === \App\Models\User::ROLE_CUSTOMER)
-                        <a href="{{ route('customer.testimonies') }}">My Testimonies</a>
-                    @endif
-                    @if (in_array(auth()->user()->role, [\App\Models\User::ROLE_ADMIN, \App\Models\User::ROLE_TECHNICIAN], true))
-                        <a href="{{ route('quotations.item-builder') }}">Quotation Item Builder</a>
-                    @endif
-                    @if (auth()->user()->role === \App\Models\User::ROLE_ADMIN)
-                        <a href="{{ route('admin.notifications') }}" class="nav-link-with-badge">
-                            Notifications
-                            <span id="admin-notification-badge" class="notification-count-badge" style="display: none;">0</span>
+            @if ($isCustomerShell)
+                {{-- ===== CUSTOMER HEADER ===== --}}
+                <nav class="solmate-nav" aria-label="Customer navigation">
+                    {{-- Left: brand --}}
+                    <div class="solmate-nav-left">
+                        <a href="{{ route('home') }}" class="solmate-brand-link" aria-label="SolMate home">
+                            <span class="solmate-brand-sol">Sol</span><span class="solmate-brand-mate">Mate</span>
                         </a>
-                        <a href="{{ route('admin.profile.show') }}">Profile</a>
-                        <a href="{{ route('admin.testimonies') }}">Testimonies</a>
-                        <a href="{{ route('admin.quotation-settings') }}">Quotation Settings</a>
-                        <a href="{{ route('admin.pricing-catalog') }}">Pricing Catalog</a>
-                        <a href="{{ route('admin.technicians.create') }}">Register Technician</a>
-                        <a href="{{ route('admin.request-assignments') }}">Request Assignments</a>
-                    @endif
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="secondary">Logout</button>
-                    </form>
-                </div>
-            </div>
+                    </div>
+
+                    {{-- Center: nav links --}}
+                    <div class="solmate-nav-center">
+                        <a href="{{ route('home') }}"
+                           class="solmate-nav-link {{ request()->routeIs('home') ? 'active' : '' }}">Home</a>
+                        <a href="{{ route('customer.quotation') }}"
+                           class="solmate-nav-link {{ request()->routeIs('customer.quotation') ? 'active' : '' }}">Quotation</a>
+                        {{-- Services dropdown --}}
+                        <div class="solmate-services-wrapper">
+                            <button
+                                type="button"
+                                id="solmateServicesBtn"
+                                class="solmate-services-trigger {{ request()->routeIs('customer.inspection', 'customer.installation', 'customer.maintenance') ? 'active' : '' }}"
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                                aria-controls="solmateServicesDropdown"
+                            >
+                                Services
+                                <svg class="solmate-services-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </button>
+
+                            <div id="solmateServicesDropdown" class="solmate-services-dropdown" role="menu">
+
+                                {{-- Installation --}}
+                                <a href="{{ route('customer.installation') }}" class="solmate-services-item {{ request()->routeIs('customer.installation') ? 'active' : '' }}" role="menuitem">
+                                    <span class="solmate-services-item-icon">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2" aria-hidden="true">
+                                            <rect x="2" y="7" width="20" height="14" rx="2"/>
+                                            <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+                                        </svg>
+                                    </span>
+                                    Installation
+                                </a>
+
+                                {{-- Inspection --}}
+                                <a href="{{ route('customer.inspection') }}" class="solmate-services-item {{ request()->routeIs('customer.inspection') ? 'active' : '' }}" role="menuitem">
+                                    <span class="solmate-services-item-icon">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2" aria-hidden="true">
+                                            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/>
+                                            <circle cx="12" cy="10" r="3"/>
+                                        </svg>
+                                    </span>
+                                    Inspection
+                                </a>
+
+                                {{-- Maintenance --}}
+                                <a href="{{ route('customer.maintenance') }}" class="solmate-services-item {{ request()->routeIs('customer.maintenance') ? 'active' : '' }}" role="menuitem">
+                                    <span class="solmate-services-item-icon">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2" aria-hidden="true">
+                                            <circle cx="12" cy="12" r="3"/>
+                                            <path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/>
+                                        </svg>
+                                    </span>
+                                    Maintenance
+                                </a>
+
+                            </div>
+                        </div>{{-- /.solmate-services-wrapper --}}
+                        <a href="{{ route('customer.tracking') }}"
+                           class="solmate-nav-link {{ request()->routeIs('customer.tracking') ? 'active' : '' }}">Tracking</a>
+                        <a href="{{ route('dashboard') }}"
+                           class="solmate-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
+                    </div>
+
+                    {{-- Right: profile icon with dropdown --}}
+                    <div class="solmate-nav-right">
+                        <div class="solmate-profile-wrapper">
+                            <button class="solmate-profile-btn" id="solmateProfileBtn" aria-label="Open profile menu" type="button" aria-haspopup="true" aria-expanded="false">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.337 0-10 1.676-10 5v2h20v-2c0-3.324-6.663-5-10-5z"/>
+                                </svg>
+                            </button>
+                            <div class="solmate-profile-dropdown" id="solmateProfileDropdown" role="menu">
+                                <div class="solmate-profile-dropdown-header">
+                                    <p class="solmate-profile-dropdown-name">{{ auth()->user()->name }}</p>
+                                    <p class="solmate-profile-dropdown-email">{{ auth()->user()->email }}</p>
+                                </div>
+                                <div class="solmate-profile-dropdown-actions">
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button type="submit" class="solmate-logout-btn">Logout</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            @else
+                {{-- ===== ADMIN / TECHNICIAN HEADER ===== --}}
+                <nav class="solmate-nav solmate-nav--admin" aria-label="Admin navigation">
+                    {{-- Left: hamburger + brand --}}
+                    <div class="solmate-nav-left">
+                        <button class="solmate-hamburger" id="solmateMenuToggle" aria-label="Toggle menu" type="button">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                        <div class="solmate-brand-stack">
+                            <a href="{{ route('dashboard') }}" class="solmate-brand-link" aria-label="SolMate home">
+                                <span class="solmate-brand-sol">Sol</span><span class="solmate-brand-mate">Mate</span>
+                            </a>
+                            <span class="solmate-admin-kicker">{{ $isAdminUser ? 'Admin Workspace' : 'Technician Workspace' }}</span>
+                        </div>
+                    </div>
+
+                    {{-- Center: nav links --}}
+                    <div class="solmate-nav-center solmate-nav-center--admin">
+                        <a href="{{ route('dashboard') }}"
+                           class="solmate-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
+                        @if (in_array(auth()->user()->role, [\App\Models\User::ROLE_ADMIN, \App\Models\User::ROLE_TECHNICIAN], true))
+                            <a href="{{ route('quotations.item-builder') }}"
+                               class="solmate-nav-link {{ request()->routeIs('quotations.item-builder') ? 'active' : '' }}">Item Builder</a>
+                        @endif
+                        @if (auth()->user()->role === \App\Models\User::ROLE_ADMIN)
+                            <a href="{{ route('admin.notifications') }}" class="solmate-nav-link solmate-nav-link-with-badge {{ request()->routeIs('admin.notifications') ? 'active' : '' }}">
+                                Notifications
+                                <span id="admin-notification-badge" class="notification-count-badge" style="display: none;">0</span>
+                            </a>
+                            <a href="{{ route('admin.testimonies') }}"
+                               class="solmate-nav-link {{ request()->routeIs('admin.testimonies') ? 'active' : '' }}">Testimonies</a>
+                            <a href="{{ route('admin.quotation-settings') }}"
+                               class="solmate-nav-link {{ request()->routeIs('admin.quotation-settings') ? 'active' : '' }}">Quotation Settings</a>
+                            <a href="{{ route('admin.pricing-catalog') }}"
+                               class="solmate-nav-link {{ request()->routeIs('admin.pricing-catalog') ? 'active' : '' }}">Pricing Catalog</a>
+                            <a href="{{ route('admin.technicians.create') }}"
+                               class="solmate-nav-link {{ request()->routeIs('admin.technicians.create') ? 'active' : '' }}">Reg. Technician</a>
+                            <a href="{{ route('admin.request-assignments') }}"
+                               class="solmate-nav-link {{ request()->routeIs('admin.request-assignments') ? 'active' : '' }}">Assignments</a>
+                        @endif
+                    </div>
+
+                    {{-- Right: profile icon with dropdown --}}
+                    <div class="solmate-nav-right">
+                        @if ($isAdminUser)
+                            <div class="solmate-admin-nav-actions">
+                                <form method="POST" action="{{ route('logout') }}" class="solmate-admin-logout-form">
+                                    @csrf
+                                    <button type="submit" class="solmate-admin-logout-btn">Logout</button>
+                                </form>
+                            </div>
+                        @endif
+                        <div class="solmate-profile-wrapper">
+                            <button class="solmate-profile-btn" id="solmateProfileBtn" aria-label="Open profile menu" type="button" aria-haspopup="true" aria-expanded="false">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.337 0-10 1.676-10 5v2h20v-2c0-3.324-6.663-5-10-5z"/>
+                                </svg>
+                            </button>
+                            <div class="solmate-profile-dropdown" id="solmateProfileDropdown" role="menu">
+                                <div class="solmate-profile-dropdown-header">
+                                    <p class="solmate-profile-dropdown-name">{{ auth()->user()->name }}</p>
+                                    <p class="solmate-profile-dropdown-email">{{ auth()->user()->email }}</p>
+                                </div>
+                                <div class="solmate-profile-dropdown-actions">
+                                    @if ($isAdminUser)
+                                        <a href="{{ route('admin.profile.show') }}" class="solmate-logout-btn" style="text-decoration:none;display:block;">Profile</a>
+                                    @endif
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button type="submit" class="solmate-logout-btn">Logout</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            @endif
         @endauth
 
         @if (session('status'))
@@ -492,13 +1544,162 @@
             </div>
         @endif
 
-        @yield('content')
+        <main class="{{ $isAdminShell ? 'admin-main' : '' }}">
+            @yield('content')
+        </main>
     </div>
+
+    {{-- ===== FOOTER ===== --}}
+    <footer class="solmate-footer" aria-label="Site footer">
+        <div class="solmate-footer-inner">
+            <div class="solmate-footer-upper">
+
+                {{-- Brand + description --}}
+                <div>
+                    <a href="{{ route('home') }}" class="solmate-footer-brand-link" aria-label="SolMate home">
+                        <span class="solmate-footer-brand-sol">Sol</span><span class="solmate-footer-brand-mate">Mate</span>
+                    </a>
+                    <p class="solmate-footer-desc">
+                        SolMate is a smart solar panel installation management system designed to
+                        streamline planning, monitoring, and deployment. We help installers,
+                        homeowners, and businesses transition to clean energy with efficiency and
+                        confidence.
+                    </p>
+                </div>
+
+                {{-- Quick Links --}}
+                <div>
+                    <p class="solmate-footer-col-heading">Quick Links</p>
+                    <ul class="solmate-footer-links">
+                        <li><a href="{{ route('home') }}">Home</a></li>
+                        <li><a href="#">Services</a></li>
+                        <li><a href="#">Solar Calculator</a></li>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+
+                {{-- Services --}}
+                <div>
+                    <p class="solmate-footer-col-heading">Services</p>
+                    <ul class="solmate-footer-links">
+                        <li><a href="#">Solar Installation</a></li>
+                        <li><a href="#">System Maintenance</a></li>
+                        <li><a href="#">Site Assessment</a></li>
+                        <li><a href="#">ROI &amp; Quotation Estimation</a></li>
+                        <li><a href="#">Consultation</a></li>
+                    </ul>
+                </div>
+
+                {{-- Socials --}}
+                <div>
+                    <p class="solmate-footer-col-heading">Socials</p>
+                    <div class="solmate-footer-socials">
+                        {{-- Facebook --}}
+                        <a href="#" class="solmate-footer-social-btn" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                        </a>
+                        {{-- Instagram --}}
+                        <a href="#" class="solmate-footer-social-btn" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                        </a>
+                        {{-- X (Twitter) --}}
+                        <a href="#" class="solmate-footer-social-btn" aria-label="X (Twitter)" target="_blank" rel="noopener noreferrer">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        </a>
+                        {{-- TikTok --}}
+                        <a href="#" class="solmate-footer-social-btn" aria-label="TikTok" target="_blank" rel="noopener noreferrer">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <hr class="solmate-footer-divider">
+
+        <div class="solmate-footer-bottom">
+            <p class="solmate-footer-copyright">
+                &copy; {{ date('Y') }} RDY Solar Installation Inc.<br>
+                All Rights Reserved.
+            </p>
+            <div class="solmate-footer-contact-items">
+                <div class="solmate-footer-contact-item">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span>Address, Philippines</span>
+                </div>
+                <div class="solmate-footer-contact-item">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    <span>rdysolarpanel@gmail.com</span>
+                </div>
+                <div class="solmate-footer-contact-item">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.68A2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    <span>+63 9654326865</span>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     @stack('scripts')
 
     @auth
-        @if (auth()->user()->role === \App\Models\User::ROLE_ADMIN)
+        <script>
+            (function () {
+                    const profileBtn = document.getElementById('solmateProfileBtn');
+                    const profileDropdown = document.getElementById('solmateProfileDropdown');
+
+                    if (profileBtn && profileDropdown) {
+                        profileBtn.addEventListener('click', function (e) {
+                            e.stopPropagation();
+                            const isOpen = profileDropdown.classList.toggle('open');
+                            profileBtn.setAttribute('aria-expanded', String(isOpen));
+                        });
+
+                        document.addEventListener('click', function () {
+                            profileDropdown.classList.remove('open');
+                            profileBtn.setAttribute('aria-expanded', 'false');
+                        });
+
+                        document.addEventListener('keydown', function (e) {
+                            if (e.key === 'Escape') {
+                                profileDropdown.classList.remove('open');
+                                profileBtn.setAttribute('aria-expanded', 'false');
+                                profileBtn.focus();
+                            }
+                        });
+                    }
+
+                    // Services dropdown
+                    const servicesBtn      = document.getElementById('solmateServicesBtn');
+                    const servicesDropdown = document.getElementById('solmateServicesDropdown');
+
+                    if (servicesBtn && servicesDropdown) {
+                        servicesBtn.addEventListener('click', function (e) {
+                            e.stopPropagation();
+                            const isOpen = servicesDropdown.classList.toggle('open');
+                            servicesBtn.setAttribute('aria-expanded', String(isOpen));
+                        });
+
+                        document.addEventListener('click', function () {
+                            servicesDropdown.classList.remove('open');
+                            servicesBtn.setAttribute('aria-expanded', 'false');
+                        });
+
+                        document.addEventListener('keydown', function (e) {
+                            if (e.key === 'Escape') {
+                                servicesDropdown.classList.remove('open');
+                                servicesBtn.setAttribute('aria-expanded', 'false');
+                                servicesBtn.focus();
+                            }
+                        });
+                    }
+            })();
+        </script>
+    @endauth
+
+    @auth
+        @if ($isAdminUser)
             <script>
                 (function () {
                     const badge = document.getElementById('admin-notification-badge');

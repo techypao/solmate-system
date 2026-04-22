@@ -9,9 +9,10 @@
             gap: 16px;
             flex-wrap: wrap;
             padding: 18px;
-            border: 1px solid #d9e2ec;
-            border-radius: 12px;
-            background: #f8fbff;
+            border: 1px solid #dbe7f3;
+            border-radius: 16px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
         }
 
         .notification-summary-label {
@@ -39,10 +40,10 @@
             display: block;
             width: 100%;
             text-align: left;
-            padding: 18px;
-            border: 1px solid #d9e2ec;
-            border-radius: 12px;
-            background: #ffffff;
+            padding: 20px;
+            border: 1px solid #dbe7f3;
+            border-radius: 18px;
+            background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
             color: inherit;
             cursor: pointer;
             appearance: none;
@@ -124,8 +125,8 @@
         .notification-empty-state {
             text-align: center;
             padding: 28px;
-            border: 1px solid #d9e2ec;
-            border-radius: 12px;
+            border: 1px solid #dbe7f3;
+            border-radius: 18px;
             background: #fbfcfe;
         }
 
@@ -137,9 +138,11 @@
         }
     </style>
 
-    <div class="card">
+    <div class="admin-page-stack">
+    <div class="card admin-hero-card">
         <div class="section-header">
             <div>
+                <p class="admin-page-eyebrow">Admin Alerts</p>
                 <h1 class="page-title">Admin Notifications</h1>
                 <p class="page-copy">Review new customer request alerts and jump straight into the admin request assignment workflow.</p>
             </div>
@@ -162,10 +165,10 @@
         <div id="notifications-error" class="error-box" style="display: none; margin-top: 16px;"></div>
     </div>
 
-    <div class="card">
+    <div class="card admin-section-surface">
         <div class="section-header">
             <div>
-                <h2 style="margin: 0 0 6px;">Latest notifications</h2>
+                <h2 class="admin-section-title">Latest notifications</h2>
                 <p class="page-copy" style="margin-bottom: 0;">Click a notification to mark it as read and open the related admin request assignment record.</p>
             </div>
         </div>
@@ -176,6 +179,7 @@
         </div>
 
         <div id="notifications-list" class="notification-list" style="display: none;"></div>
+    </div>
     </div>
 @endsection
 

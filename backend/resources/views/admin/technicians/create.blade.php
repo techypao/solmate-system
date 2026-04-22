@@ -1,9 +1,11 @@
 @extends('layouts.app', ['title' => 'Register Technician'])
 
 @section('content')
-    <div class="card">
+    <div class="admin-page-stack">
+    <div class="card admin-hero-card">
         <div class="section-header">
             <div>
+                <p class="admin-page-eyebrow">Admin Team Management</p>
                 <h1 class="page-title">Register Technician</h1>
                 <p class="page-copy">Create technician accounts directly from the admin website. New accounts created here are saved with the <strong>technician</strong> role and can be used in your existing assignment flows.</p>
             </div>
@@ -22,8 +24,13 @@
         </div>
     </div>
 
-    <div class="card">
-        <h2 style="margin-top: 0;">Technician Account Details</h2>
+    <div class="card admin-section-surface">
+        <div class="section-header">
+            <div>
+                <h2 class="admin-section-title">Technician Account Details</h2>
+                <p class="admin-section-copy">Fill in the account fields below to create a new technician website login.</p>
+            </div>
+        </div>
 
         <form method="POST" action="{{ route('admin.technicians.store') }}" class="form-grid">
             @csrf
@@ -63,10 +70,10 @@
         </form>
     </div>
 
-    <div class="card">
+    <div class="card admin-section-surface">
         <div class="section-header">
             <div>
-                <h2 style="margin: 0;">Existing Technicians</h2>
+                <h2 class="admin-section-title">Existing Technicians</h2>
                 <p class="page-copy" style="margin-bottom: 0;">Use this list to confirm which technician accounts are already available for request assignment.</p>
             </div>
         </div>
@@ -86,5 +93,6 @@
                 @endforeach
             </div>
         @endif
+    </div>
     </div>
 @endsection

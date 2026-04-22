@@ -8,10 +8,11 @@
         }
 
         .testimony-card {
-            padding: 18px;
-            border: 1px solid #d9e2ec;
-            border-radius: 12px;
-            background: #fbfcfe;
+            padding: 20px;
+            border: 1px solid #dbe7f3;
+            border-radius: 18px;
+            background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
         }
 
         .testimony-preview {
@@ -39,12 +40,6 @@
             min-width: 96px;
         }
 
-        .badge-danger {
-            background: #fde8e8;
-            color: #8a1c1c;
-            border-color: #f8b4b4;
-        }
-
         .detail-panel {
             display: grid;
             gap: 16px;
@@ -52,9 +47,9 @@
 
         .detail-box {
             padding: 16px;
-            border: 1px solid #d9e2ec;
-            border-radius: 12px;
-            background: #fbfcfe;
+            border: 1px solid #dbe7f3;
+            border-radius: 16px;
+            background: #fbfdff;
         }
 
         .detail-box h3 {
@@ -76,8 +71,8 @@
 
         .image-tile {
             display: block;
-            border: 1px solid #d9e2ec;
-            border-radius: 12px;
+            border: 1px solid #dbe7f3;
+            border-radius: 14px;
             overflow: hidden;
             background: #ffffff;
         }
@@ -106,9 +101,11 @@
         }
     </style>
 
-    <div class="card">
+    <div class="admin-page-stack">
+    <div class="card admin-hero-card">
         <div class="section-header">
             <div>
+                <p class="admin-page-eyebrow">Admin Moderation</p>
                 <h1 class="page-title">Admin Testimonies</h1>
                 <p class="page-copy">Review customer submissions, inspect uploaded images, and moderate what can appear publicly.</p>
             </div>
@@ -123,10 +120,10 @@
         <div id="testimonies-summary" class="summary-grid" style="display: none;"></div>
     </div>
 
-    <div class="card">
+    <div class="card admin-section-surface">
         <div class="section-header">
             <div>
-                <h2 style="margin: 0 0 6px;">Moderation queue</h2>
+                <h2 class="admin-section-title">Moderation queue</h2>
                 <p class="page-copy" style="margin-bottom: 0;">View, approve, reject, edit, or delete testimonies without leaving the admin workflow.</p>
             </div>
         </div>
@@ -139,10 +136,10 @@
         <div id="testimonies-list" class="testimony-list" style="display: none;"></div>
     </div>
 
-    <div id="testimony-detail-card" class="card" style="display: none;">
+    <div id="testimony-detail-card" class="card admin-section-surface" style="display: none;">
         <div class="section-header">
             <div>
-                <h2 id="detail-heading" style="margin: 0 0 6px;">Testimony details</h2>
+                <h2 id="detail-heading" class="admin-section-title">Testimony details</h2>
                 <p id="detail-subtitle" class="page-copy" style="margin-bottom: 0;">Inspect the full submission before moderating it.</p>
             </div>
             <div class="actions" style="margin-top: 0;">
@@ -215,6 +212,7 @@
                 <button id="cancel-reject-button" type="button" class="secondary">Cancel</button>
             </div>
         </form>
+    </div>
     </div>
 @endsection
 
@@ -541,9 +539,9 @@
                         <div class="testimony-actions">
                             <button type="button" class="secondary" data-action="view" data-id="${testimony.id}">View</button>
                             <button type="button" data-action="approve" data-id="${testimony.id}">Approve</button>
-                            <button type="button" class="secondary" data-action="reject" data-id="${testimony.id}">Reject</button>
+                            <button type="button" class="danger" data-action="reject" data-id="${testimony.id}">Reject</button>
                             <button type="button" class="secondary" data-action="edit" data-id="${testimony.id}">Edit</button>
-                            <button type="button" class="secondary" data-action="delete" data-id="${testimony.id}">Delete</button>
+                            <button type="button" class="danger" data-action="delete" data-id="${testimony.id}">Delete</button>
                         </div>
                     </div>
                 `;
@@ -644,9 +642,9 @@
 
                 <div class="actions" style="margin-top: 0;">
                     <button id="detail-approve-action" type="button">Approve</button>
-                    <button id="detail-reject-action" type="button" class="secondary">Reject</button>
+                    <button id="detail-reject-action" type="button" class="danger">Reject</button>
                     <button id="detail-edit-action" type="button" class="secondary">Edit</button>
-                    <button id="detail-delete-action" type="button" class="secondary">Delete</button>
+                    <button id="detail-delete-action" type="button" class="danger">Delete</button>
                 </div>
             `;
 

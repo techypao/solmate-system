@@ -1,7 +1,9 @@
 @extends('layouts.app', ['title' => 'Quotation Item Builder'])
 
 @section('content')
-    <div class="card">
+    <div class="admin-page-stack">
+    <div class="card admin-hero-card">
+        <p class="admin-page-eyebrow">Quotation Workspace</p>
         <h1 class="page-title">Quotation Item Builder</h1>
         <p class="page-copy">Load an existing final quotation, edit its itemized line items, and save them through the existing backend sync endpoint.</p>
 
@@ -23,21 +25,21 @@
 
     <div id="builder-loading" class="info-box" style="display: none; margin-top: 16px;">Loading quotation builder data...</div>
 
-    <div id="builder-locked" class="card" style="display: none; margin-top: 16px;">
-        <h2 style="margin-top: 0;">Editing Unavailable</h2>
+    <div id="builder-locked" class="card admin-section-surface" style="display: none; margin-top: 16px;">
+        <h2 class="admin-section-title" style="margin-top: 0;">Editing Unavailable</h2>
         <p id="builder-locked-message" class="page-copy" style="margin-bottom: 0;"></p>
     </div>
 
-    <div id="builder-content" style="display: none;">
-        <div class="card" style="margin-top: 16px;">
-            <h2 style="margin-top: 0;">Quotation Summary</h2>
+        <div id="builder-content" style="display: none;">
+        <div class="card admin-section-surface" style="margin-top: 16px;">
+            <h2 class="admin-section-title" style="margin-top: 0;">Quotation Summary</h2>
             <div id="quotation-summary" class="stack"></div>
         </div>
 
-        <div class="card" style="margin-top: 16px;">
+        <div class="card admin-section-surface" style="margin-top: 16px;">
             <div class="actions" style="justify-content: space-between;">
                 <div>
-                    <h2 style="margin: 0 0 6px;">Line Items</h2>
+                    <h2 class="admin-section-title" style="margin: 0 0 6px;">Line Items</h2>
                     <div class="muted">Choose from the active catalog or enter custom snapshot values manually.</div>
                 </div>
                 <button id="add-line-item-button" type="button" class="secondary">Add line item</button>
@@ -48,8 +50,8 @@
             <div id="line-items-list" class="stack" style="margin-top: 16px;"></div>
         </div>
 
-        <div class="card" style="margin-top: 16px;">
-            <h2 style="margin-top: 0;">Subtotal Preview</h2>
+        <div class="card admin-section-surface" style="margin-top: 16px;">
+            <h2 class="admin-section-title" style="margin-top: 0;">Subtotal Preview</h2>
             <div id="totals-preview" class="stack"></div>
 
             <div class="actions" style="margin-top: 20px;">
@@ -58,12 +60,15 @@
             </div>
         </div>
     </div>
+    </div>
 @endsection
 
 @push('scripts')
+    <script type="application/json" id="__ib-categories">{!! json_encode($categories, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!}</script>
+    <script type="application/json" id="__ib-quotation-id">{!! json_encode($initialQuotationId, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!}</script>
     <script>
-        const categories = @json($categories);
-        const initialQuotationId = @json($initialQuotationId);
+        const categories = JSON.parse(document.getElementById('__ib-categories').textContent);
+        const initialQuotationId = JSON.parse(document.getElementById('__ib-quotation-id').textContent);
         const quotationLoaderForm = document.getElementById('quotation-loader-form');
         const quotationIdInput = document.getElementById('quotation_id');
         const loaderError = document.querySelector('[data-loader-error]');
@@ -299,10 +304,7 @@
                     <div class="form-grid two-columns" style="margin-top: 16px;">
                         <div style="grid-column: 1 / -1;">
                             <label>Catalog Item</label>
-                            <select
-                                data-field="pricing_item_id"
-                                style="width: 100%; padding: 10px 12px; border: 1px solid #bcccdc; border-radius: 8px; background: #fff;"
-                            >
+                            <select data-field="pricing_item_id">
                                 ${pricingOptions(item.pricing_item_id)}
                             </select>
                         </div>
@@ -314,10 +316,7 @@
 
                         <div>
                             <label>Category</label>
-                            <select
-                                data-field="category"
-                                style="width: 100%; padding: 10px 12px; border: 1px solid #bcccdc; border-radius: 8px; background: #fff;"
-                            >
+                            <select data-field="category">
                                 ${categoryOptions(item.category)}
                             </select>
                         </div>

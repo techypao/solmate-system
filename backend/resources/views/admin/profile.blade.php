@@ -1,9 +1,11 @@
 @extends('layouts.app', ['title' => 'Admin Profile'])
 
 @section('content')
-    <div class="card">
+    <div class="admin-page-stack">
+    <div class="card admin-hero-card">
         <div class="section-header">
             <div>
+                <p class="admin-page-eyebrow">Admin Account</p>
                 <h1 class="page-title">Admin Profile</h1>
                 <p class="page-copy">Manage your admin account details and keep your website login credentials up to date.</p>
             </div>
@@ -30,10 +32,10 @@
         </div>
     </div>
 
-    <div class="card">
+    <div class="card admin-section-surface">
         <div class="section-header">
             <div>
-                <h2 style="margin: 0 0 6px;">Update account information</h2>
+                <h2 class="admin-section-title">Update account information</h2>
                 <p class="page-copy" style="margin-bottom: 0;">Edit your admin name and email. Changes apply to your own website account only.</p>
             </div>
         </div>
@@ -62,10 +64,10 @@
         </form>
     </div>
 
-    <div class="card">
+    <div class="card admin-section-surface">
         <div class="section-header">
             <div>
-                <h2 style="margin: 0 0 6px;">Change password</h2>
+                <h2 class="admin-section-title">Change password</h2>
                 <p class="page-copy" style="margin-bottom: 0;">Enter your current password before setting a new one for your admin web account.</p>
             </div>
         </div>
@@ -100,5 +102,6 @@
                 <button type="submit">Update password</button>
             </div>
         </form>
+    </div>
     </div>
 @endsection

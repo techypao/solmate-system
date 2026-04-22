@@ -12,23 +12,28 @@ use App\Http\Controllers\CustomerTestimonyPageController;
 use App\Http\Controllers\PublicTestimonyPageController;
 use App\Http\Controllers\QuotationItemBuilderPageController;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
 Route::get('/', function () {
-    if (!auth()->check()) {
-        return redirect()->route('login');
+    if (!Auth::check()) {
+        return view('welcome');
     }
 
-    if (auth()->user()->role === User::ROLE_ADMIN) {
+    if (Auth::user()->role === User::ROLE_ADMIN) {
         return redirect()->route('admin.quotation-settings');
     }
 
-    return redirect()->route('dashboard');
+    return view('customer.home');
 })->name('home');
 
 Route::get('/testimonies', [PublicTestimonyPageController::class, 'show'])
     ->name('public.testimonies');
+
+Route::get('/contact', function () {
+    return view('public.contact');
+})->name('public.contact');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -85,5 +90,29 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:customer')->group(function () {
         Route::get('/customer/testimonies', [CustomerTestimonyPageController::class, 'show'])
             ->name('customer.testimonies');
+
+        Route::get('/customer/quotation', function () {
+            return view('customer.quotation');
+        })->name('customer.quotation');
+
+        Route::get('/customer/inspection', function () {
+            return view('customer.inspection');
+        })->name('customer.inspection');
+
+        Route::get('/customer/tracking', function () {
+            return view('customer.tracking');
+        })->name('customer.tracking');
+
+        Route::get('/customer/final-quotation/{inspection_request_id}', function ($inspection_request_id) {
+            return view('customer.final-quotation');
+        })->name('customer.final-quotation');
+
+        Route::get('/customer/installation', function () {
+            return view('customer.installation');
+        })->name('customer.installation');
+
+        Route::get('/customer/maintenance', function () {
+            return view('customer.maintenance');
+        })->name('customer.maintenance');
     });
 });

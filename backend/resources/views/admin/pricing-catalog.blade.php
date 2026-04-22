@@ -1,19 +1,34 @@
 @extends('layouts.app', ['title' => 'Admin Pricing Catalog'])
 
 @section('content')
-    <div class="card">
+    <div class="admin-page-stack">
+    <div class="card admin-hero-card">
+        <p class="admin-page-eyebrow">Admin Catalog</p>
         <h1 class="page-title">Admin Pricing Catalog</h1>
         <p class="page-copy">Manage pricing items for future final quotation itemization. This page uses the existing admin pricing API.</p>
+    </div>
+
+    <style>
+        .pricing-panel {
+            padding: 20px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            border: 1px solid #dbe7f3;
+            border-radius: 18px;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
+        }
+    </style>
+
+    <div class="card admin-section-surface">
 
         <div id="catalog-loading" class="info-box">Loading pricing catalog...</div>
         <div id="catalog-success" class="status" style="display: none;"></div>
         <div id="catalog-error" class="error-box" style="display: none;"></div>
 
         <div class="stack">
-            <div class="card" style="padding: 18px; background: #f8fbfd;">
+            <div class="pricing-panel">
                 <div class="actions" style="justify-content: space-between;">
                     <div>
-                        <h2 style="margin: 0 0 6px;">Create or Edit Item</h2>
+                        <h2 class="admin-section-title" style="margin: 0 0 6px;">Create or Edit Item</h2>
                         <div class="muted">Use the form to add a pricing item or update an existing one.</div>
                     </div>
                     <button id="reset-form-button" type="button" class="secondary" style="display: none;">Cancel edit</button>
@@ -30,12 +45,7 @@
 
                     <div>
                         <label for="category">Category</label>
-                        <select
-                            id="category"
-                            name="category"
-                            required
-                            style="width: 100%; padding: 10px 12px; border: 1px solid #bcccdc; border-radius: 8px; background: #fff;"
-                        >
+                        <select id="category" name="category" required>
                             @foreach ($categories as $category)
                                 <option value="{{ $category }}">{{ ucfirst($category) }}</option>
                             @endforeach
@@ -69,12 +79,7 @@
 
                     <div style="grid-column: 1 / -1;">
                         <label for="specification">Specification</label>
-                        <textarea
-                            id="specification"
-                            name="specification"
-                            rows="3"
-                            style="width: 100%; padding: 10px 12px; border: 1px solid #bcccdc; border-radius: 8px; background: #fff;"
-                        ></textarea>
+                        <textarea id="specification" name="specification" rows="3"></textarea>
                         <div class="field-error" data-error-for="specification"></div>
                     </div>
 
@@ -93,10 +98,10 @@
                 </form>
             </div>
 
-            <div class="card" style="padding: 18px;">
+            <div class="pricing-panel">
                 <div class="actions" style="justify-content: space-between;">
                     <div>
-                        <h2 style="margin: 0 0 6px;">Pricing Items</h2>
+                        <h2 class="admin-section-title" style="margin: 0 0 6px;">Pricing Items</h2>
                         <div class="muted">Activate, deactivate, or edit existing catalog entries.</div>
                         <div class="muted">Grouped into Panels, Inverters, Batteries, Other Materials / BOS, and Labor / Installation when available.</div>
                     </div>
@@ -109,6 +114,7 @@
                 <div id="pricing-items-list" class="stack" style="margin-top: 16px; display: none;"></div>
             </div>
         </div>
+    </div>
     </div>
 @endsection
 

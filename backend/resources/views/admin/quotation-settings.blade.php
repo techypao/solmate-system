@@ -1,9 +1,20 @@
 @extends('layouts.app', ['title' => 'Admin Quotation Settings'])
 
 @section('content')
-    <div class="card">
+    <div class="admin-page-stack">
+    <div class="card admin-hero-card">
+        <p class="admin-page-eyebrow">Admin Quotations</p>
         <h1 class="page-title">Admin Quotation Settings</h1>
         <p class="page-copy">Edit numeric quotation defaults only. Formula logic stays fixed in the backend.</p>
+    </div>
+
+    <div class="card admin-section-surface">
+        <div class="section-header">
+            <div>
+                <h2 class="admin-section-title">Quotation Defaults</h2>
+                <p class="admin-section-copy">These values feed the existing quotation workflow while the backend formula rules stay unchanged.</p>
+            </div>
+        </div>
 
         <div id="settings-loading" class="info-box">Loading current quotation settings...</div>
         <div id="settings-success" class="status" style="display: none;"></div>
@@ -29,6 +40,7 @@
                 <span id="save-hint" class="muted">Changes are saved through the existing admin API.</span>
             </div>
         </form>
+    </div>
     </div>
 @endsection
 
