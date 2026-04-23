@@ -119,8 +119,9 @@
 @endsection
 
 @push('scripts')
+    <script type="application/json" id="__data_categories">@json($categories)</script>
     <script>
-        const categories = @json($categories);
+        const categories = JSON.parse(document.getElementById('__data_categories').textContent);
         const loadingBox = document.getElementById('catalog-loading');
         const successBox = document.getElementById('catalog-success');
         const errorBox = document.getElementById('catalog-error');

@@ -107,7 +107,7 @@
         <div id="assignment-error" class="error-box" style="display: none; margin-top: 16px; margin-bottom: 0;"></div>
     </div>
 
-    <div class="card admin-section-surface">
+    <div id="service-requests-section" class="card admin-section-surface">
         <div class="section-header">
             <div>
                 <h2 class="admin-section-title">Service Requests</h2>
@@ -299,7 +299,7 @@
         @endif
     </div>
 
-    <div class="card admin-section-surface">
+    <div id="inspection-requests-section" class="card admin-section-surface">
         <div class="section-header">
             <div>
                 <h2 class="admin-section-title">Inspection Requests</h2>
@@ -433,6 +433,8 @@
 @endsection
 
 @push('scripts')
+    <script type="application/json" id="__data_serviceRequestRecords">@json($serviceRequestRecords)</script>
+    <script type="application/json" id="__data_inspectionRequestRecords">@json($inspectionRequestRecords)</script>
     <script>
         const reservedDateMessage = 'Selected date is already reserved. Please choose another date.';
         const successBox = document.getElementById('assignment-success');
@@ -442,8 +444,8 @@
         const preferredDateForms = document.querySelectorAll('.preferred-date-form');
         const serviceStatusForms = document.querySelectorAll('.service-status-form');
         const lockingStatuses = new Set(['pending', 'approved', 'scheduled', 'assigned', 'in_progress']);
-        const serviceRequestRecords = @js($serviceRequestRecords);
-        const inspectionRequestRecords = @js($inspectionRequestRecords);
+        const serviceRequestRecords = JSON.parse(document.getElementById('__data_serviceRequestRecords').textContent);
+        const inspectionRequestRecords = JSON.parse(document.getElementById('__data_inspectionRequestRecords').textContent);
         const requestRecords = serviceRequestRecords.concat(inspectionRequestRecords);
 
         function getCookie(name) {

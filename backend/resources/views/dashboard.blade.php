@@ -626,58 +626,481 @@
 </div>{{-- end .dash-wrapper --}}
 
 @elseif ($user->role === \App\Models\User::ROLE_ADMIN)
-<div class="adm-home">
-    <section class="adm-hero" aria-label="Admin dashboard hero">
-        <p class="adm-eyebrow">Admin Workspace</p>
-        <h1 class="adm-title">Admin Dashboard</h1>
-        <p class="adm-copy">Manage quotations, pricing data, testimonies, technician accounts, and request operations from one unified SolMate admin workspace.</p>
+@php
+    $adm_totalCustomers   = \App\Models\User::where('role', \App\Models\User::ROLE_CUSTOMER)->count();
+    $adm_totalTechnicians = \App\Models\User::where('role', \App\Models\User::ROLE_TECHNICIAN)->count();
+    $adm_pendingInspCount = \App\Models\InspectionRequest::where('status', 'pending')->count();
+    $adm_pendingServiceCount = \App\Models\ServiceRequest::where('status', 'pending')->count();
+    $adm_initialQuotations = \App\Models\Quotation::where('quotation_type', 'initial')->count();
+    $adm_finalQuotations   = \App\Models\Quotation::where('quotation_type', 'final')->count();
+    $adm_pendingInspections = \App\Models\InspectionRequest::with(['customer', 'technician'])
+        ->where('status', 'pending')->latest()->limit(5)->get();
+    $adm_pendingServices = \App\Models\ServiceRequest::with(['customer', 'technician'])
+        ->where('status', 'pending')->latest()->limit(5)->get();
+    $adm_recentQuotations = \App\Models\Quotation::with('customer')
+        ->latest()->limit(5)->get();
+@endphp
+<style>
+    /* ── Admin Dashboard (adm2- prefix) ── */
+    .adm2-wrap { display: grid; gap: 22px; width: 100%; min-width: 0; box-sizing: border-box; }
+
+    /* Hero */
+    .adm2-hero {
+        background: linear-gradient(135deg, #b8d4f0 0%, #cde2f7 55%, #d8ecfc 100%);
+        border-radius: 16px;
+        padding: 28px 32px 30px;
+        position: relative;
+        overflow: hidden;
+    }
+    .adm2-hero::after {
+        content: '';
+        position: absolute;
+        right: -28px; top: -28px;
+        width: 160px; height: 160px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.25);
+        pointer-events: none;
+    }
+    .adm2-hero-title {
+        font-size: 30px;
+        font-weight: 800;
+        color: #102a43;
+        margin: 0 0 8px;
+        letter-spacing: -0.03em;
+    }
+    .adm2-hero-copy {
+        color: #334155;
+        font-size: 14px;
+        line-height: 1.65;
+        max-width: 600px;
+        margin: 0;
+    }
+
+    /* Stats row */
+    .adm2-stats {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        min-width: 0;
+    }
+    .adm2-stat-card {
+        flex: 1;
+        min-width: 0;
+        max-width: 100%;
+        background: #ffffff;
+        border: 1px solid #dde8f4;
+        border-radius: 14px;
+        padding: 16px 18px;
+        box-shadow: 0 3px 10px rgba(15,23,42,0.05);
+        box-sizing: border-box;
+    }
+    .adm2-stat-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 10px;
+        min-height: 28px;
+    }
+    .adm2-stat-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: #102a43;
+        line-height: 1;
+        margin-bottom: 10px;
+    }
+    .adm2-stat-value-pair {
+        display: flex;
+        gap: 18px;
+        margin-bottom: 10px;
+        align-items: flex-end;
+    }
+    .adm2-stat-pair-label {
+        font-size: 10px;
+        color: #94a3b8;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 2px;
+    }
+    .adm2-stat-pair-value {
+        font-size: 24px;
+        font-weight: 800;
+        color: #102a43;
+        line-height: 1;
+    }
+    .adm2-stat-link {
+        font-size: 12px;
+        font-weight: 600;
+        color: #1e6fb5;
+        text-decoration: none;
+    }
+    .adm2-stat-link:hover { text-decoration: underline; }
+
+    /* Two-column rows */
+    .adm2-row         { display: grid; gap: 18px; grid-template-columns: 260px 1fr; min-width: 0; }
+    .adm2-row-equal   { display: grid; gap: 18px; grid-template-columns: 1fr 1fr; min-width: 0; }
+
+    .adm2-panel {
+        background: #ffffff;
+        border: 1px solid #dde8f4;
+        border-radius: 16px;
+        padding: 20px 22px;
+        box-shadow: 0 3px 12px rgba(15,23,42,0.05);
+        min-width: 0;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+    .adm2-panel-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #102a43;
+        margin: 0 0 16px;
+    }
+
+    /* Quick action buttons */
+    .adm2-action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        width: 100%;
+        padding: 11px 12px;
+        border-radius: 9px;
+        border: 1.5px solid #dbe7f3;
+        background: #f4f9ff;
+        color: #102a43;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        margin-bottom: 9px;
+        transition: background 0.15s, border-color 0.15s;
+        cursor: pointer;
+    }
+    .adm2-action-btn:hover {
+        background: #e8f3fb;
+        border-color: #b0ccdf;
+        text-decoration: none;
+        color: #102a43;
+    }
+    .adm2-cta-btn {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        margin-top: 14px;
+        border-radius: 9px;
+        border: none;
+        background: #d4a017;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 700;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background 0.15s;
+        box-shadow: 0 5px 16px rgba(212,160,23,0.28);
+    }
+    .adm2-cta-btn:hover { background: #b8880f; text-decoration: none; color: #fff; }
+
+    /* Panel tables */
+    .adm2-table-wrap { overflow-x: auto; }
+    .adm2-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12.5px;
+    }
+    .adm2-table th {
+        text-align: left;
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: #64748b;
+        padding: 7px 9px;
+        border-bottom: 1px solid #e8eff7;
+        white-space: nowrap;
+        background: #f7fafd;
+    }
+    .adm2-table td {
+        padding: 9px 9px;
+        border-bottom: 1px solid #f0f5fb;
+        color: #334155;
+        vertical-align: middle;
+    }
+    .adm2-table tbody tr:last-child td { border-bottom: none; }
+    .adm2-table tbody tr:hover td { background: #f9fcff; }
+    .adm2-table-id { font-weight: 700; color: #102a43; }
+
+    /* Row action buttons */
+    .adm2-row-btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 9px;
+        border-radius: 5px;
+        font-size: 11px;
+        font-weight: 600;
+        text-decoration: none;
+        border: 1px solid transparent;
+        transition: background 0.12s;
+    }
+    .adm2-row-btn-view    { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+    .adm2-row-btn-view:hover    { background: #dbeafe; text-decoration: none; }
+    .adm2-row-btn-approve { background: #dcfce7; color: #15803d; border-color: #bbf7d0; }
+    .adm2-row-btn-approve:hover { background: #bbf7d0; text-decoration: none; }
+
+    /* Status badges */
+    .adm2-badge {
+        display: inline-block;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+    .adm2-badge-pending      { background: #fef9c3; color: #a16207; }
+    .adm2-badge-approved     { background: #dcfce7; color: #15803d; }
+    .adm2-badge-in-progress  { background: #dbeafe; color: #1d4ed8; }
+    .adm2-badge-completed    { background: #d1fae5; color: #065f46; }
+    .adm2-badge-cancelled    { background: #fee2e2; color: #dc2626; }
+    .adm2-badge-default      { background: #f1f5f9; color: #475569; }
+
+    /* Panel footer (view all link) */
+    .adm2-panel-footer {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 12px;
+        padding-top: 11px;
+        border-top: 1px solid #f0f5fb;
+    }
+    .adm2-view-all {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 14px;
+        border-radius: 7px;
+        border: 1.5px solid #d4e4f3;
+        background: #f4f9ff;
+        color: #1e4068;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.12s;
+    }
+    .adm2-view-all:hover { background: #e8f3fb; text-decoration: none; }
+
+    /* Empty row */
+    .adm2-empty-row td {
+        text-align: center;
+        color: #94a3b8;
+        font-style: italic;
+        padding: 20px;
+    }
+
+    @media (max-width: 1100px) {
+        .adm2-row       { grid-template-columns: 1fr; }
+        .adm2-row-equal { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+        .adm2-stats { gap: 10px; }
+        .adm2-stat-card { min-width: 0; flex-basis: calc(50% - 5px); }
+        .adm2-hero { padding: 20px 18px; }
+        .adm2-hero-title { font-size: 22px; }
+        .adm2-panel { padding: 16px; }
+    }
+</style>
+
+<div class="adm2-wrap">
+
+    {{-- HERO --}}
+    <section class="adm2-hero" aria-label="Admin Dashboard">
+        <h1 class="adm2-hero-title">Admin Dashboard</h1>
+        <p class="adm2-hero-copy">Manage quotations, pricing data, testimonies, technician accounts, and request operations from one unified SolMate admin workspace.</p>
     </section>
 
-    <div class="adm-quick-grid">
-        <a class="adm-link-card" href="{{ route('admin.quotation-settings') }}">
-            <div class="adm-link-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f4c542" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 113 3L7 19l-4 1 1-4Z"/></svg>
+    {{-- STAT CARDS --}}
+    <div class="adm2-stats">
+        <div class="adm2-stat-card">
+            <div class="adm2-stat-label">Total Customers</div>
+            <div class="adm2-stat-value">{{ $adm_totalCustomers }}</div>
+            <a href="{{ route('admin.customers') }}" class="adm2-stat-link">View Customers</a>
+        </div>
+        <div class="adm2-stat-card">
+            <div class="adm2-stat-label">Total Technicians</div>
+            <div class="adm2-stat-value">{{ $adm_totalTechnicians }}</div>
+            <a href="{{ route('admin.technicians.create') }}" class="adm2-stat-link">View Technicians</a>
+        </div>
+        <div class="adm2-stat-card">
+            <div class="adm2-stat-label">Pending Quotation Requests</div>
+            <div class="adm2-stat-value">{{ $adm_pendingInspCount }}</div>
+            <a href="{{ route('admin.request-assignments') }}#inspection-requests-section" class="adm2-stat-link">View Requests</a>
+        </div>
+        <div class="adm2-stat-card">
+            <div class="adm2-stat-label">Pending Service Requests</div>
+            <div class="adm2-stat-value">{{ $adm_pendingServiceCount }}</div>
+            <a href="{{ route('admin.request-assignments') }}#service-requests-section" class="adm2-stat-link">View Requests</a>
+        </div>
+        <div class="adm2-stat-card">
+            <div class="adm2-stat-label">Quotations Generated</div>
+            <div class="adm2-stat-value-pair">
+                <div>
+                    <div class="adm2-stat-pair-label">Initial</div>
+                    <div class="adm2-stat-pair-value">{{ $adm_initialQuotations }}</div>
+                </div>
+                <div>
+                    <div class="adm2-stat-pair-label">Final</div>
+                    <div class="adm2-stat-pair-value">{{ $adm_finalQuotations }}</div>
+                </div>
             </div>
-            <p class="adm-link-title">Quotation Settings</p>
-            <p class="adm-link-copy">Adjust default quotation inputs while preserving the existing backend formulas.</p>
-        </a>
-        <a class="adm-link-card" href="{{ route('admin.pricing-catalog') }}">
-            <div class="adm-link-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f4c542" stroke-width="2"><path d="M20 7H4"/><path d="M20 12H4"/><path d="M20 17H4"/></svg>
-            </div>
-            <p class="adm-link-title">Pricing Catalog</p>
-            <p class="adm-link-copy">Maintain pricing items used for future final quotation itemization.</p>
-        </a>
-        <a class="adm-link-card" href="{{ route('admin.request-assignments') }}">
-            <div class="adm-link-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f4c542" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
-            </div>
-            <p class="adm-link-title">Request Assignments</p>
-            <p class="adm-link-copy">Assign technicians, manage official schedules, and review request completion updates.</p>
-        </a>
-        <a class="adm-link-card" href="{{ route('admin.technicians.create') }}">
-            <div class="adm-link-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f4c542" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            </div>
-            <p class="adm-link-title">Register Technician</p>
-            <p class="adm-link-copy">Create technician accounts used by the existing assignment workflow.</p>
-        </a>
-        <a class="adm-link-card" href="{{ route('admin.testimonies') }}">
-            <div class="adm-link-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f4c542" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-            </div>
-            <p class="adm-link-title">Testimony Moderation</p>
-            <p class="adm-link-copy">Review customer feedback, inspect uploads, and moderate public-facing testimonies.</p>
-        </a>
-        <a class="adm-link-card" href="{{ route('quotations.item-builder') }}">
-            <div class="adm-link-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f4c542" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            </div>
-            <p class="adm-link-title">Quotation Item Builder</p>
-            <p class="adm-link-copy">Open the item builder for final quotation line items and catalog-linked editing.</p>
-        </a>
+            <a href="{{ route('quotations.item-builder') }}" class="adm2-stat-link">View Quotations</a>
+        </div>
     </div>
-</div>
+
+    {{-- ROW: Quick Actions + Pending Inspection Request --}}
+    <div class="adm2-row">
+
+        {{-- Quick Actions panel --}}
+        <div class="adm2-panel">
+            <h2 class="adm2-panel-title">Quick Actions</h2>
+            <a href="{{ route('admin.request-assignments') }}" class="adm2-action-btn">Assign Technician</a>
+            <a href="{{ route('admin.request-assignments') }}" class="adm2-action-btn">Approve Inspection Request</a>
+            <a href="{{ route('admin.request-assignments') }}" class="adm2-action-btn">Approve Service Request</a>
+            <a href="{{ route('admin.notifications') }}"      class="adm2-action-btn">View Reports</a>
+            <a href="{{ route('admin.quotation-settings') }}" class="adm2-action-btn">Rule Configuration</a>
+            <a href="{{ route('admin.quotation-settings') }}" class="adm2-cta-btn">Go to Rule Configurations</a>
+        </div>
+
+        {{-- Pending Inspection Request panel --}}
+        <div class="adm2-panel">
+            <h2 class="adm2-panel-title">Pending Inspection Request</h2>
+            <div class="adm2-table-wrap">
+                <table class="adm2-table">
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Customer</th>
+                            <th>Preferred Schedule</th>
+                            <th>Status</th>
+                            <th>Assigned Technician</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($adm_pendingInspections as $insp)
+                            <tr>
+                                <td class="adm2-table-id">IR-{{ $insp->id }}</td>
+                                <td>{{ $insp->customer?->name ?? 'N/A' }}</td>
+                                <td style="white-space:nowrap;">{{ $insp->date_needed ? \Carbon\Carbon::parse($insp->date_needed)->format('M d • g:i A') : '—' }}</td>
+                                <td>
+                                    @php $adm_status = strtolower(str_replace(['_',' '], '-', $insp->status ?? 'pending')); @endphp
+                                    <span class="adm2-badge adm2-badge-{{ $adm_status }}">{{ ucfirst(str_replace('_',' ',$insp->status ?? 'pending')) }}</span>
+                                </td>
+                                <td>{{ $insp->technician?->name ?? 'Unassigned' }}</td>
+                                <td style="white-space:nowrap;">
+                                    <a href="{{ route('admin.request-assignments') }}" class="adm2-row-btn adm2-row-btn-view">View</a>
+                                    <a href="{{ route('admin.request-assignments') }}" class="adm2-row-btn adm2-row-btn-approve">Approve</a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr class="adm2-empty-row"><td colspan="6">No pending inspection requests.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <div class="adm2-panel-footer">
+                <a href="{{ route('admin.request-assignments') }}" class="adm2-view-all">View All Inspection</a>
+            </div>
+        </div>
+
+    </div>{{-- /.adm2-row --}}
+
+    {{-- ROW: Pending Service Request + Recent Quotations --}}
+    <div class="adm2-row-equal">
+
+        {{-- Pending Service Request panel --}}
+        <div class="adm2-panel">
+            <h2 class="adm2-panel-title">Pending Service Request</h2>
+            <div class="adm2-table-wrap">
+                <table class="adm2-table">
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Service Type</th>
+                            <th>Preferred Schedule</th>
+                            <th>Status</th>
+                            <th>Assigned Tech</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($adm_pendingServices as $svc)
+                            <tr>
+                                <td class="adm2-table-id">SR-{{ $svc->id }}</td>
+                                <td>{{ ucfirst($svc->request_type ?? 'Service') }}</td>
+                                <td style="white-space:nowrap;">{{ $svc->date_needed ? \Carbon\Carbon::parse($svc->date_needed)->format('M d • g:i A') : '—' }}</td>
+                                <td>
+                                    @php $adm_sv_status = strtolower(str_replace(['_',' '], '-', $svc->status ?? 'pending')); @endphp
+                                    <span class="adm2-badge adm2-badge-{{ $adm_sv_status }}">{{ ucfirst(str_replace('_',' ',$svc->status ?? 'pending')) }}</span>
+                                </td>
+                                <td>{{ $svc->technician?->name ?? 'Unassigned' }}</td>
+                                <td style="white-space:nowrap;">
+                                    <a href="{{ route('admin.request-assignments') }}" class="adm2-row-btn adm2-row-btn-view">View</a>
+                                    <a href="{{ route('admin.request-assignments') }}" class="adm2-row-btn adm2-row-btn-approve">Approve</a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr class="adm2-empty-row"><td colspan="6">No pending service requests.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {{-- Recent Quotations panel --}}
+        <div class="adm2-panel">
+            <h2 class="adm2-panel-title">Recent Quotations</h2>
+            <div class="adm2-table-wrap">
+                <table class="adm2-table">
+                    <thead>
+                        <tr>
+                            <th>Quote ID</th>
+                            <th>Type</th>
+                            <th>Customer</th>
+                            <th>Generated Date</th>
+                            <th>Est. Cost</th>
+                            <th>ROI</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($adm_recentQuotations as $q)
+                            <tr>
+                                <td class="adm2-table-id">Q-{{ str_pad($q->id, 3, '0', STR_PAD_LEFT) }}</td>
+                                <td>{{ ucfirst($q->quotation_type ?? 'Initial') }}</td>
+                                <td>{{ $q->customer?->name ?? 'N/A' }}</td>
+                                <td style="white-space:nowrap;">{{ $q->created_at->format('M d, Y') }}</td>
+                                <td style="white-space:nowrap;">{{ $q->project_cost ? '₱'.number_format($q->project_cost) : '—' }}</td>
+                                <td>{{ $q->roi_years ? $q->roi_years.' yrs' : '—' }}</td>
+                                <td>
+                                    @php $adm_q_status = strtolower(str_replace(['_',' '], '-', $q->status ?? 'pending')); @endphp
+                                    <span class="adm2-badge adm2-badge-{{ $adm_q_status }}">{{ ucfirst(str_replace('_',' ',$q->status ?? 'pending')) }}</span>
+                                </td>
+                                <td>
+                                    <a href="{{ route('quotations.item-builder') }}" class="adm2-row-btn adm2-row-btn-view">View</a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr class="adm2-empty-row"><td colspan="8">No quotations found.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>{{-- /.adm2-row-equal --}}
+
+</div>{{-- /.adm2-wrap --}}
 
 @elseif ($user->role === \App\Models\User::ROLE_TECHNICIAN)
 <div class="adm-home">

@@ -184,6 +184,7 @@
 @endsection
 
 @push('scripts')
+    <script type="application/json" id="__data_requestAssignmentsUrl">@json($requestAssignmentsUrl)</script>
     <script>
         const notificationsLoading = document.getElementById('notifications-loading');
         const notificationsSuccess = document.getElementById('notifications-success');
@@ -193,7 +194,7 @@
         const unreadCountValue = document.getElementById('notification-unread-count');
         const refreshButton = document.getElementById('refresh-notifications-button');
         const markAllReadButton = document.getElementById('mark-all-read-button');
-        const requestAssignmentsUrl = @json($requestAssignmentsUrl);
+        const requestAssignmentsUrl = JSON.parse(document.getElementById('__data_requestAssignmentsUrl').textContent);
         let notificationsState = [];
 
         function setVisible(element, visible, displayValue = 'block') {

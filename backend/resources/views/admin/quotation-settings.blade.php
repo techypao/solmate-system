@@ -45,13 +45,14 @@
 @endsection
 
 @push('scripts')
+    <script type="application/json" id="__data_fieldNames">@json(array_keys($fields))</script>
     <script>
         const form = document.getElementById('settings-form');
         const loadingBox = document.getElementById('settings-loading');
         const successBox = document.getElementById('settings-success');
         const errorBox = document.getElementById('settings-error');
         const saveButton = document.getElementById('save-button');
-        const fieldNames = @json(array_keys($fields));
+        const fieldNames = JSON.parse(document.getElementById('__data_fieldNames').textContent);
 
         function setVisible(element, visible) {
             element.style.display = visible ? 'block' : 'none';

@@ -71,6 +71,11 @@ Route::middleware('auth')->group(function () {
         ->name('admin.request-assignments');
 
     Route::middleware('role:admin')->group(function () {
+        Route::get('/admin/customers', function () {
+            $customers = \App\Models\User::where('role', \App\Models\User::ROLE_CUSTOMER)->orderBy('name')->get();
+            return view('admin.customers', compact('customers'));
+        })->name('admin.customers');
+
         Route::get('/admin/testimonies', [TestimonyModerationPageController::class, 'show'])
             ->name('admin.testimonies');
 

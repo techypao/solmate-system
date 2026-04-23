@@ -1345,9 +1345,546 @@
                 gap: 16px;
             }
         }
+
+        /* ===== ADMIN SIDEBAR LAYOUT ===== */
+        .solmate-admin-shell {
+            background: #dce8f5;
+            overflow-x: hidden; /* prevent page-level horizontal scroll */
+        }
+
+        .admin-layout {
+            display: flex;
+            position: relative;
+        }
+
+        /* Sidebar - light theme */
+        .admin-sidebar {
+            width: 220px;
+            min-width: 220px;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 100;
+            overflow-y: auto;
+            transition: transform 0.25s ease;
+            border-right: 1px solid #e2e8f0;
+            box-shadow: 2px 0 16px rgba(15, 23, 42, 0.06);
+        }
+
+        .admin-sidebar.sidebar-hidden {
+            transform: translateX(-220px);
+        }
+
+        /* Sidebar brand area */
+        .admin-sidebar-brand {
+            padding: 20px 18px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            flex-shrink: 0;
+        }
+
+        .admin-sidebar-brand .solmate-brand-sol {
+            color: #102a43;
+        }
+
+        .admin-sidebar-brand .solmate-brand-mate {
+            color: #d4a017;
+        }
+
+        .admin-sidebar-kicker {
+            display: block;
+            margin-top: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+
+        /* Sidebar navigation */
+        .admin-sidebar-nav {
+            flex: 1;
+            padding: 12px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow-y: auto;
+        }
+
+        .admin-sidebar-nav-section {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #b0bec9;
+            padding: 10px 12px 4px;
+        }
+
+        .admin-sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 9px 12px;
+            border-radius: 9px;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: #52606d;
+            text-decoration: none;
+            transition: background 0.14s, color 0.14s;
+            white-space: nowrap;
+        }
+
+        .admin-sidebar-link:hover {
+            background: #f1f5f9;
+            color: #102a43;
+            text-decoration: none;
+        }
+
+        .admin-sidebar-link.active {
+            background: #102a43;
+            color: #ffffff;
+            font-weight: 700;
+            border-radius: 10px;
+        }
+
+        .admin-sidebar-link.disabled {
+            opacity: 0.45;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .admin-sidebar-link .nav-icon {
+            flex-shrink: 0;
+            width: 16px;
+            height: 16px;
+            opacity: 0.55;
+        }
+
+        .admin-sidebar-link.active .nav-icon {
+            opacity: 1;
+        }
+
+        .admin-sidebar-link:hover .nav-icon {
+            opacity: 0.8;
+        }
+
+        .admin-sidebar-link-badge {
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 19px;
+            height: 19px;
+            padding: 0 5px;
+            border-radius: 999px;
+            background: #d64545;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        /* Sidebar footer */
+        .admin-sidebar-foot {
+            padding: 10px 10px 16px;
+            border-top: 1px solid #f1f5f9;
+            flex-shrink: 0;
+        }
+
+        .admin-sidebar-logout-btn {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            width: 100%;
+            padding: 9px 12px;
+            border-radius: 9px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.14s, color 0.14s;
+            box-shadow: none;
+        }
+
+        .admin-sidebar-logout-btn:hover {
+            background: #f1f5f9;
+            color: #102a43;
+        }
+
+        /* Admin main area (content beside sidebar) */
+        .admin-main-area {
+            flex: 1;
+            min-width: 0; /* allow flex child to shrink below content width */
+            overflow-x: hidden; /* contain any overflowing children */
+            margin-left: 220px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #dce8f5;
+            transition: margin-left 0.25s ease;
+        }
+
+        .admin-main-area.sidebar-collapsed {
+            margin-left: 0;
+        }
+
+        /* Simplified admin topbar */
+        .admin-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 0 24px;
+            height: 58px;
+            background: #ffffff;
+            border-bottom: 1px solid #e8eff7;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+            flex-shrink: 0;
+        }
+
+        .admin-topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .admin-topbar-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #475569;
+            cursor: pointer;
+            transition: background 0.14s, color 0.14s;
+            padding: 0;
+            line-height: 0;
+        }
+
+        .admin-topbar-toggle:hover {
+            background: #f1f5f9;
+            color: #102a43;
+        }
+
+        .admin-topbar-brand {
+            display: none;
+        }
+
+        .admin-topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Admin content wrapper */
+        .admin-content-shell {
+            flex: 1;
+            padding: 24px 24px 52px;
+            width: 100%;
+            max-width: 100%; /* do not exceed the column given by margin-left */
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        /* Hide site footer inside admin workspace */
+        .solmate-admin-shell > .solmate-footer {
+            display: none;
+        }
+
+        /* Sidebar overlay (mobile) */
+        .admin-sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 99;
+        }
+
+        .admin-sidebar-overlay.open {
+            display: block;
+        }
+
+        @media (max-width: 900px) {
+            .admin-sidebar {
+                transform: translateX(-220px);
+            }
+
+            .admin-sidebar.open {
+                transform: translateX(0);
+            }
+
+            .admin-main-area {
+                margin-left: 0;
+            }
+
+            .admin-topbar-brand {
+                display: flex;
+                align-items: baseline;
+                gap: 0;
+            }
+        }
     </style>
 </head>
 <body class="{{ $isAdminShell ? 'solmate-admin-shell' : 'solmate-site-shell' }} {{ $isAdminUser ? 'solmate-role-admin' : '' }} {{ $isTechnicianUser ? 'solmate-role-technician' : '' }}">
+
+@if ($isAdminShell)
+    {{-- ===== ADMIN LAYOUT: SIDEBAR + MAIN AREA ===== --}}
+
+    {{-- Mobile overlay --}}
+    <div class="admin-sidebar-overlay" id="adminSidebarOverlay" aria-hidden="true"></div>
+
+    {{-- LEFT SIDEBAR --}}
+    <aside class="admin-sidebar" id="adminSidebar" aria-label="Admin navigation">
+
+        {{-- Brand area --}}
+        <div class="admin-sidebar-brand">
+            <a href="{{ route('dashboard') }}" class="solmate-brand-link" aria-label="SolMate home">
+                <span class="solmate-brand-sol">Sol</span><span class="solmate-brand-mate">Mate</span>
+            </a>
+            @auth
+                <span class="admin-sidebar-kicker">{{ $isAdminUser ? 'Admin Workspace' : 'Technician Workspace' }}</span>
+            @endauth
+        </div>
+
+        {{-- Navigation items --}}
+        @auth
+        <nav class="admin-sidebar-nav" aria-label="Admin menu">
+
+            {{-- Dashboard --}}
+            <a href="{{ route('dashboard') }}"
+               class="admin-sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                Dashboard
+            </a>
+
+            @if (auth()->user()->role === \App\Models\User::ROLE_ADMIN)
+
+                {{-- Customers --}}
+                <a href="{{ route('admin.customers') }}"
+                   class="admin-sidebar-link {{ request()->routeIs('admin.customers') ? 'active' : '' }}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    Customers
+                </a>
+
+                {{-- Technician --}}
+                <a href="{{ route('admin.technicians.create') }}"
+                   class="admin-sidebar-link {{ request()->routeIs('admin.technicians.create') ? 'active' : '' }}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/>
+                        <line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
+                    </svg>
+                    Technician
+                </a>
+
+                {{-- Inspections --}}
+                <a href="{{ route('admin.request-assignments') }}#inspection-requests-section"
+                   class="admin-sidebar-link {{ request()->routeIs('admin.request-assignments') ? 'active' : '' }}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M9 11l3 3L22 4"/>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                    </svg>
+                    Inspections
+                </a>
+
+                {{-- Services --}}
+                <a href="{{ route('admin.request-assignments') }}#service-requests-section"
+                   class="admin-sidebar-link {{ request()->routeIs('admin.request-assignments') ? 'active' : '' }}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/>
+                    </svg>
+                    Services
+                </a>
+
+                {{-- Quotations --}}
+                <a href="{{ route('quotations.item-builder') }}"
+                   class="admin-sidebar-link {{ request()->routeIs('quotations.item-builder') ? 'active' : '' }}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    Quotations
+                </a>
+
+                {{-- Notifications with badge --}}
+                <a href="{{ route('admin.notifications') }}"
+                   class="admin-sidebar-link {{ request()->routeIs('admin.notifications') ? 'active' : '' }}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    Notifications
+                    <span id="admin-notification-badge" class="admin-sidebar-link-badge" style="display:none;">0</span>
+                </a>
+
+                {{-- Reports (no route yet) --}}
+                <span class="admin-sidebar-link disabled">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
+                    </svg>
+                    Reports
+                </span>
+
+                {{-- Rule Configuration --}}
+                <a href="{{ route('admin.quotation-settings') }}"
+                   class="admin-sidebar-link {{ request()->routeIs('admin.quotation-settings') ? 'active' : '' }}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                    Rule Configuration
+                </a>
+
+                {{-- Settings → Profile --}}
+                <a href="{{ route('admin.profile.show') }}"
+                   class="admin-sidebar-link {{ request()->routeIs('admin.profile.show') ? 'active' : '' }}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/>
+                    </svg>
+                    Settings
+                </a>
+
+            @else
+
+                {{-- Technician sees only item builder --}}
+                <a href="{{ route('quotations.item-builder') }}"
+                   class="admin-sidebar-link {{ request()->routeIs('quotations.item-builder') ? 'active' : '' }}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    Item Builder
+                </a>
+
+                <a href="{{ route('admin.request-assignments') }}"
+                   class="admin-sidebar-link {{ request()->routeIs('admin.request-assignments') ? 'active' : '' }}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="9 11 12 14 22 4"/>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                    </svg>
+                    Assignments
+                </a>
+
+            @endif
+
+        </nav>
+        @endauth
+
+        {{-- Sidebar bottom: logout --}}
+        @auth
+        <div class="admin-sidebar-foot">
+            @if ($isAdminUser)
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="admin-sidebar-logout-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <polyline points="16 17 21 12 16 7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                        Logout
+                    </button>
+                </form>
+            @endif
+        </div>
+        @endauth
+
+    </aside>{{-- /.admin-sidebar --}}
+
+    {{-- MAIN AREA: topbar + content --}}
+    <div class="admin-main-area" id="adminMainArea">
+
+        {{-- Simplified topbar --}}
+        @auth
+        <header class="admin-topbar" aria-label="Admin topbar">
+            <div class="admin-topbar-left">
+                <button class="admin-topbar-toggle" id="adminSidebarToggle" aria-label="Toggle sidebar" type="button">
+                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="admin-topbar-right">
+                @if ($isAdminUser)
+                    <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                        @csrf
+                        <button type="submit" class="solmate-admin-logout-btn">Logout</button>
+                    </form>
+                @endif
+                <div class="solmate-profile-wrapper">
+                    <button class="solmate-profile-btn" id="solmateProfileBtn" aria-label="Open profile menu" type="button" aria-haspopup="true" aria-expanded="false">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.337 0-10 1.676-10 5v2h20v-2c0-3.324-6.663-5-10-5z"/>
+                        </svg>
+                    </button>
+                    <div class="solmate-profile-dropdown" id="solmateProfileDropdown" role="menu">
+                        <div class="solmate-profile-dropdown-header">
+                            <p class="solmate-profile-dropdown-name">{{ auth()->user()->name }}</p>
+                            <p class="solmate-profile-dropdown-email">{{ auth()->user()->email }}</p>
+                        </div>
+                        <div class="solmate-profile-dropdown-actions">
+                            @if ($isAdminUser)
+                                <a href="{{ route('admin.profile.show') }}" class="solmate-logout-btn" style="text-decoration:none;display:block;">Profile</a>
+                            @endif
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="solmate-logout-btn">Logout</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        @endauth
+
+        {{-- Admin content area --}}
+        <div class="admin-content-shell">
+
+            @if (session('status'))
+                <div class="status">{{ session('status') }}</div>
+            @endif
+
+            @if ($errors->any())
+                <div class="error-box">
+                    <strong>Please review the form.</strong>
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <main class="admin-main">
+                @yield('content')
+            </main>
+
+        </div>{{-- /.admin-content-shell --}}
+
+    </div>{{-- /.admin-main-area --}}
+
+@else
+    {{-- ===== CUSTOMER / PUBLIC LAYOUT ===== --}}
     <div class="shell">
         @auth
             @if ($isCustomerShell)
@@ -1448,84 +1985,6 @@
                         </div>
                     </div>
                 </nav>
-            @else
-                {{-- ===== ADMIN / TECHNICIAN HEADER ===== --}}
-                <nav class="solmate-nav solmate-nav--admin" aria-label="Admin navigation">
-                    {{-- Left: hamburger + brand --}}
-                    <div class="solmate-nav-left">
-                        <button class="solmate-hamburger" id="solmateMenuToggle" aria-label="Toggle menu" type="button">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                            </svg>
-                        </button>
-                        <div class="solmate-brand-stack">
-                            <a href="{{ route('dashboard') }}" class="solmate-brand-link" aria-label="SolMate home">
-                                <span class="solmate-brand-sol">Sol</span><span class="solmate-brand-mate">Mate</span>
-                            </a>
-                            <span class="solmate-admin-kicker">{{ $isAdminUser ? 'Admin Workspace' : 'Technician Workspace' }}</span>
-                        </div>
-                    </div>
-
-                    {{-- Center: nav links --}}
-                    <div class="solmate-nav-center solmate-nav-center--admin">
-                        <a href="{{ route('dashboard') }}"
-                           class="solmate-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
-                        @if (in_array(auth()->user()->role, [\App\Models\User::ROLE_ADMIN, \App\Models\User::ROLE_TECHNICIAN], true))
-                            <a href="{{ route('quotations.item-builder') }}"
-                               class="solmate-nav-link {{ request()->routeIs('quotations.item-builder') ? 'active' : '' }}">Item Builder</a>
-                        @endif
-                        @if (auth()->user()->role === \App\Models\User::ROLE_ADMIN)
-                            <a href="{{ route('admin.notifications') }}" class="solmate-nav-link solmate-nav-link-with-badge {{ request()->routeIs('admin.notifications') ? 'active' : '' }}">
-                                Notifications
-                                <span id="admin-notification-badge" class="notification-count-badge" style="display: none;">0</span>
-                            </a>
-                            <a href="{{ route('admin.testimonies') }}"
-                               class="solmate-nav-link {{ request()->routeIs('admin.testimonies') ? 'active' : '' }}">Testimonies</a>
-                            <a href="{{ route('admin.quotation-settings') }}"
-                               class="solmate-nav-link {{ request()->routeIs('admin.quotation-settings') ? 'active' : '' }}">Quotation Settings</a>
-                            <a href="{{ route('admin.pricing-catalog') }}"
-                               class="solmate-nav-link {{ request()->routeIs('admin.pricing-catalog') ? 'active' : '' }}">Pricing Catalog</a>
-                            <a href="{{ route('admin.technicians.create') }}"
-                               class="solmate-nav-link {{ request()->routeIs('admin.technicians.create') ? 'active' : '' }}">Reg. Technician</a>
-                            <a href="{{ route('admin.request-assignments') }}"
-                               class="solmate-nav-link {{ request()->routeIs('admin.request-assignments') ? 'active' : '' }}">Assignments</a>
-                        @endif
-                    </div>
-
-                    {{-- Right: profile icon with dropdown --}}
-                    <div class="solmate-nav-right">
-                        @if ($isAdminUser)
-                            <div class="solmate-admin-nav-actions">
-                                <form method="POST" action="{{ route('logout') }}" class="solmate-admin-logout-form">
-                                    @csrf
-                                    <button type="submit" class="solmate-admin-logout-btn">Logout</button>
-                                </form>
-                            </div>
-                        @endif
-                        <div class="solmate-profile-wrapper">
-                            <button class="solmate-profile-btn" id="solmateProfileBtn" aria-label="Open profile menu" type="button" aria-haspopup="true" aria-expanded="false">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                    <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.337 0-10 1.676-10 5v2h20v-2c0-3.324-6.663-5-10-5z"/>
-                                </svg>
-                            </button>
-                            <div class="solmate-profile-dropdown" id="solmateProfileDropdown" role="menu">
-                                <div class="solmate-profile-dropdown-header">
-                                    <p class="solmate-profile-dropdown-name">{{ auth()->user()->name }}</p>
-                                    <p class="solmate-profile-dropdown-email">{{ auth()->user()->email }}</p>
-                                </div>
-                                <div class="solmate-profile-dropdown-actions">
-                                    @if ($isAdminUser)
-                                        <a href="{{ route('admin.profile.show') }}" class="solmate-logout-btn" style="text-decoration:none;display:block;">Profile</a>
-                                    @endif
-                                    <form method="POST" action="{{ route('logout') }}">
-                                        @csrf
-                                        <button type="submit" class="solmate-logout-btn">Logout</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </nav>
             @endif
         @endauth
 
@@ -1544,10 +2003,12 @@
             </div>
         @endif
 
-        <main class="{{ $isAdminShell ? 'admin-main' : '' }}">
+        <main>
             @yield('content')
         </main>
-    </div>
+    </div>{{-- /.shell (customer/public) --}}
+
+@endif{{-- /@if ($isAdminShell) --}}
 
     {{-- ===== FOOTER ===== --}}
     <footer class="solmate-footer" aria-label="Site footer">
@@ -1752,5 +2213,75 @@
             </script>
         @endif
     @endauth
+
+    @if ($isAdminShell)
+        <script>
+            (function () {
+                const sidebar  = document.getElementById('adminSidebar');
+                const mainArea = document.getElementById('adminMainArea');
+                const toggle   = document.getElementById('adminSidebarToggle');
+                const overlay  = document.getElementById('adminSidebarOverlay');
+
+                if (!sidebar || !toggle) return;
+
+                var isMobile = window.matchMedia('(max-width: 900px)').matches;
+
+                function openSidebar() {
+                    sidebar.classList.add('open');
+                    sidebar.classList.remove('sidebar-hidden');
+                    if (overlay) { overlay.classList.add('open'); overlay.removeAttribute('aria-hidden'); }
+                }
+
+                function closeSidebar() {
+                    if (isMobile) {
+                        sidebar.classList.remove('open');
+                        if (overlay) { overlay.classList.remove('open'); overlay.setAttribute('aria-hidden', 'true'); }
+                    } else {
+                        sidebar.classList.add('sidebar-hidden');
+                        if (mainArea) mainArea.classList.add('sidebar-collapsed');
+                    }
+                }
+
+                function toggleSidebar() {
+                    isMobile = window.matchMedia('(max-width: 900px)').matches;
+                    if (isMobile) {
+                        if (sidebar.classList.contains('open')) {
+                            closeSidebar();
+                        } else {
+                            openSidebar();
+                        }
+                    } else {
+                        if (sidebar.classList.contains('sidebar-hidden')) {
+                            sidebar.classList.remove('sidebar-hidden');
+                            if (mainArea) mainArea.classList.remove('sidebar-collapsed');
+                        } else {
+                            closeSidebar();
+                        }
+                    }
+                }
+
+                toggle.addEventListener('click', toggleSidebar);
+
+                if (overlay) {
+                    overlay.addEventListener('click', function () {
+                        closeSidebar();
+                    });
+                }
+
+                window.addEventListener('resize', function () {
+                    isMobile = window.matchMedia('(max-width: 900px)').matches;
+                    if (!isMobile) {
+                        sidebar.classList.remove('open');
+                        if (overlay) { overlay.classList.remove('open'); overlay.setAttribute('aria-hidden', 'true'); }
+                        if (sidebar.classList.contains('sidebar-hidden')) {
+                            if (mainArea) mainArea.classList.add('sidebar-collapsed');
+                        } else {
+                            if (mainArea) mainArea.classList.remove('sidebar-collapsed');
+                        }
+                    }
+                });
+            })();
+        </script>
+    @endif
 </body>
 </html>

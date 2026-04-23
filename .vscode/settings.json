@@ -1,0 +1,7 @@
+{
+    "javascript.validate.enable": false,
+    "js/ts.implicitProjectConfig.checkJs": false,
+    "files.associations": {
+        "*.blade.php": "php"
+    }
+}
