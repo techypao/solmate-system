@@ -40,7 +40,7 @@
             <div class="stack">
                 @foreach ($customers as $customer)
                     <div class="list-row">
-                        <div>
+                        <div style="flex: 1; min-width: 0;">
                             <strong>{{ $customer->name }}</strong>
                             <div class="muted">{{ $customer->email }}</div>
                         </div>
@@ -48,6 +48,9 @@
                             Joined {{ $customer->created_at->format('M d, Y') }}
                         </div>
                         <span class="badge badge-neutral">Customer</span>
+                        <a href="{{ route('admin.customers.edit', $customer) }}"
+                           class="button-link secondary"
+                           style="padding: 6px 14px; font-size: 13px; flex-shrink: 0;">Edit</a>
                     </div>
                 @endforeach
             </div>

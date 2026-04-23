@@ -65,6 +65,15 @@ class PricingItemController extends Controller
         ]);
     }
 
+    public function destroy(Request $request, PricingItem $pricingItem)
+    {
+        $pricingItem->delete();
+
+        return response()->json([
+            'message' => 'Pricing item removed successfully.',
+        ]);
+    }
+
     private function storeRules(): array
     {
         return [

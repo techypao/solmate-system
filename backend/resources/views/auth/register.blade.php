@@ -11,27 +11,30 @@
             <div>
                 <label for="name">Name</label>
                 <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus>
+                <div class="field-error">@error('name') {{ $message }} @enderror</div>
             </div>
 
             <div>
                 <label for="email">Email</label>
                 <input id="email" type="email" name="email" value="{{ old('email') }}" required>
+                <div class="field-error">@error('email') {{ $message }} @enderror</div>
             </div>
 
             <div>
                 <label for="password">Password</label>
                 <input id="password" type="password" name="password" required>
+                <div class="field-error">@error('password') {{ $message }} @enderror</div>
             </div>
 
             <div>
                 <label for="password_confirmation">Confirm password</label>
                 <input id="password_confirmation" type="password" name="password_confirmation" required>
+                <div class="field-error">@error('password_confirmation') {{ $message }} @enderror</div>
             </div>
 
             <div class="actions">
                 <button type="submit">Register</button>
                 <a class="button-link secondary" href="{{ route('login') }}">Back to login</a>
-                <a class="button-link secondary" href="{{ route('public.testimonies') }}">View testimonies</a>
             </div>
         </form>
     </div>

@@ -57,6 +57,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/admin/pricing-items', [PricingItemController::class, 'index']);
     Route::post('/admin/pricing-items', [PricingItemController::class, 'store']);
     Route::match(['put', 'patch'], '/admin/pricing-items/{pricingItem}', [PricingItemController::class, 'update']);
+    Route::delete('/admin/pricing-items/{pricingItem}', [PricingItemController::class, 'destroy']);
     Route::get('/admin/testimonies', [TestimonyController::class, 'adminIndex']);
     Route::patch('/admin/testimonies/{id}/approve', [TestimonyController::class, 'approve']);
     Route::patch('/admin/testimonies/{id}/reject', [TestimonyController::class, 'reject']);

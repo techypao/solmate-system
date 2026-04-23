@@ -11,11 +11,13 @@
             <div>
                 <label for="email">Email</label>
                 <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus>
+                <div class="field-error">@error('email') {{ $message }} @enderror</div>
             </div>
 
             <div class="password-field">
                 <label for="password">Password</label>
                 <input id="password" type="password" name="password" required>
+                <div class="field-error">@error('password') {{ $message }} @enderror</div>
                 <button type="button" class="password-toggle" data-password-toggle data-target="password">
                     Show
                 </button>
@@ -31,7 +33,6 @@
             <div class="actions">
                 <button type="submit">Login</button>
                 <a class="button-link secondary" href="{{ route('register') }}">Create account</a>
-                <a class="button-link secondary" href="{{ route('public.testimonies') }}">View testimonies</a>
             </div>
         </form>
     </div>

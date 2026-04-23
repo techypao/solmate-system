@@ -93,6 +93,7 @@
 
                     <div class="actions" style="grid-column: 1 / -1;">
                         <button id="save-item-button" type="submit">Create item</button>
+                        <button id="remove-item-button" type="button" class="danger" style="display: none;">Remove item</button>
                         <span id="form-mode-hint" class="muted">New items are saved through the existing admin API.</span>
                     </div>
                 </form>
@@ -133,6 +134,7 @@
         const saveButton = document.getElementById('save-item-button');
         const resetFormButton = document.getElementById('reset-form-button');
         const formModeHint = document.getElementById('form-mode-hint');
+        const removeItemButton = document.getElementById('remove-item-button');
         const pricingGroups = [
             {
                 key: 'panels',
@@ -350,6 +352,7 @@
                 ? 'Editing an existing pricing item through the existing admin API.'
                 : 'New items are saved through the existing admin API.';
             resetFormButton.style.display = isEditing ? 'inline-flex' : 'none';
+            removeItemButton.style.display = isEditing ? 'inline-flex' : 'none';
         }
 
         function renderGroupSummary(groups) {
@@ -443,6 +446,7 @@
                                 <button type="button" class="${item.is_active ? 'secondary' : ''}" data-action="toggle">
                                     ${item.is_active ? 'Deactivate' : 'Activate'}
                                 </button>
+                                <button type="button" class="danger" data-action="remove">Remove</button>
                             </div>
                         </div>
                     `;
@@ -492,6 +496,10 @@
                         } finally {
                             button.disabled = false;
                         }
+                    });
+
+                    row.querySelector('[data-action="remove"]').addEventListener('click', async () => {
+                        await deleteItem(item.id, item.name);
                     });
 
                     itemStack.appendChild(row);
@@ -611,12 +619,55 @@
             }
         }
 
+        async function deleteItem(itemId, itemName) {
+            if (!confirm(`Remove "${itemName}"? This cannot be undone.`)) {
+                return;
+            }
+
+            clearMessages();
+            clearFieldErrors();
+
+            try {
+                await ensureCsrfCookie();
+
+                const response = await fetch(`/api/admin/pricing-items/${itemId}`, {
+                    method: 'DELETE',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') || '',
+                    },
+                });
+
+                const responseBody = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(responseBody.message || 'Could not remove pricing item.');
+                }
+
+                successBox.textContent = responseBody.message || 'Pricing item removed successfully.';
+                setVisible(successBox, true);
+                fillForm();
+                await loadPricingItems(true);
+            } catch (error) {
+                showError(error.message || 'Could not remove pricing item.');
+            }
+        }
+
         form.addEventListener('submit', savePricingItem);
         refreshButton.addEventListener('click', loadPricingItems);
         resetFormButton.addEventListener('click', () => {
             clearMessages();
             clearFieldErrors();
             fillForm();
+        });
+        removeItemButton.addEventListener('click', async () => {
+            const itemId = form.elements.namedItem('pricing_item_id').value;
+            const itemName = form.elements.namedItem('name').value;
+            if (itemId) {
+                await deleteItem(itemId, itemName);
+            }
         });
 
         loadPricingItems();

@@ -21,14 +21,15 @@
         <div id="settings-error" class="error-box" style="display: none;"></div>
 
         <form id="settings-form" class="form-grid two-columns" style="display: none;">
-            @foreach ($fields as $name => $label)
+            @foreach ($fields as $name => $meta)
                 <div>
-                    <label for="{{ $name }}">{{ $label }}</label>
+                    <label for="{{ $name }}">{{ $meta['label'] }}</label>
                     <input
                         id="{{ $name }}"
                         name="{{ $name }}"
                         type="number"
-                        step="0.01"
+                        step="{{ $meta['step'] }}"
+                        min="{{ $meta['min'] }}"
                         required
                     >
                     <div class="field-error" data-error-for="{{ $name }}"></div>
@@ -37,6 +38,7 @@
 
             <div class="actions" style="grid-column: 1 / -1;">
                 <button id="save-button" type="submit">Save settings</button>
+                <button id="reset-button" type="button" class="secondary">Reset to defaults</button>
                 <span id="save-hint" class="muted">Changes are saved through the existing admin API.</span>
             </div>
         </form>
@@ -46,13 +48,16 @@
 
 @push('scripts')
     <script type="application/json" id="__data_fieldNames">@json(array_keys($fields))</script>
+    <script type="application/json" id="__data_defaults">@json($defaults)</script>
     <script>
         const form = document.getElementById('settings-form');
         const loadingBox = document.getElementById('settings-loading');
         const successBox = document.getElementById('settings-success');
         const errorBox = document.getElementById('settings-error');
         const saveButton = document.getElementById('save-button');
+        const resetButton = document.getElementById('reset-button');
         const fieldNames = JSON.parse(document.getElementById('__data_fieldNames').textContent);
+        const systemDefaults = JSON.parse(document.getElementById('__data_defaults').textContent);
 
         function setVisible(element, visible) {
             element.style.display = visible ? 'block' : 'none';
@@ -199,6 +204,13 @@
         }
 
         form.addEventListener('submit', saveSettings);
+        resetButton.addEventListener('click', () => {
+            clearMessages();
+            clearFieldErrors();
+            populateForm(systemDefaults);
+            successBox.textContent = 'Form pre-filled with system defaults. Click "Save settings" to apply.';
+            setVisible(successBox, true);
+        });
         loadSettings();
     </script>
 @endpush

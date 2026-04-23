@@ -141,10 +141,9 @@
     /* ─── Quick Action Cards ─── */
     .ch-actions-grid {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 14px;
     }
-    @media (max-width: 900px) { .ch-actions-grid { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width: 560px) { .ch-actions-grid { grid-template-columns: repeat(2, 1fr); } }
     .ch-action-card {
         background: #fff;
@@ -518,6 +517,21 @@
             <p class="ch-action-desc">Manage your profile, review quotation history, and update account details</p>
             <span class="ch-action-cta">
                 Open
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </span>
+        </a>
+
+        {{-- 6. My Feedback --}}
+        <a href="{{ route('customer.testimonies') }}" class="ch-action-card">
+            <div class="ch-action-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2" aria-hidden="true">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+            </div>
+            <p class="ch-action-title">My Feedback</p>
+            <p class="ch-action-desc">Share your experience, rate our service quality, and help us improve</p>
+            <span class="ch-action-cta">
+                Write
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </span>
         </a>

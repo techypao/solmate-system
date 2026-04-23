@@ -116,6 +116,10 @@
                 <p class="page-copy">Create, update, and track your own testimonies from the customer website dashboard.</p>
             </div>
             <div class="actions" style="margin-top: 0;">
+                <a href="{{ route('home') }}" class="secondary" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:600;color:#475569;text-decoration:none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                    Back
+                </a>
                 <button id="add-testimony-button" type="button">Add Testimony</button>
                 <button id="refresh-testimonies-button" type="button" class="secondary">Refresh</button>
             </div>

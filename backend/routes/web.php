@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminCustomerController;
 use App\Http\Controllers\Admin\QuotationSettingsPageController;
 use App\Http\Controllers\Admin\PricingCatalogPageController;
 use App\Http\Controllers\Admin\NotificationPageController;
@@ -67,14 +68,27 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/technicians', [TechnicianRegistrationController::class, 'store'])
         ->name('admin.technicians.store');
 
+    Route::get('/admin/technicians/{technician}/edit', [TechnicianRegistrationController::class, 'edit'])
+        ->name('admin.technicians.edit');
+
+    Route::put('/admin/technicians/{technician}', [TechnicianRegistrationController::class, 'update'])
+        ->name('admin.technicians.update');
+
+    Route::delete('/admin/technicians/{technician}', [TechnicianRegistrationController::class, 'destroy'])
+        ->name('admin.technicians.destroy');
+
     Route::get('/admin/request-assignments', [RequestAssignmentPageController::class, 'show'])
         ->name('admin.request-assignments');
 
     Route::middleware('role:admin')->group(function () {
-        Route::get('/admin/customers', function () {
-            $customers = \App\Models\User::where('role', \App\Models\User::ROLE_CUSTOMER)->orderBy('name')->get();
-            return view('admin.customers', compact('customers'));
-        })->name('admin.customers');
+        Route::get('/admin/customers', [AdminCustomerController::class, 'index'])
+            ->name('admin.customers');
+
+        Route::get('/admin/customers/{customer}/edit', [AdminCustomerController::class, 'edit'])
+            ->name('admin.customers.edit');
+
+        Route::put('/admin/customers/{customer}', [AdminCustomerController::class, 'update'])
+            ->name('admin.customers.update');
 
         Route::get('/admin/testimonies', [TestimonyModerationPageController::class, 'show'])
             ->name('admin.testimonies');

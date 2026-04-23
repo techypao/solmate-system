@@ -1725,6 +1725,29 @@
                     Quotations
                 </a>
 
+                {{-- Pricing Catalog --}}
+                <a href="{{ route('admin.pricing-catalog') }}"
+                   class="admin-sidebar-link {{ request()->routeIs('admin.pricing-catalog') ? 'active' : '' }}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="8" y1="6" x2="21" y2="6"/>
+                        <line x1="8" y1="12" x2="21" y2="12"/>
+                        <line x1="8" y1="18" x2="21" y2="18"/>
+                        <line x1="3" y1="6" x2="3.01" y2="6"/>
+                        <line x1="3" y1="12" x2="3.01" y2="12"/>
+                        <line x1="3" y1="18" x2="3.01" y2="18"/>
+                    </svg>
+                    Pricing Catalog
+                </a>
+
+                {{-- Testimonies --}}
+                <a href="{{ route('admin.testimonies') }}"
+                   class="admin-sidebar-link {{ request()->routeIs('admin.testimonies') ? 'active' : '' }}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    Testimonies
+                </a>
+
                 {{-- Notifications with badge --}}
                 <a href="{{ route('admin.notifications') }}"
                    class="admin-sidebar-link {{ request()->routeIs('admin.notifications') ? 'active' : '' }}">
@@ -1744,13 +1767,13 @@
                     Reports
                 </span>
 
-                {{-- Rule Configuration --}}
+                {{-- Quotation Settings --}}
                 <a href="{{ route('admin.quotation-settings') }}"
                    class="admin-sidebar-link {{ request()->routeIs('admin.quotation-settings') ? 'active' : '' }}">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                     </svg>
-                    Rule Configuration
+                    Quotation Settings
                 </a>
 
                 {{-- Settings → Profile --}}
@@ -1825,12 +1848,6 @@
                 </button>
             </div>
             <div class="admin-topbar-right">
-                @if ($isAdminUser)
-                    <form method="POST" action="{{ route('logout') }}" style="margin:0;">
-                        @csrf
-                        <button type="submit" class="solmate-admin-logout-btn">Logout</button>
-                    </form>
-                @endif
                 <div class="solmate-profile-wrapper">
                     <button class="solmate-profile-btn" id="solmateProfileBtn" aria-label="Open profile menu" type="button" aria-haspopup="true" aria-expanded="false">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -1958,6 +1975,8 @@
                         </div>{{-- /.solmate-services-wrapper --}}
                         <a href="{{ route('customer.tracking') }}"
                            class="solmate-nav-link {{ request()->routeIs('customer.tracking') ? 'active' : '' }}">Tracking</a>
+                        <a href="{{ route('customer.testimonies') }}"
+                           class="solmate-nav-link {{ request()->routeIs('customer.testimonies') ? 'active' : '' }}">Feedback</a>
                         <a href="{{ route('dashboard') }}"
                            class="solmate-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
                     </div>

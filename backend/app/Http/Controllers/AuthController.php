@@ -13,7 +13,9 @@ class AuthController extends Controller
 {
     public function showLoginForm()
     {
-        return view('auth.login');
+        return response(view('auth.login'))
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache');
     }
 
     public function login(Request $request)
@@ -55,13 +57,15 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended($this->redirectPath($request->user()))
+        return redirect($this->redirectPath($request->user()))
             ->with('status', 'Logged in successfully.');
     }
 
     public function showRegisterForm()
     {
-        return view('auth.register');
+        return response(view('auth.register'))
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache');
     }
 
     public function register(Request $request)
@@ -82,7 +86,7 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->intended($this->redirectPath($user))
+        return redirect($this->redirectPath($user))
             ->with('status', 'Account created successfully.');
     }
 
@@ -100,7 +104,11 @@ class AuthController extends Controller
     private function redirectPath(User $user): string
     {
         if ($user->role === User::ROLE_ADMIN) {
-            return route('admin.quotation-settings');
+            return route('dashboard');
+        }
+
+        if ($user->role === User::ROLE_CUSTOMER) {
+            return route('home');
         }
 
         return route('dashboard');

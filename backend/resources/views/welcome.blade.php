@@ -301,21 +301,21 @@
 </section>
 
 {{-- ABOUT US --}}
-<section class="gst-about" id="about" aria-label="About SolMate">
+<section class="gst-about" id="about" aria-label="About RDY Solar Panel Installation">
     <div class="gst-about-inner">
         <div>
             <span class="gst-about-eyebrow">About Us</span>
-            <h2 class="gst-about-title">Smart Solar Management<br>for Everyone</h2>
+            <h2 class="gst-about-title">Powering Homes &amp;<br>Businesses Since 2020</h2>
             <p class="gst-about-p">
-                SolMate is a smart solar panel installation management system designed to streamline
-                planning, monitoring, and deployment. We help installers, homeowners, and businesses
-                transition to clean energy with efficiency and confidence &mdash; making the entire
-                process transparent, organized, and stress-free.
+                RDY Solar Panel Installation was founded at the height of the pandemic in 2020 &mdash;
+                a time when many Filipino families were looking for ways to reduce their electricity bills
+                and achieve greater energy independence. From humble beginnings, we grew into a trusted
+                name in solar installation across the region.
             </p>
             <p class="gst-about-p" style="margin-bottom: 0;">
-                Whether you need a full residential installation, routine system maintenance, or expert
-                consultation on maximizing your ROI, our team and platform are built to support your
-                clean energy transition every step of the way.
+                Today, we proudly serve hundreds of residential and commercial clients across Metro Manila
+                (NCR), Rizal, Bulacan, and Laguna. Our team of certified technicians is dedicated to
+                delivering quality workmanship, honest pricing, and after-sales support you can count on.
             </p>
         </div>
         <div class="gst-about-highlights">
@@ -323,29 +323,29 @@
                 <div class="gst-about-highlight-icon" aria-hidden="true">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                 </div>
-                <div class="gst-about-highlight-title">Professional Coordination</div>
-                <p class="gst-about-highlight-desc">Expert solar service coordination from certified installation specialists.</p>
+                <div class="gst-about-highlight-title">Founded in 2020</div>
+                <p class="gst-about-highlight-desc">Born during the pandemic with a mission to make solar energy accessible to every Filipino household.</p>
             </div>
             <div class="gst-about-highlight">
                 <div class="gst-about-highlight-icon" aria-hidden="true">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 </div>
-                <div class="gst-about-highlight-title">Streamlined Quotations</div>
-                <p class="gst-about-highlight-desc">Fast, accurate ROI and quotation estimates tailored to your property.</p>
+                <div class="gst-about-highlight-title">Serving 4 Regions</div>
+                <p class="gst-about-highlight-desc">Covering NCR, Rizal, Bulacan, and Laguna &mdash; with a growing presence across Luzon.</p>
             </div>
             <div class="gst-about-highlight">
                 <div class="gst-about-highlight-icon" aria-hidden="true">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                 </div>
-                <div class="gst-about-highlight-title">Customer-Centered</div>
-                <p class="gst-about-highlight-desc">Every feature built around customer satisfaction and ease of use.</p>
+                <div class="gst-about-highlight-title">Hundreds of Happy Clients</div>
+                <p class="gst-about-highlight-desc">A rapidly growing customer base that trusts RDY for reliable solar solutions and after-sales care.</p>
             </div>
             <div class="gst-about-highlight">
                 <div class="gst-about-highlight-icon" aria-hidden="true">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
                 </div>
-                <div class="gst-about-highlight-title">Clean Energy Transition</div>
-                <p class="gst-about-highlight-desc">Committed to helping homes and businesses go solar with confidence.</p>
+                <div class="gst-about-highlight-title">Clean Energy Advocates</div>
+                <p class="gst-about-highlight-desc">Committed to reducing carbon footprint one rooftop at a time, helping the Philippines go green.</p>
             </div>
         </div>
     </div>
@@ -452,7 +452,7 @@
         }
         sample.forEach(function (t) {
             var name = escapeHtml(t.user && t.user.name ? t.user.name : "Anonymous Customer");
-            var body = escapeHtml(t.body || t.content || t.title || "Great service!");
+            var body = escapeHtml(t.message || t.title || "Great service!");
             var stars = buildStars(t.rating);
             var card = document.createElement("div");
             card.className = "gst-testimony-card";
