@@ -18,15 +18,20 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
 Route::get('/', function () {
+    $headers = [
+        'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        'Pragma'        => 'no-cache',
+    ];
+
     if (!Auth::check()) {
-        return view('welcome');
+        return response(view('welcome'), 200, $headers);
     }
 
     if (Auth::user()->role === User::ROLE_ADMIN) {
         return redirect()->route('admin.quotation-settings');
     }
 
-    return view('customer.home');
+    return response(view('customer.home'), 200, $headers);
 })->name('home');
 
 Route::get('/testimonies', [PublicTestimonyPageController::class, 'show'])
