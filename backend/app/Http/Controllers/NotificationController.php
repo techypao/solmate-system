@@ -59,4 +59,29 @@ class NotificationController extends Controller
             'unread_count' => 0,
         ]);
     }
+
+    public function destroy(Request $request, string $id)
+    {
+        $notification = $request->user()
+            ->notifications()
+            ->where('id', $id)
+            ->firstOrFail();
+
+        $notification->delete();
+
+        return response()->json([
+            'message' => 'Notification deleted successfully.',
+        ]);
+    }
+
+    public function destroyAll(Request $request)
+    {
+        $request->user()
+            ->notifications()
+            ->delete();
+
+        return response()->json([
+            'message' => 'All notifications deleted successfully.',
+        ]);
+    }
 }

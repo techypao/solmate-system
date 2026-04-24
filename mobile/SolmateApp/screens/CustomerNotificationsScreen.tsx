@@ -15,6 +15,8 @@ import {useFocusEffect} from '@react-navigation/native';
 import {ApiError} from '../src/services/api';
 import {
   AppNotification,
+  deleteAllNotifications,
+  deleteNotification,
   getNotifications,
   markAllNotificationsAsRead,
   markNotificationAsRead,
@@ -109,6 +111,26 @@ function getMarkAllReadErrorMessage(error: unknown) {
   return 'Could not mark all notifications as read.';
 }
 
+function getDeleteNotificationErrorMessage(error: unknown) {
+  if (error instanceof ApiError) {
+    if (error.status === 401) {
+      return 'Your session has expired. Please log in again.';
+    }
+
+    if (error.status === 404) {
+      return 'This notification no longer exists.';
+    }
+
+    return error.message || 'Could not delete this notification.';
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  return 'Could not delete this notification.';
+}
+
 function formatTypeLabel(type?: string | null) {
   return String(type || 'general')
     .replace(/_/g, ' ')
@@ -123,6 +145,8 @@ export default function CustomerNotificationsScreen({navigation}: any) {
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [markingAllRead, setMarkingAllRead] = useState(false);
+  const [deletingAll, setDeletingAll] = useState(false);
+  const [deletingNotificationId, setDeletingNotificationId] = useState<string | null>(null);
 
   const loadNotifications = useCallback(async (showLoadingState = false) => {
     try {
@@ -235,6 +259,79 @@ export default function CustomerNotificationsScreen({navigation}: any) {
     }
   };
 
+  const handleDeleteNotification = useCallback(
+    (notification: AppNotification) => {
+      Alert.alert(
+        'Delete this notification?',
+        '',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                setDeletingNotificationId(notification.id);
+                await deleteNotification(notification.id);
+                setNotifications(currentNotifications =>
+                  currentNotifications.filter(
+                    currentNotification => currentNotification.id !== notification.id,
+                  ),
+                );
+              } catch (error) {
+                Alert.alert(
+                  'Delete failed',
+                  getDeleteNotificationErrorMessage(error),
+                );
+              } finally {
+                setDeletingNotificationId(currentNotificationId =>
+                  currentNotificationId === notification.id
+                    ? null
+                    : currentNotificationId,
+                );
+              }
+            },
+          },
+        ],
+      );
+    },
+    [],
+  );
+
+  const handleDeleteAllNotifications = useCallback(() => {
+    Alert.alert(
+      'Delete all notifications?',
+      '',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete all',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setDeletingAll(true);
+              await deleteAllNotifications();
+              setNotifications([]);
+            } catch (error) {
+              Alert.alert(
+                'Delete all failed',
+                getDeleteNotificationErrorMessage(error),
+              );
+            } finally {
+              setDeletingAll(false);
+            }
+          },
+        },
+      ],
+    );
+  }, []);
+
   const unreadCount = notifications.filter(
     notification => !isNotificationRead(notification),
   ).length;
@@ -242,48 +339,65 @@ export default function CustomerNotificationsScreen({navigation}: any) {
   /* ── notification card ── */
   const renderNotification = ({item}: {item: AppNotification}) => {
     const isRead = isNotificationRead(item);
+    const isDeleting = deletingNotificationId === item.id;
 
     return (
-      <Pressable
-        onPress={() => handleNotificationPress(item)}
-        style={({pressed}) => [
-          s.card,
-          !isRead && s.cardUnread,
-          pressed && s.cardPressed,
-        ]}>
-        {/* header row */}
-        <View style={s.cardHeader}>
-          <View style={s.cardTitleWrap}>
-            {!isRead && <View style={s.unreadDot} />}
-            <Text style={[s.cardTitle, !isRead && s.cardTitleUnread]} numberOfLines={2}>
-              {item.title || 'Notification'}
-            </Text>
+      <View style={[s.card, !isRead && s.cardUnread, isDeleting && s.cardDisabled]}>
+        <Pressable
+          disabled={isDeleting}
+          onPress={() => handleNotificationPress(item)}
+          style={({pressed}) => [pressed && !isDeleting && s.cardPressed]}>
+          <View style={s.cardHeader}>
+            <View style={s.cardTitleWrap}>
+              {!isRead && <View style={s.unreadDot} />}
+              <Text style={[s.cardTitle, !isRead && s.cardTitleUnread]} numberOfLines={2}>
+                {item.title || 'Notification'}
+              </Text>
+            </View>
+            <Text style={s.cardDate}>{formatNotificationDate(item)}</Text>
           </View>
-          <Text style={s.cardDate}>{formatNotificationDate(item)}</Text>
-        </View>
 
-        {/* body */}
-        <Text style={s.cardMessage} numberOfLines={3}>
-          {item.message || 'Open this notification to view more details.'}
-        </Text>
+          <Text style={s.cardMessage} numberOfLines={3}>
+            {item.message || 'Open this notification to view more details.'}
+          </Text>
+        </Pressable>
 
-        {/* footer */}
         <View style={s.cardDivider} />
         <View style={s.cardFooter}>
-          <View
-            style={[
-              s.typeBadge,
-              {backgroundColor: isRead ? DIVIDER : '#dce6f8'},
-            ]}>
-            <Text style={[s.typeBadgeText, {color: isRead ? MUTED : NAVY}]}>
-              {formatTypeLabel(item.type)}
+          <View style={s.cardFooterMeta}>
+            <View
+              style={[
+                s.typeBadge,
+                isRead ? s.typeBadgeRead : s.typeBadgeUnread,
+              ]}>
+              <Text
+                style={[
+                  s.typeBadgeText,
+                  isRead ? s.typeBadgeTextRead : s.typeBadgeTextUnread,
+                ]}>
+                {formatTypeLabel(item.type)}
+              </Text>
+            </View>
+            <Text style={[s.readLabel, isRead ? s.readLabelRead : s.readLabelUnread]}>
+              {isRead ? 'Read' : 'Unread'}
             </Text>
           </View>
-          <Text style={[s.readLabel, isRead ? s.readLabelRead : s.readLabelUnread]}>
-            {isRead ? 'Read' : 'Unread'}
-          </Text>
+          <Pressable
+            accessibilityRole="button"
+            disabled={isDeleting}
+            hitSlop={10}
+            onPress={() => handleDeleteNotification(item)}
+            style={({pressed}) => [
+              s.deleteButton,
+              isDeleting && s.deleteButtonDisabled,
+              pressed && !isDeleting ? s.deleteButtonPressed : null,
+            ]}>
+            <Text style={[s.deleteButtonText, isDeleting && s.deleteButtonTextDisabled]}>
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Text>
+          </Pressable>
         </View>
-      </Pressable>
+      </View>
     );
   };
 
@@ -328,10 +442,10 @@ export default function CustomerNotificationsScreen({navigation}: any) {
         </View>
         <Pressable
           onPress={handleMarkAllRead}
-          disabled={markingAllRead || unreadCount === 0}
+          disabled={markingAllRead || deletingAll || unreadCount === 0}
           style={({pressed}) => [
             s.markAllBtn,
-            (markingAllRead || unreadCount === 0) && s.markAllBtnDisabled,
+            (markingAllRead || deletingAll || unreadCount === 0) && s.markAllBtnDisabled,
             pressed && {opacity: 0.7},
           ]}>
           {markingAllRead ? (
@@ -340,11 +454,30 @@ export default function CustomerNotificationsScreen({navigation}: any) {
             <Text
               style={[
                 s.markAllBtnText,
-                (markingAllRead || unreadCount === 0) && s.markAllBtnTextDisabled,
+                (markingAllRead || deletingAll || unreadCount === 0) && s.markAllBtnTextDisabled,
               ]}>
               Mark all as read
             </Text>
           )}
+        </Pressable>
+      </View>
+
+      <View style={s.bulkActionsRow}>
+        <Pressable
+          onPress={handleDeleteAllNotifications}
+          disabled={deletingAll || notifications.length === 0}
+          style={({pressed}) => [
+            s.deleteAllBtn,
+            (deletingAll || notifications.length === 0) && s.deleteAllBtnDisabled,
+            pressed && !deletingAll ? s.deleteAllBtnPressed : null,
+          ]}>
+          <Text
+            style={[
+              s.deleteAllBtnText,
+              (deletingAll || notifications.length === 0) && s.deleteAllBtnTextDisabled,
+            ]}>
+            {deletingAll ? 'Deleting...' : 'Delete all'}
+          </Text>
         </Pressable>
       </View>
 
@@ -505,6 +638,34 @@ const s = StyleSheet.create({
   markAllBtnTextDisabled: {
     color: MUTED,
   },
+  bulkActionsRow: {
+    paddingHorizontal: 20,
+    paddingBottom: 14,
+  },
+  deleteAllBtn: {
+    backgroundColor: '#fff7f7',
+    borderWidth: 1,
+    borderColor: '#f3d6d6',
+    borderRadius: 14,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteAllBtnDisabled: {
+    backgroundColor: '#f8fafc',
+    borderColor: DIVIDER,
+  },
+  deleteAllBtnPressed: {
+    opacity: 0.75,
+  },
+  deleteAllBtnText: {
+    color: '#b91c1c',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  deleteAllBtnTextDisabled: {
+    color: MUTED,
+  },
 
   /* error card */
   errorCard: {
@@ -599,6 +760,9 @@ const s = StyleSheet.create({
   cardPressed: {
     opacity: 0.88,
   },
+  cardDisabled: {
+    opacity: 0.72,
+  },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -649,17 +813,37 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 12,
+  },
+  cardFooterMeta: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flexWrap: 'wrap',
   },
   typeBadge: {
     borderRadius: 8,
     paddingVertical: 4,
     paddingHorizontal: 10,
   },
+  typeBadgeRead: {
+    backgroundColor: DIVIDER,
+  },
+  typeBadgeUnread: {
+    backgroundColor: '#dce6f8',
+  },
   typeBadgeText: {
     fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.3,
+  },
+  typeBadgeTextRead: {
+    color: MUTED,
+  },
+  typeBadgeTextUnread: {
+    color: NAVY,
   },
   readLabel: {
     fontSize: 11,
@@ -670,5 +854,30 @@ const s = StyleSheet.create({
   },
   readLabelUnread: {
     color: GOLD,
+  },
+  deleteButton: {
+    borderWidth: 1,
+    borderColor: '#f3d6d6',
+    backgroundColor: '#fff7f7',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteButtonDisabled: {
+    borderColor: DIVIDER,
+    backgroundColor: '#f8fafc',
+  },
+  deleteButtonPressed: {
+    opacity: 0.72,
+  },
+  deleteButtonText: {
+    color: '#b91c1c',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  deleteButtonTextDisabled: {
+    color: MUTED,
   },
 });

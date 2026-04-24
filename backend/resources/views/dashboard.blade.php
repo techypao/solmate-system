@@ -1713,6 +1713,13 @@
         setVisible(qEmpty, false);
 
         qList.innerHTML = filtered.map(function(q) {
+            var quotationType = String(q.quotation_type || 'initial').toLowerCase();
+            var badges = typeBadge(quotationType);
+
+            if (quotationType === 'final') {
+                badges += statusBadge(q.status || 'pending');
+            }
+
             var systemKw = q.system_kw    ? Number(q.system_kw).toFixed(2) + ' kW' : '-';
             var savings  = q.estimated_monthly_savings ? fmtPeso(q.estimated_monthly_savings) + '/mo' : '-';
             var roi      = q.roi_years    ? Number(q.roi_years).toFixed(1) + ' yrs' : '-';
@@ -1723,7 +1730,7 @@
                 +     '<div class="dash-q-id">Quote #' + escHtml(q.id) + '</div>'
                 +     '<div class="dash-q-meta">Generated ' + fmtDate(q.created_at) + '</div>'
                 +   '</div>'
-                +   '<div class="dash-q-badges">' + typeBadge(q.quotation_type||'initial') + statusBadge(q.status||'pending') + '</div>'
+                +   '<div class="dash-q-badges">' + badges + '</div>'
                 + '</div>'
                 + '<div class="dash-q-grid">'
                 +   '<div class="dash-q-stat"><div class="dash-q-stat-label">System Size</div><div class="dash-q-stat-value">' + escHtml(systemKw) + '</div></div>'

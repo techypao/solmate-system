@@ -38,7 +38,7 @@
 
         .notification-item {
             display: block;
-            width: 100%;
+            flex: 1;
             text-align: left;
             padding: 20px;
             border: 1px solid #dbe7f3;
@@ -47,6 +47,12 @@
             color: inherit;
             cursor: pointer;
             appearance: none;
+        }
+
+        .notification-item-row {
+            display: flex;
+            align-items: stretch;
+            gap: 12px;
         }
 
         .notification-item:hover {
@@ -122,6 +128,40 @@
             margin-top: 6px;
         }
 
+        .notification-delete-button {
+            align-self: center;
+            min-width: 92px;
+            padding: 14px 16px;
+            border: 1px solid #f3d1d1;
+            border-radius: 14px;
+            background: #fff7f7;
+            color: #b42318;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            appearance: none;
+        }
+
+        .notification-delete-button:hover:not(:disabled) {
+            border-color: #e9a2a2;
+            background: #fff1f1;
+        }
+
+        .notification-delete-button:disabled {
+            opacity: 0.65;
+            cursor: wait;
+        }
+
+        @media (max-width: 640px) {
+            .notification-item-row {
+                flex-direction: column;
+            }
+
+            .notification-delete-button {
+                width: 100%;
+            }
+        }
+
         .notification-empty-state {
             text-align: center;
             padding: 28px;
@@ -157,7 +197,10 @@
                 <div id="notification-unread-count" class="notification-summary-value">0</div>
             </div>
 
-            <button id="mark-all-read-button" type="button" class="secondary">Mark all as read</button>
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <button id="mark-all-read-button" type="button" class="secondary">Mark all as read</button>
+                <button id="delete-all-button" type="button" class="secondary" style="border-color:#f3d1d1; color:#b42318; background:#fff7f7;">Delete all</button>
+            </div>
         </div>
 
         <div id="notifications-loading" class="info-box" style="margin-top: 16px;">Loading notifications...</div>
@@ -194,8 +237,11 @@
         const unreadCountValue = document.getElementById('notification-unread-count');
         const refreshButton = document.getElementById('refresh-notifications-button');
         const markAllReadButton = document.getElementById('mark-all-read-button');
+        const deleteAllButton = document.getElementById('delete-all-button');
         const requestAssignmentsUrl = JSON.parse(document.getElementById('__data_requestAssignmentsUrl').textContent);
         let notificationsState = [];
+        let deletingAllNotifications = false;
+        let deletingNotificationId = null;
 
         function setVisible(element, visible, displayValue = 'block') {
             if (!element) {
@@ -319,6 +365,7 @@
             }
 
             markAllReadButton.disabled = unreadCount === 0;
+            deleteAllButton.disabled = notifications.length === 0 || deletingAllNotifications;
         }
 
         function getNotificationTargetUrl(notification) {
@@ -357,10 +404,16 @@
 
             notifications.forEach((notification) => {
                 const isRead = isNotificationRead(notification);
-                const button = document.createElement('button');
-                button.type = 'button';
-                button.className = `notification-item${isRead ? '' : ' unread'}`;
-                button.innerHTML = `
+                const isDeleting = deletingNotificationId === notification.id;
+                const wrapper = document.createElement('div');
+                const openButton = document.createElement('button');
+                const deleteButton = document.createElement('button');
+
+                wrapper.className = 'notification-item-row';
+                openButton.type = 'button';
+                openButton.className = `notification-item${isRead ? '' : ' unread'}`;
+                openButton.disabled = isDeleting;
+                openButton.innerHTML = `
                     <div class="notification-item-header">
                         <div>
                             <div class="notification-item-title">${escapeHtml(notification.title || 'Notification')}</div>
@@ -375,8 +428,17 @@
                     </div>
                 `;
 
-                button.addEventListener('click', () => handleNotificationClick(notification));
-                notificationsList.appendChild(button);
+                deleteButton.type = 'button';
+                deleteButton.className = 'notification-delete-button';
+                deleteButton.disabled = isDeleting;
+                deleteButton.textContent = isDeleting ? 'Deleting...' : 'Delete';
+                deleteButton.addEventListener('click', () => handleDeleteNotification(notification));
+
+                openButton.addEventListener('click', () => handleNotificationClick(notification));
+
+                wrapper.appendChild(openButton);
+                wrapper.appendChild(deleteButton);
+                notificationsList.appendChild(wrapper);
             });
 
             syncUnreadCount(notifications);
@@ -411,11 +473,11 @@
                 .filter((notification) => notification && notification.id);
         }
 
-        async function patchNotification(endpoint) {
+        async function requestNotification(endpoint, method) {
             await ensureCsrfCookie();
 
             const response = await fetch(endpoint, {
-                method: 'PATCH',
+                method: method,
                 credentials: 'same-origin',
                 headers: {
                     'Accept': 'application/json',
@@ -433,6 +495,14 @@
             }
 
             return payload;
+        }
+
+        async function patchNotification(endpoint) {
+            return requestNotification(endpoint, 'PATCH');
+        }
+
+        async function deleteNotificationRequest(endpoint) {
+            return requestNotification(endpoint, 'DELETE');
         }
 
         async function loadNotifications(showLoadingState = false) {
@@ -484,6 +554,63 @@
             }
         }
 
+        async function handleDeleteNotification(notification) {
+            const confirmed = window.confirm('Delete this notification?');
+
+            if (!confirmed) {
+                return;
+            }
+
+            try {
+                clearMessages();
+                deletingNotificationId = notification.id;
+                renderNotifications();
+
+                const payload = await deleteNotificationRequest(`/api/notifications/${notification.id}`);
+
+                notificationsState = notificationsState.filter((currentNotification) => currentNotification.id !== notification.id);
+                renderNotifications();
+
+                notificationsSuccess.textContent = payload?.message || 'Notification deleted successfully.';
+                setVisible(notificationsSuccess, true);
+            } catch (error) {
+                showTopError(getFriendlyErrorMessage(error, 'Could not delete notification.'));
+            } finally {
+                deletingNotificationId = null;
+                renderNotifications();
+            }
+        }
+
+        async function handleDeleteAllNotifications() {
+            const confirmed = window.confirm('Delete all notifications?');
+
+            if (!confirmed) {
+                return;
+            }
+
+            try {
+                clearMessages();
+                deletingAllNotifications = true;
+                deleteAllButton.disabled = true;
+                deleteAllButton.textContent = 'Deleting...';
+
+                const payload = await deleteNotificationRequest('/api/notifications');
+
+                notificationsState = [];
+                renderNotifications();
+
+                notificationsSuccess.textContent = payload?.message || 'All notifications deleted successfully.';
+                setVisible(notificationsSuccess, true);
+            } catch (error) {
+                showTopError(getFriendlyErrorMessage(error, 'Could not delete notifications.'));
+            } finally {
+                deletingAllNotifications = false;
+                deleteAllButton.textContent = 'Delete all';
+                deleteAllButton.disabled = notificationsState.length === 0;
+                renderNotifications();
+            }
+        }
+
         async function handleMarkAllRead() {
             try {
                 clearMessages();
@@ -504,6 +631,7 @@
 
         refreshButton.addEventListener('click', () => loadNotifications(true));
         markAllReadButton.addEventListener('click', handleMarkAllRead);
+        deleteAllButton.addEventListener('click', handleDeleteAllNotifications);
 
         loadNotifications(true);
         window.addEventListener('focus', () => loadNotifications(false));

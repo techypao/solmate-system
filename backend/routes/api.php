@@ -32,7 +32,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::patch('/notifications/mark-all-read', [NotificationController::class, 'markAllRead']);
+    Route::delete('/notifications', [NotificationController::class, 'destroyAll']);
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markRead']);
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
     Route::get('/quotations', [QuotationController::class, 'index']);
     Route::post('/quotations', [QuotationController::class, 'store']);
     Route::get('/quotations/{id}', [QuotationController::class, 'show']);

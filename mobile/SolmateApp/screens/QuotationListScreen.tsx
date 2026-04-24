@@ -1,7 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Pressable,
   SafeAreaView,
@@ -120,13 +119,10 @@ function getStatusBadgeColors(status?: string | null) {
 /* ── primary CTA label based on status / type ── */
 
 function getPrimaryActionLabel(item: Quotation) {
-  const status = (item.status || '').toLowerCase();
   if (item.quotation_type === 'final') {
-    if (status === 'approved' || status === 'completed') return 'View Final';
     return 'View Final';
   }
-  if (status === 'approved') return 'Request Inspection';
-  return 'Confirm Initial';
+  return 'View Initial';
 }
 
 /* ── filter chips config ── */
@@ -210,38 +206,22 @@ export default function QuotationListScreen({navigation}: any) {
   };
 
   const handlePrimaryAction = (item: Quotation) => {
-    const status = (item.status || '').toLowerCase();
-
     if (item.quotation_type === 'final') {
       handleViewDetails(item);
       return;
     }
 
-    if (status === 'approved') {
-      navigation.navigate('InspectionRequest');
-      return;
-    }
-
-    Alert.alert(
-      'Confirm Quotation',
-      'This initial quotation will be marked as confirmed. You may proceed to request a site inspection next.',
-      [
-        {text: 'Cancel', style: 'cancel'},
-        {
-          text: 'Confirm',
-          onPress: () => {
-            Alert.alert('Confirmed', 'Your initial quotation has been confirmed.');
-          },
-        },
-      ],
-    );
+    handleViewDetails(item);
   };
 
   /* ── render card ── */
 
   const renderQuotationItem = ({item}: {item: Quotation}) => {
+    const isFinalQuotation = (item.quotation_type || '').toLowerCase() === 'final';
     const typeColors = getTypeBadgeColors(item.quotation_type);
-    const statusColors = getStatusBadgeColors(item.status);
+    const statusColors = isFinalQuotation
+      ? getStatusBadgeColors(item.status)
+      : null;
 
     return (
       <View style={s.card}>
@@ -252,11 +232,13 @@ export default function QuotationListScreen({navigation}: any) {
               {formatTypeLabel(item.quotation_type)}
             </Text>
           </View>
-          <View style={[s.badge, {backgroundColor: statusColors.bg}]}>
-            <Text style={[s.badgeText, {color: statusColors.text}]}>
-              {formatStatusLabel(item.status)}
-            </Text>
-          </View>
+          {isFinalQuotation && statusColors ? (
+            <View style={[s.badge, {backgroundColor: statusColors.bg}]}>
+              <Text style={[s.badgeText, {color: statusColors.text}]}>
+                {formatStatusLabel(item.status)}
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         {/* quote info */}
@@ -285,13 +267,15 @@ export default function QuotationListScreen({navigation}: any) {
             <Text style={s.btnSecondaryText}>View Details</Text>
           </Pressable>
 
-          <Pressable
-            onPress={() => handlePrimaryAction(item)}
-            style={({pressed}) => [s.btnPrimary, pressed && s.pressed]}>
-            <Text style={s.btnPrimaryText}>
-              {getPrimaryActionLabel(item)}
-            </Text>
-          </Pressable>
+          {isFinalQuotation ? (
+            <Pressable
+              onPress={() => handlePrimaryAction(item)}
+              style={({pressed}) => [s.btnPrimary, pressed && s.pressed]}>
+              <Text style={s.btnPrimaryText}>
+                {getPrimaryActionLabel(item)}
+              </Text>
+            </Pressable>
+          ) : null}
         </View>
       </View>
     );

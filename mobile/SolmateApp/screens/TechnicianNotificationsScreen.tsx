@@ -15,6 +15,8 @@ import {AppButton} from '../components';
 import {ApiError} from '../src/services/api';
 import {
   AppNotification,
+  deleteAllNotifications,
+  deleteNotification,
   getNotifications,
   markAllNotificationsAsRead,
   markNotificationAsRead,
@@ -98,12 +100,34 @@ function getMarkAllReadErrorMessage(error: unknown) {
   return 'Could not mark all notifications as read.';
 }
 
+function getDeleteNotificationErrorMessage(error: unknown) {
+  if (error instanceof ApiError) {
+    if (error.status === 401) {
+      return 'Your session has expired. Please log in again.';
+    }
+
+    if (error.status === 404) {
+      return 'This notification no longer exists.';
+    }
+
+    return error.message || 'Could not delete this notification.';
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  return 'Could not delete this notification.';
+}
+
 export default function TechnicianNotificationsScreen({navigation}: any) {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [markingAllRead, setMarkingAllRead] = useState(false);
+  const [deletingAll, setDeletingAll] = useState(false);
+  const [deletingNotificationId, setDeletingNotificationId] = useState<string | null>(null);
 
   const loadNotifications = useCallback(async (showLoadingState = false) => {
     try {
@@ -216,53 +240,153 @@ export default function TechnicianNotificationsScreen({navigation}: any) {
     }
   };
 
+  const handleDeleteNotification = useCallback(
+    (notification: AppNotification) => {
+      Alert.alert(
+        'Delete this notification?',
+        '',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                setDeletingNotificationId(notification.id);
+                await deleteNotification(notification.id);
+                setNotifications(currentNotifications =>
+                  currentNotifications.filter(
+                    currentNotification => currentNotification.id !== notification.id,
+                  ),
+                );
+              } catch (error) {
+                Alert.alert(
+                  'Delete failed',
+                  getDeleteNotificationErrorMessage(error),
+                );
+              } finally {
+                setDeletingNotificationId(currentNotificationId =>
+                  currentNotificationId === notification.id
+                    ? null
+                    : currentNotificationId,
+                );
+              }
+            },
+          },
+        ],
+      );
+    },
+    [],
+  );
+
+  const handleDeleteAllNotifications = useCallback(() => {
+    Alert.alert(
+      'Delete all notifications?',
+      '',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete all',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setDeletingAll(true);
+              await deleteAllNotifications();
+              setNotifications([]);
+            } catch (error) {
+              Alert.alert(
+                'Delete all failed',
+                getDeleteNotificationErrorMessage(error),
+              );
+            } finally {
+              setDeletingAll(false);
+            }
+          },
+        },
+      ],
+    );
+  }, []);
+
   const unreadCount = notifications.filter(
     notification => !isNotificationRead(notification),
   ).length;
 
   const renderNotification = ({item}: {item: AppNotification}) => {
     const isRead = isNotificationRead(item);
+    const isDeleting = deletingNotificationId === item.id;
 
     return (
-      <Pressable
-        onPress={() => handleNotificationPress(item)}
-        style={({pressed}) => [
+      <View
+        style={[
           styles.notificationCard,
           !isRead ? styles.notificationCardUnread : null,
-          pressed ? styles.notificationCardPressed : null,
+          isDeleting ? styles.notificationCardDisabled : null,
         ]}>
-        <View style={styles.notificationHeader}>
-          <View style={styles.notificationTitleWrap}>
-            <Text style={styles.notificationTitle}>
-              {item.title || 'Notification'}
-            </Text>
-            <Text style={styles.notificationDate}>
-              {formatNotificationDate(item)}
-            </Text>
+        <Pressable
+          disabled={isDeleting}
+          onPress={() => handleNotificationPress(item)}
+          style={({pressed}) => [
+            pressed && !isDeleting ? styles.notificationCardPressed : null,
+          ]}>
+          <View style={styles.notificationHeader}>
+            <View style={styles.notificationTitleWrap}>
+              <Text style={styles.notificationTitle}>
+                {item.title || 'Notification'}
+              </Text>
+              <Text style={styles.notificationDate}>
+                {formatNotificationDate(item)}
+              </Text>
+            </View>
+
+            {!isRead ? <View style={styles.unreadDot} /> : null}
           </View>
 
-          {!isRead ? <View style={styles.unreadDot} /> : null}
-        </View>
-
-        <Text style={styles.notificationMessage}>
-          {item.message || 'Open this notification to view more details.'}
-        </Text>
+          <Text style={styles.notificationMessage}>
+            {item.message || 'Open this notification to view more details.'}
+          </Text>
+        </Pressable>
 
         <View style={styles.notificationFooter}>
-          <Text
-            style={[
-              styles.notificationState,
-              isRead ? styles.readState : styles.unreadState,
+          <View style={styles.notificationFooterMeta}>
+            <Text
+              style={[
+                styles.notificationState,
+                isRead ? styles.readState : styles.unreadState,
+              ]}>
+              {isRead ? 'Read' : 'Unread'}
+            </Text>
+            <Text style={styles.notificationType}>
+              {String(item.type || 'general')
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, character => character.toUpperCase())}
+            </Text>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            disabled={isDeleting}
+            hitSlop={10}
+            onPress={() => handleDeleteNotification(item)}
+            style={({pressed}) => [
+              styles.deleteButton,
+              isDeleting ? styles.deleteButtonDisabled : null,
+              pressed && !isDeleting ? styles.deleteButtonPressed : null,
             ]}>
-            {isRead ? 'Read' : 'Unread'}
-          </Text>
-          <Text style={styles.notificationType}>
-            {String(item.type || 'general')
-              .replace(/_/g, ' ')
-              .replace(/\b\w/g, character => character.toUpperCase())}
-          </Text>
+            <Text
+              style={[
+                styles.deleteButtonText,
+                isDeleting ? styles.deleteButtonTextDisabled : null,
+              ]}>
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Text>
+          </Pressable>
         </View>
-      </Pressable>
+      </View>
     );
   };
 
@@ -292,11 +416,24 @@ export default function TechnicianNotificationsScreen({navigation}: any) {
         <AppButton
           title={markingAllRead ? 'Marking...' : 'Mark all as read'}
           variant="outline"
-          disabled={markingAllRead || unreadCount === 0}
+          disabled={markingAllRead || deletingAll || unreadCount === 0}
           onPress={handleMarkAllRead}
           style={styles.markAllButton}
         />
       </View>
+
+      <AppButton
+        title={deletingAll ? 'Deleting...' : 'Delete all'}
+        variant="outline"
+        disabled={deletingAll || notifications.length === 0}
+        onPress={handleDeleteAllNotifications}
+        style={styles.deleteAllButton}
+        textStyle={
+          deletingAll || notifications.length === 0
+            ? styles.deleteAllButtonTextDisabled
+            : styles.deleteAllButtonText
+        }
+      />
 
       {errorMessage ? (
         <View style={styles.errorCard}>
@@ -393,6 +530,18 @@ const styles = StyleSheet.create({
     minHeight: 46,
     paddingHorizontal: 14,
   },
+  deleteAllButton: {
+    minHeight: 46,
+    marginBottom: 18,
+    borderColor: '#fecaca',
+    backgroundColor: '#fff7ed',
+  },
+  deleteAllButtonText: {
+    color: '#b91c1c',
+  },
+  deleteAllButtonTextDisabled: {
+    color: '#64748b',
+  },
   errorCard: {
     backgroundColor: '#ffffff',
     borderRadius: 18,
@@ -461,6 +610,9 @@ const styles = StyleSheet.create({
   notificationCardPressed: {
     opacity: 0.9,
   },
+  notificationCardDisabled: {
+    opacity: 0.72,
+  },
   notificationHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -499,6 +651,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 12,
+  },
+  notificationFooterMeta: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flexWrap: 'wrap',
   },
   notificationState: {
     fontSize: 12,
@@ -514,5 +674,30 @@ const styles = StyleSheet.create({
     color: '#64748b',
     fontSize: 12,
     fontWeight: '600',
+  },
+  deleteButton: {
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    backgroundColor: '#fff7ed',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteButtonDisabled: {
+    borderColor: '#e2e8f0',
+    backgroundColor: '#f8fafc',
+  },
+  deleteButtonPressed: {
+    opacity: 0.72,
+  },
+  deleteButtonText: {
+    color: '#b91c1c',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  deleteButtonTextDisabled: {
+    color: '#64748b',
   },
 });

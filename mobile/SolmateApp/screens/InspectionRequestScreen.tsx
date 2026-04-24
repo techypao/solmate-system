@@ -335,13 +335,13 @@ export default function InspectionRequestScreen({navigation}: any) {
             <TextInput
               keyboardType="phone-pad"
               onChangeText={handleContactNumberChange}
-              placeholder="Enter a phone number we can reach"
+              placeholder="e.g. 09171234567"
               placeholderTextColor={MUTED}
               style={[s.input, fieldErrors.contactNumber && s.inputError]}
               value={contactNumber}
             />
             <Text style={s.helpText}>
-              Best number to call or text about this inspection request.
+              Use 11 digits, starting with 09.
             </Text>
             {fieldErrors.contactNumber ? (
               <Text style={s.fieldErrorText}>{fieldErrors.contactNumber}</Text>

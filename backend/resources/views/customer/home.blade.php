@@ -673,7 +673,7 @@
         return map[s] || 'ch-act-badge-default';
     }
 
-    function renderItems(listId, loadId, emptyId, items, labelFn) {
+    function renderItems(listId, loadId, emptyId, items, labelFn, showStatusFn) {
         var loadEl  = document.getElementById(loadId);
         var listEl  = document.getElementById(listId);
         var emptyEl = document.getElementById(emptyId);
@@ -691,13 +691,14 @@
             var statusLabel = status.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
             var dc = dotClass(status);
             var bc = badgeClass(status);
+            var showStatus = typeof showStatusFn === 'function' ? showStatusFn(item) : true;
             return '<div class="ch-act-item">'
                 + '<div class="ch-act-dot ' + escHtml(dc) + '"></div>'
                 + '<div class="ch-act-info">'
                 +   '<p class="ch-act-label">' + escHtml(label) + '</p>'
                 +   '<p class="ch-act-meta">' + escHtml(meta) + '</p>'
                 + '</div>'
-                + '<span class="ch-act-badge ' + escHtml(bc) + '">' + escHtml(statusLabel) + '</span>'
+                + (showStatus ? '<span class="ch-act-badge ' + escHtml(bc) + '">' + escHtml(statusLabel) + '</span>' : '')
                 + '</div>';
         }).join('');
 
@@ -713,6 +714,8 @@
             renderItems('ch-qt-list', 'ch-qt-loading', 'ch-qt-empty', items, function (q) {
                 var type = q.quotation_type ? (q.quotation_type.charAt(0).toUpperCase() + q.quotation_type.slice(1)) : 'Quotation';
                 return type + ' Quotation #' + (q.id || '');
+            }, function (q) {
+                return String(q.quotation_type || 'initial').toLowerCase() === 'final';
             });
         } catch (e) {
             var el = document.getElementById('ch-qt-loading');

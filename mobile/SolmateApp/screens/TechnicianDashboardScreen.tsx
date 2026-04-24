@@ -1,6 +1,7 @@
 import React, {useCallback, useContext, useState} from 'react';
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -10,11 +11,10 @@ import {
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 import {AuthContext} from '../src/context/AuthContext';
-import {ApiError} from '../src/services/api';
 import {getUnreadNotificationCount} from '../src/services/notificationApi';
 import {getAssignedInspectionRequests} from '../src/services/technicianApi';
 import {getTechnicianServiceRequests} from '../src/services/serviceRequestApi';
-import {authColors} from './authStyles';
+import {getProfilePictureUrl, getUserInitial} from '../src/utils/profilePicture';
 
 // ─── colour tokens that mirror the design ────────────────────────────────────
 const NAVY   = '#152a4a';
@@ -23,12 +23,6 @@ const BG     = '#dde5f4';   // soft lavender-blue page background
 const CARD   = '#ffffff';
 const MUTED  = '#64748b';
 const SHADOW = '#8a9bbd';
-
-// ─── helpers ─────────────────────────────────────────────────────────────────
-function getFriendlyErrorMessage(error: unknown) {
-  if (error instanceof ApiError) {return error.message;}
-  return 'Could not load dashboard data.';
-}
 
 // ─── small icon stand-ins (unicode shapes) ───────────────────────────────────
 // The design shows a tiny box-chart icon for Pending Reports and a calendar
@@ -41,29 +35,6 @@ function BellIcon() {
       <View style={icon.bellBody} />
       {/* bell clapper */}
       <View style={icon.bellClapper} />
-    </View>
-  );
-}
-
-function ReportIcon() {
-  return (
-    <View style={icon.wrap}>
-      <View style={[icon.bar, {height: 10, marginTop: 2}]} />
-      <View style={[icon.bar, {height: 14}]} />
-      <View style={[icon.bar, {height: 8, marginTop: 4}]} />
-    </View>
-  );
-}
-
-function CalendarIcon() {
-  return (
-    <View style={icon.calWrap}>
-      <View style={icon.calHeader} />
-      <View style={icon.calGrid}>
-        {[0,1,2,3,4,5].map(i => (
-          <View key={i} style={icon.calDot} />
-        ))}
-      </View>
     </View>
   );
 }
@@ -139,6 +110,7 @@ function BottomNav({active, onPress}: {active: Tab; onPress: (t: Tab) => void}) 
 export default function TechnicianDashboardScreen({navigation}: any) {
   const {user} = useContext(AuthContext);
   const technicianName = user?.name || 'Technician';
+  const profilePictureUrl = getProfilePictureUrl(user?.profile_picture);
 
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -222,9 +194,13 @@ export default function TechnicianDashboardScreen({navigation}: any) {
                 onPress={() => navigation.navigate('TechnicianSettings')}
                 style={s.avatarBtn}>
                 <View style={s.avatarCircle}>
-                  <Text style={s.avatarInitial}>
-                    {(user?.name?.[0] ?? 'T').toUpperCase()}
-                  </Text>
+                  {profilePictureUrl ? (
+                    <Image source={{uri: profilePictureUrl}} style={s.avatarImage} />
+                  ) : (
+                    <Text style={s.avatarInitial}>
+                      {getUserInitial(user?.name, 'T')}
+                    </Text>
+                  )}
                 </View>
               </Pressable>
             </View>
@@ -589,6 +565,12 @@ const s = StyleSheet.create({
     backgroundColor: NAVY,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 19,
   },
   avatarInitial: {
     color: '#fff',

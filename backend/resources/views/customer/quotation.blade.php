@@ -844,6 +844,13 @@
         historyEmpty.classList.remove('show');
 
         historyList.innerHTML = filtered.map(function (q) {
+            var quotationType = String(q.quotation_type || 'initial').toLowerCase();
+            var badges = typeBadge(q.quotation_type);
+
+            if (quotationType === 'final') {
+                badges += statusBadge(q.status);
+            }
+
             var systemKw = q.system_kw ? Number(q.system_kw).toFixed(2) + ' kW' : '-';
             var cost     = fmtPeso(q.project_cost);
             var savings  = fmtPeso(q.estimated_monthly_savings);
@@ -855,7 +862,7 @@
                 +     '<div class="cq-q-id">Quote #' + escHtml(q.id) + '</div>'
                 +     '<div class="cq-q-date">Generated ' + fmtDate(q.created_at) + '</div>'
                 +   '</div>'
-                +   '<div class="cq-q-badges">' + typeBadge(q.quotation_type) + statusBadge(q.status) + '</div>'
+                +   '<div class="cq-q-badges">' + badges + '</div>'
                 + '</div>'
                 + '<div class="cq-q-stats">'
                 +   '<div class="cq-q-stat"><div class="cq-q-stat-label">System Size</div><div class="cq-q-stat-val">' + escHtml(systemKw) + '</div></div>'

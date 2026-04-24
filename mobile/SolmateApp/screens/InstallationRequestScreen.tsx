@@ -527,6 +527,9 @@ export default function InstallationRequestScreen({navigation}: any) {
             style={styles.input}
             value={contactNumber}
           />
+          <Text style={styles.helperText}>
+            Use 11 digits, starting with 09.
+          </Text>
           {fieldErrors.contactNumber ? (
             <Text style={styles.fieldError}>{fieldErrors.contactNumber}</Text>
           ) : null}
@@ -596,11 +599,6 @@ export default function InstallationRequestScreen({navigation}: any) {
             <Text style={styles.primaryBtnText}>
               {submitting ? 'Submitting...' : 'Submit Installation Request'}
             </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => navigation.navigate('ServicesHome')}
-            style={({pressed}) => [styles.secondaryBtn, pressed && styles.pressed]}>
-            <Text style={styles.secondaryBtnText}>Back to Services</Text>
           </Pressable>
           <Pressable
             onPress={() =>

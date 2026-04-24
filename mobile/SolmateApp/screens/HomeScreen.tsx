@@ -1,6 +1,6 @@
 import React, {useCallback, useContext, useState} from 'react';
 import {
-  ActivityIndicator,
+  Image,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -13,6 +13,7 @@ import {useFocusEffect} from '@react-navigation/native';
 import {AuthContext} from '../src/context/AuthContext';
 import {ApiError} from '../src/services/api';
 import {getUnreadNotificationCount} from '../src/services/notificationApi';
+import {getProfilePictureUrl, getUserInitial} from '../src/utils/profilePicture';
 
 const NAVY = '#152a4a';
 const GOLD = '#e8a800';
@@ -101,6 +102,7 @@ function ActionCard({
 export default function HomeScreen({navigation}: any) {
   const {user} = useContext(AuthContext);
   const customerName = user?.name || 'Customer';
+  const profilePictureUrl = getProfilePictureUrl(user?.profile_picture);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationsLoading, setNotificationsLoading] = useState(true);
 
@@ -125,7 +127,7 @@ export default function HomeScreen({navigation}: any) {
     }, [loadUnreadCount]),
   );
 
-  const initial = customerName.charAt(0).toUpperCase();
+  const initial = getUserInitial(customerName, 'C');
 
   return (
     <SafeAreaView style={s.safe}>
@@ -143,7 +145,11 @@ export default function HomeScreen({navigation}: any) {
           <Pressable
             onPress={() => navigation.navigate('CustomerSettings')}
             style={s.avatar}>
-            <Text style={s.avatarText}>{initial}</Text>
+            {profilePictureUrl ? (
+              <Image source={{uri: profilePictureUrl}} style={s.avatarImage} />
+            ) : (
+              <Text style={s.avatarText}>{initial}</Text>
+            )}
           </Pressable>
         </View>
 
@@ -159,7 +165,7 @@ export default function HomeScreen({navigation}: any) {
           <SummaryCard
             icon={'\ud83d\udccb'}
             label="Latest Quote"
-            value="Ready"
+            value="View"
             onPress={() => navigation.navigate('QuotationList')}
           />
           <SummaryCard
@@ -309,6 +315,12 @@ const s = StyleSheet.create({
     backgroundColor: NAVY,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
   },
   avatarText: {color: '#fff', fontSize: 17, fontWeight: '700'},
 

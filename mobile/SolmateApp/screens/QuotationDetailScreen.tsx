@@ -166,22 +166,6 @@ export default function QuotationDetailScreen({route, navigation}: any) {
 
   /* ── handlers ── */
 
-  const handleConfirm = () => {
-    Alert.alert(
-      'Confirm Quotation',
-      'This initial quotation will be marked as confirmed. You may proceed to request a site inspection next.',
-      [
-        {text: 'Cancel', style: 'cancel'},
-        {
-          text: 'Confirm',
-          onPress: () => {
-            Alert.alert('Confirmed', 'Your initial quotation has been confirmed.');
-          },
-        },
-      ],
-    );
-  };
-
   const handleRequestInspection = () => {
     navigation.navigate('InspectionRequest');
   };
@@ -246,12 +230,6 @@ export default function QuotationDetailScreen({route, navigation}: any) {
 
         {/* ── action buttons ── */}
         <Pressable
-          onPress={handleConfirm}
-          style={({pressed}) => [s.primaryBtn, pressed && s.pressed]}>
-          <Text style={s.primaryBtnText}>Confirm Initial Quotation</Text>
-        </Pressable>
-
-        <Pressable
           onPress={handleRequestInspection}
           style={({pressed}) => [s.secondaryBtn, pressed && s.pressed]}>
           <Text style={s.secondaryBtnText}>Request Site Inspection</Text>
@@ -268,21 +246,11 @@ export default function QuotationDetailScreen({route, navigation}: any) {
           hitSlop={10}
           onPress={() => navigation.goBack()}
           style={({pressed}) => [s.backLink, pressed && s.pressed]}>
-          <Text style={s.backLinkText}>{'\u2039 Back to Edit Bill'}</Text>
+          <Text style={s.backLinkText}>{'\u2039 Back to Quotations'}</Text>
         </Pressable>
 
         {/* ── spacer ── */}
         <View style={s.spacer} />
-
-        {/* ── chatbot shortcut ── */}
-        <Pressable
-          onPress={() => navigation.navigate('Chatbot')}
-          style={({pressed}) => [s.chatRow, pressed && s.pressed]}>
-          <Text style={s.chatText}>Chat with SolBot</Text>
-          <View style={s.chatBtn}>
-            <Text style={s.chatBtnIcon}>{'\uD83E\uDD16'}</Text>
-          </View>
-        </Pressable>
 
         {/* ── bottom nav ── */}
         <View style={s.bottomNav}>
@@ -416,21 +384,6 @@ const s = StyleSheet.create({
   loadingText: {color: MUTED, fontSize: 14, marginTop: 12},
   errTitle: {color: NAVY, fontSize: 20, fontWeight: '700', marginBottom: 8, textAlign: 'center'},
   errText: {color: '#dc2626', fontSize: 14, lineHeight: 20, textAlign: 'center'},
-
-  /* chat shortcut */
-  chatRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end',
-    marginBottom: 22, marginTop: 4,
-  },
-  chatText: {fontSize: 13, color: MUTED, marginRight: 10},
-  chatBtn: {
-    width: 48, height: 48, borderRadius: 24,
-    backgroundColor: NAVY,
-    alignItems: 'center', justifyContent: 'center',
-    shadowColor: NAVY, shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.25, shadowRadius: 8, elevation: 5,
-  },
-  chatBtnIcon: {fontSize: 22},
 
   /* bottom nav */
   bottomNav: {

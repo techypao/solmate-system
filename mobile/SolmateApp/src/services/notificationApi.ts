@@ -1,4 +1,4 @@
-import {apiGet, apiPatch} from './api';
+import {apiDelete, apiGet, apiPatch} from './api';
 
 export type AppNotification = {
   id: string;
@@ -37,6 +37,10 @@ type MarkAllReadResponse = {
   success: boolean;
   message?: string;
   unread_count?: number;
+};
+
+type DeleteNotificationResponse = {
+  message?: string;
 };
 
 function toBoolean(value: unknown) {
@@ -146,4 +150,20 @@ export async function markAllNotificationsAsRead() {
   );
 
   return typeof response?.unread_count === 'number' ? response.unread_count : 0;
+}
+
+export async function deleteNotification(id: string) {
+  const response = await apiDelete<DeleteNotificationResponse>(
+    `/notifications/${id}`,
+  );
+
+  return response?.message || 'Notification deleted successfully.';
+}
+
+export async function deleteAllNotifications() {
+  const response = await apiDelete<DeleteNotificationResponse>(
+    '/notifications',
+  );
+
+  return response?.message || 'All notifications deleted successfully.';
 }
