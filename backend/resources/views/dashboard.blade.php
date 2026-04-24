@@ -496,6 +496,14 @@
                     <span class="dash-info-value" id="di-email">{{ $user->email }}</span>
                 </div>
                 <div class="dash-info-row">
+                    <span class="dash-info-label">Address</span>
+                    <span class="dash-info-value" id="di-address">{{ $user->address ?: 'Not provided' }}</span>
+                </div>
+                <div class="dash-info-row">
+                    <span class="dash-info-label">Contact Number</span>
+                    <span class="dash-info-value" id="di-contact-number">{{ $user->contact_number ?: 'Not provided' }}</span>
+                </div>
+                <div class="dash-info-row">
                     <span class="dash-info-label">Account Role</span>
                     <span class="dash-info-value">Customer</span>
                 </div>
@@ -520,6 +528,18 @@
                         <label for="ep-email">Email Address</label>
                         <input type="email" id="ep-email" name="email" value="{{ $user->email }}" placeholder="your@email.com" required>
                         <div class="field-error" id="ep-email-error"></div>
+                    </div>
+                </div>
+                <div class="dash-form-row">
+                    <div class="dash-form-group">
+                        <label for="ep-address">Address</label>
+                        <input type="text" id="ep-address" name="address" value="{{ $user->address }}" placeholder="Your address">
+                        <div class="field-error" id="ep-address-error"></div>
+                    </div>
+                    <div class="dash-form-group">
+                        <label for="ep-contact-number">Contact Number</label>
+                        <input type="text" id="ep-contact-number" name="contact_number" value="{{ $user->contact_number }}" placeholder="Your contact number">
+                        <div class="field-error" id="ep-contact_number-error"></div>
                     </div>
                 </div>
                 <div class="dash-form-actions">
@@ -1270,12 +1290,21 @@
         try {
             var resp = await apiRequest('/api/customer/account', {
                 method: 'PUT',
-                body: { name: qs('#ep-name').value.trim(), email: qs('#ep-email').value.trim() },
+                body: {
+                    name: qs('#ep-name').value.trim(),
+                    email: qs('#ep-email').value.trim(),
+                    address: qs('#ep-address').value.trim(),
+                    contact_number: qs('#ep-contact-number').value.trim(),
+                },
             });
             qs('#di-name').textContent  = resp.user.name;
             qs('#di-email').textContent = resp.user.email;
+            qs('#di-address').textContent = resp.user.address || 'Not provided';
+            qs('#di-contact-number').textContent = resp.user.contact_number || 'Not provided';
             qs('#dash-banner-name').textContent  = resp.user.name;
             qs('#dash-banner-email').textContent = resp.user.email;
+            qs('#ep-address').value = resp.user.address || '';
+            qs('#ep-contact-number').value = resp.user.contact_number || '';
             qs('#dash-avatar-initials').textContent = initials(resp.user.name);
             setVisible(editProfileCard, false);
             showMsg(profileMsg, 'success', resp.message || 'Profile updated successfully.');

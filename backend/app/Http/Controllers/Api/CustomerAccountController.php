@@ -23,9 +23,16 @@ class CustomerAccountController extends Controller
                 'max:255',
                 Rule::unique('users', 'email')->ignore($user->id),
             ],
+            'address' => ['nullable', 'string', 'max:255'],
+            'contact_number' => ['nullable', 'string', 'max:20'],
         ]);
 
-        $user->fill($validated);
+        $user->fill([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'address' => isset($validated['address']) ? trim($validated['address']) : null,
+            'contact_number' => isset($validated['contact_number']) ? trim($validated['contact_number']) : null,
+        ]);
         $user->save();
 
         return response()->json([
