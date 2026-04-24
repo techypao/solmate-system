@@ -330,7 +330,7 @@ export default function CustomerSettingsScreen() {
 
         <MenuRow
           icon={'\u23f1\ufe0f'}
-          label="My Service History"
+          label="My Maintenance History"
           onPress={() => navigation.navigate('ServiceRequestList')}
         />
 
@@ -435,13 +435,13 @@ export default function CustomerSettingsScreen() {
           </Pressable>
           <Pressable
             style={s.navItem}
-            onPress={() => navigation.navigate('ServiceRequestList')}>
+            onPress={() => navigation.navigate('ServicesHome')}>
             <Text style={s.navIcon}>{'\u2699\ufe0f'}</Text>
             <Text style={s.navLabel}>Services</Text>
           </Pressable>
           <Pressable
             style={s.navItem}
-            onPress={() => navigation.navigate('InspectionRequestList')}>
+            onPress={() => navigation.navigate('TrackingHub')}>
             <Text style={s.navIcon}>{'\ud83d\udccd'}</Text>
             <Text style={s.navLabel}>Tracking</Text>
           </Pressable>

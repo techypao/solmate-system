@@ -179,15 +179,15 @@ export default function HomeScreen({navigation}: any) {
         {/* ── info cards ─────────────────────────────── */}
         <InfoCard
           icon={'\ud83d\udee0'}
-          title="Service Request"
-          subtitle={'Installation \u2022 Maintenance \u2022 Support'}
-          onPress={() => navigation.navigate('ServiceRequestList')}
+          title="Services"
+          subtitle={'Installation \u2022 Maintenance'}
+          onPress={() => navigation.navigate('ServicesHome')}
         />
         <InfoCard
-          icon={'\ud83d\udcc5'}
-          title="Next Schedule"
-          subtitle="Check your inspections"
-          onPress={() => navigation.navigate('InspectionRequestList')}
+          icon={'\u2705'}
+          title="Inspection"
+          subtitle="Request or view inspections"
+          onPress={() => navigation.navigate('InspectionHome')}
         />
 
         {/* ── quick actions ──────────────────────────── */}
@@ -200,6 +200,12 @@ export default function HomeScreen({navigation}: any) {
             onPress={() => navigation.navigate('Quotations')}
           />
           <ActionCard
+            icon={'\ud83e\uddf0'}
+            title="Request"
+            subtitle="Installation"
+            onPress={() => navigation.navigate('InstallationRequest')}
+          />
+          <ActionCard
             icon={'\u2705'}
             title="Request"
             subtitle="Inspection"
@@ -208,7 +214,7 @@ export default function HomeScreen({navigation}: any) {
           <ActionCard
             icon={'\ud83d\udee0'}
             title="Request"
-            subtitle="Service"
+            subtitle="Maintenance"
             onPress={() => navigation.navigate('ServiceRequest')}
           />
           <ActionCard
@@ -257,13 +263,13 @@ export default function HomeScreen({navigation}: any) {
           </Pressable>
           <Pressable
             style={s.navItem}
-            onPress={() => navigation.navigate('ServiceRequestList')}>
+            onPress={() => navigation.navigate('ServicesHome')}>
             <Text style={s.navIcon}>{'\u2699\ufe0f'}</Text>
             <Text style={s.navLabel}>Services</Text>
           </Pressable>
           <Pressable
             style={s.navItem}
-            onPress={() => navigation.navigate('InspectionRequestList')}>
+            onPress={() => navigation.navigate('TrackingHub')}>
             <Text style={s.navIcon}>{'\ud83d\udccd'}</Text>
             <Text style={s.navLabel}>Tracking</Text>
           </Pressable>

@@ -395,11 +395,11 @@ export default function QuotationListScreen({navigation}: any) {
           <Text style={s.navIconActive}>{'\uD83D\uDCCB'}</Text>
           <Text style={s.navLabelActive}>Quotation</Text>
         </Pressable>
-        <Pressable style={s.navItem} onPress={() => navigation.navigate('ServiceRequestList')}>
+        <Pressable style={s.navItem} onPress={() => navigation.navigate('ServicesHome')}>
           <Text style={s.navIcon}>{'\u2699\uFE0F'}</Text>
           <Text style={s.navLabel}>Services</Text>
         </Pressable>
-        <Pressable style={s.navItem} onPress={() => navigation.navigate('InspectionRequestList')}>
+        <Pressable style={s.navItem} onPress={() => navigation.navigate('TrackingHub')}>
           <Text style={s.navIcon}>{'\uD83D\uDCCD'}</Text>
           <Text style={s.navLabel}>Tracking</Text>
         </Pressable>

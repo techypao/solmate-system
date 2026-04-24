@@ -27,10 +27,12 @@ const DIVIDER = '#edf1f7';
 /* ── constants (preserved) ── */
 
 const REQUEST_TYPE_OPTIONS = [
-  'Battery Check',
-  'Panel Cleaning',
-  'Inverter Issue',
-  'System Maintenance',
+  'Battery check-up',
+  'Panel cleaning',
+  'Inverter check',
+  'Wiring inspection',
+  'General system check',
+  'Other custom concern',
 ];
 
 type FieldErrors = {
@@ -54,7 +56,7 @@ function getFriendlyErrorMessage(error: unknown) {
     if (error.status === 401) return 'Your session has expired. Please log in again.';
     return error.message;
   }
-  return 'Something went wrong while submitting your service request.';
+  return 'Something went wrong while submitting your maintenance request.';
 }
 
 function getFieldValidationMessage(error: unknown, field: string) {
@@ -62,6 +64,13 @@ function getFieldValidationMessage(error: unknown, field: string) {
   const messages = error.errors?.[field];
   if (Array.isArray(messages) && messages.length > 0) return messages[0];
   return null;
+}
+
+function buildMaintenanceDetails(maintenanceType: string, description: string) {
+  return [
+    `Maintenance Concern: ${maintenanceType}`,
+    `Concern Description: ${description}`,
+  ].join('\n');
 }
 
 /* ══════════════════════════════════════════
@@ -168,8 +177,12 @@ export default function ServiceRequestScreen({navigation}: any) {
     const trimmedContactNumber = contactNumber.trim();
     const nextErrors: FieldErrors = {};
 
-    if (!trimmedRequestType) nextErrors.requestType = 'Please choose or enter a request type.';
-    if (!trimmedDetails) nextErrors.details = 'Please add details about the service you need.';
+    if (!trimmedRequestType) {
+      nextErrors.requestType = 'Please choose a maintenance concern.';
+    }
+    if (!trimmedDetails) {
+      nextErrors.details = 'Please add details about the maintenance you need.';
+    }
     if (!trimmedContactNumber) nextErrors.contactNumber = 'Contact number is required.';
     if (dateNeeded && unavailableDates.includes(dateNeeded)) nextErrors.dateNeeded = RESERVED_DATE_MESSAGE;
 
@@ -198,10 +211,14 @@ export default function ServiceRequestScreen({navigation}: any) {
       setErrorMessage('');
       setSuccessMessage('');
 
+      const trimmedRequestType = requestType.trim();
+      const trimmedDetails = details.trim();
+      const trimmedContactNumber = contactNumber.trim();
+
       const response = await createServiceRequest({
-        request_type: requestType.trim(),
-        details: details.trim(),
-        ...(contactNumber.trim() ? {contact_number: contactNumber.trim()} : {}),
+        request_type: 'maintenance',
+        details: buildMaintenanceDetails(trimmedRequestType, trimmedDetails),
+        ...(trimmedContactNumber ? {contact_number: trimmedContactNumber} : {}),
         ...(dateNeeded ? {date_needed: dateNeeded} : {}),
       });
 
@@ -217,7 +234,9 @@ export default function ServiceRequestScreen({navigation}: any) {
       }
 
       resetForm();
-      setSuccessMessage(response.message || 'Service request submitted successfully.');
+      setSuccessMessage(
+        response.message || 'Maintenance request submitted successfully.',
+      );
     } catch (error) {
       const dateFieldMessage = getFieldValidationMessage(error, 'date_needed');
       if (dateFieldMessage) {
@@ -255,10 +274,10 @@ export default function ServiceRequestScreen({navigation}: any) {
         </Pressable>
 
         {/* ── title ── */}
-        <Text style={s.title}>Request Service</Text>
+        <Text style={s.title}>Maintenance Request</Text>
         <Text style={s.subtitle}>
-          Schedule support for your solar system. Choose the kind of help you
-          need, describe the issue, and pick a preferred date.
+          Schedule maintenance support for your solar system. Choose the
+          maintenance concern, describe the issue, and pick a preferred date.
         </Text>
 
         {/* ── banners ── */}
@@ -282,7 +301,7 @@ export default function ServiceRequestScreen({navigation}: any) {
           {/* A. Request type */}
           <View style={s.fieldGroup}>
             <View style={s.fieldHeader}>
-              <Text style={s.fieldLabel}>Request Type</Text>
+              <Text style={s.fieldLabel}>Maintenance Service Type</Text>
               <Text style={s.requiredTag}>Required</Text>
             </View>
 
@@ -305,17 +324,9 @@ export default function ServiceRequestScreen({navigation}: any) {
                 );
               })}
             </View>
-
-            <TextInput
-              autoCapitalize="words"
-              onChangeText={handleRequestTypeChange}
-              placeholder="Or enter a custom request type"
-              placeholderTextColor={MUTED}
-              style={[s.input, fieldErrors.requestType && s.inputError]}
-              value={requestType}
-            />
             <Text style={s.helpText}>
-              Common types are listed above, or enter your own.
+              You are already inside the maintenance request flow, so just pick
+              the specific concern you want serviced.
             </Text>
             {fieldErrors.requestType ? (
               <Text style={s.fieldErrorText}>{fieldErrors.requestType}</Text>
@@ -332,14 +343,15 @@ export default function ServiceRequestScreen({navigation}: any) {
               multiline
               numberOfLines={5}
               onChangeText={handleDetailsChange}
-              placeholder="Explain what is happening and what help you need"
+              placeholder="Describe the maintenance concern or the work you want scheduled."
               placeholderTextColor={MUTED}
               style={[s.input, s.textArea, fieldErrors.details && s.inputError]}
               textAlignVertical="top"
               value={details}
             />
             <Text style={s.helpText}>
-              Example: battery drains quickly at night, or inverter shows a warning light.
+              Example: reduced output, inverter alert, wiring concern, or
+              routine cleaning request.
             </Text>
             {fieldErrors.details ? (
               <Text style={s.fieldErrorText}>{fieldErrors.details}</Text>
@@ -386,7 +398,8 @@ export default function ServiceRequestScreen({navigation}: any) {
         <View style={s.card}>
           <Text style={s.submitTitle}>Ready to send your request?</Text>
           <Text style={s.submitSubtitle}>
-            After submission, you will be taken to the request details screen.
+            After submission, you will be taken to the maintenance request
+            details screen.
           </Text>
 
           <Pressable
@@ -398,14 +411,14 @@ export default function ServiceRequestScreen({navigation}: any) {
               pressed && s.pressed,
             ]}>
             <Text style={s.primaryBtnText}>
-              {submitting ? 'Submitting...' : 'Submit Request'}
+              {submitting ? 'Submitting...' : 'Submit Maintenance Request'}
             </Text>
           </Pressable>
 
           <Pressable
             onPress={() => navigation.navigate('ServiceRequestList')}
             style={({pressed}) => [s.secondaryBtn, pressed && s.pressed]}>
-            <Text style={s.secondaryBtnText}>View My Service Requests</Text>
+            <Text style={s.secondaryBtnText}>View My Maintenance Requests</Text>
           </Pressable>
         </View>
 
@@ -432,11 +445,11 @@ export default function ServiceRequestScreen({navigation}: any) {
             <Text style={s.navIcon}>{'\uD83D\uDCCB'}</Text>
             <Text style={s.navLabel}>Quotation</Text>
           </Pressable>
-          <Pressable style={s.navItem} onPress={() => navigation.navigate('ServiceRequestList')}>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('ServicesHome')}>
             <Text style={s.navIconActive}>{'\u2699\uFE0F'}</Text>
             <Text style={s.navLabelActive}>Services</Text>
           </Pressable>
-          <Pressable style={s.navItem} onPress={() => navigation.navigate('InspectionRequestList')}>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('TrackingHub')}>
             <Text style={s.navIcon}>{'\uD83D\uDCCD'}</Text>
             <Text style={s.navLabel}>Tracking</Text>
           </Pressable>

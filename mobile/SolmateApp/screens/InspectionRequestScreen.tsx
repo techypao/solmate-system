@@ -393,16 +393,6 @@ export default function InspectionRequestScreen({navigation}: any) {
         {/* ── spacer ── */}
         <View style={s.spacer} />
 
-        {/* ── chatbot shortcut ── */}
-        <Pressable
-          onPress={() => navigation.navigate('Chatbot')}
-          style={({pressed}) => [s.chatRow, pressed && s.pressed]}>
-          <Text style={s.chatText}>Chat with SolBot</Text>
-          <View style={s.chatBtn}>
-            <Text style={s.chatBtnIcon}>{'\uD83E\uDD16'}</Text>
-          </View>
-        </Pressable>
-
         {/* ── bottom nav ── */}
         <View style={s.bottomNav}>
           <Pressable style={s.navItem} onPress={() => navigation.navigate('Home')}>
@@ -413,11 +403,11 @@ export default function InspectionRequestScreen({navigation}: any) {
             <Text style={s.navIcon}>{'\uD83D\uDCCB'}</Text>
             <Text style={s.navLabel}>Quotation</Text>
           </Pressable>
-          <Pressable style={s.navItem} onPress={() => navigation.navigate('ServiceRequestList')}>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('ServicesHome')}>
             <Text style={s.navIcon}>{'\u2699\uFE0F'}</Text>
             <Text style={s.navLabel}>Services</Text>
           </Pressable>
-          <Pressable style={s.navItem} onPress={() => navigation.navigate('InspectionRequestList')}>
+          <Pressable style={s.navItem} onPress={() => navigation.navigate('TrackingHub')}>
             <Text style={s.navIconActive}>{'\uD83D\uDCCD'}</Text>
             <Text style={s.navLabelActive}>Tracking</Text>
           </Pressable>
@@ -555,21 +545,6 @@ const s = StyleSheet.create({
 
   /* spacer */
   spacer: {minHeight: 30},
-
-  /* chat shortcut */
-  chatRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end',
-    marginBottom: 22, marginTop: 4,
-  },
-  chatText: {fontSize: 13, color: MUTED, marginRight: 10},
-  chatBtn: {
-    width: 48, height: 48, borderRadius: 24,
-    backgroundColor: NAVY,
-    alignItems: 'center', justifyContent: 'center',
-    shadowColor: NAVY, shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.25, shadowRadius: 8, elevation: 5,
-  },
-  chatBtnIcon: {fontSize: 22},
 
   /* bottom nav */
   bottomNav: {

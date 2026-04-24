@@ -10,15 +10,19 @@ import EditTestimonyScreen from '../../screens/EditTestimonyScreen';
 import FinalQuotationViewScreen from '../../screens/FinalQuotationViewScreen';
 import ChatbotScreen from '../../screens/ChatbotScreen';
 import InspectionRequestDetailScreen from '../../screens/InspectionRequestDetailScreen';
+import InspectionHubScreen from '../../screens/InspectionHubScreen';
 import InspectionRequestListScreen from '../../screens/InspectionRequestListScreen';
 import InspectionRequestScreen from '../../screens/InspectionRequestScreen';
+import InstallationRequestScreen from '../../screens/InstallationRequestScreen';
 import MyTestimoniesScreen from '../../screens/MyTestimoniesScreen';
 import QuotationDetailScreen from '../../screens/QuotationDetailScreen';
 import QuotationListScreen from '../../screens/QuotationListScreen';
 import QuotationScreen from '../../screens/QuotationScreen';
+import ServicesHubScreen from '../../screens/ServicesHubScreen';
 import ServiceRequestDetailScreen from '../../screens/ServiceRequestDetailScreen';
 import ServiceRequestListScreen from '../../screens/ServiceRequestListScreen';
 import ServiceRequestScreen from '../../screens/ServiceRequestScreen';
+import TrackingHubScreen from '../../screens/TrackingHubScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -78,6 +82,24 @@ export default function CustomerStack() {
       />
 
       <Stack.Screen
+        name="InspectionHome"
+        component={InspectionHubScreen}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="InstallationRequest"
+        component={InstallationRequestScreen}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="ServicesHome"
+        component={ServicesHubScreen}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
         name="InspectionRequestList"
         component={InspectionRequestListScreen}
         options={{ headerShown: false }}
@@ -104,6 +126,12 @@ export default function CustomerStack() {
       <Stack.Screen
         name="ServiceRequestList"
         component={ServiceRequestListScreen}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="TrackingHub"
+        component={TrackingHubScreen}
         options={{ headerShown: false }}
       />
 

@@ -65,7 +65,27 @@ function getFriendlyErrorMessage(error: unknown) {
   if (error instanceof ApiError) {
     return error.message;
   }
-  return 'Could not load the service request details.';
+  return 'Could not load the maintenance request details.';
+}
+
+function getInstallationType(serviceRequest: ServiceRequest) {
+  const details = serviceRequest.details || '';
+  const match = details.match(/Installation Type:\s*(.+)/i);
+  if (match?.[1]) {
+    return match[1].trim();
+  }
+
+  return serviceRequest.request_type;
+}
+
+function getMaintenanceConcern(serviceRequest: ServiceRequest) {
+  const details = serviceRequest.details || '';
+  const match = details.match(/Maintenance Concern:\s*(.+)/i);
+  if (match?.[1]) {
+    return match[1].trim();
+  }
+
+  return serviceRequest.request_type;
 }
 
 function InlineRow({label, value}: {label: string; value?: string | null}) {
@@ -148,6 +168,27 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
   const [loading, setLoading] = useState(!initialServiceRequest);
   const [errorMessage, setErrorMessage] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const customerRequestCategory =
+    (serviceRequest?.request_type || route?.params?.requestCategory || '').toLowerCase() ===
+    'installation'
+      ? 'installation'
+      : 'maintenance';
+  const customerTitle =
+    customerRequestCategory === 'installation'
+      ? 'Installation Details'
+      : 'Maintenance Details';
+  const customerCardTitle =
+    customerRequestCategory === 'installation'
+      ? 'Installation Information'
+      : 'Maintenance Information';
+  const customerRequestIdLabel =
+    customerRequestCategory === 'installation'
+      ? 'Installation Request ID'
+      : 'Maintenance Request ID';
+  const customerTypeLabel =
+    customerRequestCategory === 'installation'
+      ? 'Installation Service Type'
+      : 'Maintenance Service Type';
 
   const loadServiceRequest = useCallback(
     async (showLoadingState = false) => {
@@ -329,13 +370,26 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
             style={({pressed}) => [styles.backBtn, pressed && styles.backBtnPressed]}>
             <Text style={styles.backIcon}>{'‹'}</Text>
           </Pressable>
-          <Text style={styles.headerTitle}>Service Details</Text>
+          <Text style={styles.headerTitle}>
+            {mode === 'technician' ? 'Service Details' : customerTitle}
+          </Text>
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.centeredContainer}>
-          <Text style={styles.errorTitle}>Service request unavailable</Text>
+          <Text style={styles.errorTitle}>
+            {mode === 'technician'
+              ? 'Service request unavailable'
+              : customerRequestCategory === 'installation'
+                ? 'Installation request unavailable'
+                : 'Maintenance request unavailable'}
+          </Text>
           <Text style={styles.errorText}>
-            {errorMessage || 'No service request details were found.'}
+            {errorMessage ||
+              (mode === 'technician'
+                ? 'No service request details were found.'
+                : customerRequestCategory === 'installation'
+                  ? 'No installation request details were found.'
+                  : 'No maintenance request details were found.')}
           </Text>
           <AppButton
             title="Try again"
@@ -343,13 +397,22 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
             style={styles.actionBtn}
           />
           <AppButton
-            title="Back to requests"
+            title={
+              mode === 'technician'
+                ? 'Back to requests'
+                : customerRequestCategory === 'installation'
+                  ? 'Back to installation'
+                  : 'Back to maintenance'
+            }
             variant="outline"
             onPress={() =>
               navigation.navigate(
                 mode === 'technician'
                   ? 'TechnicianServiceRequests'
                   : 'ServiceRequestList',
+                mode === 'technician'
+                  ? undefined
+                  : {requestCategory: customerRequestCategory},
               )
             }
             style={[styles.actionBtn, {marginTop: 10}]}
@@ -360,6 +423,12 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
   }
 
   const statusColors = getServiceRequestStatusColors(serviceRequest.status);
+  const displayType =
+    mode === 'customer' && customerRequestCategory === 'maintenance'
+      ? getMaintenanceConcern(serviceRequest)
+      : mode === 'customer' && customerRequestCategory === 'installation'
+        ? getInstallationType(serviceRequest)
+        : serviceRequest.request_type;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -374,7 +443,9 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
           ]}>
           <Text style={styles.backIcon}>{'‹'}</Text>
         </Pressable>
-        <Text style={styles.headerTitle}>Service Details</Text>
+        <Text style={styles.headerTitle}>
+          {mode === 'technician' ? 'Service Details' : customerTitle}
+        </Text>
         <View
           style={[
             styles.statusPill,
@@ -393,12 +464,17 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
 
         {/* ── Service Information ── */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Service Information</Text>
+          <Text style={styles.cardTitle}>
+            {mode === 'technician' ? 'Service Information' : customerCardTitle}
+          </Text>
           <InlineRow
-            label="Service Request ID"
+            label={mode === 'technician' ? 'Service Request ID' : customerRequestIdLabel}
             value={`SR-${serviceRequest.id}`}
           />
-          <InlineRow label="Type" value={serviceRequest.request_type} />
+          <InlineRow
+            label={mode === 'technician' ? 'Type' : customerTypeLabel}
+            value={displayType}
+          />
           <InlineRow
             label="Status"
             value={formatServiceRequestStatus(serviceRequest.status)}

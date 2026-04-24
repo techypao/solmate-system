@@ -257,7 +257,7 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
   };
 
   const handleCreateService = () => {
-    navigation.navigate('ServiceRequest');
+    navigation.navigate('InstallationRequest');
   };
 
   const handleSave = () => {
@@ -496,7 +496,7 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
         <Pressable
           onPress={handleCreateService}
           style={({pressed}) => [s.secondaryBtn, pressed && s.pressed]}>
-          <Text style={s.secondaryBtnText}>Create Service Request</Text>
+          <Text style={s.secondaryBtnText}>Create Installation Request</Text>
         </Pressable>
 
         <Pressable
@@ -539,13 +539,13 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
           </Pressable>
           <Pressable
             style={s.navItem}
-            onPress={() => navigation.navigate('ServiceRequestList')}>
+            onPress={() => navigation.navigate('ServicesHome')}>
             <Text style={s.navIcon}>{'\u2699\uFE0F'}</Text>
             <Text style={s.navLabel}>Services</Text>
           </Pressable>
           <Pressable
             style={s.navItem}
-            onPress={() => navigation.navigate('InspectionRequestList')}>
+            onPress={() => navigation.navigate('TrackingHub')}>
             <Text style={s.navIconActive}>{'\uD83D\uDCCD'}</Text>
             <Text style={s.navLabelActive}>Tracking</Text>
           </Pressable>

@@ -57,14 +57,16 @@ function formatStatusLabel(status?: string | null) {
   }
 }
 
-function getFriendlyErrorMessage(error: unknown) {
+function getFriendlyErrorMessage(error: unknown, requestCategory = 'maintenance') {
   if (error instanceof ApiError) {
     if (error.status === 401) {
       return 'Your session has expired. Please log in again.';
     }
     return error.message;
   }
-  return 'Could not load your service requests right now.';
+  return requestCategory === 'installation'
+    ? 'Could not load your installation requests right now.'
+    : 'Could not load your maintenance requests right now.';
 }
 
 function getStatusBadgeStyle(status?: string | null) {
@@ -89,12 +91,36 @@ function normalizeServiceRequest(item: ServiceRequest): ServiceRequest {
   };
 }
 
+function getInstallationType(item: ServiceRequest) {
+  const details = item.details || '';
+  const match = details.match(/Installation Type:\s*(.+)/i);
+  if (match?.[1]) {
+    return match[1].trim();
+  }
+
+  return item.request_type;
+}
+
+function getMaintenanceConcern(item: ServiceRequest) {
+  const details = item.details || '';
+  const match = details.match(/Maintenance Concern:\s*(.+)/i);
+  if (match?.[1]) {
+    return match[1].trim();
+  }
+
+  return item.request_type;
+}
+
 /* ════════════════════════════════════════════
    Main screen
    ════════════════════════════════════════════ */
 
 export default function ServiceRequestListScreen({navigation, route}: any) {
   const mode = route?.params?.mode === 'technician' ? 'technician' : 'customer';
+  const requestCategory =
+    route?.params?.requestCategory === 'installation'
+      ? 'installation'
+      : 'maintenance';
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -109,18 +135,27 @@ export default function ServiceRequestListScreen({navigation, route}: any) {
           mode === 'technician'
             ? await getTechnicianServiceRequests()
             : await getServiceRequests();
+        const normalizedData = Array.isArray(data)
+          ? data.map(normalizeServiceRequest)
+          : [];
+
         setServiceRequests(
-          Array.isArray(data) ? data.map(normalizeServiceRequest) : [],
+          mode === 'customer'
+            ? normalizedData.filter(
+                item =>
+                  (item.request_type || '').toLowerCase() === requestCategory,
+              )
+            : normalizedData,
         );
       } catch (error) {
         setServiceRequests([]);
-        setErrorMessage(getFriendlyErrorMessage(error));
+        setErrorMessage(getFriendlyErrorMessage(error, requestCategory));
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [mode],
+    [mode, requestCategory],
   );
 
   useFocusEffect(
@@ -141,6 +176,21 @@ export default function ServiceRequestListScreen({navigation, route}: any) {
     const customerName = item.customer?.name || 'Customer not available';
     const awaitingAdminReview =
       !!item.technician_marked_done_at && item.status !== 'completed';
+    const title =
+      mode === 'customer' && (item.request_type || '').toLowerCase() === 'maintenance'
+        ? getMaintenanceConcern(item)
+        : mode === 'customer' &&
+            (item.request_type || '').toLowerCase() === 'installation'
+          ? getInstallationType(item)
+        : item.request_type;
+    const isInstallationCustomerView =
+      mode === 'customer' && requestCategory === 'installation';
+    const requestLabel = isInstallationCustomerView
+      ? 'Installation request'
+      : 'Maintenance request';
+    const actionLabel = isInstallationCustomerView
+      ? 'View Installation Details'
+      : 'View Maintenance Details';
 
     return (
       <View style={s.card}>
@@ -150,8 +200,12 @@ export default function ServiceRequestListScreen({navigation, route}: any) {
         {/* header row: title + status */}
         <View style={s.cardHeader}>
           <View style={s.cardTitleWrap}>
-            <Text style={s.cardEyebrow}>Service request #{item.id}</Text>
-            <Text style={s.cardTitle}>{item.request_type}</Text>
+            <Text style={s.cardEyebrow}>
+              {mode === 'technician'
+                ? `Service request #${item.id}`
+                : `${requestLabel} #${item.id}`}
+            </Text>
+            <Text style={s.cardTitle}>{title}</Text>
             {mode === 'technician' ? (
               <Text style={s.cardSubTitle}>{customerName}</Text>
             ) : null}
@@ -220,6 +274,7 @@ export default function ServiceRequestListScreen({navigation, route}: any) {
                 serviceRequestId: item.id,
                 initialServiceRequest: item,
                 mode,
+                requestCategory,
               },
             )
           }
@@ -227,7 +282,7 @@ export default function ServiceRequestListScreen({navigation, route}: any) {
           <Text style={s.cardBtnText}>
             {mode === 'technician'
               ? 'Open Service Request'
-              : 'View Request Details'}
+              : actionLabel}
           </Text>
         </Pressable>
       </View>
@@ -241,7 +296,11 @@ export default function ServiceRequestListScreen({navigation, route}: any) {
       <SafeAreaView style={s.safe}>
         <View style={s.centered}>
           <ActivityIndicator color={GOLD} size="large" />
-          <Text style={s.loadingText}>Loading your service requests…</Text>
+          <Text style={s.loadingText}>
+            {requestCategory === 'installation'
+              ? 'Loading your installation requests…'
+              : 'Loading your maintenance requests…'}
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -267,12 +326,18 @@ export default function ServiceRequestListScreen({navigation, route}: any) {
 
         {/* title block */}
         <Text style={s.title}>
-          {mode === 'technician' ? 'Service Requests' : 'My Service Requests'}
+          {mode === 'technician'
+            ? 'Service Requests'
+            : requestCategory === 'installation'
+              ? 'My Installation Requests'
+              : 'My Maintenance Requests'}
         </Text>
         <Text style={s.subtitle}>
           {mode === 'technician'
             ? 'Review service requests assigned to your technician account and pull down to refresh their latest status.'
-            : 'Review your submitted service requests and pull down to refresh their latest status.'}
+            : requestCategory === 'installation'
+              ? 'Review your submitted installation requests and pull down to refresh their latest status.'
+              : 'Review your submitted maintenance requests and pull down to refresh their latest status.'}
         </Text>
       </View>
 
@@ -311,18 +376,32 @@ export default function ServiceRequestListScreen({navigation, route}: any) {
               <Text style={s.emptyTitle}>
                 {mode === 'technician'
                   ? 'No assigned service requests yet.'
-                  : 'No service requests yet.'}
+                  : requestCategory === 'installation'
+                    ? 'No installation requests yet.'
+                    : 'No maintenance requests yet.'}
               </Text>
               <Text style={s.emptyText}>
                 {mode === 'technician'
                   ? 'Assigned service requests will appear here once they are linked to your technician account.'
-                  : 'Submit your first request from the customer dashboard and it will appear here.'}
+                  : requestCategory === 'installation'
+                    ? 'Submit your first installation request from Services and it will appear here.'
+                    : 'Submit your first maintenance request from Services and it will appear here.'}
               </Text>
               {mode === 'customer' ? (
                 <Pressable
-                  onPress={() => navigation.navigate('ServiceRequest')}
+                  onPress={() =>
+                    navigation.navigate(
+                      requestCategory === 'installation'
+                        ? 'InstallationRequest'
+                        : 'ServiceRequest',
+                    )
+                  }
                   style={({pressed}) => [s.emptyBtn, pressed && s.pressed]}>
-                  <Text style={s.emptyBtnText}>Request Service</Text>
+                  <Text style={s.emptyBtnText}>
+                    {requestCategory === 'installation'
+                      ? 'Request Installation'
+                      : 'Request Maintenance'}
+                  </Text>
                 </Pressable>
               ) : null}
             </View>
@@ -340,11 +419,11 @@ export default function ServiceRequestListScreen({navigation, route}: any) {
           <Text style={s.navIcon}>{'\uD83D\uDCCB'}</Text>
           <Text style={s.navLabel}>Quotation</Text>
         </Pressable>
-        <Pressable style={s.navItem} onPress={() => navigation.navigate('ServiceRequestList')}>
+        <Pressable style={s.navItem} onPress={() => navigation.navigate('ServicesHome')}>
           <Text style={s.navIconActive}>{'\u2699\uFE0F'}</Text>
           <Text style={s.navLabelActive}>Services</Text>
         </Pressable>
-        <Pressable style={s.navItem} onPress={() => navigation.navigate('InspectionRequestList')}>
+        <Pressable style={s.navItem} onPress={() => navigation.navigate('TrackingHub')}>
           <Text style={s.navIcon}>{'\uD83D\uDCCD'}</Text>
           <Text style={s.navLabel}>Tracking</Text>
         </Pressable>
