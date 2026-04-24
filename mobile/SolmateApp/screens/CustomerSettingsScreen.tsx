@@ -33,6 +33,14 @@ function formatRole(role?: string | null) {
   return role.charAt(0).toUpperCase() + role.slice(1);
 }
 
+function formatProfileValue(value?: string | null) {
+  if (!value || !value.trim()) {
+    return 'Not provided';
+  }
+
+  return value.trim();
+}
+
 /* \u2500\u2500 small presentational pieces \u2500\u2500 */
 
 function MenuRow({
@@ -74,6 +82,8 @@ export default function CustomerSettingsScreen() {
   /* \u2500\u2500 profile form state (preserved) \u2500\u2500 */
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
+  const [address, setAddress] = useState(user?.address || '');
+  const [contactNumber, setContactNumber] = useState(user?.contact_number || '');
   const [profileSubmitting, setProfileSubmitting] = useState(false);
 
   /* \u2500\u2500 password form state (preserved) \u2500\u2500 */
@@ -89,7 +99,9 @@ export default function CustomerSettingsScreen() {
   useEffect(() => {
     setName(user?.name || '');
     setEmail(user?.email || '');
-  }, [user?.email, user?.name]);
+    setAddress(user?.address || '');
+    setContactNumber(user?.contact_number || '');
+  }, [user?.address, user?.contact_number, user?.email, user?.name]);
 
   /* \u2500\u2500 handlers (100 % preserved) \u2500\u2500 */
 
@@ -115,6 +127,8 @@ export default function CustomerSettingsScreen() {
       const response = await updateCustomerAccount({
         name: trimmedName,
         email: trimmedEmail,
+        address: address.trim(),
+        contact_number: contactNumber.trim(),
       });
       setUser((currentUser: typeof user) =>
         currentUser
@@ -219,6 +233,20 @@ export default function CustomerSettingsScreen() {
             <Text style={s.profileName}>{user?.name || 'Customer'}</Text>
             <Text style={s.profileEmail}>{user?.email || 'Not available'}</Text>
             <Text style={s.profileRole}>{formatRole(user?.role)}</Text>
+            <View style={s.profileDetailList}>
+              <View style={s.profileDetailRow}>
+                <Text style={s.profileDetailLabel}>Address</Text>
+                <Text style={s.profileDetailValue}>
+                  {formatProfileValue(user?.address)}
+                </Text>
+              </View>
+              <View style={s.profileDetailRow}>
+                <Text style={s.profileDetailLabel}>Contact Number</Text>
+                <Text style={s.profileDetailValue}>
+                  {formatProfileValue(user?.contact_number)}
+                </Text>
+              </View>
+            </View>
           </View>
           <Pressable
             hitSlop={12}
@@ -233,7 +261,7 @@ export default function CustomerSettingsScreen() {
           <View style={s.expandedCard}>
             <Text style={s.expandedTitle}>Update Account</Text>
             <Text style={s.expandedSub}>
-              Edit your name and email. Changes are saved directly.
+              Edit your account details. Changes are saved directly.
             </Text>
 
             <FormLabel text="Full Name" />
@@ -255,6 +283,25 @@ export default function CustomerSettingsScreen() {
               placeholderTextColor="#a8b4c8"
               style={s.input}
               value={email}
+            />
+
+            <FormLabel text="Address" />
+            <TextInput
+              onChangeText={setAddress}
+              placeholder="Enter your address"
+              placeholderTextColor="#a8b4c8"
+              style={s.input}
+              value={address}
+            />
+
+            <FormLabel text="Contact Number" />
+            <TextInput
+              keyboardType="phone-pad"
+              onChangeText={setContactNumber}
+              placeholder="Enter your contact number"
+              placeholderTextColor="#a8b4c8"
+              style={s.input}
+              value={contactNumber}
             />
 
             <Pressable
@@ -451,6 +498,16 @@ const s = StyleSheet.create({
   profileName: {fontSize: 17, fontWeight: '800', color: NAVY, marginBottom: 2},
   profileEmail: {fontSize: 13, color: MUTED, marginBottom: 1},
   profileRole: {fontSize: 12, color: MUTED, opacity: 0.75},
+  profileDetailList: {marginTop: 10, gap: 6},
+  profileDetailRow: {gap: 2},
+  profileDetailLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: MUTED,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  profileDetailValue: {fontSize: 13, color: NAVY, fontWeight: '600'},
   editLink: {fontSize: 15, fontWeight: '700', color: NAVY},
 
   /* menu rows */

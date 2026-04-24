@@ -5,11 +5,15 @@ export type AccountUser = {
   name?: string | null;
   email?: string | null;
   role?: string | null;
+  address?: string | null;
+  contact_number?: string | null;
 };
 
 export type UpdateCustomerAccountPayload = {
   name: string;
   email: string;
+  address?: string;
+  contact_number?: string;
 };
 
 export type UpdateCustomerPasswordPayload = {

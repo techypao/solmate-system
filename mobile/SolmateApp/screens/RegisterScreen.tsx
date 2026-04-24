@@ -25,6 +25,8 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -40,6 +42,8 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
     if (
       !name.trim() ||
       !email.trim() ||
+      !address.trim() ||
+      !contactNumber.trim() ||
       !password.trim() ||
       !confirmPassword.trim()
     ) {
@@ -57,6 +61,8 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
     const registerData = {
       name: name.trim(),
       email: email.trim(),
+      address: address.trim(),
+      contact_number: contactNumber.trim(),
       password: password,
       password_confirmation: confirmPassword,
     };
@@ -137,6 +143,33 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
             placeholderTextColor={authColors.placeholderText}
             style={authStyles.input}
             value={email}
+          />
+
+          <Text style={authStyles.label}>Address</Text>
+          <TextInput
+            onChangeText={value => {
+              setAddress(value);
+              if (errorMessage) {
+                setErrorMessage('');
+              }
+            }}
+            placeholderTextColor={authColors.placeholderText}
+            style={authStyles.input}
+            value={address}
+          />
+
+          <Text style={authStyles.label}>Contact Number</Text>
+          <TextInput
+            keyboardType="phone-pad"
+            onChangeText={value => {
+              setContactNumber(value);
+              if (errorMessage) {
+                setErrorMessage('');
+              }
+            }}
+            placeholderTextColor={authColors.placeholderText}
+            style={authStyles.input}
+            value={contactNumber}
           />
 
           <Text style={authStyles.label}>Password</Text>
