@@ -33,13 +33,18 @@ class ServiceRequestController extends Controller
             'request_type' => 'required|string|max:255',
             'details' => 'required|string',
             'contact_number' => 'required|string|max:30',
+            'address' => 'nullable|string|max:255',
             'date_needed' => 'nullable|date',
         ]);
 
+        $userAddress = trim((string) ($request->user()->address ?? ''));
+        $providedAddress = trim((string) ($validated['address'] ?? ''));
+        $resolvedAddress = $providedAddress !== '' ? $providedAddress : ($userAddress !== '' ? $userAddress : null);
+
         $serviceRequest = $this->preferredDateLockService->withLockedDates(
             [$validated['date_needed'] ?? null],
-            function () use ($request, $validated) {
-                return DB::transaction(function () use ($request, $validated) {
+            function () use ($request, $validated, $resolvedAddress) {
+                return DB::transaction(function () use ($request, $validated, $resolvedAddress) {
                     $this->preferredDateLockService->ensureDateIsAvailable($validated['date_needed'] ?? null);
 
                     return ServiceRequest::query()->create([
@@ -47,6 +52,7 @@ class ServiceRequestController extends Controller
                         'request_type' => $validated['request_type'],
                         'details' => $validated['details'],
                         'contact_number' => trim($validated['contact_number']),
+                        'address' => $resolvedAddress,
                         'date_needed' => $validated['date_needed'] ?? null,
                         'status' => 'pending',
                     ]);

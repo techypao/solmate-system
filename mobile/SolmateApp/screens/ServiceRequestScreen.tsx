@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useContext, useEffect, useState} from 'react';
 import {useFocusEffect} from '@react-navigation/native';
 import {
   Pressable,
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import {PreferredDateCalendar} from '../components';
+import {AuthContext} from '../src/context/AuthContext';
 import {ApiError} from '../src/services/api';
 import {getUnavailablePreferredDates} from '../src/services/preferredDateAvailabilityApi';
 import {createServiceRequest} from '../src/services/serviceRequestApi';
@@ -39,6 +40,7 @@ type FieldErrors = {
   requestType?: string;
   details?: string;
   contactNumber?: string;
+  address?: string;
   dateNeeded?: string;
 };
 
@@ -78,9 +80,11 @@ function buildMaintenanceDetails(maintenanceType: string, description: string) {
    ══════════════════════════════════════════ */
 
 export default function ServiceRequestScreen({navigation}: any) {
+  const {user} = useContext(AuthContext);
   const [requestType, setRequestType] = useState('');
   const [details, setDetails] = useState('');
   const [contactNumber, setContactNumber] = useState('');
+  const [address, setAddress] = useState(user?.address || '');
   const [dateNeeded, setDateNeeded] = useState('');
   const [unavailableDates, setUnavailableDates] = useState<string[]>([]);
   const [availabilityMessage, setAvailabilityMessage] = useState('');
@@ -95,9 +99,14 @@ export default function ServiceRequestScreen({navigation}: any) {
     setRequestType('');
     setDetails('');
     setContactNumber('');
+    setAddress(user?.address || '');
     setDateNeeded('');
     setFieldErrors({});
   };
+
+  useEffect(() => {
+    setAddress(user?.address || '');
+  }, [user?.address]);
 
   const loadUnavailableDates = useCallback(async () => {
     try {
@@ -159,6 +168,14 @@ export default function ServiceRequestScreen({navigation}: any) {
     }
   };
 
+  const handleAddressChange = (value: string) => {
+    setAddress(value);
+    clearStatusMessages();
+    if (fieldErrors.address) {
+      setFieldErrors(c => ({...c, address: undefined}));
+    }
+  };
+
   const handleDateSelect = (value: string) => {
     setDateNeeded(value);
     clearStatusMessages();
@@ -175,6 +192,7 @@ export default function ServiceRequestScreen({navigation}: any) {
     const trimmedRequestType = requestType.trim();
     const trimmedDetails = details.trim();
     const trimmedContactNumber = contactNumber.trim();
+    const trimmedAddress = address.trim();
     const nextErrors: FieldErrors = {};
 
     if (!trimmedRequestType) {
@@ -184,6 +202,7 @@ export default function ServiceRequestScreen({navigation}: any) {
       nextErrors.details = 'Please add details about the maintenance you need.';
     }
     if (!trimmedContactNumber) nextErrors.contactNumber = 'Contact number is required.';
+    if (!trimmedAddress) nextErrors.address = 'Address is required.';
     if (dateNeeded && unavailableDates.includes(dateNeeded)) nextErrors.dateNeeded = RESERVED_DATE_MESSAGE;
 
     setFieldErrors(nextErrors);
@@ -214,11 +233,13 @@ export default function ServiceRequestScreen({navigation}: any) {
       const trimmedRequestType = requestType.trim();
       const trimmedDetails = details.trim();
       const trimmedContactNumber = contactNumber.trim();
+      const trimmedAddress = address.trim();
 
       const response = await createServiceRequest({
         request_type: 'maintenance',
         details: buildMaintenanceDetails(trimmedRequestType, trimmedDetails),
         ...(trimmedContactNumber ? {contact_number: trimmedContactNumber} : {}),
+        address: trimmedAddress,
         ...(dateNeeded ? {date_needed: dateNeeded} : {}),
       });
 
@@ -238,12 +259,20 @@ export default function ServiceRequestScreen({navigation}: any) {
         response.message || 'Maintenance request submitted successfully.',
       );
     } catch (error) {
+      const addressFieldMessage = getFieldValidationMessage(error, 'address');
       const dateFieldMessage = getFieldValidationMessage(error, 'date_needed');
+      if (addressFieldMessage) {
+        setFieldErrors(c => ({...c, address: addressFieldMessage}));
+      }
       if (dateFieldMessage) {
         setFieldErrors(c => ({...c, dateNeeded: dateFieldMessage}));
         loadUnavailableDates();
       }
-      setErrorMessage(dateFieldMessage || getFriendlyErrorMessage(error));
+      setErrorMessage(
+        addressFieldMessage ||
+        dateFieldMessage ||
+        getFriendlyErrorMessage(error),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -380,7 +409,28 @@ export default function ServiceRequestScreen({navigation}: any) {
             ) : null}
           </View>
 
-          {/* D. Calendar (PreferredDateCalendar component) */}
+          {/* D. Address */}
+          <View style={s.fieldGroup}>
+            <View style={s.fieldHeader}>
+              <Text style={s.fieldLabel}>Address</Text>
+              <Text style={s.requiredTag}>Required</Text>
+            </View>
+            <TextInput
+              onChangeText={handleAddressChange}
+              placeholder="Enter the service address"
+              placeholderTextColor={MUTED}
+              style={[s.input, fieldErrors.address && s.inputError]}
+              value={address}
+            />
+            <Text style={s.helpText}>
+              This is pre-filled from your profile when available, and you can still edit it.
+            </Text>
+            {fieldErrors.address ? (
+              <Text style={s.fieldErrorText}>{fieldErrors.address}</Text>
+            ) : null}
+          </View>
+
+          {/* E. Calendar (PreferredDateCalendar component) */}
           <PreferredDateCalendar
             availabilityMessage={availabilityMessage}
             errorText={fieldErrors.dateNeeded}

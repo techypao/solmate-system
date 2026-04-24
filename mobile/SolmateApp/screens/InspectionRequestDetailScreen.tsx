@@ -236,6 +236,10 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
             label="Contact Number"
             value={inspectionRequest.contact_number || 'Not provided'}
           />
+          <DetailRow
+            label="Address"
+            value={inspectionRequest.address || 'Not provided'}
+          />
 
           <View style={s.descBlock}>
             <Text style={s.descLabel}>Problem Description</Text>

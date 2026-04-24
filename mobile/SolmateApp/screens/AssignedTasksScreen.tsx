@@ -18,7 +18,6 @@ import {
   getAssignedInspectionRequests,
   TechnicianInspectionRequest,
 } from '../src/services/technicianApi';
-import {formatDate} from '../src/utils/technicianRequests';
 
 // ─── colour tokens (match dashboard) ─────────────────────────────────────────
 const NAVY   = '#152a4a';
@@ -158,6 +157,7 @@ function InspectionCard({
 
       {/* customer */}
       <Text style={s.cardMeta}>Customer Name: {getCustomerName(item)}</Text>
+      <Text style={s.cardMeta}>Address: {item.address || 'Not provided'}</Text>
 
       {/* schedule */}
       <Text style={s.cardMeta}>

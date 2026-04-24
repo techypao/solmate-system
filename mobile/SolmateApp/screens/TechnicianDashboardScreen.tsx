@@ -12,8 +12,14 @@ import {
 import {useFocusEffect} from '@react-navigation/native';
 import {AuthContext} from '../src/context/AuthContext';
 import {getUnreadNotificationCount} from '../src/services/notificationApi';
-import {getAssignedInspectionRequests} from '../src/services/technicianApi';
-import {getTechnicianServiceRequests} from '../src/services/serviceRequestApi';
+import {
+  getAssignedInspectionRequests,
+  TechnicianInspectionRequest,
+} from '../src/services/technicianApi';
+import {
+  getTechnicianServiceRequests,
+  ServiceRequest,
+} from '../src/services/serviceRequestApi';
 import {getProfilePictureUrl, getUserInitial} from '../src/utils/profilePicture';
 
 // ─── colour tokens that mirror the design ────────────────────────────────────
@@ -80,6 +86,218 @@ function ProfileIcon({active}: {active?: boolean}) {
 // ─── bottom nav bar ──────────────────────────────────────────────────────────
 type Tab = 'Home' | 'Inspections' | 'Services' | 'Profile';
 
+type DashboardTask = {
+  id: number;
+  kind: 'inspection' | 'service';
+  customerName: string;
+  address: string;
+  taskType: string;
+  scheduleLabel: string;
+  statusLabel: string;
+  statusValue: string;
+  shortDetails: string;
+  scheduledAt: Date | null;
+  rawInspection?: TechnicianInspectionRequest;
+  rawService?: ServiceRequest;
+};
+
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function parseTaskDate(value?: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  const parsedDate = new Date(value);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return null;
+  }
+
+  return parsedDate;
+}
+
+function isSameDay(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+function formatTaskSchedule(value?: string | null) {
+  if (!value) {
+    return 'Schedule not set';
+  }
+
+  const parsedDate = parseTaskDate(value);
+
+  if (!parsedDate) {
+    return value;
+  }
+
+  return parsedDate.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+function formatTaskStatus(status?: string | null) {
+  switch ((status || '').toLowerCase()) {
+    case 'assigned':
+      return 'Assigned';
+    case 'in_progress':
+      return 'In Progress';
+    case 'completed':
+      return 'Completed';
+    case 'pending':
+      return 'Pending';
+    default:
+      return 'Pending';
+  }
+}
+
+function getTaskStatusColors(status?: string | null) {
+  switch ((status || '').toLowerCase()) {
+    case 'assigned':
+      return {
+        backgroundColor: '#fef3c7',
+        textColor: '#b45309',
+      };
+    case 'in_progress':
+      return {
+        backgroundColor: '#dbeafe',
+        textColor: '#1d4ed8',
+      };
+    case 'completed':
+      return {
+        backgroundColor: '#dcfce7',
+        textColor: '#166534',
+      };
+    default:
+      return {
+        backgroundColor: '#eef2ff',
+        textColor: '#4338ca',
+      };
+  }
+}
+
+function getTaskShortDetails(value?: string | null, fallback = 'No details provided.') {
+  const trimmedValue = String(value || '').trim();
+
+  if (!trimmedValue) {
+    return fallback;
+  }
+
+  return trimmedValue.length > 90
+    ? `${trimmedValue.slice(0, 87).trimEnd()}...`
+    : trimmedValue;
+}
+
+function buildInspectionTask(item: TechnicianInspectionRequest): DashboardTask {
+  return {
+    id: item.id,
+    kind: 'inspection',
+    customerName: item.customer?.name || 'Unknown customer',
+    address: item.address || 'Not provided',
+    taskType: 'Inspection Request',
+    scheduleLabel: formatTaskSchedule(item.date_needed),
+    statusLabel: formatTaskStatus(item.status),
+    statusValue: String(item.status || 'pending'),
+    shortDetails: getTaskShortDetails(item.details, 'No inspection details provided.'),
+    scheduledAt: parseTaskDate(item.date_needed),
+    rawInspection: item,
+  };
+}
+
+function buildServiceTask(item: ServiceRequest): DashboardTask {
+  const rawType = String(item.request_type || 'Service').trim();
+  const hasInstallation = rawType.toLowerCase().includes('installation');
+
+  return {
+    id: item.id,
+    kind: 'service',
+    customerName: item.customer?.name || 'Unknown customer',
+    address: item.address || 'Not provided',
+    taskType: hasInstallation ? 'Installation Request' : 'Maintenance Request',
+    scheduleLabel: formatTaskSchedule(item.date_needed),
+    statusLabel: formatTaskStatus(item.status),
+    statusValue: String(item.status || 'pending'),
+    shortDetails: getTaskShortDetails(item.details, 'No service details provided.'),
+    scheduledAt: parseTaskDate(item.date_needed),
+    rawService: item,
+  };
+}
+
+function sortTasksByNearestDate(tasks: DashboardTask[]) {
+  return [...tasks].sort((leftTask, rightTask) => {
+    const leftTime = leftTask.scheduledAt?.getTime() ?? Number.MAX_SAFE_INTEGER;
+    const rightTime = rightTask.scheduledAt?.getTime() ?? Number.MAX_SAFE_INTEGER;
+
+    if (leftTime !== rightTime) {
+      return leftTime - rightTime;
+    }
+
+    return leftTask.id - rightTask.id;
+  });
+}
+
+function TaskCard({
+  item,
+  onPress,
+}: {
+  item: DashboardTask;
+  onPress: () => void;
+}) {
+  const statusColors = getTaskStatusColors(item.statusValue);
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({pressed}) => [s.taskCard, pressed && s.pressed]}>
+      <View style={s.taskTopRow}>
+        <View style={s.taskTypePill}>
+          <Text style={s.taskTypePillText}>{item.taskType}</Text>
+        </View>
+        <View
+          style={[
+            s.taskStatusBadge,
+            {backgroundColor: statusColors.backgroundColor},
+          ]}>
+          <Text
+            style={[
+              s.taskStatusText,
+              {color: statusColors.textColor},
+            ]}>
+            {item.statusLabel}
+          </Text>
+        </View>
+      </View>
+
+      <Text style={s.taskCustomer}>{item.customerName}</Text>
+      <Text style={s.taskAddress}>Address: {item.address}</Text>
+      <Text style={s.taskDate}>Scheduled: {item.scheduleLabel}</Text>
+      <Text style={s.taskDetails}>{item.shortDetails}</Text>
+
+      <View style={s.taskFooter}>
+        <Text style={s.taskFooterText}>View Details</Text>
+        <Text style={s.chevron}>›</Text>
+      </View>
+    </Pressable>
+  );
+}
+
+function EmptyTaskState({message}: {message: string}) {
+  return (
+    <View style={s.emptyTaskCard}>
+      <Text style={s.emptyTaskText}>{message}</Text>
+    </View>
+  );
+}
+
 function BottomNav({active, onPress}: {active: Tab; onPress: (t: Tab) => void}) {
   const tabs: {key: Tab; label: string; Icon: React.FC<{active?: boolean}>}[] = [
     {key: 'Home',        label: 'Home',        Icon: HomeIcon},
@@ -115,6 +333,10 @@ export default function TechnicianDashboardScreen({navigation}: any) {
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [activeTab, setActiveTab] = useState<Tab>('Home');
+  const [inspectionTasks, setInspectionTasks] = useState<
+    TechnicianInspectionRequest[]
+  >([]);
+  const [serviceTasks, setServiceTasks] = useState<ServiceRequest[]>([]);
   const [requestCounts, setRequestCounts] = useState({
     total: 0,
     assigned: 0,
@@ -130,12 +352,16 @@ export default function TechnicianDashboardScreen({navigation}: any) {
         getAssignedInspectionRequests(),
         getTechnicianServiceRequests(),
       ]);
+      setInspectionTasks(Array.isArray(requests) ? requests : []);
+      setServiceTasks(Array.isArray(serviceRequests) ? serviceRequests : []);
       const assigned   = requests.filter(r => r.status === 'assigned').length;
       const inProgress = requests.filter(r => r.status === 'in_progress').length;
       const completed  = requests.filter(r => r.status === 'completed').length;
       setRequestCounts({total: requests.length, assigned, inProgress, completed});
       setServiceTotal(serviceRequests.length);
     } catch {
+      setInspectionTasks([]);
+      setServiceTasks([]);
       setRequestCounts({total: 0, assigned: 0, inProgress: 0, completed: 0});
       setServiceTotal(null);
     } finally {
@@ -155,11 +381,41 @@ export default function TechnicianDashboardScreen({navigation}: any) {
   useFocusEffect(useCallback(() => { loadDashboard(); }, [loadDashboard]));
   useFocusEffect(useCallback(() => { loadUnreadCount(); }, [loadUnreadCount]));
 
+  const normalizedTasks = sortTasksByNearestDate([
+    ...inspectionTasks.map(buildInspectionTask),
+    ...serviceTasks.map(buildServiceTask),
+  ]);
+  const today = startOfDay(new Date());
+  const todaysTasks = normalizedTasks.filter(task =>
+    task.scheduledAt ? isSameDay(task.scheduledAt, today) : false,
+  );
+  const upcomingTasks = normalizedTasks.filter(task =>
+    task.scheduledAt ? startOfDay(task.scheduledAt).getTime() > today.getTime() : false,
+  );
+
   function handleTabPress(tab: Tab) {
     setActiveTab(tab);
     if (tab === 'Inspections') {navigation.navigate('AssignedInspectionRequests');}
     if (tab === 'Services')    {navigation.navigate('TechnicianServiceRequests');}
     if (tab === 'Profile')     {navigation.navigate('TechnicianSettings');}
+  }
+
+  function openTask(task: DashboardTask) {
+    if (task.kind === 'inspection' && task.rawInspection) {
+      navigation.navigate('InspectionDetails', {
+        inspectionRequestId: task.rawInspection.id,
+        initialInspectionRequest: task.rawInspection,
+      });
+      return;
+    }
+
+    if (task.kind === 'service' && task.rawService) {
+      navigation.navigate('TechnicianServiceRequestDetail', {
+        serviceRequestId: task.rawService.id,
+        initialServiceRequest: task.rawService,
+        mode: 'technician',
+      });
+    }
   }
 
   return (
@@ -282,6 +538,42 @@ export default function TechnicianDashboardScreen({navigation}: any) {
             </View>
             <Text style={s.chevron}>›</Text>
           </Pressable>
+
+          <Text style={s.sectionTitle}>Today&apos;s Tasks</Text>
+          {loading ? (
+            <View style={s.sectionLoadingCard}>
+              <ActivityIndicator color={NAVY} size="small" />
+              <Text style={s.sectionLoadingText}>Loading today&apos;s tasks...</Text>
+            </View>
+          ) : todaysTasks.length > 0 ? (
+            todaysTasks.map(task => (
+              <TaskCard
+                key={`today-${task.kind}-${task.id}`}
+                item={task}
+                onPress={() => openTask(task)}
+              />
+            ))
+          ) : (
+            <EmptyTaskState message="No tasks scheduled for today." />
+          )}
+
+          <Text style={s.sectionTitle}>Upcoming Tasks</Text>
+          {loading ? (
+            <View style={s.sectionLoadingCard}>
+              <ActivityIndicator color={NAVY} size="small" />
+              <Text style={s.sectionLoadingText}>Loading upcoming tasks...</Text>
+            </View>
+          ) : upcomingTasks.length > 0 ? (
+            upcomingTasks.map(task => (
+              <TaskCard
+                key={`upcoming-${task.kind}-${task.id}`}
+                item={task}
+                onPress={() => openTask(task)}
+              />
+            ))
+          ) : (
+            <EmptyTaskState message="No upcoming tasks." />
+          )}
 
 
         </ScrollView>
@@ -712,6 +1004,115 @@ const s = StyleSheet.create({
   actionSub: {
     fontSize: 13,
     color: MUTED,
+  },
+  taskCard: {
+    backgroundColor: CARD,
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+    shadowColor: SHADOW,
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.09,
+    shadowRadius: 7,
+    elevation: 2,
+  },
+  taskTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 10,
+  },
+  taskTypePill: {
+    backgroundColor: '#eef2fb',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  taskTypePillText: {
+    color: NAVY,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  taskStatusBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  taskStatusText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  taskCustomer: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: NAVY,
+    marginBottom: 4,
+  },
+  taskDate: {
+    fontSize: 13,
+    color: MUTED,
+    marginBottom: 4,
+  },
+  taskAddress: {
+    fontSize: 13,
+    color: NAVY,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  taskDetails: {
+    fontSize: 13,
+    color: MUTED,
+    lineHeight: 19,
+  },
+  taskFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#edf1f7',
+  },
+  taskFooterText: {
+    color: NAVY,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  emptyTaskCard: {
+    backgroundColor: '#edf3fb',
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#d8e4f4',
+  },
+  emptyTaskText: {
+    color: MUTED,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  sectionLoadingCard: {
+    backgroundColor: CARD,
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    shadowColor: SHADOW,
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.09,
+    shadowRadius: 7,
+    elevation: 2,
+  },
+  sectionLoadingText: {
+    color: MUTED,
+    fontSize: 13,
+    fontWeight: '500',
   },
 
   pressed: {

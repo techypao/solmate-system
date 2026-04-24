@@ -679,6 +679,12 @@
                             </div>
                         </div>
 
+                        <div class="mnt-field">
+                            <label class="mnt-label" for="mnt-address">Address</label>
+                            <input id="mnt-address" class="mnt-input" type="text" maxlength="255" autocomplete="street-address" placeholder="e.g. 123 Rizal Street, Quezon City" value="{{ auth()->user()->address ?? '' }}">
+                            <div class="mnt-field-error" id="mnt-address-error" role="alert"></div>
+                        </div>
+
                         <div class="mnt-field-row">
                             <div class="mnt-field">
                                 <label class="mnt-label" for="mnt-time">Preferred Time</label>
@@ -952,6 +958,7 @@
                 + '<div class="mnt-history-chip"><div class="mnt-history-chip-label">Request Type</div><div class="mnt-history-chip-value">Maintenance</div></div>'
                 + '<div class="mnt-history-chip"><div class="mnt-history-chip-label">Preferred Date</div><div class="mnt-history-chip-value">' + escHtml(fmtDate(request.date_needed)) + '</div></div>'
                 + '<div class="mnt-history-chip"><div class="mnt-history-chip-label">Contact</div><div class="mnt-history-chip-value">' + escHtml(request.contact_number || '-') + '</div></div>'
+                + '<div class="mnt-history-chip"><div class="mnt-history-chip-label">Address</div><div class="mnt-history-chip-value">' + escHtml(request.address || 'Not provided') + '</div></div>'
                 + '</div>'
                 + '<pre class="mnt-history-details">' + escHtml(request.details || 'No details provided.') + '</pre>'
                 + '</article>';
@@ -989,6 +996,7 @@
         var dateNeeded = qs('#mnt-date').value;
         var time = qs('#mnt-time').value.trim();
         var visitNote = qs('#mnt-visit-note').value.trim();
+        var address = qs('#mnt-address').value.trim();
 
         var hasError = false;
         if (!selectedType) {
@@ -1031,7 +1039,8 @@
                     request_type: 'maintenance',
                     contact_number: contact,
                     date_needed: dateNeeded,
-                    details: detailLines.join('\n')
+                    details: detailLines.join('\n'),
+                    address: address || undefined
                 }
             });
 

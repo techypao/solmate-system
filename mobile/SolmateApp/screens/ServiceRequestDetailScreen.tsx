@@ -488,6 +488,10 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
             value={formatDate(serviceRequest.date_needed)}
           />
           <InlineRow
+            label="Address"
+            value={serviceRequest.address || 'Not provided'}
+          />
+          <InlineRow
             label="Technician Assigned"
             value={serviceRequest.technician?.name || 'Not assigned'}
           />

@@ -296,7 +296,7 @@ export default function RequestDetailsScreen({navigation, route}: any) {
             <Text style={s.cardTitle}>Customer Information</Text>
             <InfoRow label="Name"       value={getCustomerName(inspectionRequest)} />
             <InfoRow label="Contact No." value={inspectionRequest.contact_number} />
-            <InfoRow label="Address"    value={null} />
+            <InfoRow label="Address"    value={inspectionRequest.address || 'Not provided'} />
           </View>
 
           {/* ── Request Information ── */}

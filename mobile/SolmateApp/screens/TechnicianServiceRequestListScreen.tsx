@@ -147,6 +147,7 @@ function ServiceRequestCard({
 
       {/* customer */}
       <Text style={s.cardMeta}>Customer: {customerName}</Text>
+      <Text style={s.cardMeta}>Address: {item.address || 'Not provided'}</Text>
 
       {/* schedule */}
       <Text style={s.cardMeta}>

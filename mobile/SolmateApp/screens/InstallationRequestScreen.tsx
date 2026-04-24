@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useContext, useEffect, useState} from 'react';
 import {useFocusEffect} from '@react-navigation/native';
 import {
   ActivityIndicator,
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 
 import {PreferredDateCalendar} from '../components';
+import {AuthContext} from '../src/context/AuthContext';
 import {ApiError} from '../src/services/api';
 import {getUnavailablePreferredDates} from '../src/services/preferredDateAvailabilityApi';
 import {createServiceRequest} from '../src/services/serviceRequestApi';
@@ -41,6 +42,7 @@ type FieldErrors = {
   installationType?: string;
   details?: string;
   contactNumber?: string;
+  address?: string;
   preferredDate?: string;
 };
 
@@ -107,6 +109,7 @@ function ChoiceChip({
 }
 
 export default function InstallationRequestScreen({navigation}: any) {
+  const {user} = useContext(AuthContext);
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [quotationsLoading, setQuotationsLoading] = useState(true);
   const [quotationMessage, setQuotationMessage] = useState('');
@@ -117,6 +120,7 @@ export default function InstallationRequestScreen({navigation}: any) {
   const [installationType, setInstallationType] = useState('');
   const [details, setDetails] = useState('');
   const [contactNumber, setContactNumber] = useState('');
+  const [address, setAddress] = useState(user?.address || '');
   const [preferredDate, setPreferredDate] = useState('');
   const [preferredTime, setPreferredTime] = useState('');
   const [extraNotes, setExtraNotes] = useState('');
@@ -135,11 +139,16 @@ export default function InstallationRequestScreen({navigation}: any) {
     setInstallationType('');
     setDetails('');
     setContactNumber('');
+    setAddress(user?.address || '');
     setPreferredDate('');
     setPreferredTime('');
     setExtraNotes('');
     setFieldErrors({});
   };
+
+  useEffect(() => {
+    setAddress(user?.address || '');
+  }, [user?.address]);
 
   const loadUnavailableDates = useCallback(async () => {
     try {
@@ -227,6 +236,10 @@ export default function InstallationRequestScreen({navigation}: any) {
       nextErrors.contactNumber = 'Contact number is required.';
     }
 
+    if (!address.trim()) {
+      nextErrors.address = 'Address is required.';
+    }
+
     if (!preferredDate.trim()) {
       nextErrors.preferredDate = 'Please choose your preferred schedule date.';
     } else if (unavailableDates.includes(preferredDate)) {
@@ -249,6 +262,7 @@ export default function InstallationRequestScreen({navigation}: any) {
 
     const trimmedDetails = details.trim();
     const trimmedContactNumber = contactNumber.trim();
+    const trimmedAddress = address.trim();
     const trimmedPreferredDate = preferredDate.trim();
     const trimmedPreferredTime = preferredTime.trim();
     const trimmedExtraNotes = extraNotes.trim();
@@ -285,6 +299,7 @@ export default function InstallationRequestScreen({navigation}: any) {
         request_type: 'installation',
         details: detailLines.join('\n'),
         contact_number: trimmedContactNumber,
+        address: trimmedAddress,
         date_needed: trimmedPreferredDate,
       });
 
@@ -299,6 +314,7 @@ export default function InstallationRequestScreen({navigation}: any) {
         error,
         'contact_number',
       );
+      const addressFieldMessage = getFieldValidationMessage(error, 'address');
       const dateFieldMessage = getFieldValidationMessage(error, 'date_needed');
       const detailsFieldMessage = getFieldValidationMessage(error, 'details');
 
@@ -307,6 +323,7 @@ export default function InstallationRequestScreen({navigation}: any) {
         ...(contactFieldMessage
           ? {contactNumber: contactFieldMessage}
           : {}),
+        ...(addressFieldMessage ? {address: addressFieldMessage} : {}),
         ...(dateFieldMessage ? {preferredDate: dateFieldMessage} : {}),
         ...(detailsFieldMessage ? {details: detailsFieldMessage} : {}),
       }));
@@ -317,6 +334,7 @@ export default function InstallationRequestScreen({navigation}: any) {
 
       setErrorMessage(
         contactFieldMessage ||
+          addressFieldMessage ||
           dateFieldMessage ||
           detailsFieldMessage ||
           getFriendlyErrorMessage(error),
@@ -534,6 +552,28 @@ export default function InstallationRequestScreen({navigation}: any) {
             <Text style={styles.fieldError}>{fieldErrors.contactNumber}</Text>
           ) : null}
 
+          <View style={styles.fieldHeader}>
+            <Text style={styles.fieldLabel}>Address</Text>
+            <Text style={styles.requiredTag}>Required</Text>
+          </View>
+          <TextInput
+            onChangeText={value => {
+              setAddress(value);
+              clearStatusMessages();
+              clearFieldError('address');
+            }}
+            placeholder="Enter the installation address"
+            placeholderTextColor="#a8b4c8"
+            style={[styles.input, fieldErrors.address && styles.inputError]}
+            value={address}
+          />
+          <Text style={styles.helperText}>
+            This is pre-filled from your profile when available, and you can still edit it.
+          </Text>
+          {fieldErrors.address ? (
+            <Text style={styles.fieldError}>{fieldErrors.address}</Text>
+          ) : null}
+
           <PreferredDateCalendar
             availabilityMessage={availabilityMessage}
             errorText={fieldErrors.preferredDate}
@@ -730,6 +770,9 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     fontSize: 15,
     color: NAVY,
+  },
+  inputError: {
+    borderColor: '#ef4444',
   },
   textArea: {minHeight: 110},
   helperText: {fontSize: 12, color: MUTED, lineHeight: 18, marginTop: 10},

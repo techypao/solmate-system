@@ -737,6 +737,12 @@
                             </div>
                         </div>
 
+                        <div class="inst-field">
+                            <label class="inst-label" for="inst-address">Address</label>
+                            <input id="inst-address" class="inst-input" type="text" maxlength="255" autocomplete="street-address" placeholder="e.g. 123 Rizal Street, Quezon City" value="{{ auth()->user()->address ?? '' }}">
+                            <div class="inst-field-error" id="inst-address-error" role="alert"></div>
+                        </div>
+
                         <div class="inst-field-row">
                             <div class="inst-field">
                                 <label class="inst-label" for="inst-time">Preferred Time</label>
@@ -1073,6 +1079,7 @@
                 + '<div class="inst-history-chip"><div class="inst-history-chip-label">Request Type</div><div class="inst-history-chip-value">Installation</div></div>'
                 + '<div class="inst-history-chip"><div class="inst-history-chip-label">Preferred Date</div><div class="inst-history-chip-value">' + escHtml(fmtDate(request.date_needed)) + '</div></div>'
                 + '<div class="inst-history-chip"><div class="inst-history-chip-label">Contact</div><div class="inst-history-chip-value">' + escHtml(request.contact_number || '-') + '</div></div>'
+                + '<div class="inst-history-chip"><div class="inst-history-chip-label">Address</div><div class="inst-history-chip-value">' + escHtml(request.address || 'Not provided') + '</div></div>'
                 + '</div>'
                 + '<pre class="inst-history-details">' + escHtml(request.details || 'No details provided.') + '</pre>'
                 + '</article>';
@@ -1111,6 +1118,7 @@
         var detailsText = qs('#inst-details').value.trim();
         var extra = qs('#inst-extra').value.trim();
         var quotationId = quoteSelect.value;
+        var address = qs('#inst-address').value.trim();
 
         var hasError = false;
         if (!basis) {
@@ -1157,7 +1165,8 @@
                     request_type: 'installation',
                     contact_number: contact,
                     date_needed: dateNeeded,
-                    details: detailLines.join('\n')
+                    details: detailLines.join('\n'),
+                    address: address || undefined
                 }
             });
 

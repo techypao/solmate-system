@@ -900,7 +900,10 @@
         submitBtn.disabled = true;
         submitText.textContent = 'Submitting...';
 
+        var address = qs('#insp-address').value.trim();
+
         var body = { details: details, contact_number: contact };
+        if (address) body.address = address;
         if (dateNeeded) body.date_needed = dateNeeded;
 
         try {
@@ -958,6 +961,10 @@
                 +   '<div class="insp-ir-meta-item">'
                 +     '<div class="insp-ir-meta-label">Contact</div>'
                 +     '<div class="insp-ir-meta-value">' + escHtml(ir.contact_number || '\u2014') + '</div>'
+                +   '</div>'
+                +   '<div class="insp-ir-meta-item">'
+                +     '<div class="insp-ir-meta-label">Address</div>'
+                +     '<div class="insp-ir-meta-value">' + escHtml(ir.address || 'Not provided') + '</div>'
                 +   '</div>'
                 +   '<div class="insp-ir-meta-item">'
                 +     '<div class="insp-ir-meta-label">Preferred Date</div>'

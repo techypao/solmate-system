@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useContext, useEffect, useState} from 'react';
 import {useFocusEffect} from '@react-navigation/native';
 import {
   Pressable,
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import {PreferredDateCalendar} from '../components';
+import {AuthContext} from '../src/context/AuthContext';
 import {ApiError} from '../src/services/api';
 import {getUnavailablePreferredDates} from '../src/services/preferredDateAvailabilityApi';
 import {createInspectionRequest} from '../src/services/inspectionRequestApi';
@@ -29,6 +30,7 @@ const DIVIDER = '#edf1f7';
 type FieldErrors = {
   details?: string;
   contactNumber?: string;
+  address?: string;
   dateNeeded?: string;
 };
 
@@ -63,8 +65,10 @@ function getFieldValidationMessage(error: unknown, field: string) {
    ════════════════════════════════════════════ */
 
 export default function InspectionRequestScreen({navigation}: any) {
+  const {user} = useContext(AuthContext);
   const [details, setDetails] = useState('');
   const [contactNumber, setContactNumber] = useState('');
+  const [address, setAddress] = useState(user?.address || '');
   const [dateNeeded, setDateNeeded] = useState('');
   const [unavailableDates, setUnavailableDates] = useState<string[]>([]);
   const [availabilityMessage, setAvailabilityMessage] = useState('');
@@ -76,9 +80,14 @@ export default function InspectionRequestScreen({navigation}: any) {
   const resetForm = () => {
     setDetails('');
     setContactNumber('');
+    setAddress(user?.address || '');
     setDateNeeded('');
     setFieldErrors({});
   };
+
+  useEffect(() => {
+    setAddress(user?.address || '');
+  }, [user?.address]);
 
   const loadUnavailableDates = useCallback(async () => {
     try {
@@ -147,6 +156,17 @@ export default function InspectionRequestScreen({navigation}: any) {
     }
   };
 
+  const handleAddressChange = (value: string) => {
+    setAddress(value);
+    clearStatusMessages();
+    if (fieldErrors.address) {
+      setFieldErrors(currentErrors => ({
+        ...currentErrors,
+        address: undefined,
+      }));
+    }
+  };
+
   const handleDateSelect = (value: string) => {
     setDateNeeded(value);
     clearStatusMessages();
@@ -168,6 +188,7 @@ export default function InspectionRequestScreen({navigation}: any) {
   const validateForm = () => {
     const trimmedDetails = details.trim();
     const trimmedContactNumber = contactNumber.trim();
+    const trimmedAddress = address.trim();
     const nextErrors: FieldErrors = {};
 
     if (!trimmedDetails) {
@@ -176,6 +197,10 @@ export default function InspectionRequestScreen({navigation}: any) {
 
     if (!trimmedContactNumber) {
       nextErrors.contactNumber = 'Contact number is required.';
+    }
+
+    if (!trimmedAddress) {
+      nextErrors.address = 'Address is required.';
     }
 
     if (dateNeeded && unavailableDates.includes(dateNeeded)) {
@@ -199,6 +224,7 @@ export default function InspectionRequestScreen({navigation}: any) {
 
     const trimmedDetails = details.trim();
     const trimmedContactNumber = contactNumber.trim();
+    const trimmedAddress = address.trim();
     const trimmedDateNeeded = dateNeeded.trim();
 
     if (trimmedDateNeeded && unavailableDates.includes(trimmedDateNeeded)) {
@@ -221,6 +247,7 @@ export default function InspectionRequestScreen({navigation}: any) {
         ...(trimmedContactNumber
           ? {contact_number: trimmedContactNumber}
           : {}),
+        address: trimmedAddress,
         ...(trimmedDateNeeded ? {date_needed: trimmedDateNeeded} : {}),
       });
 
@@ -240,7 +267,15 @@ export default function InspectionRequestScreen({navigation}: any) {
         response.message || 'Inspection request submitted successfully.',
       );
     } catch (error) {
+      const addressFieldMessage = getFieldValidationMessage(error, 'address');
       const dateFieldMessage = getFieldValidationMessage(error, 'date_needed');
+
+      if (addressFieldMessage) {
+        setFieldErrors(currentErrors => ({
+          ...currentErrors,
+          address: addressFieldMessage,
+        }));
+      }
 
       if (dateFieldMessage) {
         setFieldErrors(currentErrors => ({
@@ -250,7 +285,11 @@ export default function InspectionRequestScreen({navigation}: any) {
         loadUnavailableDates();
       }
 
-      setErrorMessage(dateFieldMessage || getFriendlyErrorMessage(error));
+      setErrorMessage(
+        addressFieldMessage ||
+        dateFieldMessage ||
+        getFriendlyErrorMessage(error),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -348,7 +387,28 @@ export default function InspectionRequestScreen({navigation}: any) {
             ) : null}
           </View>
 
-          {/* C. Calendar (PreferredDateCalendar component) */}
+          {/* C. Address */}
+          <View style={s.fieldGroup}>
+            <View style={s.fieldHeader}>
+              <Text style={s.fieldLabel}>Address</Text>
+              <Text style={s.requiredTag}>Required</Text>
+            </View>
+            <TextInput
+              onChangeText={handleAddressChange}
+              placeholder="Enter the service address"
+              placeholderTextColor={MUTED}
+              style={[s.input, fieldErrors.address && s.inputError]}
+              value={address}
+            />
+            <Text style={s.helpText}>
+              This is pre-filled from your profile when available, and you can still edit it.
+            </Text>
+            {fieldErrors.address ? (
+              <Text style={s.fieldErrorText}>{fieldErrors.address}</Text>
+            ) : null}
+          </View>
+
+          {/* D. Calendar (PreferredDateCalendar component) */}
           <PreferredDateCalendar
             availabilityMessage={availabilityMessage}
             errorText={fieldErrors.dateNeeded}

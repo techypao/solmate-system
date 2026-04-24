@@ -20,6 +20,7 @@ export type InspectionRequest = {
   technician_id?: number | null;
   details: string;
   contact_number?: string | null;
+  address?: string | null;
   date_needed?: string | null;
   status?: InspectionRequestStatus | null;
   created_at?: string;
@@ -31,6 +32,7 @@ export type InspectionRequest = {
 export type CreateInspectionRequestPayload = {
   details: string;
   contact_number?: string;
+  address?: string;
   date_needed?: string;
 };
 

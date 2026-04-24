@@ -194,6 +194,10 @@
                                 <strong>{{ $serviceRequest->contact_number ?: 'Not provided' }}</strong>
                             </div>
                             <div class="detail-item">
+                                <span class="detail-label">Address</span>
+                                <strong>{{ $serviceRequest->address ?: 'Not provided' }}</strong>
+                            </div>
+                            <div class="detail-item">
                                 <span class="detail-label">Request Type</span>
                                 <strong>{{ $serviceRequest->request_type ?: 'Not specified' }}</strong>
                             </div>
@@ -354,6 +358,10 @@
                             <div class="detail-item">
                                 <span class="detail-label">Contact Number</span>
                                 <strong>{{ $inspectionRequest->contact_number ?: 'Not provided' }}</strong>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Address</span>
+                                <strong>{{ $inspectionRequest->address ?: 'Not provided' }}</strong>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">Preferred Date</span>

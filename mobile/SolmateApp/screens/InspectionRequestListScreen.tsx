@@ -123,6 +123,13 @@ export default function InspectionRequestListScreen({navigation}: any) {
             </Text>
           </View>
           <View style={s.metaCard}>
+            <Text style={s.metaLabel}>Address</Text>
+            <Text style={s.metaValue}>{item.address || 'Not provided'}</Text>
+          </View>
+        </View>
+
+        <View style={s.metaGrid}>
+          <View style={s.metaCard}>
             <Text style={s.metaLabel}>Submitted</Text>
             <Text style={s.metaValue}>{formatDateTime(item.created_at)}</Text>
           </View>

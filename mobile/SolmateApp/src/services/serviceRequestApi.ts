@@ -15,6 +15,7 @@ export type ServiceRequest = {
   request_type: string;
   details: string;
   contact_number?: string | null;
+  address?: string | null;
   date_needed?: string | null;
   status: string;
   technician_marked_done_at?: string | null;
@@ -28,6 +29,7 @@ export type CreateServiceRequestPayload = {
   request_type: string;
   details: string;
   contact_number?: string;
+  address?: string;
   date_needed?: string;
 };
 
