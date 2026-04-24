@@ -58,6 +58,21 @@
         letter-spacing: 1px;
         flex-shrink: 0;
         z-index: 1;
+        overflow: hidden;
+        position: relative;
+    }
+    .dash-avatar-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .dash-avatar-fallback {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     .dash-banner-info {
         flex: 1;
@@ -194,6 +209,60 @@
     }
     .dash-form-group .field-error { color: #dc2626; font-size: 12px; margin-top: 4px; }
     .dash-form-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .dash-form-helper {
+        margin: 8px 0 0;
+        font-size: 12px;
+        line-height: 1.5;
+        color: #64748b;
+    }
+    .dash-profile-picture-panel {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 18px;
+        align-items: center;
+        padding: 18px;
+        margin-bottom: 18px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: #ffffff;
+    }
+    .dash-profile-picture-preview {
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        border: 3px solid #d4a017;
+        background: #102a43;
+        color: #ffffff;
+        font-size: 30px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+    .dash-profile-picture-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .dash-profile-picture-meta {
+        display: grid;
+        gap: 10px;
+    }
+    .dash-profile-picture-title {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 700;
+        color: #102a43;
+    }
+    .dash-profile-picture-copy {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.6;
+        color: #52606d;
+    }
 
     /* Buttons */
     .dash-btn {
@@ -449,6 +518,7 @@
         .dash-sr-grid { grid-template-columns: 1fr; }
         .dash-info-row { grid-template-columns: 1fr; gap: 2px; }
         .dash-form-row { grid-template-columns: 1fr; }
+        .dash-profile-picture-panel { grid-template-columns: 1fr; justify-items: flex-start; }
         .dash-tab-btn { padding: 12px 14px; font-size: 13px; }
         .adm-hero { padding: 28px 22px; }
         .adm-title { font-size: 25px; }
@@ -456,11 +526,32 @@
 </style>
 
 @if ($user->role === \App\Models\User::ROLE_CUSTOMER)
-<div class="dash-wrapper">
+<div
+    class="dash-wrapper"
+    data-user-name="{{ $user->name }}"
+    data-profile-picture-path="{{ $user->profile_picture ?? '' }}"
+>
+    @php
+        $dashboardProfilePictureUrl = $user->profile_picture ? asset('storage/' . ltrim($user->profile_picture, '/')) : null;
+    @endphp
 
     {{-- Profile Banner --}}
     <div class="dash-banner">
-        <div class="dash-avatar" id="dash-avatar-initials">?</div>
+        <div class="dash-avatar" id="dash-avatar">
+            @if ($dashboardProfilePictureUrl)
+                <img
+                    src="{{ $dashboardProfilePictureUrl }}"
+                    alt="{{ $user->name }} profile picture"
+                    class="dash-avatar-image"
+                    id="dash-avatar-image"
+                >
+            @endif
+            <div
+                class="dash-avatar-fallback"
+                id="dash-avatar-initials"
+                @if ($dashboardProfilePictureUrl) style="display:none;" @endif
+            >?</div>
+        </div>
         <div class="dash-banner-info">
             <h1 class="dash-banner-name" id="dash-banner-name">{{ $user->name }}</h1>
             <span class="dash-banner-role">Customer</span>
@@ -517,6 +608,34 @@
         {{-- Edit Profile Form --}}
         <div class="dash-form-card" id="edit-profile-form-card" style="display:none;">
             <h3 class="dash-form-title">Edit Profile</h3>
+            <div class="dash-profile-picture-panel">
+                <div class="dash-profile-picture-preview" id="dash-profile-picture-preview">
+                    @if ($dashboardProfilePictureUrl)
+                        <img
+                            src="{{ $dashboardProfilePictureUrl }}"
+                            alt="{{ $user->name }} profile picture preview"
+                            id="dash-profile-picture-preview-image"
+                        >
+                    @else
+                        <span id="dash-profile-picture-preview-fallback">?</span>
+                    @endif
+                </div>
+                <div class="dash-profile-picture-meta">
+                    <div>
+                        <p class="dash-profile-picture-title">Profile Picture</p>
+                        <p class="dash-profile-picture-copy">Upload a JPG, JPEG, PNG, or WEBP image up to 2 MB. The banner avatar updates right away after a successful upload.</p>
+                    </div>
+                    <div class="dash-form-group">
+                        <label for="ep-profile-picture">Choose Image</label>
+                        <input type="file" id="ep-profile-picture" name="profile_picture" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+                        <div class="field-error" id="ep-profile_picture-error"></div>
+                        <p class="dash-form-helper" id="ep-profile-picture-helper">No file selected.</p>
+                    </div>
+                    <div class="dash-form-actions" style="margin-top:0;">
+                        <button type="button" class="dash-btn dash-btn-outline" id="ep-upload-picture-btn">Upload Picture</button>
+                    </div>
+                </div>
+            </div>
             <form id="edit-profile-form">
                 <div class="dash-form-row">
                     <div class="dash-form-group">
@@ -1176,6 +1295,11 @@
         return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
+    function profilePictureUrl(path) {
+        var cleanPath = String(path || '').replace(/^\/+/, '');
+        return cleanPath ? '/storage/' + cleanPath : '';
+    }
+
     function getCookie(name) {
         var m = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.*+?^=!:${}()|[\]\/\\])/g,'\\$1') + '=([^;]*)'));
         return m ? decodeURIComponent(m[1]) : null;
@@ -1201,6 +1325,30 @@
             headers: headers,
             body: (opts && opts.body !== undefined) ? JSON.stringify(opts.body) : undefined,
         });
+        var payload = await resp.json().catch(function(){ return {}; });
+        if (!resp.ok) {
+            var err = new Error(payload.message || 'Request failed.');
+            err.status = resp.status;
+            err.errors = payload.errors || {};
+            throw err;
+        }
+        return payload;
+    }
+
+    async function formDataRequest(endpoint, opts) {
+        await ensureCsrf();
+
+        var resp = await fetch(endpoint, {
+            method: (opts && opts.method) || 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') || '',
+            },
+            body: opts && opts.body,
+        });
+
         var payload = await resp.json().catch(function(){ return {}; });
         if (!resp.ok) {
             var err = new Error(payload.message || 'Request failed.');
@@ -1238,6 +1386,83 @@
         return '<span class="dash-badge dash-badge-status-' + raw + '">' + escHtml(label) + '</span>';
     }
 
+    var dashWrapper = qs('.dash-wrapper');
+
+    if (!dashWrapper) {
+        return;
+    }
+
+    var initialProfilePicturePath = dashWrapper.dataset.profilePicturePath || '';
+
+    function setImageSource(target, src, alt) {
+        if (!target) return;
+        if (src) {
+            target.src = src;
+        } else {
+            target.removeAttribute('src');
+        }
+        if (alt) {
+            target.alt = alt;
+        }
+    }
+
+    function syncSharedProfileButtons(imageUrl, userName) {
+        document.querySelectorAll('[data-profile-menu-button]').forEach(function(button) {
+            button.classList.toggle('has-image', !!imageUrl);
+        });
+
+        document.querySelectorAll('[data-profile-menu-image]').forEach(function(imageEl) {
+            setVisible(imageEl, !!imageUrl);
+            if (imageUrl) {
+                setImageSource(imageEl, imageUrl, (userName || 'User') + ' profile picture');
+            }
+        });
+
+        document.querySelectorAll('[data-profile-menu-icon]').forEach(function(iconEl) {
+            setVisible(iconEl, !imageUrl);
+        });
+    }
+
+    function renderProfilePicture(path, userName) {
+        var imageUrl = path ? profilePictureUrl(path) : '';
+        var avatar = qs('#dash-avatar');
+        var avatarImage = qs('#dash-avatar-image');
+        var avatarFallback = qs('#dash-avatar-initials');
+        var preview = qs('#dash-profile-picture-preview');
+        var previewImage = qs('#dash-profile-picture-preview-image');
+        var previewFallback = qs('#dash-profile-picture-preview-fallback');
+
+        if (imageUrl) {
+            if (!avatarImage && avatar) {
+                avatarImage = document.createElement('img');
+                avatarImage.id = 'dash-avatar-image';
+                avatarImage.className = 'dash-avatar-image';
+                avatar.insertBefore(avatarImage, avatarFallback);
+            }
+            if (!previewImage && preview) {
+                previewImage = document.createElement('img');
+                previewImage.id = 'dash-profile-picture-preview-image';
+                preview.insertBefore(previewImage, previewFallback);
+            }
+
+            setImageSource(avatarImage, imageUrl, (userName || 'User') + ' profile picture');
+            setImageSource(previewImage, imageUrl, (userName || 'User') + ' profile picture preview');
+            setVisible(avatarImage, true);
+            setVisible(previewImage, true);
+            setVisible(avatarFallback, false);
+            setVisible(previewFallback, false);
+        } else {
+            if (avatarImage) setVisible(avatarImage, false);
+            if (previewImage) setVisible(previewImage, false);
+            if (avatarFallback) avatarFallback.textContent = initials(userName);
+            if (previewFallback) previewFallback.textContent = initials(userName);
+            setVisible(avatarFallback, true);
+            setVisible(previewFallback, true);
+        }
+
+        syncSharedProfileButtons(imageUrl, userName);
+    }
+
     /* ── Tab switching ── */
     var tabBtns = document.querySelectorAll('.dash-tab-btn');
     var tabPanels = document.querySelectorAll('.dash-tab-panel');
@@ -1257,8 +1482,9 @@
     /* ── Avatar initials ── */
     (function() {
         var nameEl = qs('#dash-banner-name');
-        var avatarEl = qs('#dash-avatar-initials');
-        if (nameEl && avatarEl) { avatarEl.textContent = initials(nameEl.textContent); }
+        if (nameEl) {
+            renderProfilePicture(initialProfilePicturePath, nameEl.textContent);
+        }
     })();
 
     /* ── Profile toggle ── */
@@ -1282,6 +1508,50 @@
     var editProfileForm = qs('#edit-profile-form');
     var epSubmitBtn     = qs('#ep-submit-btn');
     var profileMsg      = qs('#dash-profile-msg');
+    var pictureInput    = qs('#ep-profile-picture');
+    var pictureHelper   = qs('#ep-profile-picture-helper');
+    var pictureUploadBtn = qs('#ep-upload-picture-btn');
+
+    pictureInput.addEventListener('change', function() {
+        clearFieldErrors('ep-');
+        pictureHelper.textContent = pictureInput.files && pictureInput.files[0]
+            ? pictureInput.files[0].name
+            : 'No file selected.';
+    });
+
+    pictureUploadBtn.addEventListener('click', async function() {
+        hideMsg(profileMsg);
+        clearFieldErrors('ep-');
+
+        if (!pictureInput.files || !pictureInput.files[0]) {
+            applyFieldErrors('ep-', { profile_picture: ['Please choose an image file to upload.'] });
+            showMsg(profileMsg, 'error', 'Please choose an image file to upload.');
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append('profile_picture', pictureInput.files[0]);
+
+        pictureUploadBtn.disabled = true;
+        pictureUploadBtn.textContent = 'Uploading...';
+
+        try {
+            var uploadResp = await formDataRequest('/api/user/profile-picture', {
+                method: 'POST',
+                body: formData,
+            });
+            renderProfilePicture(uploadResp.user.profile_picture, uploadResp.user.name || qs('#dash-banner-name').textContent);
+            pictureInput.value = '';
+            pictureHelper.textContent = 'No file selected.';
+            showMsg(profileMsg, 'success', uploadResp.message || 'Profile picture updated successfully.');
+        } catch (err) {
+            applyFieldErrors('ep-', err.errors || {});
+            showMsg(profileMsg, 'error', err.message || 'Could not upload profile picture.');
+        } finally {
+            pictureUploadBtn.disabled = false;
+            pictureUploadBtn.textContent = 'Upload Picture';
+        }
+    });
 
     editProfileForm.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -1305,7 +1575,7 @@
             qs('#dash-banner-email').textContent = resp.user.email;
             qs('#ep-address').value = resp.user.address || '';
             qs('#ep-contact-number').value = resp.user.contact_number || '';
-            qs('#dash-avatar-initials').textContent = initials(resp.user.name);
+            renderProfilePicture(resp.user.profile_picture, resp.user.name);
             setVisible(editProfileCard, false);
             showMsg(profileMsg, 'success', resp.message || 'Profile updated successfully.');
         } catch(err) {

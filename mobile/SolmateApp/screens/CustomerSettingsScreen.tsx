@@ -1,6 +1,7 @@
 import React, {useContext, useEffect, useState} from 'react';
 import {
   Alert,
+  Image,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -10,12 +11,15 @@ import {
   View,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import {Asset, launchImageLibrary} from 'react-native-image-picker';
 
 import {AuthContext} from '../src/context/AuthContext';
 import {
   updateCustomerAccount,
   updateCustomerPassword,
 } from '../src/services/accountApi';
+import {uploadProfilePicture} from '../src/services/profilePictureApi';
+import {getProfilePictureUrl, getUserInitial} from '../src/utils/profilePicture';
 
 /* \u2500\u2500 design tokens \u2500\u2500 */
 
@@ -39,6 +43,28 @@ function formatProfileValue(value?: string | null) {
   }
 
   return value.trim();
+}
+
+type LocalProfileImageAsset = {
+  uri: string;
+  type?: string | null;
+  name?: string | null;
+};
+
+function normalizePickedProfileAsset(
+  assets?: Asset[],
+): LocalProfileImageAsset | null {
+  const firstAsset = (assets || []).find(asset => !!asset.uri);
+
+  if (!firstAsset?.uri) {
+    return null;
+  }
+
+  return {
+    uri: firstAsset.uri,
+    type: firstAsset.type || 'image/jpeg',
+    name: firstAsset.fileName || null,
+  };
 }
 
 /* \u2500\u2500 small presentational pieces \u2500\u2500 */
@@ -85,6 +111,7 @@ export default function CustomerSettingsScreen() {
   const [address, setAddress] = useState(user?.address || '');
   const [contactNumber, setContactNumber] = useState(user?.contact_number || '');
   const [profileSubmitting, setProfileSubmitting] = useState(false);
+  const [pictureSubmitting, setPictureSubmitting] = useState(false);
 
   /* \u2500\u2500 password form state (preserved) \u2500\u2500 */
   const [currentPassword, setCurrentPassword] = useState('');
@@ -204,7 +231,53 @@ export default function CustomerSettingsScreen() {
 
   /* \u2500\u2500 derived \u2500\u2500 */
 
-  const initial = (user?.name || 'C').charAt(0).toUpperCase();
+  const initial = getUserInitial(user?.name, 'C');
+  const profilePictureUrl = getProfilePictureUrl(user?.profile_picture);
+
+  const handleUploadProfilePicture = async () => {
+    if (pictureSubmitting) return;
+
+    const result = await launchImageLibrary({
+      mediaType: 'photo',
+      selectionLimit: 1,
+      quality: 0.8,
+    });
+
+    if (result.didCancel) {
+      return;
+    }
+
+    if (result.errorMessage) {
+      Alert.alert('Image selection failed', result.errorMessage);
+      return;
+    }
+
+    const pickedAsset = normalizePickedProfileAsset(result.assets);
+
+    if (!pickedAsset) {
+      Alert.alert(
+        'Image selection failed',
+        'Please choose a JPG, JPEG, PNG, or WEBP image.',
+      );
+      return;
+    }
+
+    try {
+      setPictureSubmitting(true);
+      const response = await uploadProfilePicture(pickedAsset);
+      setUser((currentUser: typeof user) =>
+        currentUser ? {...currentUser, ...response.user} : response.user,
+      );
+      Alert.alert('Success', response.message);
+    } catch (error: any) {
+      Alert.alert(
+        'Upload failed',
+        error?.message || 'Could not upload your profile picture.',
+      );
+    } finally {
+      setPictureSubmitting(false);
+    }
+  };
 
   /* \u2500\u2500 render \u2500\u2500 */
 
@@ -227,7 +300,11 @@ export default function CustomerSettingsScreen() {
         {/* \u2500\u2500 profile summary card \u2500\u2500 */}
         <View style={s.profileCard}>
           <View style={s.avatarCircle}>
-            <Text style={s.avatarText}>{initial}</Text>
+            {profilePictureUrl ? (
+              <Image source={{uri: profilePictureUrl}} style={s.avatarImage} />
+            ) : (
+              <Text style={s.avatarText}>{initial}</Text>
+            )}
           </View>
           <View style={s.profileInfo}>
             <Text style={s.profileName}>{user?.name || 'Customer'}</Text>
@@ -247,6 +324,22 @@ export default function CustomerSettingsScreen() {
                 </Text>
               </View>
             </View>
+            <Pressable
+              disabled={pictureSubmitting}
+              onPress={handleUploadProfilePicture}
+              style={({pressed}) => [
+                s.profilePictureBtn,
+                pressed && s.pressed,
+                pictureSubmitting && s.profilePictureBtnDisabled,
+              ]}>
+              <Text style={s.profilePictureBtnText}>
+                {pictureSubmitting
+                  ? 'Uploading…'
+                  : user?.profile_picture
+                    ? 'Change Profile Picture'
+                    : 'Upload Profile Picture'}
+              </Text>
+            </Pressable>
           </View>
           <Pressable
             hitSlop={12}
@@ -492,6 +585,11 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
   },
   avatarText: {fontSize: 24, fontWeight: '800', color: NAVY},
   profileInfo: {flex: 1},
@@ -508,6 +606,24 @@ const s = StyleSheet.create({
     letterSpacing: 0.3,
   },
   profileDetailValue: {fontSize: 13, color: NAVY, fontWeight: '600'},
+  profilePictureBtn: {
+    alignSelf: 'flex-start',
+    marginTop: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#d9b24c',
+    backgroundColor: '#fff8e3',
+  },
+  profilePictureBtnDisabled: {
+    opacity: 0.7,
+  },
+  profilePictureBtnText: {
+    color: NAVY,
+    fontSize: 12,
+    fontWeight: '800',
+  },
   editLink: {fontSize: 15, fontWeight: '700', color: NAVY},
 
   /* menu rows */

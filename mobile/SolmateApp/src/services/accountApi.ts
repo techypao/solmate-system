@@ -7,6 +7,7 @@ export type AccountUser = {
   role?: string | null;
   address?: string | null;
   contact_number?: string | null;
+  profile_picture?: string | null;
 };
 
 export type UpdateCustomerAccountPayload = {

@@ -956,11 +956,32 @@
             transition: background 0.15s, transform 0.1s;
             color: #ffffff;
             line-height: 0;
+            overflow: hidden;
         }
 
         .solmate-profile-btn:hover {
             background: #c49215;
             transform: scale(1.04);
+        }
+
+        .solmate-profile-btn.has-image {
+            background: #ffffff;
+            border: 2px solid #d4a017;
+        }
+
+        .solmate-profile-btn-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .solmate-profile-btn-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
         }
 
         .solmate-profile-dropdown {
@@ -1848,11 +1869,25 @@
                 </button>
             </div>
             <div class="admin-topbar-right">
+                @php
+                    $solmateProfileImageUrl = auth()->user()?->profile_picture
+                        ? asset('storage/' . ltrim(auth()->user()->profile_picture, '/'))
+                        : null;
+                @endphp
                 <div class="solmate-profile-wrapper">
-                    <button class="solmate-profile-btn" id="solmateProfileBtn" aria-label="Open profile menu" type="button" aria-haspopup="true" aria-expanded="false">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.337 0-10 1.676-10 5v2h20v-2c0-3.324-6.663-5-10-5z"/>
-                        </svg>
+                    <button class="solmate-profile-btn {{ $solmateProfileImageUrl ? 'has-image' : '' }}" id="solmateProfileBtn" aria-label="Open profile menu" type="button" aria-haspopup="true" aria-expanded="false" data-profile-menu-button>
+                        <img
+                            src="{{ $solmateProfileImageUrl ?: '' }}"
+                            alt="{{ auth()->user()->name }} profile picture"
+                            class="solmate-profile-btn-image"
+                            data-profile-menu-image
+                            @if (! $solmateProfileImageUrl) style="display:none;" @endif
+                        >
+                        <span class="solmate-profile-btn-icon" data-profile-menu-icon @if ($solmateProfileImageUrl) style="display:none;" @endif>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.337 0-10 1.676-10 5v2h20v-2c0-3.324-6.663-5-10-5z"/>
+                            </svg>
+                        </span>
                     </button>
                     <div class="solmate-profile-dropdown" id="solmateProfileDropdown" role="menu">
                         <div class="solmate-profile-dropdown-header">
@@ -1983,11 +2018,25 @@
 
                     {{-- Right: profile icon with dropdown --}}
                     <div class="solmate-nav-right">
+                        @php
+                            $solmateProfileImageUrl = auth()->user()?->profile_picture
+                                ? asset('storage/' . ltrim(auth()->user()->profile_picture, '/'))
+                                : null;
+                        @endphp
                         <div class="solmate-profile-wrapper">
-                            <button class="solmate-profile-btn" id="solmateProfileBtn" aria-label="Open profile menu" type="button" aria-haspopup="true" aria-expanded="false">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                    <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.337 0-10 1.676-10 5v2h20v-2c0-3.324-6.663-5-10-5z"/>
-                                </svg>
+                            <button class="solmate-profile-btn {{ $solmateProfileImageUrl ? 'has-image' : '' }}" id="solmateProfileBtn" aria-label="Open profile menu" type="button" aria-haspopup="true" aria-expanded="false" data-profile-menu-button>
+                                <img
+                                    src="{{ $solmateProfileImageUrl ?: '' }}"
+                                    alt="{{ auth()->user()->name }} profile picture"
+                                    class="solmate-profile-btn-image"
+                                    data-profile-menu-image
+                                    @if (! $solmateProfileImageUrl) style="display:none;" @endif
+                                >
+                                <span class="solmate-profile-btn-icon" data-profile-menu-icon @if ($solmateProfileImageUrl) style="display:none;" @endif>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                        <path d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.337 0-10 1.676-10 5v2h20v-2c0-3.324-6.663-5-10-5z"/>
+                                    </svg>
+                                </span>
                             </button>
                             <div class="solmate-profile-dropdown" id="solmateProfileDropdown" role="menu">
                                 <div class="solmate-profile-dropdown-header">

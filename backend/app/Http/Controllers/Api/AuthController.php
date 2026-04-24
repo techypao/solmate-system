@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
@@ -67,6 +68,31 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Logged out successfully'
+        ], 200);
+    }
+
+    public function updateProfilePicture(Request $request)
+    {
+        $request->validate([
+            'profile_picture' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ]);
+
+        $user = $request->user();
+
+        if ($request->hasFile('profile_picture')) {
+            if ($user->profile_picture) {
+                Storage::disk('public')->delete($user->profile_picture);
+            }
+
+            $user->profile_picture = $request->file('profile_picture')->store('profile_pictures', 'public');
+            $user->save();
+        }
+
+        return response()->json([
+            'message' => $request->hasFile('profile_picture')
+                ? 'Profile picture updated successfully.'
+                : 'No profile picture uploaded.',
+            'user' => $user->fresh(),
         ], 200);
     }
 }

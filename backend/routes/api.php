@@ -22,6 +22,7 @@ Route::get('/public/testimonies', [TestimonyController::class, 'publicIndex']);
 // PROTECTED GENERAL ROUTES
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/user/profile-picture', [AuthController::class, 'updateProfilePicture']);
 
     Route::get('/user', function (Request $request) {
         return response()->json($request->user());

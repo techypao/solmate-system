@@ -1,6 +1,7 @@
 import React, {useCallback, useContext, useState} from 'react';
 import {
   Alert,
+  Image,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -8,6 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import {Asset, launchImageLibrary} from 'react-native-image-picker';
 
 import {AppInput} from '../components';
 import {AuthContext} from '../src/context/AuthContext';
@@ -15,6 +17,8 @@ import {
   updateTechnicianAccount,
   updateTechnicianPassword,
 } from '../src/services/technicianAccountApi';
+import {uploadProfilePicture} from '../src/services/profilePictureApi';
+import {getProfilePictureUrl} from '../src/utils/profilePicture';
 
 /* ── design tokens ── */
 const NAVY    = '#152a4a';
@@ -93,6 +97,28 @@ function ProfileNavIcon({active}: {active?: boolean}) {
 
 type Tab = 'Home' | 'Inspections' | 'Services' | 'Profile';
 
+type LocalProfileImageAsset = {
+  uri: string;
+  type?: string | null;
+  name?: string | null;
+};
+
+function normalizePickedProfileAsset(
+  assets?: Asset[],
+): LocalProfileImageAsset | null {
+  const firstAsset = (assets || []).find(asset => !!asset.uri);
+
+  if (!firstAsset?.uri) {
+    return null;
+  }
+
+  return {
+    uri: firstAsset.uri,
+    type: firstAsset.type || 'image/jpeg',
+    name: firstAsset.fileName || null,
+  };
+}
+
 function BottomNav({active, onPress}: {active: Tab; onPress: (t: Tab) => void}) {
   const tabs: {key: Tab; label: string; Icon: React.FC<{active?: boolean}>}[] = [
     {key: 'Home',        label: 'Home',        Icon: HomeIcon},
@@ -126,6 +152,7 @@ export default function TechnicianSettingsScreen({navigation}: any) {
   const [newPassword, setNewPassword]           = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [profileSubmitting, setProfileSubmitting]   = useState(false);
+  const [pictureSubmitting, setPictureSubmitting]   = useState(false);
   const [passwordSubmitting, setPasswordSubmitting] = useState(false);
 
   /* expanded panel state */
@@ -139,6 +166,7 @@ export default function TechnicianSettingsScreen({navigation}: any) {
   const technicianId = user?.id
     ? `T-${String(user.id).padStart(3, '0')}`
     : 'T-—';
+  const profilePictureUrl = getProfilePictureUrl(user?.profile_picture);
 
   const handleSaveProfile = async () => {
     const trimmedName  = name.trim();
@@ -208,6 +236,53 @@ export default function TechnicianSettingsScreen({navigation}: any) {
     }
   };
 
+  const handleUploadProfilePicture = async () => {
+    if (pictureSubmitting) {
+      return;
+    }
+
+    const result = await launchImageLibrary({
+      mediaType: 'photo',
+      selectionLimit: 1,
+      quality: 0.8,
+    });
+
+    if (result.didCancel) {
+      return;
+    }
+
+    if (result.errorMessage) {
+      Alert.alert('Image selection failed', result.errorMessage);
+      return;
+    }
+
+    const pickedAsset = normalizePickedProfileAsset(result.assets);
+
+    if (!pickedAsset) {
+      Alert.alert(
+        'Image selection failed',
+        'Please choose a JPG, JPEG, PNG, or WEBP image.',
+      );
+      return;
+    }
+
+    try {
+      setPictureSubmitting(true);
+      const response = await uploadProfilePicture(pickedAsset);
+      setUser((currentUser: typeof user) =>
+        currentUser ? {...currentUser, ...response.user} : response.user,
+      );
+      Alert.alert('Success', response.message);
+    } catch (error: any) {
+      Alert.alert(
+        'Upload failed',
+        error?.message || 'Could not upload your profile picture.',
+      );
+    } finally {
+      setPictureSubmitting(false);
+    }
+  };
+
   function handleTabPress(tab: Tab) {
     if (tab === 'Home')        {navigation.navigate('TechnicianDashboard');}
     if (tab === 'Inspections') {navigation.navigate('AssignedInspectionRequests');}
@@ -237,7 +312,11 @@ export default function TechnicianSettingsScreen({navigation}: any) {
             <View style={styles.profileTopRow}>
               {/* avatar */}
               <View style={styles.avatarCircle}>
-                <AvatarIcon />
+                {profilePictureUrl ? (
+                  <Image source={{uri: profilePictureUrl}} style={styles.avatarImage} />
+                ) : (
+                  <AvatarIcon />
+                )}
               </View>
 
               {/* name + contact */}
@@ -262,6 +341,23 @@ export default function TechnicianSettingsScreen({navigation}: any) {
               <Text style={styles.profileIdLabel}>Technician ID</Text>
               <Text style={styles.profileIdValue}>{technicianId}</Text>
             </View>
+
+            <Pressable
+              disabled={pictureSubmitting}
+              onPress={handleUploadProfilePicture}
+              style={({pressed}) => [
+                styles.profilePictureBtn,
+                pressed && {opacity: 0.8},
+                pictureSubmitting && styles.profilePictureBtnDisabled,
+              ]}>
+              <Text style={styles.profilePictureBtnText}>
+                {pictureSubmitting
+                  ? 'Uploading…'
+                  : user?.profile_picture
+                    ? 'Change Profile Picture'
+                    : 'Upload Profile Picture'}
+              </Text>
+            </Pressable>
           </View>
 
           {/* ── Personal Information row ── */}
@@ -537,6 +633,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
   },
   avatarIconWrap: {
     alignItems: 'center',
@@ -595,6 +696,24 @@ const styles = StyleSheet.create({
   profileIdValue: {
     color: NAVY,
     fontSize: 13,
+    fontWeight: '800',
+  },
+  profilePictureBtn: {
+    alignSelf: 'flex-start',
+    marginTop: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#d9b24c',
+    backgroundColor: '#fff8e3',
+  },
+  profilePictureBtnDisabled: {
+    opacity: 0.7,
+  },
+  profilePictureBtnText: {
+    color: NAVY,
+    fontSize: 12,
     fontWeight: '800',
   },
 

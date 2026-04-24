@@ -5,6 +5,7 @@ export type TechnicianAccountUser = {
   name?: string | null;
   email?: string | null;
   role?: string | null;
+  profile_picture?: string | null;
 };
 
 export type UpdateTechnicianAccountPayload = {
