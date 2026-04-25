@@ -107,6 +107,9 @@
         box-shadow: 0 2px 12px rgba(0,0,0,.04);
         margin-bottom: 20px;
     }
+    .insp-card-schedule {
+        overflow: visible;
+    }
     .insp-card:last-child { margin-bottom: 0; }
     .insp-card-header {
         display: flex;
@@ -450,6 +453,7 @@
     .insp-empty.show { display: flex; }
     .insp-empty svg { opacity: .4; }
     .insp-empty p { font-size: 14px; margin: 0; }
+@include('customer.partials.preferred-date-picker-styles')
 </style>
 
 {{-- ═══ PAGE HERO ═══ --}}
@@ -531,7 +535,7 @@
         </div>
 
         {{-- CARD 2: Preferred Schedule & Details --}}
-        <div class="insp-card">
+        <div class="insp-card insp-card-schedule">
             <div class="insp-card-header">
                 <div class="insp-card-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2">
@@ -576,10 +580,11 @@
                             <input
                                 id="insp-date"
                                 class="insp-input"
-                                type="date"
+                                type="hidden"
                                 name="date_needed"
                                 autocomplete="off"
                             >
+                            <div id="insp-date-picker" class="sdp-field-host"></div>
                             <div class="insp-field-error" id="insp-date-error" role="alert"></div>
                         </div>
                     </div>
@@ -696,26 +701,10 @@
 
 </div>{{-- /.insp-layout --}}
 
-{{-- ═══ INSPECTION REQUEST HISTORY ═══ --}}
-<div class="insp-history-section">
-    <h2 class="insp-history-title">My Inspection Requests</h2>
-    <div id="insp-history-loading" class="insp-loading">Loading your inspection requests...</div>
-    <div id="insp-history-msg" class="insp-msg" role="alert"></div>
-    <div id="insp-history-list" class="insp-ir-grid"></div>
-    <div id="insp-history-empty" class="insp-empty">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-            <line x1="16" y1="2" x2="16" y2="6"/>
-            <line x1="8" y1="2" x2="8" y2="6"/>
-            <line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
-        <p>No inspection requests yet. Fill out the form above to get started.</p>
-    </div>
-</div>
-
 @endsection
 
 @push('scripts')
+@include('customer.partials.preferred-date-picker-script')
 <script>
 (function () {
     'use strict';
@@ -791,10 +780,13 @@
     var formMsg      = qs('#insp-form-msg');
     var submitBtn    = qs('#insp-submit-btn');
     var submitText   = qs('#insp-submit-text');
-    var histLoading  = qs('#insp-history-loading');
-    var histMsg      = qs('#insp-history-msg');
-    var histList     = qs('#insp-history-list');
-    var histEmpty    = qs('#insp-history-empty');
+    var datePicker   = window.createPreferredDatePicker({
+        inputId: 'insp-date',
+        mountId: 'insp-date-picker',
+        helperText: 'Booked dates are unavailable and cannot be selected.',
+        fetchErrorText: 'Live reserved-date updates could not be loaded right now. The backend will still verify your preferred date when you submit.',
+        placeholder: 'Select a preferred date'
+    });
 
     var allQuotations = [];
 
@@ -849,6 +841,8 @@
         });
         document.querySelectorAll('.insp-input.has-error, .insp-textarea.has-error, .insp-select.has-error')
             .forEach(function (el) { el.classList.remove('has-error'); });
+        document.querySelectorAll('.sdp-field-host.has-error')
+            .forEach(function (el) { el.classList.remove('has-error'); });
     }
 
     var fieldErrorMap = {
@@ -878,7 +872,8 @@
 
         var details    = qs('#insp-details').value.trim();
         var contact    = qs('#insp-contact').value.trim();
-        var dateNeeded = qs('#insp-date').value;
+        await datePicker.refreshAvailability();
+        var dateNeeded = datePicker.getValue();
 
         var hasError = false;
         if (!details) {
@@ -893,6 +888,13 @@
             ce.textContent = 'Contact number is required.';
             ce.classList.add('show');
             qs('#insp-contact').classList.add('has-error');
+            hasError = true;
+        }
+        if (datePicker.isSelectedDateUnavailable()) {
+            var dte = qs('#insp-date-error');
+            dte.textContent = 'Selected date is already reserved. Please choose another date.';
+            dte.classList.add('show');
+            qs('#insp-date-picker').classList.add('has-error');
             hasError = true;
         }
         if (hasError) return;
@@ -910,9 +912,9 @@
             await apiRequest('/api/inspection-requests', { method: 'POST', body: body });
             showMsg(formMsg, 'success', 'Your inspection request has been submitted. Our team will contact you to confirm the schedule.');
             form.reset();
+            datePicker.clear();
             quoteSelect.value = '';
             quoteSummary.style.display = 'none';
-            await loadHistory();
             formMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } catch (err) {
             applyFieldErrors(err.errors || {});
@@ -922,77 +924,6 @@
             submitText.textContent = 'Submit Inspection Request';
         }
     });
-
-    /* Status badge */
-    function statusBadge(status) {
-        var s   = String(status || 'pending').toLowerCase().replace(/ /g, '_');
-        var map = {
-            pending:     'insp-badge-pending',
-            assigned:    'insp-badge-assigned',
-            in_progress: 'insp-badge-in_progress',
-            completed:   'insp-badge-completed',
-            cancelled:   'insp-badge-cancelled',
-            rescheduled: 'insp-badge-rescheduled',
-        };
-        var cls   = map[s] || 'insp-badge-default';
-        var label = s.replace(/_/g, ' ');
-        label = label.charAt(0).toUpperCase() + label.slice(1);
-        return '<span class="insp-badge ' + escHtml(cls) + '">' + escHtml(label) + '</span>';
-    }
-
-    /* Render inspection request cards */
-    function renderHistory(items) {
-        if (!items || items.length === 0) {
-            histList.innerHTML = '';
-            histEmpty.classList.add('show');
-            return;
-        }
-        histEmpty.classList.remove('show');
-        histList.innerHTML = items.map(function (ir) {
-            return '<div class="insp-ir-card">'
-                + '<div class="insp-ir-card-header">'
-                +   '<div>'
-                +     '<div class="insp-ir-id">Inspection #' + escHtml(ir.id) + '</div>'
-                +     '<div class="insp-ir-date">Submitted ' + fmtDate(ir.created_at) + '</div>'
-                +   '</div>'
-                +   statusBadge(ir.status)
-                + '</div>'
-                + '<div class="insp-ir-meta">'
-                +   '<div class="insp-ir-meta-item">'
-                +     '<div class="insp-ir-meta-label">Contact</div>'
-                +     '<div class="insp-ir-meta-value">' + escHtml(ir.contact_number || '\u2014') + '</div>'
-                +   '</div>'
-                +   '<div class="insp-ir-meta-item">'
-                +     '<div class="insp-ir-meta-label">Address</div>'
-                +     '<div class="insp-ir-meta-value">' + escHtml(ir.address || 'Not provided') + '</div>'
-                +   '</div>'
-                +   '<div class="insp-ir-meta-item">'
-                +     '<div class="insp-ir-meta-label">Preferred Date</div>'
-                +     '<div class="insp-ir-meta-value">' + fmtDate(ir.date_needed) + '</div>'
-                +   '</div>'
-                + '</div>'
-                + '<div class="insp-ir-details-row">'
-                +   '<div class="insp-ir-details-label">Details</div>'
-                +   escHtml(ir.details || '\u2014')
-                + '</div>'
-                + '</div>';
-        }).join('');
-    }
-
-    /* Load history */
-    async function loadHistory() {
-        histLoading.classList.add('show');
-        hideMsg(histMsg);
-        try {
-            var data  = await apiRequest('/api/inspection-requests');
-            var items = Array.isArray(data) ? data : (data.data || []);
-            renderHistory(items);
-        } catch (err) {
-            showMsg(histMsg, 'error', err.message || 'Could not load inspection requests.');
-        } finally {
-            histLoading.classList.remove('show');
-        }
-    }
 
     /* Load quotations for dropdown */
     async function loadQuotations() {
@@ -1007,7 +938,6 @@
 
     /* Bootstrap */
     loadQuotations();
-    loadHistory();
 
 })();
 </script>

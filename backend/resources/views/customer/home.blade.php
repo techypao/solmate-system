@@ -284,7 +284,8 @@
         text-overflow: ellipsis;
         margin: 0;
     }
-    .ch-act-meta { font-size: 11px; color: #94a3b8; margin: 1px 0 0; }
+    .ch-act-meta { font-size: 11px; color: #94a3b8; margin: 1px 0 0; line-height: 1.45; }
+    .ch-act-meta + .ch-act-meta { margin-top: 4px; }
     .ch-act-badge {
         display: inline-flex;
         padding: 2px 8px;
@@ -544,7 +545,7 @@
     <div class="ch-section-header">
         <p class="ch-section-eyebrow">Overview</p>
         <h2 class="ch-section-title">Recent Activity</h2>
-        <p class="ch-section-sub">Your latest quotations and inspection requests at a glance</p>
+        <p class="ch-section-sub">Your latest quotations and service requests at a glance</p>
     </div>
 
     <div class="ch-activity-grid">
@@ -574,7 +575,7 @@
             </div>
         </div>
 
-        {{-- Recent Inspection Requests --}}
+        {{-- Recent Service Requests --}}
         <div class="ch-act-card">
             <div class="ch-act-card-header">
                 <div class="ch-act-card-icon">
@@ -586,15 +587,15 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="ch-act-card-title">Inspection Requests</p>
-                    <p class="ch-act-card-sub">Latest site inspection activity</p>
+                    <p class="ch-act-card-title">Service Requests</p>
+                    <p class="ch-act-card-sub">Latest inspection, installation, and maintenance activity</p>
                 </div>
             </div>
             <div class="ch-act-card-body">
                 <div id="ch-insp-loading" class="ch-act-loading">Loading requests&hellip;</div>
                 <div id="ch-insp-list"></div>
-                <div id="ch-insp-empty" class="ch-act-empty">No inspection requests yet. <a href="{{ route('customer.inspection') }}" style="color:#d4a017;font-weight:700;">Schedule one now.</a></div>
-                <a href="{{ route('customer.inspection') }}" class="ch-act-view-link">
+                <div id="ch-insp-empty" class="ch-act-empty">No service requests yet.</div>
+                <a href="{{ route('customer.tracking') }}" class="ch-act-view-link">
                     View all requests
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </a>
@@ -642,6 +643,22 @@
         } catch (e) { return str; }
     }
 
+    function sortLatestFirst(items) {
+        return (items || []).slice().sort(function (a, b) {
+            var aTime = a && a.created_at ? new Date(a.created_at).getTime() : 0;
+            var bTime = b && b.created_at ? new Date(b.created_at).getTime() : 0;
+            return bTime - aTime;
+        });
+    }
+
+    function titleCase(value) {
+        return String(value || '')
+            .replace(/[_-]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .replace(/\b\w/g, function (char) { return char.toUpperCase(); });
+    }
+
     async function apiRequest(endpoint) {
         var resp = await fetch(endpoint, {
             credentials: 'same-origin',
@@ -655,7 +672,7 @@
         var s = String(status || '').toLowerCase();
         if (s === 'pending') return 'ch-act-dot-amber';
         if (s === 'approved' || s === 'completed') return 'ch-act-dot-green';
-        if (s === 'in_progress' || s === 'in-progress' || s === 'scheduled') return 'ch-act-dot-blue';
+        if (s === 'in_progress' || s === 'in-progress' || s === 'scheduled' || s === 'assigned') return 'ch-act-dot-blue';
         if (s === 'cancelled' || s === 'declined' || s === 'rejected') return 'ch-act-dot-red';
         return 'ch-act-dot-gold';
     }
@@ -667,38 +684,46 @@
             approved: 'ch-act-badge-approved',
             completed: 'ch-act-badge-completed',
             in_progress: 'ch-act-badge-in_progress',
+            scheduled: 'ch-act-badge-in_progress',
+            assigned: 'ch-act-badge-in_progress',
             cancelled: 'ch-act-badge-cancelled',
+            declined: 'ch-act-badge-cancelled',
             rejected: 'ch-act-badge-cancelled',
         };
         return map[s] || 'ch-act-badge-default';
     }
 
-    function renderItems(listId, loadId, emptyId, items, labelFn, showStatusFn) {
+    function renderItems(listId, loadId, emptyId, items, buildItemFn) {
         var loadEl  = document.getElementById(loadId);
         var listEl  = document.getElementById(listId);
         var emptyEl = document.getElementById(emptyId);
 
         if (loadEl)  loadEl.style.display = 'none';
+        if (emptyEl) emptyEl.classList.remove('show');
         if (!items || items.length === 0) {
             if (emptyEl) emptyEl.classList.add('show');
+            if (listEl) listEl.innerHTML = '';
             return;
         }
 
         var html = items.slice(0, 3).map(function (item) {
-            var label  = labelFn(item);
-            var meta   = fmtDate(item.created_at);
-            var status = String(item.status || 'pending');
-            var statusLabel = status.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+            var config = buildItemFn(item) || {};
+            var label  = config.label || '';
+            var metaLines = Array.isArray(config.metaLines) ? config.metaLines.filter(Boolean) : [];
+            var status = String(config.status || '');
+            var statusLabel = titleCase(status);
             var dc = dotClass(status);
             var bc = badgeClass(status);
-            var showStatus = typeof showStatusFn === 'function' ? showStatusFn(item) : true;
+            var metaHtml = metaLines.map(function (line) {
+                return '<p class="ch-act-meta">' + escHtml(line) + '</p>';
+            }).join('');
             return '<div class="ch-act-item">'
                 + '<div class="ch-act-dot ' + escHtml(dc) + '"></div>'
                 + '<div class="ch-act-info">'
                 +   '<p class="ch-act-label">' + escHtml(label) + '</p>'
-                +   '<p class="ch-act-meta">' + escHtml(meta) + '</p>'
+                +   metaHtml
                 + '</div>'
-                + (showStatus ? '<span class="ch-act-badge ' + escHtml(bc) + '">' + escHtml(statusLabel) + '</span>' : '')
+                + (status ? '<span class="ch-act-badge ' + escHtml(bc) + '">' + escHtml(statusLabel) + '</span>' : '')
                 + '</div>';
         }).join('');
 
@@ -708,14 +733,19 @@
     /* ── Load latest quotations ── */
     (async function loadQuotations() {
         try {
-            var resp  = await apiRequest('/api/customer/quotations');
+            var resp  = await apiRequest('/api/quotations');
             var items = resp.data || resp;
             if (!Array.isArray(items)) items = [];
+            items = sortLatestFirst(items);
             renderItems('ch-qt-list', 'ch-qt-loading', 'ch-qt-empty', items, function (q) {
-                var type = q.quotation_type ? (q.quotation_type.charAt(0).toUpperCase() + q.quotation_type.slice(1)) : 'Quotation';
-                return type + ' Quotation #' + (q.id || '');
-            }, function (q) {
-                return String(q.quotation_type || 'initial').toLowerCase() === 'final';
+                return {
+                    label: 'Quotation #' + (q.id || '\u2014'),
+                    status: q.status || '',
+                    metaLines: [
+                        'Type: ' + titleCase(q.quotation_type || 'Quotation'),
+                        'Submitted: ' + fmtDate(q.created_at)
+                    ]
+                };
             });
         } catch (e) {
             var el = document.getElementById('ch-qt-loading');
@@ -723,18 +753,39 @@
         }
     })();
 
-    /* ── Load latest inspection requests ── */
-    (async function loadInspections() {
+    /* ── Load latest service requests ── */
+    (async function loadRequests() {
         try {
-            var resp  = await apiRequest('/api/customer/inspection-requests');
-            var items = resp.data || resp;
-            if (!Array.isArray(items)) items = [];
+            var responses = await Promise.all([
+                apiRequest('/api/inspection-requests'),
+                apiRequest('/api/service-requests')
+            ]);
+            var inspectionItems = responses[0].data || responses[0];
+            var serviceItems = responses[1].data || responses[1];
+
+            if (!Array.isArray(inspectionItems)) inspectionItems = [];
+            if (!Array.isArray(serviceItems)) serviceItems = [];
+
+            var items = inspectionItems.map(function (request) {
+                return Object.assign({}, request, { request_type: 'inspection' });
+            }).concat(serviceItems);
+
+            items = sortLatestFirst(items);
+
             renderItems('ch-insp-list', 'ch-insp-loading', 'ch-insp-empty', items, function (r) {
-                return 'Inspection Request #' + (r.id || '');
+                return {
+                    label: 'Request #' + (r.id || '\u2014'),
+                    status: r.status || '',
+                    metaLines: [
+                        'Type: ' + (String(r.request_type || '').toLowerCase() === 'inspection' ? 'Inspection' : titleCase(r.request_type || 'Service')),
+                        'Preferred: ' + (r.date_needed ? fmtDate(r.date_needed) : '\u2014'),
+                        'Submitted: ' + fmtDate(r.created_at)
+                    ]
+                };
             });
         } catch (e) {
             var el = document.getElementById('ch-insp-loading');
-            if (el) { el.textContent = 'Could not load requests.'; el.style.color = '#94a3b8'; }
+            if (el) { el.textContent = 'Could not load service requests.'; el.style.color = '#94a3b8'; }
         }
     })();
 

@@ -524,6 +524,7 @@
             grid-template-columns: 1fr;
         }
     }
+@include('customer.partials.preferred-date-picker-styles')
 </style>
 
 <div class="mnt-page">
@@ -674,7 +675,8 @@
                             </div>
                             <div class="mnt-field">
                                 <label class="mnt-label" for="mnt-date">Preferred Date</label>
-                                <input id="mnt-date" class="mnt-input" type="date" autocomplete="off">
+                                <input id="mnt-date" class="mnt-input" type="hidden" autocomplete="off">
+                                <div id="mnt-date-picker" class="sdp-field-host"></div>
                                 <div class="mnt-field-error" id="mnt-date-error" role="alert"></div>
                             </div>
                         </div>
@@ -778,17 +780,11 @@
         </aside>
     </div>
 
-    <section aria-label="Maintenance request history">
-        <h2 class="mnt-history-title">My Maintenance Requests</h2>
-        <div id="mnt-history-loading" class="mnt-loading">Loading your maintenance requests...</div>
-        <div id="mnt-history-msg" class="mnt-msg" role="alert"></div>
-        <div id="mnt-history-list" class="mnt-history-list"></div>
-        <div id="mnt-history-empty" class="mnt-empty">No maintenance requests yet. Submit the booking form above to get started.</div>
-    </section>
 </div>
 @endsection
 
 @push('scripts')
+@include('customer.partials.preferred-date-picker-script')
 <script>
 (function () {
     'use strict';
@@ -883,6 +879,9 @@
         qsa('.mnt-input, .mnt-select, .mnt-textarea').forEach(function (el) {
             el.classList.remove('has-error');
         });
+        qsa('.sdp-field-host').forEach(function (el) {
+            el.classList.remove('has-error');
+        });
     }
 
     function showFieldError(inputId, errorId, message) {
@@ -895,31 +894,17 @@
         }
     }
 
-    function statusBadge(status) {
-        var normalized = String(status || 'pending').toLowerCase().replace(/\s+/g, '_');
-        var map = {
-            pending: 'mnt-badge-pending',
-            approved: 'mnt-badge-approved',
-            scheduled: 'mnt-badge-scheduled',
-            assigned: 'mnt-badge-assigned',
-            in_progress: 'mnt-badge-in_progress',
-            completed: 'mnt-badge-completed',
-            cancelled: 'mnt-badge-cancelled',
-            declined: 'mnt-badge-declined'
-        };
-        var label = normalized.replace(/_/g, ' ');
-        label = label.charAt(0).toUpperCase() + label.slice(1);
-        return '<span class="mnt-badge ' + (map[normalized] || 'mnt-badge-default') + '">' + escHtml(label) + '</span>';
-    }
-
     var form = qs('#mnt-form');
     var formMsg = qs('#mnt-form-msg');
     var submitBtn = qs('#mnt-submit-btn');
     var submitText = qs('#mnt-submit-text');
-    var historyLoading = qs('#mnt-history-loading');
-    var historyMsg = qs('#mnt-history-msg');
-    var historyList = qs('#mnt-history-list');
-    var historyEmpty = qs('#mnt-history-empty');
+    var datePicker = window.createPreferredDatePicker({
+        inputId: 'mnt-date',
+        mountId: 'mnt-date-picker',
+        helperText: 'Booked dates are unavailable and cannot be selected.',
+        fetchErrorText: 'Schedule availability could not be refreshed right now. The backend will still verify your preferred date when you submit.',
+        placeholder: 'Select a preferred date'
+    });
 
     qsa('.mnt-choice').forEach(function (choice) {
         var radio = qs('input[type="radio"]', choice);
@@ -937,52 +922,6 @@
         });
     });
 
-    function renderHistory(items) {
-        if (!items.length) {
-            historyList.innerHTML = '';
-            historyEmpty.classList.add('show');
-            return;
-        }
-
-        historyEmpty.classList.remove('show');
-        historyList.innerHTML = items.map(function (request) {
-            return '<article class="mnt-history-card">'
-                + '<div class="mnt-history-top">'
-                + '<div>'
-                + '<p class="mnt-history-id">Maintenance Request #' + escHtml(request.id) + '</p>'
-                + '<p class="mnt-history-date">Submitted ' + escHtml(fmtDate(request.created_at)) + '</p>'
-                + '</div>'
-                + statusBadge(request.status)
-                + '</div>'
-                + '<div class="mnt-history-meta">'
-                + '<div class="mnt-history-chip"><div class="mnt-history-chip-label">Request Type</div><div class="mnt-history-chip-value">Maintenance</div></div>'
-                + '<div class="mnt-history-chip"><div class="mnt-history-chip-label">Preferred Date</div><div class="mnt-history-chip-value">' + escHtml(fmtDate(request.date_needed)) + '</div></div>'
-                + '<div class="mnt-history-chip"><div class="mnt-history-chip-label">Contact</div><div class="mnt-history-chip-value">' + escHtml(request.contact_number || '-') + '</div></div>'
-                + '<div class="mnt-history-chip"><div class="mnt-history-chip-label">Address</div><div class="mnt-history-chip-value">' + escHtml(request.address || 'Not provided') + '</div></div>'
-                + '</div>'
-                + '<pre class="mnt-history-details">' + escHtml(request.details || 'No details provided.') + '</pre>'
-                + '</article>';
-        }).join('');
-    }
-
-    async function loadHistory() {
-        historyLoading.classList.add('show');
-        hideMsg(historyMsg);
-
-        try {
-            var response = await apiRequest('/api/service-requests');
-            var items = Array.isArray(response) ? response : (response.data || []);
-            items = items.filter(function (request) {
-                return String(request.request_type || '').toLowerCase() === 'maintenance';
-            });
-            renderHistory(items);
-        } catch (error) {
-            showMsg(historyMsg, 'error', error.message || 'Could not load maintenance requests.');
-        } finally {
-            historyLoading.classList.remove('show');
-        }
-    }
-
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
         clearFieldErrors();
@@ -993,7 +932,8 @@
         var description = qs('#mnt-description').value.trim();
         var extraConcern = qs('#mnt-extra-concern').value.trim();
         var contact = qs('#mnt-contact').value.trim();
-        var dateNeeded = qs('#mnt-date').value;
+        await datePicker.refreshAvailability();
+        var dateNeeded = datePicker.getValue();
         var time = qs('#mnt-time').value.trim();
         var visitNote = qs('#mnt-visit-note').value.trim();
         var address = qs('#mnt-address').value.trim();
@@ -1012,7 +952,11 @@
             hasError = true;
         }
         if (!dateNeeded) {
-            showFieldError('mnt-date', 'mnt-date-error', 'Preferred date is required.');
+            showFieldError('mnt-date-picker', 'mnt-date-error', 'Preferred date is required.');
+            hasError = true;
+        }
+        if (datePicker.isSelectedDateUnavailable()) {
+            showFieldError('mnt-date-picker', 'mnt-date-error', 'Selected date is already reserved. Please choose another date.');
             hasError = true;
         }
         if (!time) {
@@ -1046,17 +990,17 @@
 
             showMsg(formMsg, 'success', 'Your maintenance request has been submitted. SolMate will review the concern and confirm your appointment.');
             form.reset();
+            datePicker.clear();
             qsa('.mnt-choice').forEach(function (item) {
                 item.classList.remove('is-selected');
             });
-            await loadHistory();
             formMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } catch (error) {
             if (error.errors && error.errors.contact_number) {
                 showFieldError('mnt-contact', 'mnt-contact-error', error.errors.contact_number[0]);
             }
             if (error.errors && error.errors.date_needed) {
-                showFieldError('mnt-date', 'mnt-date-error', error.errors.date_needed[0]);
+                showFieldError('mnt-date-picker', 'mnt-date-error', error.errors.date_needed[0]);
             }
             if (error.errors && error.errors.details) {
                 showFieldError('mnt-description', 'mnt-description-error', error.errors.details[0]);
@@ -1068,7 +1012,6 @@
         }
     });
 
-    loadHistory();
 })();
 </script>
 @endpush

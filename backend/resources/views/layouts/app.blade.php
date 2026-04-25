@@ -1715,16 +1715,6 @@
                     Technician
                 </a>
 
-                {{-- Inspections --}}
-                <a href="{{ route('admin.request-assignments') }}#inspection-requests-section"
-                   class="admin-sidebar-link {{ request()->routeIs('admin.request-assignments') ? 'active' : '' }}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M9 11l3 3L22 4"/>
-                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                    </svg>
-                    Inspections
-                </a>
-
                 {{-- Services --}}
                 <a href="{{ route('admin.request-assignments') }}#service-requests-section"
                    class="admin-sidebar-link {{ request()->routeIs('admin.request-assignments') ? 'active' : '' }}">
@@ -1973,17 +1963,6 @@
 
                             <div id="solmateServicesDropdown" class="solmate-services-dropdown" role="menu">
 
-                                {{-- Installation --}}
-                                <a href="{{ route('customer.installation') }}" class="solmate-services-item {{ request()->routeIs('customer.installation') ? 'active' : '' }}" role="menuitem">
-                                    <span class="solmate-services-item-icon">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2" aria-hidden="true">
-                                            <rect x="2" y="7" width="20" height="14" rx="2"/>
-                                            <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
-                                        </svg>
-                                    </span>
-                                    Installation
-                                </a>
-
                                 {{-- Inspection --}}
                                 <a href="{{ route('customer.inspection') }}" class="solmate-services-item {{ request()->routeIs('customer.inspection') ? 'active' : '' }}" role="menuitem">
                                     <span class="solmate-services-item-icon">
@@ -1993,6 +1972,17 @@
                                         </svg>
                                     </span>
                                     Inspection
+                                </a>
+
+                                {{-- Installation --}}
+                                <a href="{{ route('customer.installation') }}" class="solmate-services-item {{ request()->routeIs('customer.installation') ? 'active' : '' }}" role="menuitem">
+                                    <span class="solmate-services-item-icon">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2" aria-hidden="true">
+                                            <rect x="2" y="7" width="20" height="14" rx="2"/>
+                                            <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+                                        </svg>
+                                    </span>
+                                    Installation
                                 </a>
 
                                 {{-- Maintenance --}}

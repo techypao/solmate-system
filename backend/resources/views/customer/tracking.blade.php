@@ -53,6 +53,119 @@
     }
 
     /* ── Shared card base ── */
+    .trk-panel {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: 0 2px 12px rgba(0,0,0,.04);
+    }
+    .trk-tabs-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 22px;
+        flex-wrap: wrap;
+    }
+    .trk-tabs {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 999px;
+        overflow-x: auto;
+        max-width: 100%;
+        -webkit-overflow-scrolling: touch;
+    }
+    .trk-tab-btn {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: #475569;
+        font-size: 14px;
+        font-weight: 700;
+        padding: 10px 18px;
+        border-radius: 999px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background .2s ease, color .2s ease, box-shadow .2s ease;
+    }
+    .trk-tab-btn:hover {
+        color: #102a43;
+        background: rgba(255,255,255,.75);
+    }
+    .trk-tab-btn.active {
+        background: linear-gradient(135deg, #102a43, #1e4068);
+        color: #fff;
+        box-shadow: 0 10px 24px rgba(16,42,67,.18);
+    }
+    .trk-tab-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 7px;
+        margin-left: 8px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.16);
+        font-size: 12px;
+        font-weight: 800;
+    }
+    .trk-tab-btn:not(.active) .trk-tab-count {
+        background: #e2e8f0;
+        color: #475569;
+    }
+    .trk-panel-note {
+        font-size: 13px;
+        color: #64748b;
+        margin: 0;
+        line-height: 1.5;
+    }
+    .trk-section-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    .trk-section-kicker {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .9px;
+        text-transform: uppercase;
+        color: #d4a017;
+        margin: 0 0 6px;
+    }
+    .trk-section-title {
+        font-size: 22px;
+        font-weight: 800;
+        color: #102a43;
+        margin: 0 0 4px;
+    }
+    .trk-section-sub {
+        font-size: 14px;
+        color: #64748b;
+        margin: 0;
+        line-height: 1.6;
+    }
+    .trk-section-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
     .trk-card {
         background: #fff;
         border: 1px solid #e2e8f0;
@@ -363,6 +476,11 @@
         background: #e2e8f0;
     }
 
+    .trk-list[aria-busy="true"] {
+        opacity: .55;
+        pointer-events: none;
+    }
+
     /* ── Loading / empty ── */
     .trk-msg {
         padding: 12px 16px;
@@ -414,6 +532,21 @@
 
     /* ── Content wrapper max-width ── */
     .trk-content { max-width: 740px; margin: 0 auto; }
+
+    @media (max-width: 768px) {
+        .trk-panel { padding: 18px; }
+        .trk-tabs-wrap { margin-bottom: 18px; }
+        .trk-tabs {
+            width: 100%;
+            justify-content: flex-start;
+        }
+        .trk-tab-btn {
+            padding: 10px 14px;
+            font-size: 13px;
+        }
+        .trk-section-title { font-size: 19px; }
+        .trk-section-pill { width: 100%; justify-content: center; }
+    }
 </style>
 
 {{-- ═══ PAGE HERO ═══ --}}
@@ -426,23 +559,49 @@
 {{-- ═══ CONTENT ═══ --}}
 <div class="trk-content">
 
-    <div id="trk-loading" class="trk-loading">Loading your service requests...</div>
-    <div id="trk-msg" class="trk-msg" role="alert"></div>
+    <div class="trk-panel">
+        <div class="trk-tabs-wrap">
+            <div class="trk-tabs" role="tablist" aria-label="Tracking request categories">
+                <button type="button" class="trk-tab-btn active" data-trk-tab="inspection" role="tab" aria-selected="true">
+                    Inspection <span class="trk-tab-count" id="trk-count-inspection">0</span>
+                </button>
+                <button type="button" class="trk-tab-btn" data-trk-tab="installation" role="tab" aria-selected="false">
+                    Installation <span class="trk-tab-count" id="trk-count-installation">0</span>
+                </button>
+                <button type="button" class="trk-tab-btn" data-trk-tab="maintenance" role="tab" aria-selected="false">
+                    Maintenance <span class="trk-tab-count" id="trk-count-maintenance">0</span>
+                </button>
+            </div>
+            <p class="trk-panel-note">Switch between your inspection, installation, and maintenance requests without leaving the page.</p>
+        </div>
 
-    <div id="trk-list"></div>
+        <div class="trk-section-head">
+            <div>
+                <p id="trk-section-kicker" class="trk-section-kicker">Inspection Requests</p>
+                <h2 id="trk-section-title" class="trk-section-title">Track your inspection schedule and progress</h2>
+                <p id="trk-section-sub" class="trk-section-sub">Review the latest status, assigned technician details, and next steps for your inspection bookings.</p>
+            </div>
+            <div id="trk-section-pill" class="trk-section-pill">0 requests in this tab</div>
+        </div>
 
-    <div id="trk-empty" class="trk-empty">
-        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.3">
-            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
-            <rect x="9" y="3" width="6" height="4" rx="1"/>
-            <path d="M9 12h6M9 16h4"/>
-        </svg>
-        <p class="trk-empty-title">No Service Requests Yet</p>
-        <p class="trk-empty-sub">You have not submitted any service requests. Start by requesting a site inspection to begin your solar journey.</p>
-        <a href="{{ route('customer.inspection') }}" class="trk-empty-link">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-            Request an Inspection
-        </a>
+        <div id="trk-loading" class="trk-loading">Loading your tracking requests...</div>
+        <div id="trk-msg" class="trk-msg" role="alert"></div>
+
+        <div id="trk-list" class="trk-list" aria-live="polite"></div>
+
+        <div id="trk-empty" class="trk-empty">
+            <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.3">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+                <rect x="9" y="3" width="6" height="4" rx="1"/>
+                <path d="M9 12h6M9 16h4"/>
+            </svg>
+            <p id="trk-empty-title" class="trk-empty-title">No inspection requests yet.</p>
+            <p id="trk-empty-sub" class="trk-empty-sub">Start with an inspection request so the SolMate team can assess your property and guide your next step.</p>
+            <a id="trk-empty-link" href="{{ route('customer.inspection') }}" class="trk-empty-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                <span id="trk-empty-link-text">Request an Inspection</span>
+            </a>
+        </div>
     </div>
 
 </div>{{-- /.trk-content --}}
@@ -550,6 +709,51 @@
         return s.charAt(0).toUpperCase() + s.slice(1);
     }
 
+    function headline(text) {
+        var cleaned = String(text || '')
+            .replace(/[_-]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        if (!cleaned) return 'Service Request';
+
+        return cleaned.split(' ').map(function (word) {
+            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        }).join(' ');
+    }
+
+    function normalizeServiceCategory(requestType) {
+        var value = String(requestType || '')
+            .toLowerCase()
+            .replace(/[_-]+/g, ' ')
+            .trim();
+
+        if (value.indexOf('installation') !== -1) return 'installation';
+        return 'maintenance';
+    }
+
+    function normalizeInspectionRequest(request) {
+        var normalized = Object.assign({}, request);
+        normalized.request_type = 'inspection';
+        normalized.tracking_category = 'inspection';
+        normalized.tracking_title = 'Inspection Request #' + request.id;
+        return normalized;
+    }
+
+    function normalizeServiceRequest(request) {
+        var normalized = Object.assign({}, request);
+        normalized.tracking_category = normalizeServiceCategory(request.request_type);
+        normalized.tracking_title = (normalized.tracking_category === 'installation'
+            ? 'Installation Request #'
+            : 'Maintenance Request #') + request.id;
+        return normalized;
+    }
+
+    function buildRequestTypeLabel(request) {
+        if (request.tracking_category === 'inspection') return 'Inspection';
+        return headline(request.request_type || request.tracking_category || 'Service Request');
+    }
+
     /* ── HTML builders ── */
     function buildStepper(status) {
         var s         = String(status || 'pending').toLowerCase();
@@ -605,16 +809,15 @@
     function buildRequestCard(sr) {
         var status = String(sr.status || 'pending').toLowerCase();
         var isTerm = !!TERMINAL[status];
-        var reqType = sr.request_type
-            ? sr.request_type.charAt(0).toUpperCase() + sr.request_type.slice(1).replace(/_/g, ' ')
-            : 'Service Request';
+        var reqType = buildRequestTypeLabel(sr);
+        var title = sr.tracking_title || ('Request #' + sr.id);
 
         var html = '<div class="trk-request-group">';
 
         /* ── Request header band ── */
         html += '<div class="trk-req-header">'
             + '<div>'
-            + '<div class="trk-req-id">Service Request #' + escHtml(sr.id) + '</div>'
+            + '<div class="trk-req-id">' + escHtml(title) + '</div>'
             + '<div class="trk-req-type">' + escHtml(reqType) + '</div>'
             + '<div class="trk-req-date">Submitted ' + fmtDate(sr.created_at) + '</div>'
             + '</div>'
@@ -672,6 +875,11 @@
                 + '<div class="trk-tech-meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' + escHtml(tech.email) + '</div>'
                 + '</div>'
                 + '</div></div>';
+        } else if (sr.technician_id) {
+            html += '<div class="trk-unassigned">'
+                + '<div class="trk-unassigned-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'
+                + '<span>A technician has been assigned to this request. Full technician details will appear here once they are available.</span>'
+                + '</div>';
         } else {
             html += '<div class="trk-unassigned">'
                 + '<div class="trk-unassigned-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'
@@ -705,41 +913,152 @@
     var trkMsg     = qs('#trk-msg');
     var trkList    = qs('#trk-list');
     var trkEmpty   = qs('#trk-empty');
+    var trkEmptyTitle = qs('#trk-empty-title');
+    var trkEmptySub = qs('#trk-empty-sub');
+    var trkEmptyLink = qs('#trk-empty-link');
+    var trkEmptyLinkText = qs('#trk-empty-link-text');
+    var trkSectionKicker = qs('#trk-section-kicker');
+    var trkSectionTitle = qs('#trk-section-title');
+    var trkSectionSub = qs('#trk-section-sub');
+    var trkSectionPill = qs('#trk-section-pill');
+    var trkTabButtons = Array.prototype.slice.call(document.querySelectorAll('[data-trk-tab]'));
+
+    var TAB_CONFIG = {
+        inspection: {
+            kicker: 'Inspection Requests',
+            title: 'Track your inspection schedule and progress',
+            subtitle: 'Review the latest status, assigned technician details, and next steps for your inspection bookings.',
+            emptyTitle: 'No inspection requests yet.',
+            emptySubtitle: 'Start with an inspection request so the SolMate team can assess your property and guide your next step.',
+            emptyHref: '{{ route('customer.inspection') }}',
+            emptyCta: 'Request an Inspection'
+        },
+        installation: {
+            kicker: 'Installation Requests',
+            title: 'Track your installation bookings and site coordination',
+            subtitle: 'See which installation requests are approved, scheduled, or already moving toward completion.',
+            emptyTitle: 'No installation requests yet.',
+            emptySubtitle: 'Book an installation request when you are ready for site coordination or solar setup scheduling.',
+            emptyHref: '{{ route('customer.installation') }}',
+            emptyCta: 'Request Installation'
+        },
+        maintenance: {
+            kicker: 'Maintenance Requests',
+            title: 'Track ongoing maintenance and service support',
+            subtitle: 'Follow maintenance progress, technician assignment, and the latest service updates in one place.',
+            emptyTitle: 'No maintenance requests yet.',
+            emptySubtitle: 'Submit a maintenance request whenever your system needs servicing, support, or follow-up work.',
+            emptyHref: '{{ route('customer.maintenance') }}',
+            emptyCta: 'Request Maintenance'
+        }
+    };
+
+    var state = {
+        activeTab: 'inspection',
+        requests: []
+    };
 
     function showMsg(type, text) {
         trkMsg.className = 'trk-msg show trk-msg-' + type;
         trkMsg.textContent = text;
     }
 
+    function requestsForTab(tabKey) {
+        return state.requests.filter(function (request) {
+            return request.tracking_category === tabKey;
+        });
+    }
+
+    function updateTabButtons() {
+        trkTabButtons.forEach(function (button) {
+            var tabKey = button.getAttribute('data-trk-tab');
+            var isActive = tabKey === state.activeTab;
+            button.classList.toggle('active', isActive);
+            button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+    }
+
+    function updateTabCounts() {
+        Object.keys(TAB_CONFIG).forEach(function (tabKey) {
+            var countEl = qs('#trk-count-' + tabKey);
+            if (countEl) countEl.textContent = String(requestsForTab(tabKey).length);
+        });
+    }
+
+    function updateSectionCopy(items) {
+        var config = TAB_CONFIG[state.activeTab];
+        var count = items.length;
+        trkSectionKicker.textContent = config.kicker;
+        trkSectionTitle.textContent = config.title;
+        trkSectionSub.textContent = config.subtitle;
+        trkSectionPill.textContent = count + ' request' + (count === 1 ? '' : 's') + ' in this tab';
+    }
+
+    function updateEmptyState() {
+        var config = TAB_CONFIG[state.activeTab];
+        trkEmptyTitle.textContent = config.emptyTitle;
+        trkEmptySub.textContent = config.emptySubtitle;
+        trkEmptyLink.setAttribute('href', config.emptyHref);
+        trkEmptyLinkText.textContent = config.emptyCta;
+    }
+
+    function renderRequests() {
+        var items = requestsForTab(state.activeTab);
+        updateTabButtons();
+        updateTabCounts();
+        updateSectionCopy(items);
+        updateEmptyState();
+
+        if (items.length === 0) {
+            trkList.innerHTML = '';
+            trkEmpty.classList.add('show');
+            return;
+        }
+
+        trkEmpty.classList.remove('show');
+
+        var html = '';
+        items.forEach(function (sr, idx) {
+            if (idx > 0) {
+                html += '<div class="trk-group-divider">Request ' + (idx + 1) + '</div>';
+            }
+            html += buildRequestCard(sr);
+        });
+        trkList.innerHTML = html;
+    }
+
     async function loadRequests() {
         trkLoading.classList.add('show');
+        trkList.setAttribute('aria-busy', 'true');
         trkMsg.className = 'trk-msg';
         trkMsg.textContent = '';
         try {
-            var data  = await apiGet('/api/service-requests');
-            var items = Array.isArray(data) ? data : (data.data || []);
+            var results = await Promise.all([
+                apiGet('/api/inspection-requests'),
+                apiGet('/api/service-requests')
+            ]);
+            var inspectionItems = Array.isArray(results[0]) ? results[0] : (results[0].data || []);
+            var serviceItems = Array.isArray(results[1]) ? results[1] : (results[1].data || []);
 
-            if (items.length === 0) {
-                trkList.innerHTML = '';
-                trkEmpty.classList.add('show');
-                return;
-            }
-            trkEmpty.classList.remove('show');
-
-            var html = '';
-            items.forEach(function (sr, idx) {
-                if (idx > 0) {
-                    html += '<div class="trk-group-divider">Request ' + (idx + 1) + '</div>';
-                }
-                html += buildRequestCard(sr);
-            });
-            trkList.innerHTML = html;
+            state.requests = inspectionItems.map(normalizeInspectionRequest)
+                .concat(serviceItems.map(normalizeServiceRequest));
+            renderRequests();
         } catch (err) {
-            showMsg('error', err.message || 'Could not load service requests. Please refresh the page.');
+            showMsg('error', err.message || 'Could not load tracking requests. Please refresh the page.');
         } finally {
             trkLoading.classList.remove('show');
+            trkList.removeAttribute('aria-busy');
         }
     }
+
+    trkTabButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            var nextTab = button.getAttribute('data-trk-tab');
+            if (!TAB_CONFIG[nextTab] || nextTab === state.activeTab) return;
+            state.activeTab = nextTab;
+            renderRequests();
+        });
+    });
 
     loadRequests();
 

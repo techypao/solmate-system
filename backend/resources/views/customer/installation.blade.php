@@ -561,6 +561,7 @@
             grid-template-columns: 1fr;
         }
     }
+@include('customer.partials.preferred-date-picker-styles')
 </style>
 
 <div class="inst-page">
@@ -569,9 +570,9 @@
             <div>
                 <p class="inst-hero-eyebrow">Customer Service Booking</p>
                 <h1 class="inst-hero-title">Book <span>Installation Service</span></h1>
-                <p class="inst-hero-sub">Schedule an installation appointment for your solar setup. Choose the service basis, add site notes, and send your preferred schedule to the SolMate team.</p>
+                <p class="inst-hero-sub">Schedule an installation appointment for your solar setup. Add site notes, choose your preferred schedule, and send the request to the SolMate team.</p>
                 <div class="inst-hero-steps" aria-label="Installation booking steps">
-                    <span class="inst-hero-step"><span class="inst-hero-step-num">1</span>Select request basis</span>
+                    <span class="inst-hero-step"><span class="inst-hero-step-num">1</span>Choose quotation reference</span>
                     <span class="inst-hero-step"><span class="inst-hero-step-num">2</span>Add installation details</span>
                     <span class="inst-hero-step"><span class="inst-hero-step-num">3</span>Choose schedule</span>
                 </div>
@@ -603,7 +604,7 @@
                         </svg>
                     </div>
                     <div>
-                        <p class="inst-card-title">Request Type and Service Basis</p>
+                        <p class="inst-card-title">Quotation Reference</p>
                         <p class="inst-card-subtitle">Connect this request to your quotation or installation coordination needs</p>
                     </div>
                 </div>
@@ -636,17 +637,6 @@
                             </div>
                         </div>
                         <p class="inst-quote-note">The selected quotation number will be included in your installation request details.</p>
-                    </div>
-
-                    <div class="inst-field" style="margin-top:20px;">
-                        <label class="inst-label" for="inst-basis">Installation Request Basis</label>
-                        <select id="inst-basis" class="inst-select" name="installation_basis">
-                            <option value="">Select the request basis</option>
-                            <option value="Approved quotation ready for installation">Approved quotation ready for installation</option>
-                            <option value="Final quotation confirmed and awaiting schedule">Final quotation confirmed and awaiting schedule</option>
-                            <option value="Need installation coordination and site access planning">Need installation coordination and site access planning</option>
-                        </select>
-                        <div class="inst-field-error" id="inst-basis-error" role="alert"></div>
                     </div>
                 </div>
             </div>
@@ -732,7 +722,8 @@
                             </div>
                             <div class="inst-field">
                                 <label class="inst-label" for="inst-date">Preferred Date</label>
-                                <input id="inst-date" class="inst-input" type="date" autocomplete="off">
+                                <input id="inst-date" class="inst-input" type="hidden" autocomplete="off">
+                                <div id="inst-date-picker" class="sdp-field-host"></div>
                                 <div class="inst-field-error" id="inst-date-error" role="alert"></div>
                             </div>
                         </div>
@@ -836,17 +827,11 @@
         </aside>
     </div>
 
-    <section aria-label="Installation request history">
-        <h2 class="inst-history-title">My Installation Requests</h2>
-        <div id="inst-history-loading" class="inst-loading">Loading your installation requests...</div>
-        <div id="inst-history-msg" class="inst-msg" role="alert"></div>
-        <div id="inst-history-list" class="inst-history-list"></div>
-        <div id="inst-history-empty" class="inst-empty">No installation requests yet. Submit the booking form above to get started.</div>
-    </section>
 </div>
 @endsection
 
 @push('scripts')
+@include('customer.partials.preferred-date-picker-script')
 <script>
 (function () {
     'use strict';
@@ -949,6 +934,9 @@
         qsa('.inst-input, .inst-select, .inst-textarea').forEach(function (el) {
             el.classList.remove('has-error');
         });
+        qsa('.sdp-field-host').forEach(function (el) {
+            el.classList.remove('has-error');
+        });
     }
 
     function showFieldError(inputId, errorId, message) {
@@ -961,33 +949,19 @@
         }
     }
 
-    function statusBadge(status) {
-        var normalized = String(status || 'pending').toLowerCase().replace(/\s+/g, '_');
-        var map = {
-            pending: 'inst-badge-pending',
-            approved: 'inst-badge-approved',
-            scheduled: 'inst-badge-scheduled',
-            assigned: 'inst-badge-assigned',
-            in_progress: 'inst-badge-in_progress',
-            completed: 'inst-badge-completed',
-            cancelled: 'inst-badge-cancelled',
-            declined: 'inst-badge-declined'
-        };
-        var label = normalized.replace(/_/g, ' ');
-        label = label.charAt(0).toUpperCase() + label.slice(1);
-        return '<span class="inst-badge ' + (map[normalized] || 'inst-badge-default') + '">' + escHtml(label) + '</span>';
-    }
-
     var quoteSelect = qs('#inst-quote-select');
     var quoteSummary = qs('#inst-quote-summary');
     var form = qs('#inst-form');
     var formMsg = qs('#inst-form-msg');
     var submitBtn = qs('#inst-submit-btn');
     var submitText = qs('#inst-submit-text');
-    var historyLoading = qs('#inst-history-loading');
-    var historyMsg = qs('#inst-history-msg');
-    var historyList = qs('#inst-history-list');
-    var historyEmpty = qs('#inst-history-empty');
+    var datePicker = window.createPreferredDatePicker({
+        inputId: 'inst-date',
+        mountId: 'inst-date-picker',
+        helperText: 'Booked dates are unavailable and cannot be selected.',
+        fetchErrorText: 'Schedule availability could not be refreshed right now. The backend will still verify your preferred date when you submit.',
+        placeholder: 'Select a preferred date'
+    });
     var allQuotations = [];
 
     qsa('.inst-choice').forEach(function (choice) {
@@ -1058,52 +1032,6 @@
         }
     }
 
-    function renderHistory(items) {
-        if (!items.length) {
-            historyList.innerHTML = '';
-            historyEmpty.classList.add('show');
-            return;
-        }
-
-        historyEmpty.classList.remove('show');
-        historyList.innerHTML = items.map(function (request) {
-            return '<article class="inst-history-card">'
-                + '<div class="inst-history-top">'
-                + '<div>'
-                + '<p class="inst-history-id">Installation Request #' + escHtml(request.id) + '</p>'
-                + '<p class="inst-history-date">Submitted ' + escHtml(fmtDate(request.created_at)) + '</p>'
-                + '</div>'
-                + statusBadge(request.status)
-                + '</div>'
-                + '<div class="inst-history-meta">'
-                + '<div class="inst-history-chip"><div class="inst-history-chip-label">Request Type</div><div class="inst-history-chip-value">Installation</div></div>'
-                + '<div class="inst-history-chip"><div class="inst-history-chip-label">Preferred Date</div><div class="inst-history-chip-value">' + escHtml(fmtDate(request.date_needed)) + '</div></div>'
-                + '<div class="inst-history-chip"><div class="inst-history-chip-label">Contact</div><div class="inst-history-chip-value">' + escHtml(request.contact_number || '-') + '</div></div>'
-                + '<div class="inst-history-chip"><div class="inst-history-chip-label">Address</div><div class="inst-history-chip-value">' + escHtml(request.address || 'Not provided') + '</div></div>'
-                + '</div>'
-                + '<pre class="inst-history-details">' + escHtml(request.details || 'No details provided.') + '</pre>'
-                + '</article>';
-        }).join('');
-    }
-
-    async function loadHistory() {
-        historyLoading.classList.add('show');
-        hideMsg(historyMsg);
-
-        try {
-            var response = await apiRequest('/api/service-requests');
-            var items = Array.isArray(response) ? response : (response.data || []);
-            items = items.filter(function (request) {
-                return String(request.request_type || '').toLowerCase() === 'installation';
-            });
-            renderHistory(items);
-        } catch (error) {
-            showMsg(historyMsg, 'error', error.message || 'Could not load installation requests.');
-        } finally {
-            historyLoading.classList.remove('show');
-        }
-    }
-
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
         clearFieldErrors();
@@ -1111,9 +1039,10 @@
 
         var selectedTypeInput = qs('input[name="installation_type"]:checked');
         var selectedType = selectedTypeInput ? selectedTypeInput.value : '';
-        var basis = qs('#inst-basis').value.trim();
+        var basis = 'Installation coordination request';
         var contact = qs('#inst-contact').value.trim();
-        var dateNeeded = qs('#inst-date').value;
+        await datePicker.refreshAvailability();
+        var dateNeeded = datePicker.getValue();
         var time = qs('#inst-time').value.trim();
         var detailsText = qs('#inst-details').value.trim();
         var extra = qs('#inst-extra').value.trim();
@@ -1121,12 +1050,8 @@
         var address = qs('#inst-address').value.trim();
 
         var hasError = false;
-        if (!basis) {
-            showFieldError('inst-basis', 'inst-basis-error', 'Please select the installation request basis.');
-            hasError = true;
-        }
         if (!selectedType) {
-            showFieldError('inst-basis', 'inst-type-error', 'Please choose the installation type.');
+            showFieldError('inst-type-grid', 'inst-type-error', 'Please choose the installation type.');
             hasError = true;
         }
         if (!detailsText) {
@@ -1138,7 +1063,11 @@
             hasError = true;
         }
         if (!dateNeeded) {
-            showFieldError('inst-date', 'inst-date-error', 'Preferred date is required.');
+            showFieldError('inst-date-picker', 'inst-date-error', 'Preferred date is required.');
+            hasError = true;
+        }
+        if (datePicker.isSelectedDateUnavailable()) {
+            showFieldError('inst-date-picker', 'inst-date-error', 'Selected date is already reserved. Please choose another date.');
             hasError = true;
         }
         if (!time) {
@@ -1172,19 +1101,19 @@
 
             showMsg(formMsg, 'success', 'Your installation request has been submitted. SolMate will review your preferred schedule and confirm the appointment.');
             form.reset();
+            datePicker.clear();
             quoteSelect.value = '';
             quoteSummary.style.display = 'none';
             qsa('.inst-choice').forEach(function (item) {
                 item.classList.remove('is-selected');
             });
-            await loadHistory();
             formMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } catch (error) {
             if (error.errors && error.errors.contact_number) {
                 showFieldError('inst-contact', 'inst-contact-error', error.errors.contact_number[0]);
             }
             if (error.errors && error.errors.date_needed) {
-                showFieldError('inst-date', 'inst-date-error', error.errors.date_needed[0]);
+                showFieldError('inst-date-picker', 'inst-date-error', error.errors.date_needed[0]);
             }
             if (error.errors && error.errors.details) {
                 showFieldError('inst-details', 'inst-details-error', error.errors.details[0]);
@@ -1197,7 +1126,6 @@
     });
 
     loadQuotations();
-    loadHistory();
 })();
 </script>
 @endpush
