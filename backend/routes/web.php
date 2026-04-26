@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\QuotationSettingsPageController;
 use App\Http\Controllers\Admin\PricingCatalogPageController;
 use App\Http\Controllers\Admin\NotificationPageController;
 use App\Http\Controllers\Admin\ProfilePageController;
+use App\Http\Controllers\Admin\ReportsPageController;
 use App\Http\Controllers\Admin\RequestAssignmentPageController;
 use App\Http\Controllers\Admin\TestimonyModerationPageController;
 use App\Http\Controllers\Admin\TechnicianRegistrationController;
@@ -104,6 +105,9 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/admin/notifications', [NotificationPageController::class, 'show'])
             ->name('admin.notifications');
+
+        Route::get('/admin/reports', [ReportsPageController::class, 'show'])
+            ->name('admin.reports');
 
         Route::get('/admin/profile', [ProfilePageController::class, 'show'])
             ->name('admin.profile.show');

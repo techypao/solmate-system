@@ -1770,13 +1770,14 @@
                     <span id="admin-notification-badge" class="admin-sidebar-link-badge" style="display:none;">0</span>
                 </a>
 
-                {{-- Reports (no route yet) --}}
-                <span class="admin-sidebar-link disabled">
+                {{-- Reports --}}
+                <a href="{{ route('admin.reports') }}"
+                   class="admin-sidebar-link {{ request()->routeIs('admin.reports') ? 'active' : '' }}">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
                     </svg>
                     Reports
-                </span>
+                </a>
 
                 {{-- Quotation Settings --}}
                 <a href="{{ route('admin.quotation-settings') }}"
