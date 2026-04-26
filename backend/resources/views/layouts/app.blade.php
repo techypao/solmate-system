@@ -1944,7 +1944,7 @@
                         <a href="{{ route('home') }}"
                            class="solmate-nav-link {{ request()->routeIs('home') ? 'active' : '' }}">Home</a>
                         <a href="{{ route('customer.quotation') }}"
-                           class="solmate-nav-link {{ request()->routeIs('customer.quotation') ? 'active' : '' }}">Quotation</a>
+                           class="solmate-nav-link {{ request()->routeIs('customer.quotation', 'customer.quotation.*', 'customer.final-quotation') ? 'active' : '' }}">Quotation</a>
                         {{-- Services dropdown --}}
                         <div class="solmate-services-wrapper">
                             <button

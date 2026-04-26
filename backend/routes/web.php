@@ -116,8 +116,16 @@ Route::middleware('auth')->group(function () {
             ->name('customer.testimonies');
 
         Route::get('/customer/quotation', function () {
-            return view('customer.quotation');
+            return view('customer.quotation-hub');
         })->name('customer.quotation');
+
+        Route::get('/customer/quotation/create', function () {
+            return view('customer.quotation');
+        })->name('customer.quotation.create');
+
+        Route::get('/customer/quotation/my-quotations', function () {
+            return view('customer.quotations');
+        })->name('customer.quotation.index');
 
         Route::get('/customer/inspection', function () {
             return view('customer.inspection');

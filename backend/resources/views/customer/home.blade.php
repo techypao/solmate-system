@@ -473,7 +473,7 @@
         </a>
 
         {{-- 3. Final Quotation --}}
-        <a href="{{ route('customer.tracking') }}" class="ch-action-card">
+        <a href="{{ route('customer.quotation.index') }}" class="ch-action-card">
             <div class="ch-action-icon">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2" aria-hidden="true">
                     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
@@ -567,8 +567,8 @@
             <div class="ch-act-card-body">
                 <div id="ch-qt-loading" class="ch-act-loading">Loading quotations&hellip;</div>
                 <div id="ch-qt-list"></div>
-                <div id="ch-qt-empty" class="ch-act-empty">No quotations yet. <a href="{{ route('customer.quotation') }}" style="color:#d4a017;font-weight:700;">Generate one now.</a></div>
-                <a href="{{ route('customer.quotation') }}" class="ch-act-view-link">
+                <div id="ch-qt-empty" class="ch-act-empty">No quotations yet. <a href="{{ route('customer.quotation.create') }}" style="color:#d4a017;font-weight:700;">Generate one now.</a></div>
+                <a href="{{ route('customer.quotation.index') }}" class="ch-act-view-link">
                     View all quotations
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </a>
