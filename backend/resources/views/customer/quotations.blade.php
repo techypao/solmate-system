@@ -251,6 +251,12 @@
         flex-wrap: wrap;
         margin-top: 18px;
     }
+    .cql-action-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
     .cql-card-note {
         color: #64748b;
         font-size: 13px;
@@ -274,6 +280,16 @@
     .cql-detail-btn:hover {
         border-color: #102a43;
         background: #102a43;
+        color: #fff;
+    }
+    .cql-detail-btn-download {
+        background: #102a43;
+        border-color: #102a43;
+        color: #fff;
+    }
+    .cql-detail-btn-download:hover {
+        background: #1a3f67;
+        border-color: #1a3f67;
         color: #fff;
     }
     .cql-detail {
@@ -632,7 +648,10 @@
     function buildAction(quotation) {
         var isFinal = !isInitialQuotation(quotation);
         if (isFinal && quotation.inspection_request_id) {
-            return '<a class="cql-detail-btn" href="{{ url('/customer/final-quotation') }}/' + encodeURIComponent(quotation.inspection_request_id) + '">View Details</a>';
+            return '<div class="cql-action-group">'
+                + '<a class="cql-detail-btn" href="{{ url('/customer/final-quotation') }}/' + encodeURIComponent(quotation.inspection_request_id) + '">View Details</a>'
+                + '<a class="cql-detail-btn cql-detail-btn-download" href="{{ url('/customer/final-quotation') }}/' + encodeURIComponent(quotation.inspection_request_id) + '/download-pdf">Download PDF</a>'
+                + '</div>';
         }
 
         return '<button type="button" class="cql-detail-btn" data-toggle-id="' + escHtml(quotation.id) + '">View Details</button>';

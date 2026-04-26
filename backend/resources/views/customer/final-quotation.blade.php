@@ -415,6 +415,16 @@
         text-decoration: none;
     }
     .fq-btn-secondary:hover { background: #f1f5f9; color: #102a43; }
+    .fq-btn-download {
+        background: #102a43;
+        border-color: #102a43;
+        color: #fff;
+    }
+    .fq-btn-download:hover {
+        background: #1a3f67;
+        border-color: #1a3f67;
+        color: #fff;
+    }
 
     /* Message boxes */
     .fq-msg {
@@ -622,6 +632,10 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
                 <span id="fq-confirm-text">Confirm Quotation</span>
             </button>
+            <a class="fq-btn-secondary fq-btn-download" id="fq-download-btn" href="#">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+                Download PDF
+            </a>
             <button type="button" class="fq-btn-secondary" id="fq-back-btn">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
                 Back
@@ -713,6 +727,7 @@
     var actionsEl    = qs('#fq-actions');
     var confirmBtn   = qs('#fq-confirm-btn');
     var confirmText  = qs('#fq-confirm-text');
+    var downloadBtn  = qs('#fq-download-btn');
     var backBtn      = qs('#fq-back-btn');
     var chipId       = qs('#fq-chip-id');
     var chipIdText   = qs('#fq-chip-id-text');
@@ -847,13 +862,18 @@
             remarksCard.style.display = '';
         }
 
-        /* Action buttons — shown when status is 'pending' (awaiting customer confirmation) */
+        downloadBtn.href = '{{ url('/customer/final-quotation') }}/' + encodeURIComponent(inspectionId) + '/download-pdf';
+
+        /* Action buttons */
+        actionsEl.style.display = '';
+
+        /* Confirm action — shown when status is 'pending' (awaiting customer confirmation) */
         var status = String(q.status || 'pending').toLowerCase();
         if (status === 'pending') {
-            actionsEl.style.display = '';
+            confirmBtn.style.display = '';
             confirmBtn.addEventListener('click', function () { handleConfirm(q.id); });
         } else {
-            actionsEl.style.display = 'none';
+            confirmBtn.style.display = 'none';
         }
 
         mainEl.style.display = '';

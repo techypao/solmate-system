@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\TechnicianRegistrationController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CustomerTestimonyPageController;
 use App\Http\Controllers\PublicTestimonyPageController;
+use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\QuotationItemBuilderPageController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -95,6 +96,9 @@ Route::middleware('auth')->group(function () {
         Route::put('/admin/customers/{customer}', [AdminCustomerController::class, 'update'])
             ->name('admin.customers.update');
 
+        Route::delete('/admin/customers/{customer}', [AdminCustomerController::class, 'destroy'])
+            ->name('admin.customers.destroy');
+
         Route::get('/admin/testimonies', [TestimonyModerationPageController::class, 'show'])
             ->name('admin.testimonies');
 
@@ -138,6 +142,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/customer/final-quotation/{inspection_request_id}', function ($inspection_request_id) {
             return view('customer.final-quotation');
         })->name('customer.final-quotation');
+
+        Route::get('/customer/final-quotation/{inspection_request_id}/download-pdf', [QuotationController::class, 'downloadCustomerFinalQuotationPdf'])
+            ->name('customer.final-quotation.download');
 
         Route::get('/customer/installation', function () {
             return view('customer.installation');

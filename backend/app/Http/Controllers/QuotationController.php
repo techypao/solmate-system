@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use App\Models\Quotation;
 use Illuminate\Support\Facades\Auth;
@@ -366,11 +367,7 @@ public function getCustomerFinalQuotation(Request $request, $inspection_request_
 {
     $customer = $request->user();
 
-    $quotation = Quotation::with(['customer', 'inspectionRequest'])
-        ->where('inspection_request_id', $inspection_request_id)
-        ->where('user_id', $customer->id)
-        ->where('quotation_type', 'final')
-        ->first();
+    $quotation = $this->findCustomerFinalQuotation($customer->id, $inspection_request_id);
 
     if (!$quotation) {
         return response()->json([
@@ -386,6 +383,27 @@ public function getCustomerFinalQuotation(Request $request, $inspection_request_
     ], 200);
 }
 
+public function downloadCustomerFinalQuotationPdf(Request $request, $inspection_request_id)
+{
+    $customer = $request->user();
+
+    $quotation = $this->findCustomerFinalQuotation($customer->id, $inspection_request_id);
+
+    if (! $quotation) {
+        abort(404, 'Final quotation not found.');
+    }
+
+    $pdf = Pdf::loadView('customer.final-quotation-pdf', [
+        'quotation' => $quotation,
+        'customer' => $quotation->customer,
+        'technician' => $quotation->inspectionRequest?->technician,
+        'inspectionRequest' => $quotation->inspectionRequest,
+        'lineItems' => $quotation->lineItems,
+    ])->setPaper('a4', 'portrait');
+
+    return $pdf->download('final-quotation-' . $quotation->id . '.pdf');
+}
+
 private function loadLineItemsForFinalQuotation(Quotation $quotation): void
 {
     if ($quotation->quotation_type !== 'final') {
@@ -393,6 +411,23 @@ private function loadLineItemsForFinalQuotation(Quotation $quotation): void
     }
 
     $quotation->loadMissing(['lineItems.pricingItem']);
+}
+
+private function findCustomerFinalQuotation(int $customerId, $inspectionRequestId): ?Quotation
+{
+    $quotation = Quotation::with(['customer', 'inspectionRequest.technician'])
+        ->where('inspection_request_id', $inspectionRequestId)
+        ->where('user_id', $customerId)
+        ->where('quotation_type', 'final')
+        ->first();
+
+    if (! $quotation) {
+        return null;
+    }
+
+    $this->loadLineItemsForFinalQuotation($quotation);
+
+    return $quotation;
 }
 
 private function storeRules(): array

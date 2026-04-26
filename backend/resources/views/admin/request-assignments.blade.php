@@ -93,6 +93,46 @@
             gap: 16px;
         }
 
+        .assignment-page .request-card .request-header {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+            grid-template-areas:
+                "copy actions"
+                "summary summary";
+            align-items: start;
+            column-gap: 24px;
+            row-gap: 18px;
+            width: 100%;
+            margin-bottom: 0;
+        }
+
+        .assignment-page .request-card {
+            display: grid;
+            gap: 18px;
+            border: 1px solid #dbe4f0;
+            border-radius: 20px;
+            padding: 18px 20px;
+            background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+            transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+        }
+
+        .assignment-page .request-card.is-active {
+            border-color: #2a5b92;
+            box-shadow: 0 18px 34px rgba(23, 59, 99, .16);
+            transform: translateY(-1px);
+        }
+
+        .assignment-page .request-card-body {
+            display: none;
+            margin-top: 16px;
+        }
+
+        .assignment-page .request-card.is-active .request-card-body {
+            display: grid;
+            gap: 16px;
+        }
+
         .services-workspace {
             display: grid;
             gap: 22px;
@@ -166,6 +206,48 @@
             max-width: 420px;
         }
 
+        .services-focus-banner {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px;
+            border: 1px solid #c7d8ec;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #eef6ff 0%, #f8fbff 100%);
+        }
+
+        .services-focus-banner.is-visible {
+            display: flex;
+        }
+
+        .services-focus-copy {
+            margin: 0;
+            color: #173b63;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .services-focus-subcopy {
+            margin: 4px 0 0;
+            color: #4b5b73;
+            font-size: 13px;
+        }
+
+        .services-focus-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 32px;
+            padding: 0 12px;
+            border-radius: 999px;
+            background: #173b63;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
         .services-tab-panel {
             display: none;
             gap: 18px;
@@ -191,7 +273,231 @@
             margin-bottom: 0;
         }
 
+        .request-summary-grid {
+            grid-area: summary;
+            display: grid;
+            width: 100%;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            align-self: stretch;
+        }
+
+        .request-summary-item {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            background: #f8fbff;
+            min-height: 100%;
+        }
+
+        .request-summary-label {
+            display: block;
+            margin-bottom: 4px;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+        .request-summary-value {
+            color: #17324f;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .request-header-main {
+            display: contents;
+        }
+
+        .request-header-copy {
+            grid-area: copy;
+            display: grid;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .request-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            width: fit-content;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #eef6ff;
+            color: #173b63;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .45px;
+        }
+
+        .request-active-indicator {
+            display: none;
+            margin-left: 8px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #173b63;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .45px;
+        }
+
+        .request-card.is-active .request-active-indicator {
+            display: inline-flex;
+        }
+
+        .request-top-actions {
+            grid-area: actions;
+            display: grid;
+            justify-items: end;
+            align-content: start;
+            gap: 10px;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .request-top-actions .request-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            width: 100%;
+        }
+
+        .request-toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 40px;
+            padding: 0 14px;
+            border: 1px solid #c7d8ec;
+            border-radius: 12px;
+            background: #fff;
+            color: #17324f;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all .2s ease;
+        }
+
+        .request-toggle-btn:hover {
+            border-color: #2a5b92;
+            color: #173b63;
+            background: #f8fbff;
+        }
+
+        .request-card.is-active .request-toggle-btn {
+            background: #173b63;
+            border-color: #173b63;
+            color: #fff;
+        }
+
+        .request-card-body .detail-grid {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        }
+
+        .request-card-body .stack {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            align-items: start;
+        }
+
+        .request-card-body .stack > form {
+            display: grid;
+            align-content: start;
+            gap: 10px;
+            min-height: 100%;
+            padding: 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            background: #ffffff;
+        }
+
+        .request-card-body .stack > form label {
+            margin-bottom: 0;
+        }
+
+        .request-card-body .assignment-row {
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: stretch;
+            gap: 12px;
+        }
+
+        .request-card-body .assignment-row > div {
+            min-width: 0;
+        }
+
+        .request-card-body .assignment-row input,
+        .request-card-body .assignment-row select {
+            min-height: 46px;
+            height: 46px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            line-height: 1.35;
+        }
+
+        .request-card-body .assignment-row button {
+            min-width: 168px;
+            min-height: 46px;
+            height: 46px;
+            padding: 0 16px;
+            align-self: stretch;
+            box-shadow: 0 10px 20px rgba(212, 160, 23, 0.16);
+        }
+
+        .request-card-body .field-error {
+            margin-top: 0;
+        }
+
+        .request-card-body [data-availability-helper] {
+            display: none !important;
+        }
+
+        .request-detail-box {
+            margin-bottom: 14px;
+        }
+
+        @media (max-width: 1200px) {
+            .assignment-page .request-card .request-header {
+                grid-template-columns: minmax(0, 1fr);
+                grid-template-areas:
+                    "copy"
+                    "actions"
+                    "summary";
+            }
+
+            .request-summary-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .request-card-body .stack {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
         @media (max-width: 768px) {
+            .request-summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .request-top-actions {
+                justify-items: start;
+            }
+
+            .request-top-actions .request-badges {
+                justify-content: flex-start;
+            }
+
             .services-tab-list {
                 width: 100%;
             }
@@ -199,6 +505,21 @@
             .services-tab-link {
                 padding: 10px 14px;
                 font-size: 14px;
+            }
+
+            .services-focus-banner {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .request-card-body .stack,
+            .assignment-row {
+                grid-template-columns: 1fr;
+            }
+
+            .request-card-body .assignment-row button {
+                width: 100%;
+                min-width: 0;
             }
         }
     </style>
@@ -288,7 +609,7 @@
                     <span class="services-tab-count">{{ $maintenanceRequests->count() }}</span>
                 </a>
             </nav>
-            <p class="page-copy services-toolbar-copy">Latest submitted requests appear first in every tab. Technician assignment, preferred date changes, completion review, and official status updates still work the same way.</p>
+            <p class="page-copy services-toolbar-copy">Requests stay compact by default. Open one request at a time to focus on assignment, date, and status updates.</p>
         </div>
 
         <section
@@ -298,10 +619,17 @@
             role="tabpanel"
             aria-labelledby="services-tab-inspection"
         >
+            <div class="services-focus-banner" data-services-focus-banner="inspection" aria-live="polite">
+                <div>
+                    <p class="services-focus-copy">Select an inspection request to start reviewing.</p>
+                    <p class="services-focus-subcopy">The active request opens in place so it is easier to scan the list.</p>
+                </div>
+                <span class="services-focus-chip">Inspection</span>
+            </div>
             <div class="services-panel-head">
                 <div>
                     <h3 class="admin-section-title" style="margin-bottom: 0;">Inspection</h3>
-                    <p class="page-copy services-panel-copy">Inspection requests stay grouped here with customer details, the official preferred date, current status, and technician assignment in one place.</p>
+                    <p class="page-copy services-panel-copy">Quick summaries first, then expand the request you want to work on.</p>
                 </div>
                 <span class="badge badge-neutral">{{ $sortedInspectionRequests->count() }} total</span>
             </div>
@@ -324,108 +652,144 @@
                                 : 'Not assigned';
                         @endphp
 
-                        <div id="inspection-request-{{ $inspectionRequest->id }}" class="request-card">
+                        <div
+                            id="inspection-request-{{ $inspectionRequest->id }}"
+                            class="request-card"
+                            data-request-card
+                            data-request-tab="inspection"
+                            data-request-label="Inspection Request #{{ $inspectionRequest->id }}"
+                        >
                             <div class="request-header">
-                                <div>
-                                    <div class="request-title">Inspection Request #{{ $inspectionRequest->id }}</div>
-                                    <div class="muted">Customer: {{ $inspectionRequest->customer?->name ?? 'Unknown customer' }}</div>
-                                </div>
-
-                                <div class="request-badges">
-                                    <span class="{{ $statusClass }}" data-status-for="{{ $requestKey }}">
-                                        {{ \Illuminate\Support\Str::headline($inspectionRequest->status) }}
-                                    </span>
-                                    <span
-                                        class="{{ $isAssigned ? 'badge badge-neutral' : 'badge badge-warning' }}"
-                                        data-assignment-state-for="{{ $requestKey }}"
-                                    >
-                                        {{ $isAssigned ? 'Assigned' : 'Needs technician' }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="detail-grid" style="margin-bottom: 14px;">
-                                <div class="detail-item">
-                                    <span class="detail-label">Customer Email</span>
-                                    <strong>{{ $inspectionRequest->customer?->email ?? 'Not available' }}</strong>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Contact Number</span>
-                                    <strong>{{ $inspectionRequest->contact_number ?: 'Not provided' }}</strong>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Address</span>
-                                    <strong>{{ $inspectionRequest->address ?: 'Not provided' }}</strong>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Request Type</span>
-                                    <strong>Inspection</strong>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Preferred Date</span>
-                                    <strong data-preferred-date-for="{{ $requestKey }}">{{ $dateNeeded }}</strong>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Assigned Technician</span>
-                                    <strong data-technician-for="{{ $requestKey }}">{{ $technicianSummary }}</strong>
-                                </div>
-                            </div>
-
-                            <div class="info-box" style="margin-bottom: 14px;">
-                                <strong>Request details:</strong> {{ $inspectionRequest->details }}
-                            </div>
-
-                            <form
-                                class="preferred-date-form"
-                                data-endpoint="/api/inspection-requests/{{ $inspectionRequest->id }}/preferred-date"
-                                data-request-key="{{ $requestKey }}"
-                            >
-                                <label for="inspection_date_needed_{{ $inspectionRequest->id }}">Official preferred date</label>
-                                <div class="assignment-row">
-                                    <div>
-                                        <input
-                                            id="inspection_date_needed_{{ $inspectionRequest->id }}"
-                                            name="date_needed"
-                                            type="date"
-                                            value="{{ $inspectionRequest->date_needed ? \Illuminate\Support\Carbon::parse($inspectionRequest->date_needed)->toDateString() : '' }}"
-                                            required
-                                        >
-                                        <div class="muted" style="margin-top: 8px;">Use this when the original customer date needs to be adjusted for technician availability. Some dates may already be reserved by other active requests.</div>
-                                        <div class="muted" style="margin-top: 8px;" data-availability-helper></div>
+                                <div class="request-header-main">
+                                    <div class="request-header-copy">
+                                        <span class="request-kicker">New Inspection Request</span>
+                                        <div class="request-title">
+                                            Inspection Request #{{ $inspectionRequest->id }}
+                                            <span class="request-active-indicator">Open now</span>
+                                        </div>
+                                        <div class="muted">Customer: {{ $inspectionRequest->customer?->name ?? 'Unknown customer' }}</div>
                                     </div>
-                                    <button type="submit">Save preferred date</button>
-                                </div>
-                                <div class="field-error" data-form-error></div>
-                            </form>
 
-                            <form
-                                class="assignment-form"
-                                data-endpoint="/api/inspection-requests/{{ $inspectionRequest->id }}/assign-technician"
-                                data-request-key="{{ $requestKey }}"
-                                data-default-label="{{ $buttonLabel }}"
-                            >
-                                <label for="inspection_technician_{{ $inspectionRequest->id }}">Technician assignment</label>
-                                <div class="assignment-row">
-                                    <div>
-                                        <select
-                                            id="inspection_technician_{{ $inspectionRequest->id }}"
-                                            name="technician_id"
-                                            required
-                                            @disabled($technicians->isEmpty())
-                                        >
-                                            <option value="">Select technician</option>
-                                            @foreach ($technicians as $technician)
-                                                <option value="{{ $technician->id }}" @selected($inspectionRequest->technician_id === $technician->id)>
-                                                    {{ $technician->name }} ({{ $technician->email }})
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        <div class="muted" style="margin-top: 8px;">Select a technician, then save the assignment.</div>
+                                    <div class="request-top-actions">
+                                        <div class="request-badges">
+                                            <span class="{{ $statusClass }}" data-status-for="{{ $requestKey }}">
+                                                {{ \Illuminate\Support\Str::headline($inspectionRequest->status) }}
+                                            </span>
+                                            <span
+                                                class="{{ $isAssigned ? 'badge badge-neutral' : 'badge badge-warning' }}"
+                                                data-assignment-state-for="{{ $requestKey }}"
+                                            >
+                                                {{ $isAssigned ? 'Assigned' : 'Needs technician' }}
+                                            </span>
+                                        </div>
+                                        <button type="button" class="request-toggle-btn" data-request-toggle>
+                                            Open request
+                                        </button>
                                     </div>
-                                    <button type="submit" @disabled($technicians->isEmpty())>{{ $buttonLabel }}</button>
                                 </div>
-                                <div class="field-error" data-form-error></div>
-                            </form>
+
+                                <div class="request-summary-grid">
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Contact</span>
+                                        <div class="request-summary-value">{{ $inspectionRequest->contact_number ?: 'Not provided' }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Preferred Date</span>
+                                        <div class="request-summary-value" data-preferred-date-for="{{ $requestKey }}">{{ $dateNeeded }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Technician</span>
+                                        <div class="request-summary-value" data-technician-for="{{ $requestKey }}">{{ $technicianSummary }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Address</span>
+                                        <div class="request-summary-value">{{ $inspectionRequest->address ?: 'Not provided' }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Customer Email</span>
+                                        <div class="request-summary-value">{{ $inspectionRequest->customer?->email ?? 'Not available' }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Request Type</span>
+                                        <div class="request-summary-value">Inspection</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="request-card-body">
+                                <div class="detail-grid" style="margin-bottom: 14px;">
+                                    <div class="detail-item">
+                                        <span class="detail-label">Customer Email</span>
+                                        <strong>{{ $inspectionRequest->customer?->email ?? 'Not available' }}</strong>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Contact Number</span>
+                                        <strong>{{ $inspectionRequest->contact_number ?: 'Not provided' }}</strong>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Address</span>
+                                        <strong>{{ $inspectionRequest->address ?: 'Not provided' }}</strong>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Request Type</span>
+                                        <strong>Inspection</strong>
+                                    </div>
+                                </div>
+
+                                <div class="info-box request-detail-box">
+                                    <strong>Request details:</strong> {{ $inspectionRequest->details }}
+                                </div>
+
+                                <form
+                                    class="preferred-date-form"
+                                    data-endpoint="/api/inspection-requests/{{ $inspectionRequest->id }}/preferred-date"
+                                    data-request-key="{{ $requestKey }}"
+                                >
+                                    <label for="inspection_date_needed_{{ $inspectionRequest->id }}">Official preferred date</label>
+                                    <div class="assignment-row">
+                                        <div>
+                                            <input
+                                                id="inspection_date_needed_{{ $inspectionRequest->id }}"
+                                                name="date_needed"
+                                                type="date"
+                                                value="{{ $inspectionRequest->date_needed ? \Illuminate\Support\Carbon::parse($inspectionRequest->date_needed)->toDateString() : '' }}"
+                                                required
+                                            >
+                                            <div class="muted" style="margin-top: 8px;" data-availability-helper></div>
+                                        </div>
+                                        <button type="submit">Save preferred date</button>
+                                    </div>
+                                    <div class="field-error" data-form-error></div>
+                                </form>
+
+                                <form
+                                    class="assignment-form"
+                                    data-endpoint="/api/inspection-requests/{{ $inspectionRequest->id }}/assign-technician"
+                                    data-request-key="{{ $requestKey }}"
+                                    data-default-label="{{ $buttonLabel }}"
+                                >
+                                    <label for="inspection_technician_{{ $inspectionRequest->id }}">Technician assignment</label>
+                                    <div class="assignment-row">
+                                        <div>
+                                            <select
+                                                id="inspection_technician_{{ $inspectionRequest->id }}"
+                                                name="technician_id"
+                                                required
+                                                @disabled($technicians->isEmpty())
+                                            >
+                                                <option value="">Select technician</option>
+                                                @foreach ($technicians as $technician)
+                                                    <option value="{{ $technician->id }}" @selected($inspectionRequest->technician_id === $technician->id)>
+                                                        {{ $technician->name }} ({{ $technician->email }})
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <button type="submit" @disabled($technicians->isEmpty())>{{ $buttonLabel }}</button>
+                                    </div>
+                                    <div class="field-error" data-form-error></div>
+                                </form>
+                            </div>
                         </div>
                     @endforeach
                 </div>
@@ -439,10 +803,17 @@
             role="tabpanel"
             aria-labelledby="services-tab-installation"
         >
+            <div class="services-focus-banner" data-services-focus-banner="installation" aria-live="polite">
+                <div>
+                    <p class="services-focus-copy">Select an installation request to work on it.</p>
+                    <p class="services-focus-subcopy">Once opened, that request becomes the active one in this tab.</p>
+                </div>
+                <span class="services-focus-chip">Installation</span>
+            </div>
             <div class="services-panel-head">
                 <div>
                     <h3 class="admin-section-title" style="margin-bottom: 0;">Installation</h3>
-                    <p class="page-copy services-panel-copy">Installation requests stay grouped here so admin can keep scheduling, technician assignments, completion review, and official status updates aligned.</p>
+                    <p class="page-copy services-panel-copy">Keep the list short on screen, then open the specific installation request you want to update.</p>
                 </div>
                 <span class="badge badge-neutral">{{ $installationRequests->count() }} total</span>
             </div>
@@ -489,77 +860,114 @@
                             }
                         @endphp
 
-                        <div id="service-request-{{ $serviceRequest->id }}" class="request-card">
+                        <div
+                            id="service-request-{{ $serviceRequest->id }}"
+                            class="request-card"
+                            data-request-card
+                            data-request-tab="installation"
+                            data-request-label="Installation Request #{{ $serviceRequest->id }}"
+                        >
                             <div class="request-header">
-                                <div>
-                                    <div class="request-title">Installation Request #{{ $serviceRequest->id }}</div>
-                                    <div class="muted">Customer: {{ $serviceRequest->customer?->name ?? 'Unknown customer' }}</div>
+                                <div class="request-header-main">
+                                    <div class="request-header-copy">
+                                        <span class="request-kicker">New Installation Request</span>
+                                        <div class="request-title">
+                                            Installation Request #{{ $serviceRequest->id }}
+                                            <span class="request-active-indicator">Open now</span>
+                                        </div>
+                                        <div class="muted">Customer: {{ $serviceRequest->customer?->name ?? 'Unknown customer' }}</div>
+                                    </div>
+
+                                    <div class="request-top-actions">
+                                        <div class="request-badges">
+                                            <span class="{{ $statusClass }}" data-status-for="{{ $requestKey }}">
+                                                {{ \Illuminate\Support\Str::headline($serviceRequest->status) }}
+                                            </span>
+                                            <span
+                                                class="{{ $isAssigned ? 'badge badge-neutral' : 'badge badge-warning' }}"
+                                                data-assignment-state-for="{{ $requestKey }}"
+                                            >
+                                                {{ $isAssigned ? 'Assigned' : 'Needs technician' }}
+                                            </span>
+                                            <span
+                                                class="{{ $completionStateClass }}"
+                                                data-completion-state-for="{{ $requestKey }}"
+                                            >
+                                                {{ $completionStateLabel }}
+                                            </span>
+                                        </div>
+                                        <button type="button" class="request-toggle-btn" data-request-toggle>
+                                            Open request
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div class="request-badges">
-                                    <span class="{{ $statusClass }}" data-status-for="{{ $requestKey }}">
-                                        {{ \Illuminate\Support\Str::headline($serviceRequest->status) }}
-                                    </span>
-                                    <span
-                                        class="{{ $isAssigned ? 'badge badge-neutral' : 'badge badge-warning' }}"
-                                        data-assignment-state-for="{{ $requestKey }}"
+                                <div class="request-summary-grid">
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Contact</span>
+                                        <div class="request-summary-value">{{ $serviceRequest->contact_number ?: 'Not provided' }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Preferred Date</span>
+                                        <div class="request-summary-value" data-service-preferred-date-for="{{ $requestKey }}">{{ $dateNeeded }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Technician</span>
+                                        <div class="request-summary-value" data-technician-for="{{ $requestKey }}">{{ $technicianSummary }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Completion</span>
+                                        <div class="request-summary-value" data-completion-message-for="{{ $requestKey }}">{{ $completionStateLabel }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Address</span>
+                                        <div class="request-summary-value">{{ $serviceRequest->address ?: 'Not provided' }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Request Type</span>
+                                        <div class="request-summary-value">{{ $serviceRequest->request_type ?: 'Installation' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="request-card-body">
+                                <div class="detail-grid" style="margin-bottom: 14px;">
+                                    <div class="detail-item">
+                                        <span class="detail-label">Customer Email</span>
+                                        <strong>{{ $serviceRequest->customer?->email ?? 'Not available' }}</strong>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Contact Number</span>
+                                        <strong>{{ $serviceRequest->contact_number ?: 'Not provided' }}</strong>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Address</span>
+                                        <strong>{{ $serviceRequest->address ?: 'Not provided' }}</strong>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Request Type</span>
+                                        <strong>{{ $serviceRequest->request_type ?: 'Not specified' }}</strong>
+                                    </div>
+                                </div>
+
+                                <div class="info-box request-detail-box">
+                                    <strong>Request details:</strong> {{ $serviceRequest->details }}
+                                </div>
+
+                                <div class="info-box request-detail-box">
+                                    <strong data-completion-heading-for="{{ $requestKey }}">{{ $completionHeading }}:</strong>
+                                    <span data-completion-detail-for="{{ $requestKey }}">{{ $completionMessage }}</span>
+                                </div>
+
+                                <div class="stack">
+                                    <form
+                                        class="service-preferred-date-form"
+                                        data-endpoint="/api/admin/service-requests/{{ $serviceRequest->id }}/preferred-date"
+                                        data-request-key="{{ $requestKey }}"
                                     >
-                                        {{ $isAssigned ? 'Assigned' : 'Needs technician' }}
-                                    </span>
-                                    <span
-                                        class="{{ $completionStateClass }}"
-                                        data-completion-state-for="{{ $requestKey }}"
-                                    >
-                                        {{ $completionStateLabel }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="detail-grid" style="margin-bottom: 14px;">
-                                <div class="detail-item">
-                                    <span class="detail-label">Customer Email</span>
-                                    <strong>{{ $serviceRequest->customer?->email ?? 'Not available' }}</strong>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Contact Number</span>
-                                    <strong>{{ $serviceRequest->contact_number ?: 'Not provided' }}</strong>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Address</span>
-                                    <strong>{{ $serviceRequest->address ?: 'Not provided' }}</strong>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Request Type</span>
-                                    <strong>{{ $serviceRequest->request_type ?: 'Not specified' }}</strong>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Preferred Date</span>
-                                    <strong data-service-preferred-date-for="{{ $requestKey }}">{{ $dateNeeded }}</strong>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Assigned Technician</span>
-                                    <strong data-technician-for="{{ $requestKey }}">{{ $technicianSummary }}</strong>
-                                </div>
-                            </div>
-
-                            <div class="info-box" style="margin-bottom: 14px;">
-                                <strong>Request details:</strong> {{ $serviceRequest->details }}
-                            </div>
-
-                            <div class="info-box" style="margin-bottom: 14px;">
-                                <strong data-completion-heading-for="{{ $requestKey }}">{{ $completionHeading }}:</strong>
-                                <span data-completion-message-for="{{ $requestKey }}">{{ $completionMessage }}</span>
-                            </div>
-
-                            <div class="stack">
-                                <form
-                                    class="service-preferred-date-form"
-                                    data-endpoint="/api/admin/service-requests/{{ $serviceRequest->id }}/preferred-date"
-                                    data-request-key="{{ $requestKey }}"
-                                >
-                                    <label for="service_date_needed_{{ $serviceRequest->id }}">Official preferred date</label>
-                                    <div class="assignment-row">
-                                        <div>
+                                        <label for="service_date_needed_{{ $serviceRequest->id }}">Official preferred date</label>
+                                        <div class="assignment-row">
+                                            <div>
                                             <input
                                                 id="service_date_needed_{{ $serviceRequest->id }}"
                                                 name="date_needed"
@@ -567,29 +975,28 @@
                                                 value="{{ $serviceRequest->date_needed ? \Illuminate\Support\Carbon::parse($serviceRequest->date_needed)->toDateString() : '' }}"
                                                 required
                                             >
-                                            <div class="muted" style="margin-top: 8px;">Adjust this when the customer's requested service date needs to move for technician availability. Some dates may already be reserved by other active requests.</div>
-                                            <div class="muted" style="margin-top: 8px;" data-availability-helper></div>
+                                                <div class="muted" style="margin-top: 8px;" data-availability-helper></div>
+                                            </div>
+                                            <button type="submit">Save preferred date</button>
                                         </div>
-                                        <button type="submit">Save preferred date</button>
-                                    </div>
-                                    <div class="field-error" data-form-error></div>
-                                </form>
+                                        <div class="field-error" data-form-error></div>
+                                    </form>
 
-                                <form
-                                    class="assignment-form"
-                                    data-endpoint="/api/service-requests/{{ $serviceRequest->id }}/assign-technician"
-                                    data-request-key="{{ $requestKey }}"
-                                    data-default-label="{{ $buttonLabel }}"
-                                >
-                                    <label for="service_technician_{{ $serviceRequest->id }}">Technician assignment</label>
-                                    <div class="assignment-row">
-                                        <div>
-                                            <select
-                                                id="service_technician_{{ $serviceRequest->id }}"
-                                                name="technician_id"
-                                                required
-                                                @disabled($technicians->isEmpty())
-                                            >
+                                    <form
+                                        class="assignment-form"
+                                        data-endpoint="/api/service-requests/{{ $serviceRequest->id }}/assign-technician"
+                                        data-request-key="{{ $requestKey }}"
+                                        data-default-label="{{ $buttonLabel }}"
+                                    >
+                                        <label for="service_technician_{{ $serviceRequest->id }}">Technician assignment</label>
+                                        <div class="assignment-row">
+                                            <div>
+                                                <select
+                                                    id="service_technician_{{ $serviceRequest->id }}"
+                                                    name="technician_id"
+                                                    required
+                                                    @disabled($technicians->isEmpty())
+                                                >
                                                 <option value="">Select technician</option>
                                                 @foreach ($technicians as $technician)
                                                     <option value="{{ $technician->id }}" @selected($serviceRequest->technician_id === $technician->id)>
@@ -597,36 +1004,35 @@
                                                     </option>
                                                 @endforeach
                                             </select>
-                                            <div class="muted" style="margin-top: 8px;">Assign or reassign the technician responsible for this service request.</div>
+                                            </div>
+                                            <button type="submit" @disabled($technicians->isEmpty())>{{ $buttonLabel }}</button>
                                         </div>
-                                        <button type="submit" @disabled($technicians->isEmpty())>{{ $buttonLabel }}</button>
-                                    </div>
-                                    <div class="field-error" data-form-error></div>
-                                </form>
+                                        <div class="field-error" data-form-error></div>
+                                    </form>
 
-                                <form
-                                    class="service-status-form"
-                                    data-endpoint="/api/admin/service-requests/{{ $serviceRequest->id }}/status"
-                                    data-request-key="{{ $requestKey }}"
-                                >
-                                    <label for="service_status_{{ $serviceRequest->id }}">Official service status</label>
-                                    <div class="assignment-row">
-                                        <div>
-                                            <select
-                                                id="service_status_{{ $serviceRequest->id }}"
-                                                name="status"
-                                                required
-                                            >
-                                                @foreach ($serviceStatusOptions as $value => $label)
-                                                    <option value="{{ $value }}" @selected($serviceRequest->status === $value)>{{ $label }}</option>
-                                                @endforeach
-                                            </select>
-                                            <div class="muted" style="margin-top: 8px;">Admin is the source of truth for the official service request status.</div>
+                                    <form
+                                        class="service-status-form"
+                                        data-endpoint="/api/admin/service-requests/{{ $serviceRequest->id }}/status"
+                                        data-request-key="{{ $requestKey }}"
+                                    >
+                                        <label for="service_status_{{ $serviceRequest->id }}">Official service status</label>
+                                        <div class="assignment-row">
+                                            <div>
+                                                <select
+                                                    id="service_status_{{ $serviceRequest->id }}"
+                                                    name="status"
+                                                    required
+                                                >
+                                                    @foreach ($serviceStatusOptions as $value => $label)
+                                                        <option value="{{ $value }}" @selected($serviceRequest->status === $value)>{{ $label }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <button type="submit">Save official status</button>
                                         </div>
-                                        <button type="submit">Save official status</button>
-                                    </div>
-                                    <div class="field-error" data-form-error></div>
-                                </form>
+                                        <div class="field-error" data-form-error></div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     @endforeach
@@ -641,10 +1047,17 @@
             role="tabpanel"
             aria-labelledby="services-tab-maintenance"
         >
+            <div class="services-focus-banner" data-services-focus-banner="maintenance" aria-live="polite">
+                <div>
+                    <p class="services-focus-copy">Select a maintenance request to review it.</p>
+                    <p class="services-focus-subcopy">The open request is highlighted so it is obvious where you are working.</p>
+                </div>
+                <span class="services-focus-chip">Maintenance</span>
+            </div>
             <div class="services-panel-head">
                 <div>
                     <h3 class="admin-section-title" style="margin-bottom: 0;">Maintenance</h3>
-                    <p class="page-copy services-panel-copy">Maintenance requests stay grouped here so recurring service work, repairs, and admin follow-up remain easy to review.</p>
+                    <p class="page-copy services-panel-copy">Open only the maintenance request you need so the page feels faster to scan.</p>
                 </div>
                 <span class="badge badge-neutral">{{ $maintenanceRequests->count() }} total</span>
             </div>
@@ -691,77 +1104,114 @@
                             }
                         @endphp
 
-                        <div id="service-request-{{ $serviceRequest->id }}" class="request-card">
+                        <div
+                            id="service-request-{{ $serviceRequest->id }}"
+                            class="request-card"
+                            data-request-card
+                            data-request-tab="maintenance"
+                            data-request-label="Maintenance Request #{{ $serviceRequest->id }}"
+                        >
                             <div class="request-header">
-                                <div>
-                                    <div class="request-title">Maintenance Request #{{ $serviceRequest->id }}</div>
-                                    <div class="muted">Customer: {{ $serviceRequest->customer?->name ?? 'Unknown customer' }}</div>
+                                <div class="request-header-main">
+                                    <div class="request-header-copy">
+                                        <span class="request-kicker">New Maintenance Request</span>
+                                        <div class="request-title">
+                                            Maintenance Request #{{ $serviceRequest->id }}
+                                            <span class="request-active-indicator">Open now</span>
+                                        </div>
+                                        <div class="muted">Customer: {{ $serviceRequest->customer?->name ?? 'Unknown customer' }}</div>
+                                    </div>
+
+                                    <div class="request-top-actions">
+                                        <div class="request-badges">
+                                            <span class="{{ $statusClass }}" data-status-for="{{ $requestKey }}">
+                                                {{ \Illuminate\Support\Str::headline($serviceRequest->status) }}
+                                            </span>
+                                            <span
+                                                class="{{ $isAssigned ? 'badge badge-neutral' : 'badge badge-warning' }}"
+                                                data-assignment-state-for="{{ $requestKey }}"
+                                            >
+                                                {{ $isAssigned ? 'Assigned' : 'Needs technician' }}
+                                            </span>
+                                            <span
+                                                class="{{ $completionStateClass }}"
+                                                data-completion-state-for="{{ $requestKey }}"
+                                            >
+                                                {{ $completionStateLabel }}
+                                            </span>
+                                        </div>
+                                        <button type="button" class="request-toggle-btn" data-request-toggle>
+                                            Open request
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div class="request-badges">
-                                    <span class="{{ $statusClass }}" data-status-for="{{ $requestKey }}">
-                                        {{ \Illuminate\Support\Str::headline($serviceRequest->status) }}
-                                    </span>
-                                    <span
-                                        class="{{ $isAssigned ? 'badge badge-neutral' : 'badge badge-warning' }}"
-                                        data-assignment-state-for="{{ $requestKey }}"
+                                <div class="request-summary-grid">
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Contact</span>
+                                        <div class="request-summary-value">{{ $serviceRequest->contact_number ?: 'Not provided' }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Preferred Date</span>
+                                        <div class="request-summary-value" data-service-preferred-date-for="{{ $requestKey }}">{{ $dateNeeded }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Technician</span>
+                                        <div class="request-summary-value" data-technician-for="{{ $requestKey }}">{{ $technicianSummary }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Completion</span>
+                                        <div class="request-summary-value" data-completion-message-for="{{ $requestKey }}">{{ $completionStateLabel }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Address</span>
+                                        <div class="request-summary-value">{{ $serviceRequest->address ?: 'Not provided' }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Request Type</span>
+                                        <div class="request-summary-value">{{ $serviceRequest->request_type ?: 'Maintenance' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="request-card-body">
+                                <div class="detail-grid" style="margin-bottom: 14px;">
+                                    <div class="detail-item">
+                                        <span class="detail-label">Customer Email</span>
+                                        <strong>{{ $serviceRequest->customer?->email ?? 'Not available' }}</strong>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Contact Number</span>
+                                        <strong>{{ $serviceRequest->contact_number ?: 'Not provided' }}</strong>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Address</span>
+                                        <strong>{{ $serviceRequest->address ?: 'Not provided' }}</strong>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Request Type</span>
+                                        <strong>{{ $serviceRequest->request_type ?: 'Not specified' }}</strong>
+                                    </div>
+                                </div>
+
+                                <div class="info-box request-detail-box">
+                                    <strong>Request details:</strong> {{ $serviceRequest->details }}
+                                </div>
+
+                                <div class="info-box request-detail-box">
+                                    <strong data-completion-heading-for="{{ $requestKey }}">{{ $completionHeading }}:</strong>
+                                    <span data-completion-detail-for="{{ $requestKey }}">{{ $completionMessage }}</span>
+                                </div>
+
+                                <div class="stack">
+                                    <form
+                                        class="service-preferred-date-form"
+                                        data-endpoint="/api/admin/service-requests/{{ $serviceRequest->id }}/preferred-date"
+                                        data-request-key="{{ $requestKey }}"
                                     >
-                                        {{ $isAssigned ? 'Assigned' : 'Needs technician' }}
-                                    </span>
-                                    <span
-                                        class="{{ $completionStateClass }}"
-                                        data-completion-state-for="{{ $requestKey }}"
-                                    >
-                                        {{ $completionStateLabel }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="detail-grid" style="margin-bottom: 14px;">
-                                <div class="detail-item">
-                                    <span class="detail-label">Customer Email</span>
-                                    <strong>{{ $serviceRequest->customer?->email ?? 'Not available' }}</strong>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Contact Number</span>
-                                    <strong>{{ $serviceRequest->contact_number ?: 'Not provided' }}</strong>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Address</span>
-                                    <strong>{{ $serviceRequest->address ?: 'Not provided' }}</strong>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Request Type</span>
-                                    <strong>{{ $serviceRequest->request_type ?: 'Not specified' }}</strong>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Preferred Date</span>
-                                    <strong data-service-preferred-date-for="{{ $requestKey }}">{{ $dateNeeded }}</strong>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Assigned Technician</span>
-                                    <strong data-technician-for="{{ $requestKey }}">{{ $technicianSummary }}</strong>
-                                </div>
-                            </div>
-
-                            <div class="info-box" style="margin-bottom: 14px;">
-                                <strong>Request details:</strong> {{ $serviceRequest->details }}
-                            </div>
-
-                            <div class="info-box" style="margin-bottom: 14px;">
-                                <strong data-completion-heading-for="{{ $requestKey }}">{{ $completionHeading }}:</strong>
-                                <span data-completion-message-for="{{ $requestKey }}">{{ $completionMessage }}</span>
-                            </div>
-
-                            <div class="stack">
-                                <form
-                                    class="service-preferred-date-form"
-                                    data-endpoint="/api/admin/service-requests/{{ $serviceRequest->id }}/preferred-date"
-                                    data-request-key="{{ $requestKey }}"
-                                >
-                                    <label for="service_date_needed_{{ $serviceRequest->id }}">Official preferred date</label>
-                                    <div class="assignment-row">
-                                        <div>
+                                        <label for="service_date_needed_{{ $serviceRequest->id }}">Official preferred date</label>
+                                        <div class="assignment-row">
+                                            <div>
                                             <input
                                                 id="service_date_needed_{{ $serviceRequest->id }}"
                                                 name="date_needed"
@@ -769,29 +1219,28 @@
                                                 value="{{ $serviceRequest->date_needed ? \Illuminate\Support\Carbon::parse($serviceRequest->date_needed)->toDateString() : '' }}"
                                                 required
                                             >
-                                            <div class="muted" style="margin-top: 8px;">Adjust this when the customer's requested service date needs to move for technician availability. Some dates may already be reserved by other active requests.</div>
-                                            <div class="muted" style="margin-top: 8px;" data-availability-helper></div>
+                                                <div class="muted" style="margin-top: 8px;" data-availability-helper></div>
+                                            </div>
+                                            <button type="submit">Save preferred date</button>
                                         </div>
-                                        <button type="submit">Save preferred date</button>
-                                    </div>
-                                    <div class="field-error" data-form-error></div>
-                                </form>
+                                        <div class="field-error" data-form-error></div>
+                                    </form>
 
-                                <form
-                                    class="assignment-form"
-                                    data-endpoint="/api/service-requests/{{ $serviceRequest->id }}/assign-technician"
-                                    data-request-key="{{ $requestKey }}"
-                                    data-default-label="{{ $buttonLabel }}"
-                                >
-                                    <label for="service_technician_{{ $serviceRequest->id }}">Technician assignment</label>
-                                    <div class="assignment-row">
-                                        <div>
-                                            <select
-                                                id="service_technician_{{ $serviceRequest->id }}"
-                                                name="technician_id"
-                                                required
-                                                @disabled($technicians->isEmpty())
-                                            >
+                                    <form
+                                        class="assignment-form"
+                                        data-endpoint="/api/service-requests/{{ $serviceRequest->id }}/assign-technician"
+                                        data-request-key="{{ $requestKey }}"
+                                        data-default-label="{{ $buttonLabel }}"
+                                    >
+                                        <label for="service_technician_{{ $serviceRequest->id }}">Technician assignment</label>
+                                        <div class="assignment-row">
+                                            <div>
+                                                <select
+                                                    id="service_technician_{{ $serviceRequest->id }}"
+                                                    name="technician_id"
+                                                    required
+                                                    @disabled($technicians->isEmpty())
+                                                >
                                                 <option value="">Select technician</option>
                                                 @foreach ($technicians as $technician)
                                                     <option value="{{ $technician->id }}" @selected($serviceRequest->technician_id === $technician->id)>
@@ -799,36 +1248,35 @@
                                                     </option>
                                                 @endforeach
                                             </select>
-                                            <div class="muted" style="margin-top: 8px;">Assign or reassign the technician responsible for this service request.</div>
+                                            </div>
+                                            <button type="submit" @disabled($technicians->isEmpty())>{{ $buttonLabel }}</button>
                                         </div>
-                                        <button type="submit" @disabled($technicians->isEmpty())>{{ $buttonLabel }}</button>
-                                    </div>
-                                    <div class="field-error" data-form-error></div>
-                                </form>
+                                        <div class="field-error" data-form-error></div>
+                                    </form>
 
-                                <form
-                                    class="service-status-form"
-                                    data-endpoint="/api/admin/service-requests/{{ $serviceRequest->id }}/status"
-                                    data-request-key="{{ $requestKey }}"
-                                >
-                                    <label for="service_status_{{ $serviceRequest->id }}">Official service status</label>
-                                    <div class="assignment-row">
-                                        <div>
-                                            <select
-                                                id="service_status_{{ $serviceRequest->id }}"
-                                                name="status"
-                                                required
-                                            >
-                                                @foreach ($serviceStatusOptions as $value => $label)
-                                                    <option value="{{ $value }}" @selected($serviceRequest->status === $value)>{{ $label }}</option>
-                                                @endforeach
-                                            </select>
-                                            <div class="muted" style="margin-top: 8px;">Admin is the source of truth for the official service request status.</div>
+                                    <form
+                                        class="service-status-form"
+                                        data-endpoint="/api/admin/service-requests/{{ $serviceRequest->id }}/status"
+                                        data-request-key="{{ $requestKey }}"
+                                    >
+                                        <label for="service_status_{{ $serviceRequest->id }}">Official service status</label>
+                                        <div class="assignment-row">
+                                            <div>
+                                                <select
+                                                    id="service_status_{{ $serviceRequest->id }}"
+                                                    name="status"
+                                                    required
+                                                >
+                                                    @foreach ($serviceStatusOptions as $value => $label)
+                                                        <option value="{{ $value }}" @selected($serviceRequest->status === $value)>{{ $label }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <button type="submit">Save official status</button>
                                         </div>
-                                        <button type="submit">Save official status</button>
-                                    </div>
-                                    <div class="field-error" data-form-error></div>
-                                </form>
+                                        <div class="field-error" data-form-error></div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     @endforeach
@@ -853,6 +1301,8 @@
         const servicePreferredDateForms = document.querySelectorAll('.service-preferred-date-form');
         const preferredDateForms = document.querySelectorAll('.preferred-date-form');
         const serviceStatusForms = document.querySelectorAll('.service-status-form');
+        const requestCards = document.querySelectorAll('[data-request-card]');
+        const focusBanners = document.querySelectorAll('[data-services-focus-banner]');
         const lockingStatuses = new Set(['pending', 'approved', 'scheduled', 'assigned', 'in_progress']);
         const serviceRequestRecords = JSON.parse(document.getElementById('__data_serviceRequestRecords').textContent);
         const inspectionRequestRecords = JSON.parse(document.getElementById('__data_inspectionRequestRecords').textContent);
@@ -1037,6 +1487,48 @@
             }
         }
 
+        function focusBannerForTab(tabKey) {
+            return document.querySelector(`[data-services-focus-banner="${tabKey}"]`);
+        }
+
+        function setFocusedRequest(card) {
+            requestCards.forEach((item) => {
+                const isActive = item === card;
+                item.classList.toggle('is-active', isActive);
+
+                const button = item.querySelector('[data-request-toggle]');
+                if (button) {
+                    button.textContent = isActive ? 'Collapse request' : 'Open request';
+                }
+            });
+
+            focusBanners.forEach((banner) => {
+                banner.classList.remove('is-visible');
+            });
+
+            if (!card) {
+                return;
+            }
+
+            const tabKey = card.dataset.requestTab;
+            const requestLabel = card.dataset.requestLabel || 'Selected request';
+            const focusBanner = focusBannerForTab(tabKey);
+
+            if (focusBanner) {
+                focusBanner.classList.add('is-visible');
+                const copy = focusBanner.querySelector('.services-focus-copy');
+                const subcopy = focusBanner.querySelector('.services-focus-subcopy');
+
+                if (copy) {
+                    copy.textContent = `You are now viewing ${requestLabel}.`;
+                }
+
+                if (subcopy) {
+                    subcopy.textContent = 'This is the active request currently open in the list.';
+                }
+            }
+        }
+
         function setActiveServiceTab(tabKey, syncHash = false) {
             serviceTabLinks.forEach((link) => {
                 const isActive = link.dataset.servicesTabLink === tabKey;
@@ -1049,6 +1541,11 @@
                 panel.classList.toggle('active', isActive);
                 panel.hidden = !isActive;
             });
+
+            if (!document.querySelector(`[data-request-card].is-active[data-request-tab="${tabKey}"]`)) {
+                const firstCard = document.querySelector(`[data-request-card][data-request-tab="${tabKey}"]`);
+                setFocusedRequest(firstCard || null);
+            }
 
             if (syncHash) {
                 window.history.replaceState(null, '', panelHashForTab(tabKey));
@@ -1128,6 +1625,26 @@
 
             setActiveServiceTab(resolveTabFromHash(window.location.hash), false);
         }
+
+        requestCards.forEach((card) => {
+            const toggle = card.querySelector('[data-request-toggle]');
+
+            if (!toggle) {
+                return;
+            }
+
+            toggle.addEventListener('click', () => {
+                const isActive = card.classList.contains('is-active');
+
+                if (isActive) {
+                    setFocusedRequest(null);
+                    return;
+                }
+
+                setFocusedRequest(card);
+                card.scrollIntoView({ block: 'start', behavior: 'smooth' });
+            });
+        });
 
         refreshAllAvailabilityHints();
 
@@ -1265,7 +1782,7 @@
                 const technicianLabel = document.querySelector(`[data-technician-for="${requestKey}"]`);
                 const assignmentStateBadge = document.querySelector(`[data-assignment-state-for="${requestKey}"]`);
                 const completionStateBadge = document.querySelector(`[data-completion-state-for="${requestKey}"]`);
-                const completionMessage = document.querySelector(`[data-completion-message-for="${requestKey}"]`);
+                const completionMessage = document.querySelector(`[data-completion-detail-for="${requestKey}"]`);
                 const selectedOption = select.options[select.selectedIndex];
 
                 inlineError.textContent = '';
@@ -1331,7 +1848,7 @@
                 const requestKey = form.dataset.requestKey;
                 const statusBadge = document.querySelector(`[data-status-for="${requestKey}"]`);
                 const completionStateBadge = document.querySelector(`[data-completion-state-for="${requestKey}"]`);
-                const completionMessage = document.querySelector(`[data-completion-message-for="${requestKey}"]`);
+                const completionMessage = document.querySelector(`[data-completion-detail-for="${requestKey}"]`);
 
                 inlineError.textContent = '';
                 button.disabled = true;

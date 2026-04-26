@@ -61,4 +61,20 @@ class AdminCustomerController extends Controller
             ->route('admin.customers')
             ->with('status', "Customer \"{$customer->name}\" was updated successfully.");
     }
+
+    public function destroy(Request $request, User $customer)
+    {
+        abort_unless($request->user()?->role === User::ROLE_ADMIN, 403);
+        abort_unless($customer->role === User::ROLE_CUSTOMER, 404);
+
+        $customerName = $customer->name;
+
+        // Customer-owned quotations, requests, inspections, and testimonies
+        // are configured with cascade deletes in the database schema.
+        $customer->delete();
+
+        return redirect()
+            ->route('admin.customers')
+            ->with('status', "Customer \"{$customerName}\" was deleted successfully.");
+    }
 }
