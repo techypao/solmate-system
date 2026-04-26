@@ -333,7 +333,7 @@
                         ],
                         'quotationsByStatus' => [
                             'title' => 'Quotations by Status',
-                            'copy' => 'Monitor quotation decisions and follow-up needs across the current reporting window.',
+                            'copy' => 'Monitor final quotation decisions and follow-up needs across the current reporting window.',
                             'dataset' => $quotationStatusChart,
                         ],
                     ];

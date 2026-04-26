@@ -67,6 +67,9 @@ class ReportsPageController extends Controller
         $installationRequests = $serviceRequests->filter(fn (ServiceRequest $request) => $this->isInstallationRequest($request));
         $maintenanceRequests = $serviceRequests->reject(fn (ServiceRequest $request) => $this->isInstallationRequest($request));
         $allRequests = $inspectionRequests->concat($serviceRequests)->values();
+        $finalQuotations = $quotations->filter(
+            fn (Quotation $quotation) => $this->normalizeQuotationType($quotation->quotation_type) === 'final'
+        )->values();
 
         $summaryCards = [
             ['label' => 'Total Customers', 'value' => $customersCount],
@@ -102,10 +105,10 @@ class ReportsPageController extends Controller
         ], array_slice($chartPalette, 0, 2));
 
         $quotationStatusChart = $this->buildChartDataset([
-            'Pending' => $quotations->filter(fn (Quotation $quotation) => $this->normalizeStatus($quotation->status) === 'pending')->count(),
-            'Approved' => $quotations->filter(fn (Quotation $quotation) => $this->normalizeStatus($quotation->status) === 'approved')->count(),
-            'Completed' => $quotations->filter(fn (Quotation $quotation) => $this->normalizeStatus($quotation->status) === 'completed')->count(),
-            'Rejected / Cancelled' => $quotations->filter(fn (Quotation $quotation) => in_array($this->normalizeStatus($quotation->status), ['rejected', 'cancelled', 'declined'], true))->count(),
+            'Pending' => $finalQuotations->filter(fn (Quotation $quotation) => $this->normalizeStatus($quotation->status) === 'pending')->count(),
+            'Approved' => $finalQuotations->filter(fn (Quotation $quotation) => $this->normalizeStatus($quotation->status) === 'approved')->count(),
+            'Completed' => $finalQuotations->filter(fn (Quotation $quotation) => $this->normalizeStatus($quotation->status) === 'completed')->count(),
+            'Rejected / Cancelled' => $finalQuotations->filter(fn (Quotation $quotation) => in_array($this->normalizeStatus($quotation->status), ['rejected', 'cancelled', 'declined'], true))->count(),
         ], ['#173b63', '#d4a017', '#22c55e', '#94a3b8']);
 
         $technicianPerformance = User::query()
