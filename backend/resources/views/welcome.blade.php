@@ -26,35 +26,35 @@
         .gst-btn-register:hover { background: #0d2237; text-decoration: none; }
 
         /* HERO */
-        .gst-hero { background: linear-gradient(135deg, #f0f7ff 0%, #fafff8 55%, #fff8e7 100%); padding: 96px 32px 100px; }
-        .gst-hero-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
-        .gst-hero-tag { display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; background: #e0f2fe; border: 1px solid #b3e0f8; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: #0369a1; margin-bottom: 22px; }
+        .gst-hero { background: linear-gradient(135deg, #f0f7ff 0%, #f8fbff 48%, #fff8e7 100%); padding: 104px 32px 108px; }
+        .gst-hero-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr); gap: 72px; align-items: center; }
+        .gst-hero-copy { max-width: 560px; }
+        .gst-hero-tag { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: #e0f2fe; border: 1px solid #b3e0f8; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: #0369a1; margin-bottom: 24px; }
         .gst-hero-tag-dot { width: 6px; height: 6px; border-radius: 50%; background: #0ea5e9; display: inline-block; }
-        .gst-hero-h1 { font-size: 50px; font-weight: 700; color: #0f172a; line-height: 1.12; margin: 0 0 22px; letter-spacing: -0.6px; }
+        .gst-hero-h1 { font-size: 52px; font-weight: 700; color: #0f172a; line-height: 1.08; margin: 0 0 22px; letter-spacing: -0.8px; }
         .gst-hero-h1 span { color: #d4a017; }
-        .gst-hero-p { font-size: 17px; color: #475569; line-height: 1.8; margin: 0 0 38px; max-width: 460px; }
-        .gst-hero-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+        .gst-hero-p { font-size: 17px; color: #475569; line-height: 1.85; margin: 0 0 34px; max-width: 500px; }
+        .gst-hero-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
         .gst-cta-primary { padding: 14px 30px; font-size: 15px; font-weight: 700; color: #ffffff; background: #102a43; border: none; border-radius: 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: background .15s, transform .1s; }
         .gst-cta-primary:hover { background: #0d2237; transform: translateY(-1px); text-decoration: none; color: #ffffff; }
         .gst-cta-secondary { padding: 14px 30px; font-size: 15px; font-weight: 600; color: #102a43; background: transparent; border: 2px solid #102a43; border-radius: 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: background .15s, color .15s; }
         .gst-cta-secondary:hover { background: #102a43; color: #ffffff; text-decoration: none; }
-        .gst-cta-text { font-size: 14px; font-weight: 500; color: #64748b; text-decoration: none; transition: color .15s; }
-        .gst-cta-text:hover { color: #102a43; }
+        .gst-hero-note { font-size: 13px; color: #64748b; margin: 0; }
         .gst-hero-visual { position: relative; }
-        .gst-hero-card-main { background: #ffffff; border-radius: 20px; padding: 32px; box-shadow: 0 20px 60px rgba(15,23,42,0.12), 0 4px 12px rgba(15,23,42,0.06); border: 1px solid rgba(0,0,0,0.05); }
-        .gst-hero-card-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: #fef3c7; border-radius: 999px; font-size: 12px; font-weight: 600; color: #92400e; margin-bottom: 18px; }
-        .gst-hero-card-title { font-size: 17px; font-weight: 700; color: #0f172a; margin: 0 0 5px; }
-        .gst-hero-card-sub { font-size: 13px; color: #64748b; margin: 0 0 22px; }
-        .gst-hero-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 22px; }
-        .gst-hero-stat { padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; }
-        .gst-hero-stat-value { font-size: 22px; font-weight: 700; color: #102a43; line-height: 1; margin-bottom: 4px; }
-        .gst-hero-stat-label { font-size: 12px; color: #64748b; }
-        .gst-hero-progress-label { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; margin-bottom: 7px; }
-        .gst-hero-progress-bar { height: 6px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
-        .gst-hero-progress-fill { height: 100%; width: 78%; background: linear-gradient(90deg, #102a43, #0ea5e9); border-radius: 999px; }
-        .gst-hero-float-card { position: absolute; bottom: -18px; right: -16px; background: #102a43; color: #ffffff; padding: 14px 18px; border-radius: 14px; box-shadow: 0 8px 24px rgba(16,42,67,0.3); min-width: 130px; }
-        .gst-hero-float-value { font-size: 18px; font-weight: 700; line-height: 1; }
-        .gst-hero-float-label { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+        .gst-hero-card-main { position: relative; overflow: hidden; background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); border-radius: 24px; padding: 34px; box-shadow: 0 24px 60px rgba(15,23,42,0.12), 0 4px 12px rgba(15,23,42,0.06); border: 1px solid rgba(148,163,184,0.22); }
+        .gst-hero-card-main::before { content: ""; position: absolute; top: -54px; right: -48px; width: 164px; height: 164px; border-radius: 50%; background: radial-gradient(circle, rgba(212,160,23,0.24) 0%, rgba(212,160,23,0) 72%); }
+        .gst-hero-card-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fef3c7; border: 1px solid rgba(212,160,23,0.24); border-radius: 999px; font-size: 12px; font-weight: 600; color: #92400e; margin-bottom: 18px; }
+        .gst-hero-card-title { font-size: 24px; font-weight: 700; color: #0f172a; margin: 0 0 10px; line-height: 1.25; }
+        .gst-hero-card-sub { font-size: 14px; color: #64748b; margin: 0 0 28px; line-height: 1.7; max-width: 420px; }
+        .gst-hero-feature-list { display: grid; gap: 14px; margin-bottom: 24px; }
+        .gst-hero-feature-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; background: rgba(248,250,252,0.9); border: 1px solid #dbe7f3; border-radius: 16px; }
+        .gst-hero-feature-icon { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #102a43, #1d4f7a); color: #ffffff; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.14); }
+        .gst-hero-feature-title { font-size: 15px; font-weight: 700; color: #102a43; margin: 0 0 4px; }
+        .gst-hero-feature-desc { font-size: 13px; color: #64748b; margin: 0; line-height: 1.6; }
+        .gst-hero-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 18px; background: #102a43; border-radius: 16px; color: #ffffff; }
+        .gst-hero-card-footer-title { font-size: 14px; font-weight: 700; margin: 0 0 4px; }
+        .gst-hero-card-footer-copy { font-size: 12.5px; color: #cbd5e1; margin: 0; line-height: 1.6; }
+        .gst-hero-card-footer-icon { width: 46px; height: 46px; border-radius: 14px; background: rgba(255,255,255,0.12); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; color: #f8d774; }
 
         /* TRUST */
         .gst-trust { background: #f8fafc; padding: 68px 32px; }
@@ -75,16 +75,49 @@
         /* TESTIMONIES */
         .gst-testimonies { background: #ffffff; padding: 80px 32px; }
         .gst-testimonies-inner { max-width: 1200px; margin: 0 auto; }
-        .gst-testimonies-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
-        .gst-testimony-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 28px; box-shadow: 0 2px 8px rgba(15,23,42,0.04); display: flex; flex-direction: column; }
-        .gst-testimony-quote-icon { width: 32px; height: 32px; background: #e0f2fe; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #0369a1; margin-bottom: 16px; flex-shrink: 0; }
-        .gst-testimony-text { font-size: 14.5px; color: #374151; line-height: 1.75; margin: 0 0 20px; flex-grow: 1; }
-        .gst-testimony-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-        .gst-testimony-name { font-size: 14px; font-weight: 700; color: #0f172a; }
-        .gst-testimony-stars { display: flex; gap: 2px; }
-        .gst-testimony-star-full { color: #d4a017; font-size: 14px; line-height: 1; }
-        .gst-testimony-star-empty { color: #e2e8f0; font-size: 14px; line-height: 1; }
-        .gst-testimonies-state-msg { grid-column: 1 / -1; text-align: center; padding: 56px 20px; color: #94a3b8; font-size: 15px; }
+        .gst-testimonies-carousel-shell { max-width: 1080px; margin: 0 auto; }
+        .gst-testimonies-carousel { position: relative; background: linear-gradient(180deg, #ffffff 0%, #f6faff 100%); border: 1px solid #dbe7f3; border-radius: 28px; box-shadow: 0 22px 50px rgba(15,23,42,0.08); overflow: hidden; }
+        .gst-testimonies-viewport { position: relative; min-height: 520px; aspect-ratio: 16 / 9; background: linear-gradient(135deg, #dff1ff 0%, #f7fbff 45%, #fff5d8 100%); }
+        .gst-testimonies-track { display: flex; width: 100%; height: 100%; transition: transform .75s ease; will-change: transform; }
+        .gst-testimony-slide { position: relative; min-width: 100%; height: 100%; overflow: hidden; }
+        .gst-testimony-slide img { width: 100%; height: 100%; display: block; object-fit: cover; }
+        .gst-testimony-slide-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(15,23,42,0.04) 0%, rgba(15,23,42,0.18) 52%, rgba(15,23,42,0.68) 100%); pointer-events: none; }
+        .gst-testimony-slide-meta { position: absolute; left: 28px; right: 28px; bottom: 26px; display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; z-index: 2; }
+        .gst-testimony-slide-copy { max-width: 540px; }
+        .gst-testimony-slide-kicker { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px; background: rgba(255,255,255,0.16); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); color: #f8fafc; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 12px; }
+        .gst-testimony-slide-kicker::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #f8d774; display: inline-block; }
+        .gst-testimony-slide-title { font-size: 28px; font-weight: 700; color: #ffffff; line-height: 1.18; margin: 0 0 8px; letter-spacing: -0.03em; }
+        .gst-testimony-slide-sub { font-size: 14px; color: rgba(226,232,240,0.96); margin: 0; line-height: 1.75; }
+        .gst-testimony-slide-index { display: inline-flex; align-items: center; justify-content: center; min-width: 56px; height: 56px; padding: 0 16px; border-radius: 16px; background: rgba(16,42,67,0.68); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.18); color: #ffffff; font-size: 14px; font-weight: 700; }
+        .gst-testimonies-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border: none; border-radius: 999px; background: rgba(255,255,255,0.88); color: #102a43; box-shadow: 0 10px 24px rgba(15,23,42,0.16); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .15s ease, background .15s ease, color .15s ease; z-index: 3; }
+        .gst-testimonies-arrow:hover { background: #102a43; color: #ffffff; transform: translateY(-50%) scale(1.02); }
+        .gst-testimonies-arrow:focus-visible { outline: 3px solid rgba(14,165,233,0.35); outline-offset: 2px; }
+        .gst-testimonies-arrow-prev { left: 20px; }
+        .gst-testimonies-arrow-next { right: 20px; }
+        .gst-testimonies-controls { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 20px 24px 22px; background: #ffffff; border-top: 1px solid #e2e8f0; }
+        .gst-testimonies-source { font-size: 13px; color: #64748b; }
+        .gst-testimonies-source strong { color: #102a43; font-weight: 700; }
+        .gst-testimonies-dots { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+        .gst-testimonies-dot { width: 10px; height: 10px; padding: 0; border: none; border-radius: 999px; background: #cbd5e1; cursor: pointer; transition: width .2s ease, background .2s ease, transform .2s ease; }
+        .gst-testimonies-dot.is-active { width: 28px; background: #d4a017; }
+        .gst-testimonies-dot:focus-visible { outline: 3px solid rgba(14,165,233,0.35); outline-offset: 2px; }
+        .gst-testimonies-state-msg { text-align: center; padding: 64px 24px; color: #64748b; font-size: 15px; line-height: 1.7; }
+        .gst-testimonies-state-msg strong { display: block; font-size: 18px; color: #102a43; margin-bottom: 8px; }
+        .gst-testimony-placeholder { position: relative; height: 100%; display: flex; align-items: flex-end; padding: 34px; background: linear-gradient(140deg, #dff0ff 0%, #ecf8ff 34%, #fff7dc 100%); }
+        .gst-testimony-placeholder::before { content: ""; position: absolute; top: 38px; right: 52px; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, rgba(212,160,23,0.9) 0%, rgba(212,160,23,0.35) 42%, rgba(212,160,23,0) 72%); }
+        .gst-testimony-placeholder::after { content: ""; position: absolute; inset: auto -60px -88px auto; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(14,165,233,0.22) 0%, rgba(14,165,233,0) 72%); }
+        .gst-testimony-placeholder-scene { position: absolute; inset: 0; overflow: hidden; }
+        .gst-testimony-placeholder-ground { position: absolute; left: -8%; right: -8%; bottom: -18%; height: 44%; background: linear-gradient(180deg, rgba(16,42,67,0.06) 0%, rgba(16,42,67,0.14) 100%); border-radius: 50% 50% 0 0; }
+        .gst-testimony-placeholder-panel { position: absolute; bottom: 104px; width: 148px; height: 92px; border-radius: 18px; background: linear-gradient(180deg, #143a5c 0%, #102a43 100%); border: 2px solid rgba(255,255,255,0.18); box-shadow: 0 24px 34px rgba(16,42,67,0.16); transform: skew(-14deg); overflow: hidden; }
+        .gst-testimony-placeholder-panel::before { content: ""; position: absolute; inset: 10px; background-image: linear-gradient(to right, rgba(255,255,255,0.18) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.18) 1px, transparent 1px); background-size: 22px 100%, 100% 18px; border-radius: 10px; }
+        .gst-testimony-placeholder-panel.is-left { left: 10%; }
+        .gst-testimony-placeholder-panel.is-center { left: 34%; bottom: 92px; }
+        .gst-testimony-placeholder-panel.is-right { right: 12%; }
+        .gst-testimony-placeholder-card { position: relative; z-index: 1; width: min(100%, 430px); padding: 26px; background: rgba(255,255,255,0.82); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.55); border-radius: 22px; box-shadow: 0 20px 44px rgba(15,23,42,0.12); }
+        .gst-testimony-placeholder-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: #102a43; color: #ffffff; border-radius: 999px; font-size: 12px; font-weight: 700; margin-bottom: 14px; }
+        .gst-testimony-placeholder-chip::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #f8d774; display: inline-block; }
+        .gst-testimony-placeholder-title { font-size: 28px; font-weight: 700; color: #102a43; line-height: 1.16; margin: 0 0 10px; letter-spacing: -0.03em; }
+        .gst-testimony-placeholder-sub { font-size: 14px; line-height: 1.75; color: #475569; margin: 0; }
         .gst-testimonies-view-all { text-align: center; margin-top: 36px; }
         .gst-testimonies-view-all a { display: inline-flex; align-items: center; gap: 6px; font-size: 14.5px; font-weight: 600; color: #102a43; border: 2px solid #102a43; padding: 10px 24px; border-radius: 8px; text-decoration: none; transition: background .15s, color .15s; }
         .gst-testimonies-view-all a:hover { background: #102a43; color: #ffffff; }
@@ -139,34 +172,52 @@
 
         /* RESPONSIVE */
         @media (max-width: 1000px) {
+            .gst-hero-inner { gap: 40px; }
             .gst-trust-grid { grid-template-columns: repeat(2,1fr); }
-            .gst-testimonies-grid { grid-template-columns: repeat(2,1fr); }
             .solmate-footer-upper { grid-template-columns: 1fr 1fr; gap: 36px; }
         }
         @media (max-width: 720px) {
             .gst-hero-inner, .gst-about-inner { grid-template-columns: 1fr; gap: 36px; }
-            .gst-hero-visual { display: none; }
+            .gst-hero-copy { max-width: none; }
+            .gst-hero-card-main { padding: 28px 22px; }
             .gst-hero-h1 { font-size: 34px; }
             .gst-hero { padding: 60px 20px 64px; }
             .gst-trust, .gst-testimonies, .gst-about, .gst-cta-section { padding: 56px 20px; }
             .gst-trust-grid { grid-template-columns: 1fr; }
-            .gst-testimonies-grid { grid-template-columns: 1fr; }
             .gst-about-highlights { grid-template-columns: 1fr; }
             .gst-section-title { font-size: 26px; }
             .gst-cta-title { font-size: 28px; }
             .gst-about-title { font-size: 28px; }
             .gst-header-inner { padding: 0 16px; }
             .gst-nav-links { display: none; }
+            .gst-testimonies-viewport { min-height: 420px; }
+            .gst-testimony-slide-meta { left: 22px; right: 22px; bottom: 22px; align-items: flex-start; flex-direction: column; }
+            .gst-testimonies-controls { flex-direction: column; align-items: flex-start; }
+            .gst-testimonies-dots { justify-content: flex-start; }
+            .gst-testimony-slide-title, .gst-testimony-placeholder-title { font-size: 24px; }
+            .gst-testimony-placeholder { padding: 24px; }
+            .gst-testimony-placeholder-panel { width: 118px; height: 72px; bottom: 124px; }
+            .gst-testimony-placeholder-panel.is-center { bottom: 110px; }
         }
         @media (max-width: 560px) {
             .solmate-footer-upper { grid-template-columns: 1fr; gap: 28px; }
             .solmate-footer-inner { padding: 40px 20px 0; }
             .solmate-footer-bottom { flex-direction: column; align-items: flex-start; padding: 20px; gap: 14px; }
             .solmate-footer-contact-items { gap: 16px; }
+            .gst-testimonies-viewport { min-height: 360px; aspect-ratio: auto; }
+            .gst-testimonies-arrow { width: 42px; height: 42px; top: auto; bottom: 96px; transform: none; }
+            .gst-testimonies-arrow:hover { transform: scale(1.02); }
+            .gst-testimonies-arrow-prev { left: 14px; }
+            .gst-testimonies-arrow-next { right: 14px; }
+            .gst-testimony-slide-meta { left: 18px; right: 18px; bottom: 18px; }
+            .gst-testimony-slide-index { min-width: 48px; height: 48px; }
+            .gst-testimony-placeholder-card { padding: 22px 20px; }
         }
         @media (max-width: 480px) {
             .gst-hero-actions, .gst-cta-buttons { flex-direction: column; align-items: flex-start; }
             .gst-cta-buttons { align-items: center; }
+            .gst-cta-primary, .gst-cta-secondary { width: 100%; justify-content: center; }
+            .gst-hero-card-footer { align-items: flex-start; }
         }
     </style>
 </head>
@@ -196,49 +247,70 @@
 {{-- HERO --}}
 <section class="gst-hero" id="hero" aria-label="Hero">
     <div class="gst-hero-inner">
-        <div>
+        <div class="gst-hero-copy">
             <div class="gst-hero-tag">
                 <span class="gst-hero-tag-dot" aria-hidden="true"></span>
-                Smart Solar Management Platform
+                Simple Solar Planning for New Customers
             </div>
             <h1 class="gst-hero-h1">
-                Solar Installation<br>Made <span>Simple</span><br>&amp; Smart
+                Start Your <span>Solar Journey</span> Today
             </h1>
             <p class="gst-hero-p">
-                SolMate streamlines your entire solar panel installation journey &mdash; from initial
-                quotation and site assessment to scheduling, monitoring, and after-service support.
-                Reliable, organized, and built for you.
+                Get an instant solar estimate, request a site inspection, and track your service
+                &mdash; all in one place.
             </p>
             <div class="gst-hero-actions">
-                <a href="{{ route('login') }}" class="gst-cta-primary">
-                    Get Started
+                <a href="{{ route('customer.quotation') }}" class="gst-cta-primary">
+                    Get Free Quotation
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </a>
-                @if (Route::has('register'))
-                    <a href="{{ route('register') }}" class="gst-cta-secondary">Create Account</a>
-                @endif
-                <a href="#about" class="gst-cta-text">Learn More &darr;</a>
+                <a href="{{ route('customer.inspection') }}" class="gst-cta-secondary">Request Inspection</a>
             </div>
+            <p class="gst-hero-note">Create an account or sign in to save your requests and follow each update inside SolMate.</p>
         </div>
-        <div class="gst-hero-visual" aria-hidden="true">
+        <div class="gst-hero-visual" aria-label="SolMate feature overview">
             <div class="gst-hero-card-main">
-                <div class="gst-hero-card-badge">&#9728;&#65039; Active Installations</div>
-                <div class="gst-hero-card-title">Installation Dashboard</div>
-                <div class="gst-hero-card-sub">Track your solar project status in real-time</div>
-                <div class="gst-hero-stats">
-                    <div class="gst-hero-stat"><div class="gst-hero-stat-value">124+</div><div class="gst-hero-stat-label">Installations Done</div></div>
-                    <div class="gst-hero-stat"><div class="gst-hero-stat-value">98%</div><div class="gst-hero-stat-label">Satisfaction Rate</div></div>
-                    <div class="gst-hero-stat"><div class="gst-hero-stat-value">4.9 &#9733;</div><div class="gst-hero-stat-label">Average Rating</div></div>
-                    <div class="gst-hero-stat"><div class="gst-hero-stat-value">3 yrs</div><div class="gst-hero-stat-label">In Operation</div></div>
+                <div class="gst-hero-card-badge">&#9728;&#65039; What You Can Do</div>
+                <h2 class="gst-hero-card-title">Everything you need to begin with solar, without the noise.</h2>
+                <p class="gst-hero-card-sub">Start with the essentials: estimate your system, book a site visit, and stay informed as your request moves forward.</p>
+                <div class="gst-hero-feature-list">
+                    <div class="gst-hero-feature-item">
+                        <div class="gst-hero-feature-icon" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="m16.24 16.24 2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="m4.93 19.07 2.83-2.83"/><path d="m16.24 7.76 2.83-2.83"/><circle cx="12" cy="12" r="4"/></svg>
+                        </div>
+                        <div>
+                            <p class="gst-hero-feature-title">Instant Quotation</p>
+                            <p class="gst-hero-feature-desc">See an initial solar estimate based on your power usage and planning needs.</p>
+                        </div>
+                    </div>
+                    <div class="gst-hero-feature-item">
+                        <div class="gst-hero-feature-icon" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4 6 3v15"/><path d="M9 9h.01"/><path d="M9 13h.01"/><path d="M9 17h.01"/><path d="M13 13h.01"/><path d="M13 17h.01"/></svg>
+                        </div>
+                        <div>
+                            <p class="gst-hero-feature-title">Site Inspection</p>
+                            <p class="gst-hero-feature-desc">Request a technician visit to confirm your site and prepare for the next step.</p>
+                        </div>
+                    </div>
+                    <div class="gst-hero-feature-item">
+                        <div class="gst-hero-feature-icon" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-7"/></svg>
+                        </div>
+                        <div>
+                            <p class="gst-hero-feature-title">Service Tracking</p>
+                            <p class="gst-hero-feature-desc">Follow request updates from quotation through inspection and ongoing support.</p>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <div class="gst-hero-progress-label"><span>Projects Completed This Month</span><span>78%</span></div>
-                    <div class="gst-hero-progress-bar"><div class="gst-hero-progress-fill"></div></div>
+                <div class="gst-hero-card-footer">
+                    <div>
+                        <p class="gst-hero-card-footer-title">Built for a clear first step</p>
+                        <p class="gst-hero-card-footer-copy">No inflated numbers, just the core tools to help you plan your solar system with confidence.</p>
+                    </div>
+                    <div class="gst-hero-card-footer-icon" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3"/><path d="M18.36 5.64 16.95 7.05"/><path d="M21 12h-3"/><path d="m18.36 18.36-1.41-1.41"/><path d="M12 21v-3"/><path d="m7.05 16.95-1.41 1.41"/><path d="M6 12H3"/><path d="M7.05 7.05 5.64 5.64"/><path d="M12 8a4 4 0 0 0-4 4c0 1.5.8 2.82 2 3.52V17a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-1.48A4 4 0 0 0 12 8Z"/></svg>
+                    </div>
                 </div>
-            </div>
-            <div class="gst-hero-float-card">
-                <div class="gst-hero-float-value">&#9889; Live</div>
-                <div class="gst-hero-float-label">Service Tracking</div>
             </div>
         </div>
     </div>
@@ -284,12 +356,17 @@
 <section class="gst-testimonies" id="testimonials" aria-label="Client testimonials">
     <div class="gst-testimonies-inner">
         <div class="gst-section-heading">
-            <span class="gst-section-eyebrow">Client Feedback</span>
-            <h2 class="gst-section-title">What Our Clients Say</h2>
-            <p class="gst-section-sub">Real experiences from homeowners and businesses who trusted SolMate for their solar journey.</p>
+            <span class="gst-section-eyebrow">Visual Highlights</span>
+            <h2 class="gst-section-title">See SolMate In Action</h2>
+            <p class="gst-section-sub">Browse customer-submitted images and service moments here, then visit All Reviews to read the full feedback.</p>
         </div>
-        <div class="gst-testimonies-grid" id="landing-testimonies-grid">
-            <div class="gst-testimonies-state-msg" id="landing-testimonies-loading">Loading testimonials&hellip;</div>
+        <div class="gst-testimonies-carousel-shell">
+            <div class="gst-testimonies-carousel" id="landing-testimonies-carousel">
+                <div class="gst-testimonies-state-msg" id="landing-testimonies-loading">
+                    <strong>Loading gallery...</strong>
+                    Preparing recent customer and service visuals.
+                </div>
+            </div>
         </div>
         <div class="gst-testimonies-view-all">
             <a href="{{ route('public.testimonies') }}">
@@ -425,7 +502,16 @@
 <script>
 (function () {
     "use strict";
-    var grid = document.getElementById("landing-testimonies-grid");
+    var carousel = document.getElementById("landing-testimonies-carousel");
+    if (!carousel) return;
+    var prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var autoplayDelay = 3000;
+    var activeIndex = 0;
+    var autoplayTimer = null;
+    var isPaused = false;
+    var slides = [];
+    var track = null;
+    var dots = [];
 
     function escapeHtml(v) {
         return String(v == null ? "" : v)
@@ -433,40 +519,230 @@
             .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
-    function buildStars(rating) {
-        var total = 5, filled = Math.min(5, Math.max(0, Math.round(Number(rating) || 0))), html = "";
-        for (var i = 0; i < total; i++) {
-            html += i < filled
-                ? "<span class=\"gst-testimony-star-full\" aria-hidden=\"true\">\u2605</span>"
-                : "<span class=\"gst-testimony-star-empty\" aria-hidden=\"true\">\u2605</span>";
-        }
-        return html;
+    function normaliseSlides(testimonies) {
+        var imageSlides = [];
+        if (!Array.isArray(testimonies)) return imageSlides;
+
+        testimonies.forEach(function (testimony) {
+            var images = Array.isArray(testimony && testimony.images) ? testimony.images : [];
+            images.forEach(function (image, index) {
+                if (!image || !image.image_url) return;
+                imageSlides.push({
+                    type: "image",
+                    src: String(image.image_url),
+                    alt: testimony && testimony.title
+                        ? String(testimony.title) + " image " + (index + 1)
+                        : "Approved testimony image " + (imageSlides.length + 1),
+                    title: "Customer Project Snapshot",
+                    subtitle: "Approved visual from the SolMate testimony gallery.",
+                    label: testimony && testimony.user && testimony.user.name
+                        ? String(testimony.user.name)
+                        : "Customer-submitted image"
+                });
+            });
+        });
+
+        return imageSlides;
     }
 
-    function render(testimonies) {
-        grid.innerHTML = "";
-        var sample = Array.isArray(testimonies) ? testimonies.slice(0, 3) : [];
-        if (sample.length === 0) {
-            grid.innerHTML = "<div class=\"gst-testimonies-state-msg\">No testimonials available yet. Be the first to share your experience!</div>";
+    function placeholderSlides() {
+        return [
+            {
+                type: "placeholder",
+                badge: "Solar Planning",
+                title: "Estimate your setup with a clearer first step.",
+                subtitle: "Start with a quotation and understand what solar could look like for your property."
+            },
+            {
+                type: "placeholder",
+                badge: "Site Inspection",
+                title: "Prepare for the site visit before installation.",
+                subtitle: "Coordinate inspection requests, confirm feasibility, and move your project forward."
+            },
+            {
+                type: "placeholder",
+                badge: "Service Tracking",
+                title: "Follow progress from request to ongoing support.",
+                subtitle: "Keep everything in one place while your solar journey takes shape."
+            }
+        ];
+    }
+
+    function createButton(className, label, iconPath) {
+        var button = document.createElement("button");
+        button.type = "button";
+        button.className = className;
+        button.setAttribute("aria-label", label);
+        button.innerHTML = "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\">" + iconPath + "</svg>";
+        return button;
+    }
+
+    function createPlaceholderSlide(slide, index, total) {
+        var item = document.createElement("article");
+        item.className = "gst-testimony-slide";
+        item.setAttribute("aria-label", "Placeholder slide " + (index + 1) + " of " + total);
+        item.innerHTML =
+            "<div class=\"gst-testimony-placeholder\">"
+                + "<div class=\"gst-testimony-placeholder-scene\" aria-hidden=\"true\">"
+                    + "<div class=\"gst-testimony-placeholder-panel is-left\"></div>"
+                    + "<div class=\"gst-testimony-placeholder-panel is-center\"></div>"
+                    + "<div class=\"gst-testimony-placeholder-panel is-right\"></div>"
+                    + "<div class=\"gst-testimony-placeholder-ground\"></div>"
+                + "</div>"
+                + "<div class=\"gst-testimony-placeholder-card\">"
+                    + "<div class=\"gst-testimony-placeholder-chip\">" + escapeHtml(slide.badge) + "</div>"
+                    + "<h3 class=\"gst-testimony-placeholder-title\">" + escapeHtml(slide.title) + "</h3>"
+                    + "<p class=\"gst-testimony-placeholder-sub\">" + escapeHtml(slide.subtitle) + "</p>"
+                + "</div>"
+            + "</div>";
+        return item;
+    }
+
+    function createImageSlide(slide, index, total) {
+        var item = document.createElement("article");
+        item.className = "gst-testimony-slide";
+        item.setAttribute("aria-label", "Gallery slide " + (index + 1) + " of " + total);
+        item.innerHTML =
+            "<img src=\"" + escapeHtml(slide.src) + "\" alt=\"" + escapeHtml(slide.alt) + "\" loading=\"" + (index === 0 ? "eager" : "lazy") + "\">"
+            + "<div class=\"gst-testimony-slide-overlay\" aria-hidden=\"true\"></div>"
+            + "<div class=\"gst-testimony-slide-meta\">"
+                + "<div class=\"gst-testimony-slide-copy\">"
+                    + "<div class=\"gst-testimony-slide-kicker\">" + escapeHtml(slide.label) + "</div>"
+                    + "<p class=\"gst-testimony-slide-title\">" + escapeHtml(slide.title) + "</p>"
+                    + "<p class=\"gst-testimony-slide-sub\">" + escapeHtml(slide.subtitle) + "</p>"
+                + "</div>"
+                + "<div class=\"gst-testimony-slide-index\">" + (index + 1) + " / " + total + "</div>"
+            + "</div>";
+        return item;
+    }
+
+    function updateCarousel() {
+        if (!track || slides.length === 0) return;
+        track.style.transform = "translateX(-" + (activeIndex * 100) + "%)";
+        dots.forEach(function (dot, index) {
+            var isActive = index === activeIndex;
+            dot.classList.toggle("is-active", isActive);
+            dot.setAttribute("aria-current", isActive ? "true" : "false");
+        });
+    }
+
+    function goTo(index) {
+        if (slides.length === 0) return;
+        activeIndex = (index + slides.length) % slides.length;
+        updateCarousel();
+    }
+
+    function stopAutoplay() {
+        if (autoplayTimer) {
+            window.clearInterval(autoplayTimer);
+            autoplayTimer = null;
+        }
+    }
+
+    function startAutoplay() {
+        stopAutoplay();
+        if (prefersReducedMotion || slides.length <= 1) return;
+        autoplayTimer = window.setInterval(function () {
+            if (!isPaused) goTo(activeIndex + 1);
+        }, autoplayDelay);
+    }
+
+    function attachPauseHandlers(element) {
+        element.addEventListener("mouseenter", function () {
+            isPaused = true;
+        });
+        element.addEventListener("mouseleave", function () {
+            isPaused = false;
+        });
+        element.addEventListener("focusin", function () {
+            isPaused = true;
+        });
+        element.addEventListener("focusout", function (event) {
+            if (!element.contains(event.relatedTarget)) {
+                isPaused = false;
+            }
+        });
+    }
+
+    function render(slideItems, sourceLabel) {
+        var hasMultipleSlides;
+        var controlMessage;
+        var viewport;
+        var controls;
+        var dotsWrap;
+
+        slides = Array.isArray(slideItems) ? slideItems : [];
+        activeIndex = 0;
+        dots = [];
+        carousel.innerHTML = "";
+
+        if (slides.length === 0) {
+            carousel.innerHTML = "<div class=\"gst-testimonies-state-msg\"><strong>Gallery unavailable</strong>Customer visuals will appear here once approved images are ready.</div>";
             return;
         }
-        sample.forEach(function (t) {
-            var name = escapeHtml(t.user && t.user.name ? t.user.name : "Anonymous Customer");
-            var body = escapeHtml(t.message || t.title || "Great service!");
-            var stars = buildStars(t.rating);
-            var card = document.createElement("div");
-            card.className = "gst-testimony-card";
-            card.innerHTML =
-                "<div class=\"gst-testimony-quote-icon\" aria-hidden=\"true\">"
-                + "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z\"/></svg>"
-                + "</div>"
-                + "<p class=\"gst-testimony-text\">" + body + "</p>"
-                + "<div class=\"gst-testimony-footer\">"
-                + "<span class=\"gst-testimony-name\">" + name + "</span>"
-                + "<div class=\"gst-testimony-stars\" aria-label=\"Rating: " + escapeHtml(String(t.rating || 0)) + " out of 5\">" + stars + "</div>"
-                + "</div>";
-            grid.appendChild(card);
+
+        hasMultipleSlides = slides.length > 1;
+        viewport = document.createElement("div");
+        viewport.className = "gst-testimonies-viewport";
+
+        track = document.createElement("div");
+        track.className = "gst-testimonies-track";
+        viewport.appendChild(track);
+
+        slides.forEach(function (slide, index) {
+            track.appendChild(slide.type === "placeholder"
+                ? createPlaceholderSlide(slide, index, slides.length)
+                : createImageSlide(slide, index, slides.length));
         });
+
+        if (hasMultipleSlides) {
+            var prevButton = createButton("gst-testimonies-arrow gst-testimonies-arrow-prev", "Previous slide", "<path d=\"m15 18-6-6 6-6\"/>");
+            var nextButton = createButton("gst-testimonies-arrow gst-testimonies-arrow-next", "Next slide", "<path d=\"m9 18 6-6-6-6\"/>");
+
+            prevButton.addEventListener("click", function () {
+                goTo(activeIndex - 1);
+            });
+            nextButton.addEventListener("click", function () {
+                goTo(activeIndex + 1);
+            });
+
+            viewport.appendChild(prevButton);
+            viewport.appendChild(nextButton);
+        }
+
+        carousel.appendChild(viewport);
+
+        controls = document.createElement("div");
+        controls.className = "gst-testimonies-controls";
+        controlMessage = hasMultipleSlides
+            ? (prefersReducedMotion
+                ? "Use the arrows or dots to browse the gallery."
+                : "Slides move automatically every 3 seconds and pause on hover.")
+            : "A featured visual is shown here.";
+        controls.innerHTML = "<div class=\"gst-testimonies-source\"><strong>" + escapeHtml(sourceLabel) + "</strong> " + escapeHtml(controlMessage) + "</div>";
+
+        dotsWrap = document.createElement("div");
+        dotsWrap.className = "gst-testimonies-dots";
+
+        if (hasMultipleSlides) {
+            slides.forEach(function (_, index) {
+                var dot = document.createElement("button");
+                dot.type = "button";
+                dot.className = "gst-testimonies-dot";
+                dot.setAttribute("aria-label", "Go to slide " + (index + 1));
+                dot.addEventListener("click", function () {
+                    goTo(index);
+                });
+                dots.push(dot);
+                dotsWrap.appendChild(dot);
+            });
+        }
+
+        controls.appendChild(dotsWrap);
+        carousel.appendChild(controls);
+        attachPauseHandlers(carousel);
+        updateCarousel();
+        startAutoplay();
     }
 
     fetch("/api/public/testimonies", {
@@ -476,9 +752,15 @@
         if (!res.ok) throw new Error("HTTP " + res.status);
         return res.json();
     }).then(function (payload) {
-        render(Array.isArray(payload) ? payload : (payload.data || []));
+        var testimonies = Array.isArray(payload) ? payload : (payload.data || []);
+        var imageSlides = normaliseSlides(testimonies);
+        if (imageSlides.length > 0) {
+            render(imageSlides, "Customer-submitted gallery");
+            return;
+        }
+        render(placeholderSlides(), "SolMate visual highlights");
     }).catch(function () {
-        grid.innerHTML = "<div class=\"gst-testimonies-state-msg\">Testimonials unavailable right now.</div>";
+        render(placeholderSlides(), "SolMate visual highlights");
     });
 })();
 </script>

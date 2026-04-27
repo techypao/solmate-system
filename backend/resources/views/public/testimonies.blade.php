@@ -1,83 +1,517 @@
-@extends('layouts.app', ['title' => 'Public Testimonies'])
+@extends('layouts.app', ['title' => 'Customer Reviews'])
 
 @section('content')
     <style>
-        .public-testimony-list {
+        .public-reviews-page {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .public-home-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 0;
+            background: #f8f4ec;
+            border: none;
+            border-radius: 0;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+            margin: -28px calc(50% - 50vw) 16px;
+        }
+
+        .public-home-header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 28px;
+            min-height: 68px;
+        }
+
+        .public-home-brand {
+            display: inline-flex;
+            align-items: baseline;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .public-home-brand-sol {
+            color: #102a43;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .public-home-brand-mate {
+            color: #d4a017;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .public-home-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            flex: 1;
+            flex-wrap: wrap;
+        }
+
+        .public-home-nav-link {
+            color: #4b5563;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            padding: 4px 0;
+            border-bottom: 2px solid transparent;
+            transition: color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .public-home-nav-link:hover,
+        .public-home-nav-link.is-active {
+            color: #102a43;
+            border-bottom-color: #d4a017;
+            text-decoration: none;
+        }
+
+        .public-home-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .public-home-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: auto;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+        }
+
+        .public-home-btn:hover {
+            text-decoration: none;
+            transform: none;
+        }
+
+        .public-home-btn-secondary {
+            background: transparent;
+            color: #102a43;
+            border: 1.5px solid #d9e2ec;
+        }
+
+        .public-home-btn-secondary:hover {
+            background: rgba(16, 42, 67, 0.04);
+            border-color: #102a43;
+        }
+
+        .public-home-btn-primary {
+            background: #102a43;
+            color: #ffffff;
+            border: 1.5px solid #102a43;
+            font-weight: 600;
+        }
+
+        .public-home-btn-primary:hover {
+            background: #0d2237;
+            color: #ffffff;
+        }
+
+        .public-reviews-hero {
+            position: relative;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at top right, rgba(212, 160, 23, 0.18), transparent 28%),
+                linear-gradient(135deg, #f0f7ff 0%, #f8fbff 48%, #fff8e7 100%);
+            border-color: #dbe7f3;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+        }
+
+        .public-reviews-hero::before {
+            content: "";
+            position: absolute;
+            top: -60px;
+            right: -48px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.18) 0%, rgba(14, 165, 233, 0) 72%);
+            pointer-events: none;
+        }
+
+        .public-reviews-hero-inner {
+            position: relative;
+            z-index: 1;
+        }
+
+        .public-reviews-hero-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 18px;
+        }
+
+        .public-reviews-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid rgba(212, 160, 23, 0.24);
+            color: #9a6b00;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        .public-reviews-eyebrow::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #d4a017;
+            display: inline-block;
+        }
+
+        .public-reviews-subtitle {
+            max-width: 700px;
+            margin: 0;
+            color: #52606d;
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        .public-reviews-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            margin-top: 28px;
+        }
+
+        .public-reviews-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .public-reviews-filter-btn {
+            appearance: none;
+            border: 1px solid #c9d9e8;
+            background: #ffffff;
+            color: #1e4068;
+            border-radius: 999px;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+        }
+
+        .public-reviews-filter-btn:hover {
+            border-color: #9fb9d4;
+            transform: translateY(-1px);
+        }
+
+        .public-reviews-filter-btn.is-active {
+            background: #102a43;
+            color: #ffffff;
+            border-color: #102a43;
+        }
+
+        .public-reviews-filter-btn:focus-visible,
+        .public-reviews-refresh:focus-visible,
+        .public-review-image-link:focus-visible {
+            outline: 3px solid rgba(14, 165, 233, 0.28);
+            outline-offset: 3px;
+        }
+
+        .public-reviews-refresh {
+            appearance: none;
+            border: none;
+            background: linear-gradient(135deg, #102a43 0%, #1e4068 100%);
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 12px 18px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 12px 28px rgba(16, 42, 67, 0.14);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .public-reviews-refresh:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 32px rgba(16, 42, 67, 0.18);
+        }
+
+        .public-reviews-grid {
             display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 24px;
+            align-items: start;
+        }
+
+        .public-review-card {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 24px;
+            border: 1px solid #d9e6f2;
+            border-radius: 20px;
+            background: #ffffff;
+            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+        }
+
+        .public-review-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
             gap: 16px;
         }
 
-        .public-testimony-card {
-            padding: 20px;
-            border: 1px solid #d9e2ec;
-            border-radius: 12px;
-            background: #fbfcfe;
+        .public-review-customer {
+            min-width: 0;
         }
 
-        .public-hero {
-            background: linear-gradient(135deg, #f8fbff 0%, #eef7ff 100%);
+        .public-review-customer-name {
+            margin: 0 0 4px;
+            color: #102a43;
+            font-size: 18px;
+            line-height: 1.25;
+            font-weight: 800;
+            letter-spacing: -0.02em;
         }
 
-        .image-grid {
-            display: grid;
-            gap: 12px;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        }
-
-        .image-tile {
-            display: block;
-            border: 1px solid #d9e2ec;
-            border-radius: 12px;
-            overflow: hidden;
-            background: #ffffff;
-        }
-
-        .image-tile img {
-            display: block;
-            width: 100%;
-            height: 140px;
-            object-fit: cover;
-            background: #e8f1fb;
-        }
-
-        .image-tile span {
-            display: block;
-            padding: 10px 12px;
-            color: #334e68;
+        .public-review-customer-meta {
+            margin: 0;
+            color: #64748b;
             font-size: 13px;
         }
 
-        .empty-illustration {
-            width: 68px;
-            height: 68px;
+        .public-review-rating {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
             border-radius: 999px;
-            background: #dbeafe;
-            margin: 0 auto 16px;
+            background: #fff8e7;
+            color: #8b6300;
+            flex-shrink: 0;
+        }
+
+        .public-review-stars {
+            display: inline-flex;
+            gap: 2px;
+            color: #d4a017;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .public-review-rating-value {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .public-review-message {
+            margin: 0;
+            color: #334e68;
+            font-size: 14px;
+            line-height: 1.85;
+        }
+
+        .public-review-image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .public-review-image-link,
+        .public-review-image-empty {
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #dbe7f3;
+            background: #f8fbff;
+        }
+
+        .public-review-image-link {
+            display: block;
+            min-height: 180px;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
+        }
+
+        .public-review-image-link img {
+            display: block;
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background: #e6f0fb;
+            transition: transform 0.24s ease;
+        }
+
+        .public-review-image-link:hover img {
+            transform: scale(1.03);
+        }
+
+        .public-review-image-empty {
+            min-height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            color: #829ab1;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .public-review-empty {
+            padding: 48px 24px;
+            text-align: center;
+            border: 1px dashed #cfdbe8;
+            border-radius: 20px;
+            background: linear-gradient(180deg, #fcfeff 0%, #f7fbff 100%);
+            color: #52606d;
+        }
+
+        .public-review-empty-illustration {
+            width: 76px;
+            height: 76px;
+            margin: 0 auto 18px;
+            border-radius: 24px;
+            background:
+                radial-gradient(circle at top, rgba(212, 160, 23, 0.92) 0%, rgba(212, 160, 23, 0.38) 34%, rgba(212, 160, 23, 0) 62%),
+                linear-gradient(180deg, #dff1ff 0%, #ffffff 100%);
+            box-shadow: inset 0 0 0 1px rgba(212, 160, 23, 0.14);
+        }
+
+        .public-review-empty strong {
+            display: block;
+            margin-bottom: 8px;
+            color: #102a43;
+            font-size: 18px;
+        }
+
+        @media (max-width: 760px) {
+            .public-home-header-inner,
+            .public-reviews-hero-inner,
+            .public-reviews-toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .public-home-nav,
+            .public-home-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .public-home-header {
+                position: relative;
+                margin: -28px -18px 16px;
+            }
+
+            .public-reviews-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .public-reviews-refresh {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .public-home-header-inner {
+                padding: 16px;
+                min-height: auto;
+            }
+
+            .public-review-image-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .public-review-card-top {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .public-review-card {
+                padding: 18px;
+            }
         }
     </style>
 
-    <div class="card public-hero">
-        <div class="section-header">
+    <div class="public-reviews-page">
+        @guest
+            <header class="card public-home-header" aria-label="Public site header">
+                <div class="public-home-header-inner">
+                    <a href="{{ route('home') }}" class="public-home-brand" aria-label="SolMate home">
+                        <span class="public-home-brand-sol">Sol</span><span class="public-home-brand-mate">Mate</span>
+                    </a>
+
+                    <nav class="public-home-nav" aria-label="Public navigation">
+                        <a href="{{ route('home') }}#about" class="public-home-nav-link">About</a>
+                        <a href="{{ route('home') }}#testimonials" class="public-home-nav-link">Testimonials</a>
+                        <a href="{{ route('public.testimonies') }}" class="public-home-nav-link is-active">All Reviews</a>
+                        <a href="{{ route('public.contact') }}" class="public-home-nav-link">Contact</a>
+                    </nav>
+
+                    <div class="public-home-actions">
+                        <a href="{{ route('login') }}" class="public-home-btn public-home-btn-secondary">Log in</a>
+                        @if (Route::has('register'))
+                            <a href="{{ route('register') }}" class="public-home-btn public-home-btn-primary">Register</a>
+                        @endif
+                    </div>
+                </div>
+            </header>
+        @endguest
+
+        <div class="card public-reviews-hero">
+        <div class="public-reviews-hero-inner">
             <div>
-                <h1 class="page-title">Customer Testimonies</h1>
-                <p class="page-copy">Read approved customer feedback shared publicly on the Solmate website.</p>
+                <div class="public-reviews-eyebrow">SolMate Experiences</div>
+                <h1 class="page-title">Customer Reviews</h1>
+                <p class="public-reviews-subtitle">See what customers share about their SolMate experience.</p>
             </div>
-            <div class="actions" style="margin-top: 0;">
-                <button id="refresh-public-testimonies-button" type="button" class="secondary">Refresh</button>
-            </div>
+            <button id="refresh-public-testimonies-button" type="button" class="public-reviews-refresh">Refresh Reviews</button>
         </div>
 
-        <div id="public-testimonies-loading" class="info-box">Loading approved testimonies...</div>
-        <div id="public-testimonies-error" class="error-box" style="display: none;"></div>
-    </div>
-
-    <div class="card">
-        <div id="public-testimonies-empty" class="info-box" style="display: none; margin-bottom: 0;">
-            <div class="empty-illustration"></div>
-            No approved testimonies are available yet.
+        <div class="public-reviews-toolbar">
+            <div class="public-reviews-filters" aria-label="Review filters">
+                <button type="button" class="public-reviews-filter-btn is-active" data-review-filter="all">All</button>
+                <button type="button" class="public-reviews-filter-btn" data-review-filter="with-images">With Images</button>
+            </div>
+            <div id="public-testimonies-loading" class="info-box" style="margin-bottom: 0;">Loading approved reviews...</div>
         </div>
 
-        <div id="public-testimonies-list" class="public-testimony-list" style="display: none;"></div>
+        <div id="public-testimonies-error" class="error-box" style="display: none; margin-top: 16px;"></div>
+        </div>
+
+        <div class="card">
+            <div id="public-testimonies-empty" class="public-review-empty" style="display: none;">
+                <div class="public-review-empty-illustration" aria-hidden="true"></div>
+                <strong id="public-testimonies-empty-title">No approved reviews yet.</strong>
+                <span id="public-testimonies-empty-copy">Customer feedback will appear here once the first public reviews are approved.</span>
+            </div>
+
+            <div id="public-testimonies-list" class="public-reviews-grid" style="display: none;"></div>
+        </div>
     </div>
 @endsection
 
@@ -88,6 +522,12 @@
         const emptyState = document.getElementById('public-testimonies-empty');
         const listContainer = document.getElementById('public-testimonies-list');
         const refreshButton = document.getElementById('refresh-public-testimonies-button');
+        const emptyTitle = document.getElementById('public-testimonies-empty-title');
+        const emptyCopy = document.getElementById('public-testimonies-empty-copy');
+        const filterButtons = Array.from(document.querySelectorAll('[data-review-filter]'));
+
+        let allApprovedTestimonies = [];
+        let currentFilter = 'all';
 
         function setVisible(element, visible, displayValue = 'block') {
             element.style.display = visible ? displayValue : 'none';
@@ -112,104 +552,145 @@
                 .replace(/'/g, '&#039;');
         }
 
-        function formatDate(value) {
-            if (!value) {
-                return 'Not available';
-            }
+        function formatDate(value, options = {}) {
+            if (!value) return 'Not available';
 
             const parsedDate = new Date(value);
-
-            if (Number.isNaN(parsedDate.getTime())) {
-                return value;
-            }
+            if (Number.isNaN(parsedDate.getTime())) return value;
 
             return parsedDate.toLocaleDateString(undefined, {
                 year: 'numeric',
-                month: 'short',
+                month: options.compact ? 'short' : 'long',
                 day: 'numeric',
             });
         }
 
-        function getRatingLabel(rating) {
-            return `${Number(rating || 0)}/5`;
+        function getCustomerName(testimony) {
+            return testimony?.user?.name || 'Anonymous customer';
         }
 
-        function getCustomerName(testimony) {
-            return testimony.user?.name || 'Anonymous customer';
+        function getDisplayDate(testimony) {
+            return testimony?.created_at || testimony?.updated_at || null;
+        }
+
+        function getReviewImages(testimony) {
+            return Array.isArray(testimony?.images)
+                ? testimony.images.filter((image) => image && image.image_url)
+                : [];
+        }
+
+        function getRatingMarkup(rating) {
+            const numericRating = Number(rating);
+            if (!Number.isFinite(numericRating) || numericRating <= 0) {
+                return '';
+            }
+
+            const rounded = Math.max(0, Math.min(5, Math.round(numericRating)));
+            let stars = '';
+
+            for (let index = 0; index < 5; index += 1) {
+                stars += `<span aria-hidden="true">${index < rounded ? '&#9733;' : '&#9734;'}</span>`;
+            }
+
+            return `
+                <div class="public-review-rating" aria-label="Rating: ${escapeHtml(String(rounded))} out of 5">
+                    <span class="public-review-stars">${stars}</span>
+                    <span class="public-review-rating-value">${escapeHtml(String(rounded))}/5</span>
+                </div>
+            `;
+        }
+
+        function sortLatestFirst(testimonies) {
+            return [...testimonies].sort((first, second) => {
+                const firstDate = new Date(getDisplayDate(first) || 0).getTime();
+                const secondDate = new Date(getDisplayDate(second) || 0).getTime();
+                return secondDate - firstDate;
+            });
+        }
+
+        function applyFilter(testimonies) {
+            if (currentFilter === 'with-images') {
+                return testimonies.filter((testimony) => getReviewImages(testimony).length > 0);
+            }
+
+            return testimonies;
+        }
+
+        function updateEmptyState(totalCount, filteredCount) {
+            if (totalCount === 0) {
+                emptyTitle.textContent = 'No approved reviews yet.';
+                emptyCopy.textContent = 'Customer feedback will appear here once the first public reviews are approved.';
+                return;
+            }
+
+            if (filteredCount === 0 && currentFilter === 'with-images') {
+                emptyTitle.textContent = 'No approved photo reviews yet.';
+                emptyCopy.textContent = 'Try the All filter to read approved customer feedback without uploaded images.';
+                return;
+            }
+
+            emptyTitle.textContent = 'No approved reviews yet.';
+            emptyCopy.textContent = 'Customer feedback will appear here once the first public reviews are approved.';
         }
 
         function renderTestimonies(testimonies) {
-            if (!Array.isArray(testimonies) || testimonies.length === 0) {
+            const filtered = applyFilter(testimonies);
+            updateEmptyState(testimonies.length, filtered.length);
+
+            if (filtered.length === 0) {
                 listContainer.innerHTML = '';
                 setVisible(listContainer, false);
                 setVisible(emptyState, true);
                 return;
             }
 
-            listContainer.innerHTML = testimonies.map((testimony) => {
-                const images = Array.isArray(testimony.images) ? testimony.images : [];
+            listContainer.innerHTML = filtered.map((testimony) => {
+                const images = getReviewImages(testimony);
                 const imageMarkup = images.length > 0
                     ? `
-                        <div class="image-grid" style="margin-top: 16px;">
-                            ${images.map((image, index) => {
-                                const imageUrl = image.image_url || '';
-
-                                if (!imageUrl) {
-                                    return `
-                                        <div class="image-tile">
-                                            <div style="height: 140px; background: #e8f1fb;"></div>
-                                            <span>Image ${index + 1} unavailable</span>
-                                        </div>
-                                    `;
-                                }
-
-                                return `
-                                    <a class="image-tile" href="${escapeHtml(imageUrl)}" target="_blank" rel="noreferrer">
-                                        <img src="${escapeHtml(imageUrl)}" alt="Public testimony image ${index + 1}">
-                                        <span>Image ${index + 1}</span>
-                                    </a>
-                                `;
-                            }).join('')}
+                        <div class="public-review-image-grid">
+                            ${images.slice(0, 4).map((image, index) => `
+                                <a class="public-review-image-link" href="${escapeHtml(image.image_url)}" target="_blank" rel="noreferrer">
+                                    <img src="${escapeHtml(image.image_url)}" alt="Review image ${index + 1} from ${escapeHtml(getCustomerName(testimony))}">
+                                </a>
+                            `).join('')}
                         </div>
                     `
-                    : '';
+                    : `
+                        <div class="public-review-image-empty">
+                            No uploaded image for this review.
+                        </div>
+                    `;
 
                 return `
-                    <div class="public-testimony-card">
-                        <div class="request-header">
-                            <div>
-                                <div class="request-title">${escapeHtml(testimony.title || 'Customer testimony')}</div>
-                                <div class="muted">${escapeHtml(getCustomerName(testimony))}</div>
+                    <article class="public-review-card">
+                        <div class="public-review-card-top">
+                            <div class="public-review-customer">
+                                <h2 class="public-review-customer-name">${escapeHtml(getCustomerName(testimony))}</h2>
+                                <p class="public-review-customer-meta">Submitted ${escapeHtml(formatDate(getDisplayDate(testimony)))}</p>
                             </div>
-                            <div class="request-badges">
-                                <span class="badge badge-success">Approved</span>
-                                <span class="badge badge-primary">${escapeHtml(getRatingLabel(testimony.rating))}</span>
-                            </div>
+                            ${getRatingMarkup(testimony.rating)}
                         </div>
 
-                        <div class="detail-grid">
-                            <div class="detail-item">
-                                <span class="detail-label">Date</span>
-                                <strong>${escapeHtml(formatDate(testimony.updated_at || testimony.created_at))}</strong>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Images</span>
-                                <strong>${escapeHtml(`${images.length} image${images.length === 1 ? '' : 's'}`)}</strong>
-                            </div>
-                        </div>
-
-                        <div class="detail-box" style="margin-top: 16px;">
-                            <h3 style="margin-bottom: 10px;">Message</h3>
-                            <p class="detail-copy">${escapeHtml(testimony.message || '')}</p>
-                        </div>
+                        <p class="public-review-message">${escapeHtml(testimony.message || testimony.title || 'No written review was provided.')}</p>
 
                         ${imageMarkup}
-                    </div>
+                    </article>
                 `;
             }).join('');
 
             setVisible(emptyState, false);
-            setVisible(listContainer, true);
+            setVisible(listContainer, true, 'grid');
+        }
+
+        function setActiveFilter(nextFilter) {
+            currentFilter = nextFilter;
+            filterButtons.forEach((button) => {
+                const isActive = button.dataset.reviewFilter === nextFilter;
+                button.classList.toggle('is-active', isActive);
+                button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
+            renderTestimonies(allApprovedTestimonies);
         }
 
         async function loadPublicTestimonies() {
@@ -227,21 +708,33 @@
                 const payload = await response.json().catch(() => ({}));
 
                 if (!response.ok) {
-                    throw new Error(payload.message || 'Could not load approved testimonies.');
+                    throw new Error(payload.message || 'Could not load approved reviews.');
                 }
 
-                renderTestimonies(Array.isArray(payload.data) ? payload.data : []);
+                const testimonies = Array.isArray(payload)
+                    ? payload
+                    : (Array.isArray(payload.data) ? payload.data : []);
+                allApprovedTestimonies = sortLatestFirst(testimonies);
+                renderTestimonies(allApprovedTestimonies);
             } catch (error) {
+                allApprovedTestimonies = [];
                 listContainer.innerHTML = '';
                 setVisible(listContainer, false);
                 setVisible(emptyState, false);
-                showError(error.message || 'Could not load approved testimonies.');
+                showError(error.message || 'Could not load approved reviews.');
             } finally {
                 setVisible(loadingBox, false);
             }
         }
 
         refreshButton.addEventListener('click', loadPublicTestimonies);
+        filterButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                setActiveFilter(button.dataset.reviewFilter || 'all');
+            });
+        });
+
+        setActiveFilter('all');
         loadPublicTestimonies();
     </script>
 @endpush
