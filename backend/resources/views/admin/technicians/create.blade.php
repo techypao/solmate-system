@@ -54,6 +54,7 @@
                 <div>
                     <label for="password">Password</label>
                     <input id="password" type="password" name="password" required placeholder="Min. 8 characters">
+                    <div class="muted" style="font-size: 12px; margin-top: 6px; line-height: 1.5;">Password must be at least 8 characters, include 1 uppercase letter, and 1 special character.</div>
                     <div class="field-error">@error('password') {{ $message }} @enderror</div>
                 </div>
                 <div>
@@ -116,4 +117,3 @@
 
 </div>
 @endsection
-

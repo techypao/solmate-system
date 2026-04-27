@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\PasswordValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
 use RuntimeException;
 
 class AuthController extends Controller
@@ -73,8 +73,8 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email',
-            'password' => ['required', 'confirmed', Password::min(8)],
-        ]);
+            'password' => PasswordValidation::required(),
+        ], PasswordValidation::messages());
 
         $user = User::create([
             'name' => $validated['name'],

@@ -683,6 +683,7 @@
                     <div class="dash-form-group">
                         <label for="cp-new">New Password</label>
                         <input type="password" id="cp-new" name="new_password" placeholder="Min 8 characters" required>
+                        <p class="dash-form-helper">Password must be at least 8 characters, include 1 uppercase letter, and 1 special character.</p>
                         <div class="field-error" id="cp-new-error"></div>
                     </div>
                     <div class="dash-form-group">

@@ -36,21 +36,36 @@ class WebAuthPagesTest extends TestCase
             ->assertSee('Loading approved testimonies');
     }
 
-    public function test_register_creates_customer_user_and_redirects_to_dashboard(): void
+    public function test_register_creates_customer_user_and_redirects_to_home(): void
     {
         $response = $this->post('/register', [
             'name' => 'Web Customer',
             'email' => 'web_customer@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
         ]);
 
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('home'));
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', [
             'email' => 'web_customer@example.com',
             'role' => User::ROLE_CUSTOMER,
         ]);
+    }
+
+    public function test_register_requires_a_stronger_password(): void
+    {
+        $this->from('/register')
+            ->post('/register', [
+                'name' => 'Weak Password Customer',
+                'email' => 'weak_password_customer@example.com',
+                'password' => 'password123',
+                'password_confirmation' => 'password123',
+            ])
+            ->assertRedirect('/register')
+            ->assertSessionHasErrors([
+                'password' => 'Password must contain at least one uppercase letter.',
+            ]);
     }
 
     public function test_customer_can_open_customer_testimonies_page(): void

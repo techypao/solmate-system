@@ -123,6 +123,13 @@ export const authStyles = StyleSheet.create({
     marginBottom: 14,
     textAlign: 'center',
   },
+  helperText: {
+    color: authColors.mutedText,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: -8,
+    marginBottom: 14,
+  },
   primaryBtn: {
     marginTop: 6,
     height: 52,

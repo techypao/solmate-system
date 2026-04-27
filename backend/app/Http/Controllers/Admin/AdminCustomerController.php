@@ -15,7 +15,7 @@ class AdminCustomerController extends Controller
 
         $customers = User::query()
             ->where('role', User::ROLE_CUSTOMER)
-            ->orderBy('name')
+            ->latest()
             ->get();
 
         return view('admin.customers', compact('customers'));

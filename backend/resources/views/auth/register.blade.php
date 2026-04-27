@@ -258,6 +258,7 @@
         .auth-field {
             display: grid;
             gap: 8px;
+            align-content: start;
         }
 
         .auth-field.auth-field-full,
@@ -287,6 +288,24 @@
             background: #ffffff;
             box-shadow: 0 0 0 4px rgba(59, 130, 246, .12);
             outline: none;
+        }
+
+        .auth-field-support {
+            display: grid;
+            align-content: start;
+            gap: 6px;
+            min-height: 42px;
+        }
+
+        .auth-field-helper {
+            margin: 0;
+            color: #52606d;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .auth-field-helper-spacer {
+            visibility: hidden;
         }
 
         .auth-field .field-error {
@@ -359,6 +378,10 @@
         @media (max-width: 720px) {
             .auth-form-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .auth-field-support {
+                min-height: auto;
             }
         }
 
@@ -452,20 +475,38 @@
 
                     <div class="auth-field">
                         <label for="contact_number">Contact Number</label>
-                        <input id="contact_number" type="text" name="contact_number" value="{{ old('contact_number') }}" required autocomplete="tel">
-                        <div class="field-error" data-error-for="contact_number">@error('contact_number') {{ $message }} @enderror</div>
+                        <input
+                            id="contact_number"
+                            type="text"
+                            name="contact_number"
+                            value="{{ old('contact_number') }}"
+                            required
+                            autocomplete="tel"
+                            inputmode="numeric"
+                            pattern="[0-9]{11}"
+                            maxlength="11"
+                        >
+                        <div class="auth-field-support">
+                            <p class="auth-field-helper">Enter an 11-digit mobile number.</p>
+                            <div class="field-error" data-error-for="contact_number">@error('contact_number') {{ $message }} @enderror</div>
+                        </div>
                     </div>
 
                     <div class="auth-field">
                         <label for="password">Password</label>
                         <input id="password" type="password" name="password" required autocomplete="new-password">
-                        <div class="field-error" data-error-for="password">@error('password') {{ $message }} @enderror</div>
+                        <div class="auth-field-support">
+                            <p class="auth-field-helper">Password must be at least 8 characters, include 1 uppercase letter, and 1 special character.</p>
+                            <div class="field-error" data-error-for="password">@error('password') {{ $message }} @enderror</div>
+                        </div>
                     </div>
 
-                    <div class="auth-field">
+                    <div class="auth-field auth-field-full">
                         <label for="password_confirmation">Confirm Password</label>
                         <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password">
-                        <div class="field-error" data-error-for="password_confirmation">@error('password_confirmation') {{ $message }} @enderror</div>
+                        <div class="auth-field-support">
+                            <div class="field-error" data-error-for="password_confirmation">@error('password_confirmation') {{ $message }} @enderror</div>
+                        </div>
                     </div>
 
                     <div class="auth-submit-row">
@@ -539,11 +580,25 @@
                         name: String(formData.get('name') || ''),
                         email: String(formData.get('email') || ''),
                         address: String(formData.get('address') || ''),
-                        contact_number: String(formData.get('contact_number') || ''),
+                        contact_number: String(formData.get('contact_number') || '').replace(/\D/g, '').slice(0, 11),
                         password: String(formData.get('password') || ''),
                         password_confirmation: String(formData.get('password_confirmation') || ''),
                     };
                 };
+
+                const contactNumberInput = form.querySelector('#contact_number');
+
+                if (contactNumberInput) {
+                    contactNumberInput.addEventListener('input', event => {
+                        const input = event.currentTarget;
+
+                        if (!(input instanceof HTMLInputElement)) {
+                            return;
+                        }
+
+                        input.value = input.value.replace(/\D/g, '').slice(0, 11);
+                    });
+                }
 
                 form.addEventListener('submit', async event => {
                     event.preventDefault();

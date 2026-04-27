@@ -47,8 +47,8 @@ class WebAdminTechnicianRegistrationTest extends TestCase
             ->post(route('admin.technicians.store'), [
                 'name' => 'New Technician',
                 'email' => 'new_technician@example.com',
-                'password' => 'password123',
-                'password_confirmation' => 'password123',
+                'password' => 'Password123!',
+                'password_confirmation' => 'Password123!',
             ]);
 
         $response->assertRedirect(route('admin.technicians.create'));
@@ -82,11 +82,34 @@ class WebAdminTechnicianRegistrationTest extends TestCase
             ->post(route('admin.technicians.store'), [
                 'name' => 'Another Technician',
                 'email' => 'duplicate_technician@example.com',
-                'password' => 'password123',
-                'password_confirmation' => 'password123',
+                'password' => 'Password123!',
+                'password_confirmation' => 'Password123!',
             ])
             ->assertRedirect(route('admin.technicians.create'))
             ->assertSessionHasErrors('email');
+    }
+
+    public function test_admin_cannot_create_technician_with_weak_password(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_weak_technician@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $this->actingAs($admin)
+            ->from(route('admin.technicians.create'))
+            ->post(route('admin.technicians.store'), [
+                'name' => 'Weak Technician',
+                'email' => 'weak_technician@example.com',
+                'password' => 'Password123',
+                'password_confirmation' => 'Password123',
+            ])
+            ->assertRedirect(route('admin.technicians.create'))
+            ->assertSessionHasErrors([
+                'password' => 'Password must contain at least one special character.',
+            ]);
     }
 
     public function test_non_admin_cannot_open_technician_registration_page(): void

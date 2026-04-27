@@ -215,6 +215,7 @@
                 <div>
                     <label for="new_password">New password</label>
                     <input id="new_password" type="password" name="new_password" required>
+                    <div class="muted" style="font-size: 12px; margin-top: 6px; line-height: 1.5;">Password must be at least 8 characters, include 1 uppercase letter, and 1 special character.</div>
                     <div class="field-error">@error('new_password') {{ $message }} @enderror</div>
                 </div>
             </div>

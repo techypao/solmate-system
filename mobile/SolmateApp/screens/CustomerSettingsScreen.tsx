@@ -20,6 +20,10 @@ import {
 } from '../src/services/accountApi';
 import {uploadProfilePicture} from '../src/services/profilePictureApi';
 import {getProfilePictureUrl, getUserInitial} from '../src/utils/profilePicture';
+import {
+  getPasswordValidationError,
+  PASSWORD_REQUIREMENTS_TEXT,
+} from '../src/utils/passwordValidation';
 
 /* \u2500\u2500 design tokens \u2500\u2500 */
 
@@ -184,11 +188,9 @@ export default function CustomerSettingsScreen() {
       return;
     }
 
-    if (newPassword.length < 8) {
-      Alert.alert(
-        'Weak password',
-        'Your new password must be at least 8 characters long.',
-      );
+    const passwordValidationError = getPasswordValidationError(newPassword);
+    if (passwordValidationError) {
+      Alert.alert('Weak password', passwordValidationError);
       return;
     }
 
@@ -473,6 +475,7 @@ export default function CustomerSettingsScreen() {
               style={s.input}
               value={newPassword}
             />
+            <Text style={s.helperText}>{PASSWORD_REQUIREMENTS_TEXT}</Text>
 
             <FormLabel text="Confirm New Password" />
             <TextInput
@@ -674,6 +677,13 @@ const s = StyleSheet.create({
     marginBottom: 4,
   },
   expandedSub: {fontSize: 13, color: MUTED, lineHeight: 19, marginBottom: 16},
+  helperText: {
+    fontSize: 12,
+    color: MUTED,
+    lineHeight: 18,
+    marginTop: -4,
+    marginBottom: 12,
+  },
 
   /* form elements */
   formLabel: {

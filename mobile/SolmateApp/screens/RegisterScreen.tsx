@@ -12,6 +12,10 @@ import {
 } from 'react-native';
 import {AuthContext} from '../src/context/AuthContext';
 import {ApiError, apiPost} from '../src/services/api';
+import {
+  getPasswordValidationError,
+  PASSWORD_REQUIREMENTS_TEXT,
+} from '../src/utils/passwordValidation';
 import {authColors, authStyles} from './authStyles';
 
 type RegisterScreenProps = {
@@ -53,6 +57,12 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
 
     if (password !== confirmPassword) {
       setErrorMessage('Passwords do not match.');
+      return;
+    }
+
+    const passwordValidationError = getPasswordValidationError(password);
+    if (passwordValidationError) {
+      setErrorMessage(passwordValidationError);
       return;
     }
 
@@ -196,6 +206,7 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
               {!showPassword && <View style={authStyles.eyeSlash} />}
             </Pressable>
           </View>
+          <Text style={authStyles.helperText}>{PASSWORD_REQUIREMENTS_TEXT}</Text>
 
           <Text style={authStyles.label}>Confirm Password</Text>
           <View style={authStyles.passwordWrap}>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\PasswordValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -15,10 +16,15 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => PasswordValidation::required(),
             'address' => 'required|string|max:255',
-            'contact_number' => 'required|string|max:20',
-        ]);
+            'contact_number' => ['required', 'regex:/^[0-9]{11}$/'],
+        ], array_merge(
+            PasswordValidation::messages(),
+            [
+                'contact_number.regex' => 'Contact number must be exactly 11 digits.',
+            ]
+        ));
 
         $user = User::create([
             'name' => $validated['name'],

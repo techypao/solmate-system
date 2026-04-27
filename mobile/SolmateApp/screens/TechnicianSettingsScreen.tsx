@@ -19,6 +19,10 @@ import {
 } from '../src/services/technicianAccountApi';
 import {uploadProfilePicture} from '../src/services/profilePictureApi';
 import {getProfilePictureUrl} from '../src/utils/profilePicture';
+import {
+  getPasswordValidationError,
+  PASSWORD_REQUIREMENTS_TEXT,
+} from '../src/utils/passwordValidation';
 
 /* ── design tokens ── */
 const NAVY    = '#152a4a';
@@ -204,8 +208,9 @@ export default function TechnicianSettingsScreen({navigation}: any) {
       Alert.alert('Incomplete form', 'Please fill in all password fields.');
       return;
     }
-    if (newPassword.length < 8) {
-      Alert.alert('Weak password', 'Your new password must be at least 8 characters long.');
+    const passwordValidationError = getPasswordValidationError(newPassword);
+    if (passwordValidationError) {
+      Alert.alert('Weak password', passwordValidationError);
       return;
     }
     if (newPassword !== confirmNewPassword) {
@@ -435,6 +440,7 @@ export default function TechnicianSettingsScreen({navigation}: any) {
                 secureTextEntry={true}
                 value={newPassword}
               />
+              <Text style={styles.helperText}>{PASSWORD_REQUIREMENTS_TEXT}</Text>
               <AppInput
                 containerStyle={styles.inputSpacing}
                 label="Confirm new password"
@@ -807,6 +813,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   inputSpacing: {
+    marginBottom: 12,
+  },
+  helperText: {
+    color: MUTED,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: -4,
     marginBottom: 12,
   },
   saveBtn: {

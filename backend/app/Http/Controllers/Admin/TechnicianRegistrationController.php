@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\PasswordValidation;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rules\Password;
 
 class TechnicianRegistrationController extends Controller
 {
@@ -34,11 +34,11 @@ class TechnicianRegistrationController extends Controller
             [
                 'name'     => 'required|string|max:255',
                 'email'    => 'required|email|max:255|unique:users,email',
-                'password' => ['required', 'confirmed', Password::min(8)],
+                'password' => PasswordValidation::required(),
             ],
-            [
+            array_merge([
                 'email.unique' => 'A user with this email already exists.',
-            ]
+            ], PasswordValidation::messages())
         );
 
         User::query()->create([
@@ -73,11 +73,11 @@ class TechnicianRegistrationController extends Controller
             [
                 'name'     => 'required|string|max:255',
                 'email'    => 'required|email|max:255|unique:users,email,' . $technician->id,
-                'password' => ['nullable', 'confirmed', Password::min(8)],
+                'password' => PasswordValidation::nullable(),
             ],
-            [
+            array_merge([
                 'email.unique' => 'This email is already used by another account.',
-            ]
+            ], PasswordValidation::messages())
         );
 
         $technician->name  = $validated['name'];

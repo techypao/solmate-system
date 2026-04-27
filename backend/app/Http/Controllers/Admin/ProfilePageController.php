@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\PasswordValidation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Password;
 
 class ProfilePageController extends Controller
 {
@@ -51,8 +51,11 @@ class ProfilePageController extends Controller
 
         $validated = $request->validate([
             'current_password' => ['required', 'string'],
-            'new_password' => ['required', 'confirmed', 'different:current_password', Password::min(8)],
-        ]);
+            'new_password' => array_merge(
+                ['required', 'different:current_password'],
+                PasswordValidation::rules()
+            ),
+        ], PasswordValidation::messages('new_password'));
 
         if (!Hash::check($validated['current_password'], $user->password)) {
             return back()->withErrors([
