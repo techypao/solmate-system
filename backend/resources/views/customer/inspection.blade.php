@@ -590,6 +590,25 @@
                     </div>
 
                     <div class="insp-field">
+                        <label class="insp-label" for="insp-address">
+                            Address <span style="color:#ef4444;font-weight:700;">*</span>
+                        </label>
+                        <input
+                            id="insp-address"
+                            class="insp-input"
+                            type="text"
+                            name="address"
+                            maxlength="255"
+                            required
+                            autocomplete="street-address"
+                            placeholder="e.g. 123 Rizal Street, Quezon City"
+                            value="{{ auth()->user()->address ?? '' }}"
+                        >
+                        <p class="insp-field-hint">Use the inspection site address. You can update the pre-filled value if needed.</p>
+                        <div class="insp-field-error" id="insp-address-error" role="alert"></div>
+                    </div>
+
+                    <div class="insp-field">
                         <label class="insp-label" for="insp-details">
                             Details / Notes <span style="color:#ef4444;font-weight:700;">*</span>
                         </label>
@@ -847,18 +866,33 @@
 
     var fieldErrorMap = {
         contact_number: 'insp-contact-error',
+        address:        'insp-address-error',
         date_needed:    'insp-date-error',
         details:        'insp-details-error',
+    };
+
+    var fieldInputMap = {
+        contact_number: 'insp-contact',
+        address:        'insp-address',
+        date_needed:    'insp-date-picker',
+        details:        'insp-details',
     };
 
     function applyFieldErrors(errors) {
         Object.keys(errors).forEach(function (key) {
             var elId = fieldErrorMap[key];
+            var inputId = fieldInputMap[key];
             if (elId) {
                 var el = qs('#' + elId);
                 if (el) {
                     el.textContent = Array.isArray(errors[key]) ? errors[key][0] : errors[key];
                     el.classList.add('show');
+                }
+            }
+            if (inputId) {
+                var input = qs('#' + inputId);
+                if (input) {
+                    input.classList.add('has-error');
                 }
             }
         });
@@ -872,6 +906,7 @@
 
         var details    = qs('#insp-details').value.trim();
         var contact    = qs('#insp-contact').value.trim();
+        var address    = qs('#insp-address').value.trim();
         await datePicker.refreshAvailability();
         var dateNeeded = datePicker.getValue();
 
@@ -890,6 +925,13 @@
             qs('#insp-contact').classList.add('has-error');
             hasError = true;
         }
+        if (!address) {
+            var ae = qs('#insp-address-error');
+            ae.textContent = 'Address is required.';
+            ae.classList.add('show');
+            qs('#insp-address').classList.add('has-error');
+            hasError = true;
+        }
         if (datePicker.isSelectedDateUnavailable()) {
             var dte = qs('#insp-date-error');
             dte.textContent = 'Selected date is already reserved. Please choose another date.';
@@ -901,8 +943,6 @@
 
         submitBtn.disabled = true;
         submitText.textContent = 'Submitting...';
-
-        var address = qs('#insp-address').value.trim();
 
         var body = { details: details, contact_number: contact };
         if (address) body.address = address;
