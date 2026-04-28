@@ -4,7 +4,10 @@
     <style>
         .auth-shell {
             position: relative;
-            padding: 36px 0 56px;
+            display: flex;
+            align-items: center;
+            min-height: clamp(680px, calc(100vh - 120px), 860px);
+            padding: 32px 0 52px;
         }
 
         .auth-shell::before,
@@ -17,36 +20,41 @@
         }
 
         .auth-shell::before {
-            top: 8px;
-            right: -70px;
-            width: 220px;
-            height: 220px;
-            background: radial-gradient(circle, rgba(212, 160, 23, .16), rgba(212, 160, 23, 0));
+            top: 28px;
+            right: -60px;
+            width: 260px;
+            height: 260px;
+            background: radial-gradient(circle, rgba(212, 160, 23, .18), rgba(212, 160, 23, 0));
         }
 
         .auth-shell::after {
-            left: -80px;
-            bottom: 12px;
-            width: 240px;
-            height: 240px;
-            background: radial-gradient(circle, rgba(59, 130, 246, .12), rgba(59, 130, 246, 0));
+            left: -70px;
+            bottom: 20px;
+            width: 280px;
+            height: 280px;
+            background: radial-gradient(circle, rgba(59, 130, 246, .14), rgba(59, 130, 246, 0));
         }
 
         .auth-card {
             position: relative;
             z-index: 1;
             display: grid;
-            grid-template-columns: minmax(280px, 420px) minmax(0, 1fr);
+            grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
+            width: min(100%, 1080px);
+            margin: 0 auto;
             overflow: hidden;
             border: 1px solid #dbe6f2;
             border-radius: 32px;
-            background: #ffffff;
-            box-shadow: 0 30px 70px rgba(15, 23, 42, .14);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, .95), rgba(248, 251, 255, .98)),
+                #ffffff;
+            box-shadow: 0 34px 80px rgba(15, 23, 42, .14);
         }
 
         .auth-panel-brand {
             position: relative;
-            padding: 44px 38px;
+            display: flex;
+            padding: 46px 38px;
             color: #ffffff;
             background:
                 radial-gradient(circle at top left, rgba(255, 255, 255, .18), transparent 34%),
@@ -83,6 +91,12 @@
             z-index: 1;
         }
 
+        .auth-brand-inner {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
         .auth-brand {
             display: inline-flex;
             align-items: center;
@@ -111,6 +125,9 @@
         }
 
         .auth-brand-copy {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
             max-width: 320px;
         }
 
@@ -146,7 +163,7 @@
         .auth-brand-points {
             display: grid;
             gap: 12px;
-            margin: 0 0 34px;
+            margin: 0 0 28px;
             padding: 0;
             list-style: none;
         }
@@ -179,6 +196,7 @@
             border-radius: 22px;
             background: rgba(255, 255, 255, .08);
             backdrop-filter: blur(8px);
+            margin-top: auto;
         }
 
         .auth-switch-label {
@@ -209,10 +227,23 @@
         }
 
         .auth-panel-form {
-            padding: 44px 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 38px;
             background:
-                linear-gradient(180deg, rgba(248, 250, 252, .88) 0%, rgba(255, 255, 255, 1) 14%),
+                radial-gradient(circle at top right, rgba(212, 160, 23, .07), transparent 28%),
+                linear-gradient(180deg, rgba(248, 250, 252, .88) 0%, rgba(255, 255, 255, 1) 18%),
                 #ffffff;
+        }
+
+        .auth-form-surface {
+            width: min(100%, 560px);
+            padding: 32px clamp(22px, 3vw, 34px);
+            border: 1px solid #e2e8f0;
+            border-radius: 28px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(248, 251, 255, 1));
+            box-shadow: 0 24px 54px rgba(15, 23, 42, .08);
         }
 
         .auth-form-head {
@@ -263,14 +294,19 @@
         }
 
         .auth-field input {
+            width: 100%;
             min-height: 54px;
             border: 1px solid #d7e3ef;
             border-radius: 16px;
-            background: #f8fbff;
+            background: #ffffff;
             padding: 0 16px;
             color: #0f172a;
             font-size: 15px;
             transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+        }
+
+        .auth-field input::placeholder {
+            color: #94a3b8;
         }
 
         .auth-field input:focus {
@@ -329,6 +365,7 @@
             color: #475569;
             font-size: 14px;
             font-weight: 600;
+            cursor: pointer;
         }
 
         .auth-options .checkbox-inline input {
@@ -338,10 +375,8 @@
         }
 
         .auth-submit-row {
-            display: flex;
-            align-items: center;
+            display: grid;
             gap: 14px;
-            flex-wrap: wrap;
             padding-top: 4px;
         }
 
@@ -349,6 +384,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            width: 100%;
             min-height: 54px;
             padding: 0 28px;
             border: 0;
@@ -369,6 +405,8 @@
         }
 
         .auth-inline-link {
+            display: inline-flex;
+            justify-content: center;
             color: #1e4068;
             font-size: 14px;
             font-weight: 700;
@@ -381,6 +419,10 @@
         }
 
         @media (max-width: 960px) {
+            .auth-shell {
+                min-height: auto;
+            }
+
             .auth-card {
                 grid-template-columns: 1fr;
             }
@@ -388,6 +430,10 @@
             .auth-panel-brand,
             .auth-panel-form {
                 padding: 34px 26px;
+            }
+
+            .auth-form-surface {
+                width: 100%;
             }
         }
 
@@ -405,14 +451,11 @@
                 border-radius: 24px;
             }
 
-            .auth-options,
-            .auth-submit-row {
-                align-items: stretch;
+            .auth-form-surface {
+                padding: 24px 18px;
+                border-radius: 22px;
             }
 
-            .auth-submit-btn {
-                width: 100%;
-            }
         }
     </style>
 
@@ -445,42 +488,44 @@
             </aside>
 
             <div class="auth-panel-form">
-                <div class="auth-form-head">
-                    <span class="auth-form-kicker">Sign In</span>
-                    <h2 class="auth-form-title">Login to SolMate</h2>
-                    <p class="auth-form-copy">Use your website account to access your SolMate workspace. Enter your email and password to continue.</p>
-                </div>
-
-                <form method="POST" action="{{ route('login.attempt') }}" class="auth-form-grid">
-                    @csrf
-
-                    <div class="auth-field">
-                        <label for="email">Email</label>
-                        <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email">
-                        <div class="field-error">@error('email') {{ $message }} @enderror</div>
+                <div class="auth-form-surface">
+                    <div class="auth-form-head">
+                        <span class="auth-form-kicker">Sign In</span>
+                        <h2 class="auth-form-title">Login to SolMate</h2>
+                        <p class="auth-form-copy">Use your website account to access your SolMate workspace. Enter your email and password to continue.</p>
                     </div>
 
-                    <div class="auth-field auth-password-field">
-                        <label for="password">Password</label>
-                        <div class="auth-input-wrap">
-                            <input id="password" type="password" name="password" required autocomplete="current-password">
-                            <button type="button" class="password-toggle" data-password-toggle data-target="password">Show</button>
+                    <form method="POST" action="{{ route('login.attempt') }}" class="auth-form-grid">
+                        @csrf
+
+                        <div class="auth-field">
+                            <label for="email">Email</label>
+                            <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email" placeholder="you@example.com">
+                            <div class="field-error">@error('email') {{ $message }} @enderror</div>
                         </div>
-                        <div class="field-error">@error('password') {{ $message }} @enderror</div>
-                    </div>
 
-                    <div class="auth-options">
-                        <label class="checkbox-inline">
-                            <input type="checkbox" name="remember" value="1" {{ old('remember') ? 'checked' : '' }}>
-                            Remember me
-                        </label>
-                    </div>
+                        <div class="auth-field auth-password-field">
+                            <label for="password">Password</label>
+                            <div class="auth-input-wrap">
+                                <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="Enter your password">
+                                <button type="button" class="password-toggle" data-password-toggle data-target="password">Show</button>
+                            </div>
+                            <div class="field-error">@error('password') {{ $message }} @enderror</div>
+                        </div>
 
-                    <div class="auth-submit-row">
-                        <button type="submit" class="auth-submit-btn">Sign In</button>
-                        <a class="auth-inline-link" href="{{ route('register') }}">New to SolMate? Register</a>
-                    </div>
-                </form>
+                        <div class="auth-options">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="remember" value="1" {{ old('remember') ? 'checked' : '' }}>
+                                Remember me
+                            </label>
+                        </div>
+
+                        <div class="auth-submit-row">
+                            <button type="submit" class="auth-submit-btn">Sign In</button>
+                            <a class="auth-inline-link" href="{{ route('register') }}">New to SolMate? Register</a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </section>

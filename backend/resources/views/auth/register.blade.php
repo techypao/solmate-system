@@ -4,7 +4,7 @@
     <style>
         .auth-shell {
             position: relative;
-            padding: 36px 0 56px;
+            padding: 32px 0 52px;
         }
 
         .auth-shell::before,
@@ -17,36 +17,41 @@
         }
 
         .auth-shell::before {
-            top: 8px;
-            right: -70px;
-            width: 220px;
-            height: 220px;
-            background: radial-gradient(circle, rgba(212, 160, 23, .16), rgba(212, 160, 23, 0));
+            top: 28px;
+            right: -60px;
+            width: 260px;
+            height: 260px;
+            background: radial-gradient(circle, rgba(212, 160, 23, .18), rgba(212, 160, 23, 0));
         }
 
         .auth-shell::after {
-            left: -80px;
-            bottom: 12px;
-            width: 240px;
-            height: 240px;
-            background: radial-gradient(circle, rgba(59, 130, 246, .12), rgba(59, 130, 246, 0));
+            left: -70px;
+            bottom: 20px;
+            width: 280px;
+            height: 280px;
+            background: radial-gradient(circle, rgba(59, 130, 246, .14), rgba(59, 130, 246, 0));
         }
 
         .auth-card {
             position: relative;
             z-index: 1;
             display: grid;
-            grid-template-columns: minmax(280px, 420px) minmax(0, 1fr);
+            grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
+            width: min(100%, 1120px);
+            margin: 0 auto;
             overflow: hidden;
             border: 1px solid #dbe6f2;
             border-radius: 32px;
-            background: #ffffff;
-            box-shadow: 0 30px 70px rgba(15, 23, 42, .14);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, .95), rgba(248, 251, 255, .98)),
+                #ffffff;
+            box-shadow: 0 34px 80px rgba(15, 23, 42, .14);
         }
 
         .auth-panel-brand {
             position: relative;
-            padding: 44px 38px;
+            display: flex;
+            padding: 46px 38px;
             color: #ffffff;
             background:
                 radial-gradient(circle at top left, rgba(255, 255, 255, .18), transparent 34%),
@@ -83,6 +88,12 @@
             z-index: 1;
         }
 
+        .auth-brand-inner {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
         .auth-brand {
             display: inline-flex;
             align-items: center;
@@ -111,6 +122,9 @@
         }
 
         .auth-brand-copy {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
             max-width: 320px;
         }
 
@@ -146,7 +160,7 @@
         .auth-brand-points {
             display: grid;
             gap: 12px;
-            margin: 0 0 34px;
+            margin: 0 0 28px;
             padding: 0;
             list-style: none;
         }
@@ -179,6 +193,7 @@
             border-radius: 22px;
             background: rgba(255, 255, 255, .08);
             backdrop-filter: blur(8px);
+            margin-top: auto;
         }
 
         .auth-switch-label {
@@ -209,10 +224,22 @@
         }
 
         .auth-panel-form {
-            padding: 44px 42px;
+            display: flex;
+            justify-content: center;
+            padding: 38px;
             background:
-                linear-gradient(180deg, rgba(248, 250, 252, .88) 0%, rgba(255, 255, 255, 1) 14%),
+                radial-gradient(circle at top right, rgba(212, 160, 23, .07), transparent 28%),
+                linear-gradient(180deg, rgba(248, 250, 252, .88) 0%, rgba(255, 255, 255, 1) 18%),
                 #ffffff;
+        }
+
+        .auth-form-surface {
+            width: min(100%, 680px);
+            padding: 32px clamp(22px, 3vw, 34px);
+            border: 1px solid #e2e8f0;
+            border-radius: 28px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(248, 251, 255, 1));
+            box-shadow: 0 24px 54px rgba(15, 23, 42, .08);
         }
 
         .auth-form-head {
@@ -273,14 +300,19 @@
         }
 
         .auth-field input {
+            width: 100%;
             min-height: 54px;
             border: 1px solid #d7e3ef;
             border-radius: 16px;
-            background: #f8fbff;
+            background: #ffffff;
             padding: 0 16px;
             color: #0f172a;
             font-size: 15px;
             transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+        }
+
+        .auth-field input::placeholder {
+            color: #94a3b8;
         }
 
         .auth-field input:focus {
@@ -316,10 +348,8 @@
         }
 
         .auth-submit-row {
-            display: flex;
-            align-items: center;
+            display: grid;
             gap: 14px;
-            flex-wrap: wrap;
             padding-top: 4px;
         }
 
@@ -327,6 +357,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            width: 100%;
             min-height: 54px;
             padding: 0 28px;
             border: 0;
@@ -353,6 +384,8 @@
         }
 
         .auth-inline-link {
+            display: inline-flex;
+            justify-content: center;
             color: #1e4068;
             font-size: 14px;
             font-weight: 700;
@@ -372,6 +405,10 @@
             .auth-panel-brand,
             .auth-panel-form {
                 padding: 34px 26px;
+            }
+
+            .auth-form-surface {
+                width: 100%;
             }
         }
 
@@ -399,12 +436,9 @@
                 border-radius: 24px;
             }
 
-            .auth-submit-row {
-                align-items: stretch;
-            }
-
-            .auth-submit-btn {
-                width: 100%;
+            .auth-form-surface {
+                padding: 24px 18px;
+                border-radius: 22px;
             }
         }
     </style>
@@ -419,7 +453,6 @@
                     </a>
 
                     <div class="auth-brand-copy">
-                        <span class="auth-kicker">Customer Access</span>
                         <h1 class="auth-brand-title">Join <span>SolMate!</span></h1>
                         <p class="auth-brand-text">Create your SolMate customer account to request services, review solar updates, and manage your journey in one secure place.</p>
 
@@ -438,82 +471,84 @@
             </aside>
 
             <div class="auth-panel-form">
-                <div class="auth-form-head">
-                    <span class="auth-form-kicker">Create Account</span>
-                    <h2 class="auth-form-title">Register for SolMate</h2>
-                    <p class="auth-form-copy">Fill in your details below to create a customer account. New registrations are saved as <strong>customer</strong> users by default.</p>
+                <div class="auth-form-surface">
+                    <div class="auth-form-head">
+                        <span class="auth-form-kicker">Create Account</span>
+                        <h2 class="auth-form-title">Register for SolMate</h2>
+                    </div>
+
+                    <div class="auth-feedback">
+                        <div class="status" id="register-success-box" hidden>Registration successful. Please login.</div>
+                        <div class="error-box" id="register-error-box" hidden></div>
+                    </div>
+
+                    <form
+                        class="auth-form-grid"
+                        id="register-form"
+                        novalidate
+                        data-login-page-url="{{ route('login') }}"
+                    >
+                        <div class="auth-field">
+                            <label for="name">Name</label>
+                            <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name" placeholder="Enter your full name">
+                            <div class="field-error" data-error-for="name">@error('name') {{ $message }} @enderror</div>
+                        </div>
+
+                        <div class="auth-field">
+                            <label for="email">Email</label>
+                            <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" placeholder="you@example.com">
+                            <div class="field-error" data-error-for="email">@error('email') {{ $message }} @enderror</div>
+                        </div>
+
+                        <div class="auth-field auth-field-full">
+                            <label for="address">Address</label>
+                            <input id="address" type="text" name="address" value="{{ old('address') }}" required autocomplete="street-address" placeholder="House number, street, barangay, city">
+                            <div class="field-error" data-error-for="address">@error('address') {{ $message }} @enderror</div>
+                        </div>
+
+                        <div class="auth-field">
+                            <label for="contact_number">Contact Number</label>
+                            <input
+                                id="contact_number"
+                                type="text"
+                                name="contact_number"
+                                value="{{ old('contact_number') }}"
+                                required
+                                autocomplete="tel"
+                                inputmode="numeric"
+                                pattern="[0-9]{11}"
+                                maxlength="11"
+                                placeholder="09XXXXXXXXX"
+                            >
+                            <div class="auth-field-support">
+                                <p class="auth-field-helper">Enter an 11-digit mobile number.</p>
+                                <div class="field-error" data-error-for="contact_number">@error('contact_number') {{ $message }} @enderror</div>
+                            </div>
+                        </div>
+
+                        <div class="auth-field">
+                            <label for="password">Password</label>
+                            <input id="password" type="password" name="password" required autocomplete="new-password" placeholder="Create a secure password">
+                            <div class="auth-field-support">
+                                <p class="auth-field-helper">Password must be at least 8 characters, include 1 uppercase letter, and 1 special character.</p>
+                                <div class="field-error" data-error-for="password">@error('password') {{ $message }} @enderror</div>
+                            </div>
+                        </div>
+
+                        <div class="auth-field auth-field-full">
+                            <label for="password_confirmation">Confirm Password</label>
+                            <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password" placeholder="Re-enter your password">
+                            <div class="auth-field-support">
+                                <div class="field-error" data-error-for="password_confirmation">@error('password_confirmation') {{ $message }} @enderror</div>
+                            </div>
+                        </div>
+
+                        <div class="auth-submit-row">
+                            <button type="submit" class="auth-submit-btn" id="register-submit-button">Create Account</button>
+                            <a class="auth-inline-link" href="{{ route('login') }}">Already have an account? Login</a>
+                        </div>
+                    </form>
                 </div>
-
-                <div class="auth-feedback">
-                    <div class="status" id="register-success-box" hidden>Registration successful. Please login.</div>
-                    <div class="error-box" id="register-error-box" hidden></div>
-                </div>
-
-                <form
-                    class="auth-form-grid"
-                    id="register-form"
-                    novalidate
-                    data-login-page-url="{{ route('login') }}"
-                >
-                    <div class="auth-field">
-                        <label for="name">Name</label>
-                        <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name">
-                        <div class="field-error" data-error-for="name">@error('name') {{ $message }} @enderror</div>
-                    </div>
-
-                    <div class="auth-field">
-                        <label for="email">Email</label>
-                        <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email">
-                        <div class="field-error" data-error-for="email">@error('email') {{ $message }} @enderror</div>
-                    </div>
-
-                    <div class="auth-field auth-field-full">
-                        <label for="address">Address</label>
-                        <input id="address" type="text" name="address" value="{{ old('address') }}" required autocomplete="street-address">
-                        <div class="field-error" data-error-for="address">@error('address') {{ $message }} @enderror</div>
-                    </div>
-
-                    <div class="auth-field">
-                        <label for="contact_number">Contact Number</label>
-                        <input
-                            id="contact_number"
-                            type="text"
-                            name="contact_number"
-                            value="{{ old('contact_number') }}"
-                            required
-                            autocomplete="tel"
-                            inputmode="numeric"
-                            pattern="[0-9]{11}"
-                            maxlength="11"
-                        >
-                        <div class="auth-field-support">
-                            <p class="auth-field-helper">Enter an 11-digit mobile number.</p>
-                            <div class="field-error" data-error-for="contact_number">@error('contact_number') {{ $message }} @enderror</div>
-                        </div>
-                    </div>
-
-                    <div class="auth-field">
-                        <label for="password">Password</label>
-                        <input id="password" type="password" name="password" required autocomplete="new-password">
-                        <div class="auth-field-support">
-                            <p class="auth-field-helper">Password must be at least 8 characters, include 1 uppercase letter, and 1 special character.</p>
-                            <div class="field-error" data-error-for="password">@error('password') {{ $message }} @enderror</div>
-                        </div>
-                    </div>
-
-                    <div class="auth-field auth-field-full">
-                        <label for="password_confirmation">Confirm Password</label>
-                        <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password">
-                        <div class="auth-field-support">
-                            <div class="field-error" data-error-for="password_confirmation">@error('password_confirmation') {{ $message }} @enderror</div>
-                        </div>
-                    </div>
-
-                    <div class="auth-submit-row">
-                        <button type="submit" class="auth-submit-btn" id="register-submit-button">Create Account</button>
-                        <a class="auth-inline-link" href="{{ route('login') }}">Already have an account? Login</a>
-                    </div>
-                </form>
             </div>
         </div>
     </section>
