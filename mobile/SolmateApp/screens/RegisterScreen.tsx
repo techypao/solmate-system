@@ -1,4 +1,4 @@
-import React, {useContext, useState} from 'react';
+import React, { useContext, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -10,13 +10,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {AuthContext} from '../src/context/AuthContext';
-import {ApiError, apiPost} from '../src/services/api';
+import { AuthContext } from '../src/context/AuthContext';
+import { ApiError, apiPost } from '../src/services/api';
 import {
   getPasswordValidationError,
   PASSWORD_REQUIREMENTS_TEXT,
 } from '../src/utils/passwordValidation';
-import {authColors, authStyles} from './authStyles';
+import { authColors, authStyles } from './authStyles';
 
 type RegisterScreenProps = {
   navigation?: {
@@ -24,8 +24,8 @@ type RegisterScreenProps = {
   };
 };
 
-export default function RegisterScreen({navigation}: RegisterScreenProps) {
-  const {login} = useContext(AuthContext);
+export default function RegisterScreen({ navigation }: RegisterScreenProps) {
+  const { login } = useContext(AuthContext);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -79,7 +79,7 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
 
     try {
       setSubmitting(true);
-      const data = await apiPost<{token: string}>(
+      const data = await apiPost<{ token: string }>(
         '/register',
         registerData,
         false,
@@ -109,12 +109,16 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
 
   return (
     <KeyboardAvoidingView
-      style={{flex: 1, backgroundColor: authColors.screenBg}}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      style={authStyles.screenContainer}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
+    >
       <ScrollView
         contentContainerStyle={authStyles.screenScroll}
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
         keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+      >
         <View style={authStyles.brandRow}>
           <Text style={authStyles.brandSol}>Sol</Text>
           <Text style={authStyles.brandMate}>Mate</Text>
@@ -199,14 +203,17 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
             <Pressable
               accessibilityRole="button"
               onPress={() => setShowPassword(c => !c)}
-              style={authStyles.eyeBtn}>
+              style={authStyles.eyeBtn}
+            >
               <View style={authStyles.eyeShape}>
                 <View style={authStyles.eyePupil} />
               </View>
               {!showPassword && <View style={authStyles.eyeSlash} />}
             </Pressable>
           </View>
-          <Text style={authStyles.helperText}>{PASSWORD_REQUIREMENTS_TEXT}</Text>
+          <Text style={authStyles.helperText}>
+            {PASSWORD_REQUIREMENTS_TEXT}
+          </Text>
 
           <Text style={authStyles.label}>Confirm Password</Text>
           <View style={authStyles.passwordWrap}>
@@ -225,7 +232,8 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
             <Pressable
               accessibilityRole="button"
               onPress={() => setShowConfirmPassword(c => !c)}
-              style={authStyles.eyeBtn}>
+              style={authStyles.eyeBtn}
+            >
               <View style={authStyles.eyeShape}>
                 <View style={authStyles.eyePupil} />
               </View>
@@ -240,7 +248,8 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
             style={[
               authStyles.primaryBtn,
               submitting ? authStyles.primaryBtnDisabled : null,
-            ]}>
+            ]}
+          >
             <Text style={authStyles.primaryBtnText}>
               {submitting ? 'Registering...' : 'Register'}
             </Text>
@@ -249,7 +258,8 @@ export default function RegisterScreen({navigation}: RegisterScreenProps) {
           <TouchableOpacity
             activeOpacity={0.75}
             onPress={handleLoginPress}
-            style={authStyles.bottomLink}>
+            style={authStyles.bottomLink}
+          >
             <Text style={authStyles.bottomLinkText}>
               Have an account?{' '}
               <Text style={authStyles.bottomLinkBold}>Login Here</Text>

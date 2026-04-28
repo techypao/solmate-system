@@ -1,4 +1,4 @@
-import {StyleSheet} from 'react-native';
+import { StyleSheet } from 'react-native';
 
 export const authColors = {
   screenBg: '#e0e8f5',
@@ -21,6 +21,10 @@ export const authColors = {
 };
 
 export const authStyles = StyleSheet.create({
+  screenContainer: {
+    flex: 1,
+    backgroundColor: authColors.screenBg,
+  },
   screenScroll: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -57,7 +61,7 @@ export const authStyles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingVertical: 28,
     shadowColor: authColors.shadowColor,
-    shadowOffset: {width: 0, height: 6},
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12,
     shadowRadius: 16,
     elevation: 6,
@@ -115,7 +119,7 @@ export const authStyles = StyleSheet.create({
     width: 1.6,
     height: 24,
     backgroundColor: authColors.mutedText,
-    transform: [{rotate: '45deg'}],
+    transform: [{ rotate: '45deg' }],
   },
   errorText: {
     color: authColors.errorText,

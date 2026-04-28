@@ -1,4 +1,4 @@
-import React, {useContext, useState} from 'react';
+import React, { useContext, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -9,9 +9,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {AuthContext} from '../src/context/AuthContext';
-import {ApiError, apiPost} from '../src/services/api';
-import {authColors, authStyles} from './authStyles';
+import { AuthContext } from '../src/context/AuthContext';
+import { ApiError, apiPost } from '../src/services/api';
+import { authColors, authStyles } from './authStyles';
 
 type LoginScreenProps = {
   navigation?: {
@@ -23,8 +23,8 @@ type LoginResponse = {
   token: string;
 };
 
-export default function LoginScreen({navigation}: LoginScreenProps) {
-  const {login} = useContext(AuthContext);
+export default function LoginScreen({ navigation }: LoginScreenProps) {
+  const { login } = useContext(AuthContext);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -56,7 +56,7 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
 
       console.log('Login success:', data);
 
-      await login(data.token, {rememberSession});
+      await login(data.token, { rememberSession });
     } catch (error) {
       console.log('Login error:', error);
       if (error instanceof ApiError) {
@@ -76,12 +76,16 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
 
   return (
     <KeyboardAvoidingView
-      style={{flex: 1, backgroundColor: authColors.screenBg}}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      style={authStyles.screenContainer}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
+    >
       <ScrollView
         contentContainerStyle={authStyles.screenScroll}
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
         keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+      >
         <View style={authStyles.brandRow}>
           <Text style={authStyles.brandSol}>Sol</Text>
           <Text style={authStyles.brandMate}>Mate</Text>
@@ -126,7 +130,8 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
             <Pressable
               accessibilityRole="button"
               onPress={() => setShowPassword(c => !c)}
-              style={authStyles.eyeBtn}>
+              style={authStyles.eyeBtn}
+            >
               <View style={authStyles.eyeShape}>
                 <View style={authStyles.eyePupil} />
               </View>
@@ -136,14 +141,16 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
 
           <Pressable
             accessibilityRole="checkbox"
-            accessibilityState={{checked: rememberSession}}
+            accessibilityState={{ checked: rememberSession }}
             onPress={() => setRememberSession(c => !c)}
-            style={authStyles.rememberRow}>
+            style={authStyles.rememberRow}
+          >
             <View
               style={[
                 authStyles.checkbox,
                 rememberSession ? authStyles.checkboxChecked : null,
-              ]}>
+              ]}
+            >
               {rememberSession ? (
                 <Text style={authStyles.checkboxMark}>{'✓'}</Text>
               ) : null}
@@ -163,7 +170,8 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
             style={[
               authStyles.primaryBtn,
               submitting ? authStyles.primaryBtnDisabled : null,
-            ]}>
+            ]}
+          >
             <Text style={authStyles.primaryBtnText}>
               {submitting ? 'Logging in...' : 'Login'}
             </Text>
@@ -172,7 +180,8 @@ export default function LoginScreen({navigation}: LoginScreenProps) {
           <TouchableOpacity
             activeOpacity={0.75}
             onPress={handleRegisterPress}
-            style={authStyles.bottomLink}>
+            style={authStyles.bottomLink}
+          >
             <Text style={authStyles.bottomLinkText}>
               Don't have an account?{' '}
               <Text style={authStyles.bottomLinkBold}>Create Account</Text>

@@ -1,6 +1,8 @@
-import React, {useCallback, useContext, useEffect, useState} from 'react';
-import {useFocusEffect} from '@react-navigation/native';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -10,11 +12,11 @@ import {
   View,
 } from 'react-native';
 
-import {PreferredDateCalendar} from '../components';
-import {AuthContext} from '../src/context/AuthContext';
-import {ApiError} from '../src/services/api';
-import {getUnavailablePreferredDates} from '../src/services/preferredDateAvailabilityApi';
-import {createServiceRequest} from '../src/services/serviceRequestApi';
+import { PreferredDateCalendar } from '../components';
+import { AuthContext } from '../src/context/AuthContext';
+import { ApiError } from '../src/services/api';
+import { getUnavailablePreferredDates } from '../src/services/preferredDateAvailabilityApi';
+import { createServiceRequest } from '../src/services/serviceRequestApi';
 
 /* ── design tokens ── */
 
@@ -55,7 +57,8 @@ function sanitizeContactNumber(value: string) {
 
 function getFriendlyErrorMessage(error: unknown) {
   if (error instanceof ApiError) {
-    if (error.status === 401) return 'Your session has expired. Please log in again.';
+    if (error.status === 401)
+      return 'Your session has expired. Please log in again.';
     return error.message;
   }
   return 'Something went wrong while submitting your maintenance request.';
@@ -79,8 +82,8 @@ function buildMaintenanceDetails(maintenanceType: string, description: string) {
    Main screen
    ══════════════════════════════════════════ */
 
-export default function ServiceRequestScreen({navigation}: any) {
-  const {user} = useContext(AuthContext);
+export default function ServiceRequestScreen({ navigation }: any) {
+  const { user } = useContext(AuthContext);
   const [requestType, setRequestType] = useState('');
   const [details, setDetails] = useState('');
   const [contactNumber, setContactNumber] = useState('');
@@ -127,13 +130,15 @@ export default function ServiceRequestScreen({navigation}: any) {
   );
 
   useEffect(() => {
-    const isReserved = Boolean(dateNeeded && unavailableDates.includes(dateNeeded));
+    const isReserved = Boolean(
+      dateNeeded && unavailableDates.includes(dateNeeded),
+    );
     setFieldErrors(currentErrors => {
       if (isReserved && currentErrors.dateNeeded !== RESERVED_DATE_MESSAGE) {
-        return {...currentErrors, dateNeeded: RESERVED_DATE_MESSAGE};
+        return { ...currentErrors, dateNeeded: RESERVED_DATE_MESSAGE };
       }
       if (!isReserved && currentErrors.dateNeeded === RESERVED_DATE_MESSAGE) {
-        return {...currentErrors, dateNeeded: undefined};
+        return { ...currentErrors, dateNeeded: undefined };
       }
       return currentErrors;
     });
@@ -148,7 +153,7 @@ export default function ServiceRequestScreen({navigation}: any) {
     setRequestType(value);
     clearStatusMessages();
     if (fieldErrors.requestType) {
-      setFieldErrors(c => ({...c, requestType: undefined}));
+      setFieldErrors(c => ({ ...c, requestType: undefined }));
     }
   };
 
@@ -156,7 +161,7 @@ export default function ServiceRequestScreen({navigation}: any) {
     setDetails(value);
     clearStatusMessages();
     if (fieldErrors.details) {
-      setFieldErrors(c => ({...c, details: undefined}));
+      setFieldErrors(c => ({ ...c, details: undefined }));
     }
   };
 
@@ -164,7 +169,7 @@ export default function ServiceRequestScreen({navigation}: any) {
     setContactNumber(sanitizeContactNumber(value));
     clearStatusMessages();
     if (fieldErrors.contactNumber) {
-      setFieldErrors(c => ({...c, contactNumber: undefined}));
+      setFieldErrors(c => ({ ...c, contactNumber: undefined }));
     }
   };
 
@@ -172,20 +177,20 @@ export default function ServiceRequestScreen({navigation}: any) {
     setAddress(value);
     clearStatusMessages();
     if (fieldErrors.address) {
-      setFieldErrors(c => ({...c, address: undefined}));
+      setFieldErrors(c => ({ ...c, address: undefined }));
     }
   };
 
   const handleDateSelect = (value: string) => {
     setDateNeeded(value);
     clearStatusMessages();
-    setFieldErrors(c => ({...c, dateNeeded: undefined}));
+    setFieldErrors(c => ({ ...c, dateNeeded: undefined }));
   };
 
   const clearSelectedDate = () => {
     setDateNeeded('');
     clearStatusMessages();
-    setFieldErrors(c => ({...c, dateNeeded: undefined}));
+    setFieldErrors(c => ({ ...c, dateNeeded: undefined }));
   };
 
   const validateForm = () => {
@@ -201,9 +206,11 @@ export default function ServiceRequestScreen({navigation}: any) {
     if (!trimmedDetails) {
       nextErrors.details = 'Please add details about the maintenance you need.';
     }
-    if (!trimmedContactNumber) nextErrors.contactNumber = 'Contact number is required.';
+    if (!trimmedContactNumber)
+      nextErrors.contactNumber = 'Contact number is required.';
     if (!trimmedAddress) nextErrors.address = 'Address is required.';
-    if (dateNeeded && unavailableDates.includes(dateNeeded)) nextErrors.dateNeeded = RESERVED_DATE_MESSAGE;
+    if (dateNeeded && unavailableDates.includes(dateNeeded))
+      nextErrors.dateNeeded = RESERVED_DATE_MESSAGE;
 
     setFieldErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
@@ -219,7 +226,7 @@ export default function ServiceRequestScreen({navigation}: any) {
     if (!validateForm()) return;
 
     if (dateNeeded && unavailableDates.includes(dateNeeded)) {
-      setFieldErrors(c => ({...c, dateNeeded: RESERVED_DATE_MESSAGE}));
+      setFieldErrors(c => ({ ...c, dateNeeded: RESERVED_DATE_MESSAGE }));
       setErrorMessage(RESERVED_DATE_MESSAGE);
       setSuccessMessage('');
       return;
@@ -238,9 +245,11 @@ export default function ServiceRequestScreen({navigation}: any) {
       const response = await createServiceRequest({
         request_type: 'maintenance',
         details: buildMaintenanceDetails(trimmedRequestType, trimmedDetails),
-        ...(trimmedContactNumber ? {contact_number: trimmedContactNumber} : {}),
+        ...(trimmedContactNumber
+          ? { contact_number: trimmedContactNumber }
+          : {}),
         address: trimmedAddress,
-        ...(dateNeeded ? {date_needed: dateNeeded} : {}),
+        ...(dateNeeded ? { date_needed: dateNeeded } : {}),
       });
 
       const createdServiceRequest = response?.data;
@@ -262,16 +271,16 @@ export default function ServiceRequestScreen({navigation}: any) {
       const addressFieldMessage = getFieldValidationMessage(error, 'address');
       const dateFieldMessage = getFieldValidationMessage(error, 'date_needed');
       if (addressFieldMessage) {
-        setFieldErrors(c => ({...c, address: addressFieldMessage}));
+        setFieldErrors(c => ({ ...c, address: addressFieldMessage }));
       }
       if (dateFieldMessage) {
-        setFieldErrors(c => ({...c, dateNeeded: dateFieldMessage}));
+        setFieldErrors(c => ({ ...c, dateNeeded: dateFieldMessage }));
         loadUnavailableDates();
       }
       setErrorMessage(
         addressFieldMessage ||
-        dateFieldMessage ||
-        getFriendlyErrorMessage(error),
+          dateFieldMessage ||
+          getFriendlyErrorMessage(error),
       );
     } finally {
       setSubmitting(false);
@@ -284,231 +293,268 @@ export default function ServiceRequestScreen({navigation}: any) {
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView
-        contentContainerStyle={s.scroll}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}>
-
-        {/* ── brand ── */}
-        <Text style={s.brand}>
-          Sol<Text style={s.brandAccent}>Mate</Text>
-        </Text>
-
-        {/* ── back ── */}
-        <Pressable
-          hitSlop={14}
-          onPress={() => navigation.goBack()}
-          style={({pressed}) => [s.backBtn, pressed && s.pressed]}>
-          <Text style={s.backIcon}>{'\u2039'}</Text>
-        </Pressable>
-
-        {/* ── title ── */}
-        <Text style={s.title}>Maintenance Request</Text>
-        <Text style={s.subtitle}>
-          Schedule maintenance support for your solar system. Choose the
-          maintenance concern, describe the issue, and pick a preferred date.
-        </Text>
-
-        {/* ── banners ── */}
-        {errorMessage ? (
-          <View style={s.errorBanner}>
-            <Text style={s.errorBannerTitle}>Unable to submit</Text>
-            <Text style={s.errorBannerText}>{errorMessage}</Text>
-          </View>
-        ) : null}
-
-        {successMessage ? (
-          <View style={s.successBanner}>
-            <Text style={s.successBannerTitle}>Request submitted</Text>
-            <Text style={s.successBannerText}>{successMessage}</Text>
-          </View>
-        ) : null}
-
-        {/* ── form card ── */}
-        <View style={s.card}>
-
-          {/* A. Request type */}
-          <View style={s.fieldGroup}>
-            <View style={s.fieldHeader}>
-              <Text style={s.fieldLabel}>Maintenance Service Type</Text>
-              <Text style={s.requiredTag}>Required</Text>
-            </View>
-
-            <View style={s.chipGroup}>
-              {REQUEST_TYPE_OPTIONS.map(option => {
-                const isSelected = selectedRequestType === option;
-                return (
-                  <Pressable
-                    key={option}
-                    onPress={() => handleRequestTypeChange(option)}
-                    style={({pressed}) => [
-                      s.chip,
-                      isSelected && s.chipSelected,
-                      pressed && s.pressed,
-                    ]}>
-                    <Text style={[s.chipText, isSelected && s.chipTextSelected]}>
-                      {option}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-            <Text style={s.helpText}>
-              You are already inside the maintenance request flow, so just pick
-              the specific concern you want serviced.
-            </Text>
-            {fieldErrors.requestType ? (
-              <Text style={s.fieldErrorText}>{fieldErrors.requestType}</Text>
-            ) : null}
-          </View>
-
-          {/* B. Details */}
-          <View style={s.fieldGroup}>
-            <View style={s.fieldHeader}>
-              <Text style={s.fieldLabel}>Details</Text>
-              <Text style={s.requiredTag}>Required</Text>
-            </View>
-            <TextInput
-              multiline
-              numberOfLines={5}
-              onChangeText={handleDetailsChange}
-              placeholder="Describe the maintenance concern or the work you want scheduled."
-              placeholderTextColor={MUTED}
-              style={[s.input, s.textArea, fieldErrors.details && s.inputError]}
-              textAlignVertical="top"
-              value={details}
-            />
-            <Text style={s.helpText}>
-              Example: reduced output, inverter alert, wiring concern, or
-              routine cleaning request.
-            </Text>
-            {fieldErrors.details ? (
-              <Text style={s.fieldErrorText}>{fieldErrors.details}</Text>
-            ) : null}
-          </View>
-
-          {/* C. Contact number */}
-          <View style={s.fieldGroup}>
-            <View style={s.fieldHeader}>
-              <Text style={s.fieldLabel}>Contact Number</Text>
-              <Text style={s.requiredTag}>Required</Text>
-            </View>
-            <TextInput
-              keyboardType="phone-pad"
-              onChangeText={handleContactNumberChange}
-              placeholder="e.g. 09171234567"
-              placeholderTextColor={MUTED}
-              style={[s.input, fieldErrors.contactNumber && s.inputError]}
-              value={contactNumber}
-            />
-            <Text style={s.helpText}>
-              Use 11 digits, starting with 09.
-            </Text>
-            {fieldErrors.contactNumber ? (
-              <Text style={s.fieldErrorText}>{fieldErrors.contactNumber}</Text>
-            ) : null}
-          </View>
-
-          {/* D. Address */}
-          <View style={s.fieldGroup}>
-            <View style={s.fieldHeader}>
-              <Text style={s.fieldLabel}>Address</Text>
-              <Text style={s.requiredTag}>Required</Text>
-            </View>
-            <TextInput
-              onChangeText={handleAddressChange}
-              placeholder="Enter the service address"
-              placeholderTextColor={MUTED}
-              style={[s.input, fieldErrors.address && s.inputError]}
-              value={address}
-            />
-            <Text style={s.helpText}>
-              This is pre-filled from your profile when available, and you can still edit it.
-            </Text>
-            {fieldErrors.address ? (
-              <Text style={s.fieldErrorText}>{fieldErrors.address}</Text>
-            ) : null}
-          </View>
-
-          {/* E. Calendar (PreferredDateCalendar component) */}
-          <PreferredDateCalendar
-            availabilityMessage={availabilityMessage}
-            errorText={fieldErrors.dateNeeded}
-            helperText="Some dates may already be reserved by other active requests. The backend will always confirm availability when you submit."
-            label="Preferred date"
-            onClearDate={clearSelectedDate}
-            onSelectDate={handleDateSelect}
-            reservedDateMessage={RESERVED_DATE_MESSAGE}
-            selectedDate={dateNeeded}
-            unavailableDates={unavailableDates}
-          />
-        </View>
-
-        {/* ── submit card ── */}
-        <View style={s.card}>
-          <Text style={s.submitTitle}>Ready to send your request?</Text>
-          <Text style={s.submitSubtitle}>
-            After submission, you will be taken to the maintenance request
-            details screen.
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
+        style={s.flex}
+      >
+        <ScrollView
+          contentContainerStyle={s.scroll}
+          keyboardDismissMode={
+            Platform.OS === 'ios' ? 'interactive' : 'on-drag'
+          }
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* ── brand ── */}
+          <Text style={s.brand}>
+            Sol<Text style={s.brandAccent}>Mate</Text>
           </Text>
 
+          {/* ── back ── */}
           <Pressable
-            disabled={submitting}
-            onPress={handleSubmit}
-            style={({pressed}) => [
-              s.primaryBtn,
-              submitting && s.btnDisabled,
-              pressed && s.pressed,
-            ]}>
-            <Text style={s.primaryBtnText}>
-              {submitting ? 'Submitting...' : 'Submit Maintenance Request'}
-            </Text>
+            hitSlop={14}
+            onPress={() => navigation.goBack()}
+            style={({ pressed }) => [s.backBtn, pressed && s.pressed]}
+          >
+            <Text style={s.backIcon}>{'\u2039'}</Text>
           </Pressable>
 
-          <Pressable
-            onPress={() => navigation.navigate('ServiceRequestList')}
-            style={({pressed}) => [s.secondaryBtn, pressed && s.pressed]}>
-            <Text style={s.secondaryBtnText}>View My Maintenance Requests</Text>
-          </Pressable>
-        </View>
+          {/* ── title ── */}
+          <Text style={s.title}>Maintenance Request</Text>
+          <Text style={s.subtitle}>
+            Schedule maintenance support for your solar system. Choose the
+            maintenance concern, describe the issue, and pick a preferred date.
+          </Text>
 
-        {/* ── spacer ── */}
-        <View style={s.spacer} />
+          {/* ── banners ── */}
+          {errorMessage ? (
+            <View style={s.errorBanner}>
+              <Text style={s.errorBannerTitle}>Unable to submit</Text>
+              <Text style={s.errorBannerText}>{errorMessage}</Text>
+            </View>
+          ) : null}
 
-        {/* ── chatbot shortcut ── */}
-        <Pressable
-          onPress={() => navigation.navigate('Chatbot')}
-          style={({pressed}) => [s.chatRow, pressed && s.pressed]}>
-          <Text style={s.chatText}>Chat with SolBot</Text>
-          <View style={s.chatBtn}>
-            <Text style={s.chatBtnIcon}>{'\uD83E\uDD16'}</Text>
+          {successMessage ? (
+            <View style={s.successBanner}>
+              <Text style={s.successBannerTitle}>Request submitted</Text>
+              <Text style={s.successBannerText}>{successMessage}</Text>
+            </View>
+          ) : null}
+
+          {/* ── form card ── */}
+          <View style={s.card}>
+            {/* A. Request type */}
+            <View style={s.fieldGroup}>
+              <View style={s.fieldHeader}>
+                <Text style={s.fieldLabel}>Maintenance Service Type</Text>
+                <Text style={s.requiredTag}>Required</Text>
+              </View>
+
+              <View style={s.chipGroup}>
+                {REQUEST_TYPE_OPTIONS.map(option => {
+                  const isSelected = selectedRequestType === option;
+                  return (
+                    <Pressable
+                      key={option}
+                      onPress={() => handleRequestTypeChange(option)}
+                      style={({ pressed }) => [
+                        s.chip,
+                        isSelected && s.chipSelected,
+                        pressed && s.pressed,
+                      ]}
+                    >
+                      <Text
+                        style={[s.chipText, isSelected && s.chipTextSelected]}
+                      >
+                        {option}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              <Text style={s.helpText}>
+                You are already inside the maintenance request flow, so just
+                pick the specific concern you want serviced.
+              </Text>
+              {fieldErrors.requestType ? (
+                <Text style={s.fieldErrorText}>{fieldErrors.requestType}</Text>
+              ) : null}
+            </View>
+
+            {/* B. Details */}
+            <View style={s.fieldGroup}>
+              <View style={s.fieldHeader}>
+                <Text style={s.fieldLabel}>Details</Text>
+                <Text style={s.requiredTag}>Required</Text>
+              </View>
+              <TextInput
+                multiline
+                numberOfLines={5}
+                onChangeText={handleDetailsChange}
+                placeholder="Describe the maintenance concern or the work you want scheduled."
+                placeholderTextColor={MUTED}
+                style={[
+                  s.input,
+                  s.textArea,
+                  fieldErrors.details && s.inputError,
+                ]}
+                textAlignVertical="top"
+                value={details}
+              />
+              <Text style={s.helpText}>
+                Example: reduced output, inverter alert, wiring concern, or
+                routine cleaning request.
+              </Text>
+              {fieldErrors.details ? (
+                <Text style={s.fieldErrorText}>{fieldErrors.details}</Text>
+              ) : null}
+            </View>
+
+            {/* C. Contact number */}
+            <View style={s.fieldGroup}>
+              <View style={s.fieldHeader}>
+                <Text style={s.fieldLabel}>Contact Number</Text>
+                <Text style={s.requiredTag}>Required</Text>
+              </View>
+              <TextInput
+                keyboardType="phone-pad"
+                onChangeText={handleContactNumberChange}
+                placeholder="e.g. 09171234567"
+                placeholderTextColor={MUTED}
+                style={[s.input, fieldErrors.contactNumber && s.inputError]}
+                value={contactNumber}
+              />
+              <Text style={s.helpText}>Use 11 digits, starting with 09.</Text>
+              {fieldErrors.contactNumber ? (
+                <Text style={s.fieldErrorText}>
+                  {fieldErrors.contactNumber}
+                </Text>
+              ) : null}
+            </View>
+
+            {/* D. Address */}
+            <View style={s.fieldGroup}>
+              <View style={s.fieldHeader}>
+                <Text style={s.fieldLabel}>Address</Text>
+                <Text style={s.requiredTag}>Required</Text>
+              </View>
+              <TextInput
+                onChangeText={handleAddressChange}
+                placeholder="Enter the service address"
+                placeholderTextColor={MUTED}
+                style={[s.input, fieldErrors.address && s.inputError]}
+                value={address}
+              />
+              <Text style={s.helpText}>
+                This is pre-filled from your profile when available, and you can
+                still edit it.
+              </Text>
+              {fieldErrors.address ? (
+                <Text style={s.fieldErrorText}>{fieldErrors.address}</Text>
+              ) : null}
+            </View>
+
+            {/* E. Calendar (PreferredDateCalendar component) */}
+            <PreferredDateCalendar
+              availabilityMessage={availabilityMessage}
+              errorText={fieldErrors.dateNeeded}
+              helperText="Some dates may already be reserved by other active requests. The backend will always confirm availability when you submit."
+              label="Preferred date"
+              onClearDate={clearSelectedDate}
+              onSelectDate={handleDateSelect}
+              reservedDateMessage={RESERVED_DATE_MESSAGE}
+              selectedDate={dateNeeded}
+              unavailableDates={unavailableDates}
+            />
           </View>
-        </Pressable>
 
-        {/* ── bottom nav ── */}
-        <View style={s.bottomNav}>
-          <Pressable style={s.navItem} onPress={() => navigation.navigate('Home')}>
-            <Text style={s.navIcon}>{'\uD83C\uDFE0'}</Text>
-            <Text style={s.navLabel}>Home</Text>
+          {/* ── submit card ── */}
+          <View style={s.card}>
+            <Text style={s.submitTitle}>Ready to send your request?</Text>
+            <Text style={s.submitSubtitle}>
+              After submission, you will be taken to the maintenance request
+              details screen.
+            </Text>
+
+            <Pressable
+              disabled={submitting}
+              onPress={handleSubmit}
+              style={({ pressed }) => [
+                s.primaryBtn,
+                submitting && s.btnDisabled,
+                pressed && s.pressed,
+              ]}
+            >
+              <Text style={s.primaryBtnText}>
+                {submitting ? 'Submitting...' : 'Submit Maintenance Request'}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => navigation.navigate('ServiceRequestList')}
+              style={({ pressed }) => [s.secondaryBtn, pressed && s.pressed]}
+            >
+              <Text style={s.secondaryBtnText}>
+                View My Maintenance Requests
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* ── spacer ── */}
+          <View style={s.spacer} />
+
+          {/* ── chatbot shortcut ── */}
+          <Pressable
+            onPress={() => navigation.navigate('Chatbot')}
+            style={({ pressed }) => [s.chatRow, pressed && s.pressed]}
+          >
+            <Text style={s.chatText}>Chat with SolBot</Text>
+            <View style={s.chatBtn}>
+              <Text style={s.chatBtnIcon}>{'\uD83E\uDD16'}</Text>
+            </View>
           </Pressable>
-          <Pressable style={s.navItem} onPress={() => navigation.navigate('QuotationList')}>
-            <Text style={s.navIcon}>{'\uD83D\uDCCB'}</Text>
-            <Text style={s.navLabel}>Quotation</Text>
-          </Pressable>
-          <Pressable style={s.navItem} onPress={() => navigation.navigate('ServicesHome')}>
-            <Text style={s.navIconActive}>{'\u2699\uFE0F'}</Text>
-            <Text style={s.navLabelActive}>Services</Text>
-          </Pressable>
-          <Pressable style={s.navItem} onPress={() => navigation.navigate('TrackingHub')}>
-            <Text style={s.navIcon}>{'\uD83D\uDCCD'}</Text>
-            <Text style={s.navLabel}>Tracking</Text>
-          </Pressable>
-          <Pressable style={s.navItem} onPress={() => navigation.navigate('CustomerSettings')}>
-            <Text style={s.navIcon}>{'\uD83D\uDC64'}</Text>
-            <Text style={s.navLabel}>Profile</Text>
-          </Pressable>
-        </View>
-      </ScrollView>
+
+          {/* ── bottom nav ── */}
+          <View style={s.bottomNav}>
+            <Pressable
+              style={s.navItem}
+              onPress={() => navigation.navigate('Home')}
+            >
+              <Text style={s.navIcon}>{'\uD83C\uDFE0'}</Text>
+              <Text style={s.navLabel}>Home</Text>
+            </Pressable>
+            <Pressable
+              style={s.navItem}
+              onPress={() => navigation.navigate('QuotationList')}
+            >
+              <Text style={s.navIcon}>{'\uD83D\uDCCB'}</Text>
+              <Text style={s.navLabel}>Quotation</Text>
+            </Pressable>
+            <Pressable
+              style={s.navItem}
+              onPress={() => navigation.navigate('ServicesHome')}
+            >
+              <Text style={s.navIconActive}>{'\u2699\uFE0F'}</Text>
+              <Text style={s.navLabelActive}>Services</Text>
+            </Pressable>
+            <Pressable
+              style={s.navItem}
+              onPress={() => navigation.navigate('TrackingHub')}
+            >
+              <Text style={s.navIcon}>{'\uD83D\uDCCD'}</Text>
+              <Text style={s.navLabel}>Tracking</Text>
+            </Pressable>
+            <Pressable
+              style={s.navItem}
+              onPress={() => navigation.navigate('CustomerSettings')}
+            >
+              <Text style={s.navIcon}>{'\uD83D\uDC64'}</Text>
+              <Text style={s.navLabel}>Profile</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -516,28 +562,35 @@ export default function ServiceRequestScreen({navigation}: any) {
 /* ── styles ── */
 
 const s = StyleSheet.create({
-  safe: {flex: 1, backgroundColor: BG},
-  scroll: {paddingHorizontal: 22, paddingTop: 20, paddingBottom: 30},
-  pressed: {opacity: 0.85},
+  safe: { flex: 1, backgroundColor: BG },
+  flex: { flex: 1 },
+  scroll: { paddingHorizontal: 22, paddingTop: 20, paddingBottom: 30 },
+  pressed: { opacity: 0.85 },
 
   /* brand */
-  brand: {fontSize: 22, fontWeight: '800', color: NAVY, marginBottom: 10},
-  brandAccent: {color: GOLD},
+  brand: { fontSize: 22, fontWeight: '800', color: NAVY, marginBottom: 10 },
+  brandAccent: { color: GOLD },
 
   /* back */
   backBtn: {
-    width: 40, height: 40, borderRadius: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: CARD,
-    alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 18,
-    shadowColor: '#8a9bbd', shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.10, shadowRadius: 6, elevation: 3,
+    shadowColor: '#8a9bbd',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  backIcon: {fontSize: 28, color: NAVY, fontWeight: '600', marginTop: -2},
+  backIcon: { fontSize: 28, color: NAVY, fontWeight: '600', marginTop: -2 },
 
   /* title */
-  title: {fontSize: 26, fontWeight: '900', color: NAVY, marginBottom: 4},
-  subtitle: {fontSize: 14, color: MUTED, lineHeight: 20, marginBottom: 22},
+  title: { fontSize: 26, fontWeight: '900', color: NAVY, marginBottom: 4 },
+  subtitle: { fontSize: 14, color: MUTED, lineHeight: 20, marginBottom: 22 },
 
   /* banners */
   errorBanner: {
@@ -548,8 +601,13 @@ const s = StyleSheet.create({
     padding: 14,
     marginBottom: 16,
   },
-  errorBannerTitle: {color: '#b91c1c', fontSize: 14, fontWeight: '700', marginBottom: 4},
-  errorBannerText: {color: '#991b1b', fontSize: 13, lineHeight: 18},
+  errorBannerTitle: {
+    color: '#b91c1c',
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  errorBannerText: { color: '#991b1b', fontSize: 13, lineHeight: 18 },
   successBanner: {
     backgroundColor: '#f0fdf4',
     borderRadius: 16,
@@ -558,8 +616,13 @@ const s = StyleSheet.create({
     padding: 14,
     marginBottom: 16,
   },
-  successBannerTitle: {color: '#166534', fontSize: 14, fontWeight: '700', marginBottom: 4},
-  successBannerText: {color: '#166534', fontSize: 13, lineHeight: 18},
+  successBannerTitle: {
+    color: '#166534',
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  successBannerText: { color: '#166534', fontSize: 13, lineHeight: 18 },
 
   /* card */
   card: {
@@ -568,23 +631,25 @@ const s = StyleSheet.create({
     padding: 20,
     marginBottom: 16,
     shadowColor: '#8a9bbd',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.10,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
     shadowRadius: 14,
     elevation: 4,
   },
 
   /* field groups */
-  fieldGroup: {marginBottom: 20},
+  fieldGroup: { marginBottom: 20 },
   fieldHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
   },
-  fieldLabel: {fontSize: 15, fontWeight: '800', color: NAVY},
+  fieldLabel: { fontSize: 15, fontWeight: '800', color: NAVY },
   requiredTag: {
-    fontSize: 11, fontWeight: '700', color: '#dc2626',
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#dc2626',
     textTransform: 'uppercase',
   },
 
@@ -607,8 +672,8 @@ const s = StyleSheet.create({
     backgroundColor: NAVY,
     borderColor: NAVY,
   },
-  chipText: {fontSize: 13, fontWeight: '700', color: MUTED},
-  chipTextSelected: {color: CARD},
+  chipText: { fontSize: 13, fontWeight: '700', color: MUTED },
+  chipTextSelected: { color: CARD },
 
   /* inputs */
   input: {
@@ -621,16 +686,31 @@ const s = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-  inputError: {borderColor: '#ef4444'},
-  textArea: {minHeight: 120},
+  inputError: { borderColor: '#ef4444' },
+  textArea: { minHeight: 120 },
 
   /* help / error text */
-  helpText: {color: MUTED, fontSize: 13, lineHeight: 18, marginTop: 6},
-  fieldErrorText: {color: '#dc2626', fontSize: 13, lineHeight: 18, marginTop: 6},
+  helpText: { color: MUTED, fontSize: 13, lineHeight: 18, marginTop: 6 },
+  fieldErrorText: {
+    color: '#dc2626',
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 6,
+  },
 
   /* submit card */
-  submitTitle: {fontSize: 16, fontWeight: '900', color: NAVY, marginBottom: 4},
-  submitSubtitle: {fontSize: 14, color: MUTED, lineHeight: 20, marginBottom: 16},
+  submitTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: NAVY,
+    marginBottom: 4,
+  },
+  submitSubtitle: {
+    fontSize: 14,
+    color: MUTED,
+    lineHeight: 20,
+    marginBottom: 16,
+  },
 
   /* buttons */
   primaryBtn: {
@@ -640,12 +720,17 @@ const s = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
     shadowColor: GOLD,
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 10,
     elevation: 4,
   },
-  primaryBtnText: {fontSize: 16, fontWeight: '900', color: CARD, letterSpacing: 0.3},
+  primaryBtnText: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: CARD,
+    letterSpacing: 0.3,
+  },
   secondaryBtn: {
     backgroundColor: CARD,
     borderRadius: 28,
@@ -654,37 +739,52 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#dfe6f0',
   },
-  secondaryBtnText: {fontSize: 16, fontWeight: '800', color: NAVY},
-  btnDisabled: {opacity: 0.5},
+  secondaryBtnText: { fontSize: 16, fontWeight: '800', color: NAVY },
+  btnDisabled: { opacity: 0.5 },
 
   /* spacer */
-  spacer: {minHeight: 30},
+  spacer: { minHeight: 30 },
 
   /* chat shortcut */
   chatRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end',
-    marginBottom: 22, marginTop: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginBottom: 22,
+    marginTop: 4,
   },
-  chatText: {fontSize: 13, color: MUTED, marginRight: 10},
+  chatText: { fontSize: 13, color: MUTED, marginRight: 10 },
   chatBtn: {
-    width: 48, height: 48, borderRadius: 24,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: NAVY,
-    alignItems: 'center', justifyContent: 'center',
-    shadowColor: NAVY, shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.25, shadowRadius: 8, elevation: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: NAVY,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  chatBtnIcon: {fontSize: 22},
+  chatBtnIcon: { fontSize: 22 },
 
   /* bottom nav */
   bottomNav: {
-    flexDirection: 'row', justifyContent: 'space-around',
-    backgroundColor: CARD, borderRadius: 18, paddingVertical: 10,
-    shadowColor: '#8a9bbd', shadowOffset: {width: 0, height: -2},
-    shadowOpacity: 0.08, shadowRadius: 8, elevation: 4,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: CARD,
+    borderRadius: 18,
+    paddingVertical: 10,
+    shadowColor: '#8a9bbd',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  navItem: {alignItems: 'center', paddingHorizontal: 6},
-  navIcon: {fontSize: 20, marginBottom: 2},
-  navIconActive: {fontSize: 20, marginBottom: 2},
-  navLabel: {fontSize: 11, color: MUTED, fontWeight: '600'},
-  navLabelActive: {fontSize: 11, color: NAVY, fontWeight: '700'},
+  navItem: { alignItems: 'center', paddingHorizontal: 6 },
+  navIcon: { fontSize: 20, marginBottom: 2 },
+  navIconActive: { fontSize: 20, marginBottom: 2 },
+  navLabel: { fontSize: 11, color: MUTED, fontWeight: '600' },
+  navLabelActive: { fontSize: 11, color: NAVY, fontWeight: '700' },
 });

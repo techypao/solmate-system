@@ -1,7 +1,10 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,8 +12,8 @@ import {
   View,
 } from 'react-native';
 
-import {AppButton, AppCard} from '../components';
-import {ApiError, apiGet, apiPut} from '../src/services/api';
+import { AppButton, AppCard } from '../components';
+import { ApiError, apiGet, apiPut } from '../src/services/api';
 
 type QuotationDetail = {
   id: number;
@@ -105,7 +108,7 @@ function FormField({
   );
 }
 
-export default function TechnicianQuotationScreen({route}: any) {
+export default function TechnicianQuotationScreen({ route }: any) {
   const quotationId = route?.params?.quotationId;
 
   const [quotation, setQuotation] = useState<QuotationDetail | null>(null);
@@ -157,7 +160,9 @@ export default function TechnicianQuotationScreen({route}: any) {
         setLoading(true);
         setErrorMessage('');
 
-        const response = await apiGet<QuotationDetail>(`/quotations/${quotationId}`);
+        const response = await apiGet<QuotationDetail>(
+          `/quotations/${quotationId}`,
+        );
         setQuotation(response);
         hydrateForm(response);
       } catch (error) {
@@ -258,186 +263,233 @@ export default function TechnicianQuotationScreen({route}: any) {
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}>
-      <View style={styles.heroCard}>
-        <Text style={styles.eyebrow}>Technician review</Text>
-        <Text style={styles.title}>Finalize quotation #{quotation.id}</Text>
-        <Text style={styles.subtitle}>
-          Review the customer&apos;s initial request, then fill in the technical
-          and cost fields needed for the final quotation.
-        </Text>
-      </View>
+    <SafeAreaView style={styles.safe}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
+        style={styles.flex}
+      >
+        <ScrollView
+          contentContainerStyle={styles.container}
+          keyboardDismissMode={
+            Platform.OS === 'ios' ? 'interactive' : 'on-drag'
+          }
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.heroCard}>
+            <Text style={styles.eyebrow}>Technician review</Text>
+            <Text style={styles.title}>Finalize quotation #{quotation.id}</Text>
+            <Text style={styles.subtitle}>
+              Review the customer&apos;s initial request, then fill in the
+              technical and cost fields needed for the final quotation.
+            </Text>
+          </View>
 
-      <AppCard style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Initial customer request</Text>
-        <Text style={styles.sectionSubtitle}>
-          These values came from the original quotation submitted by the customer.
-        </Text>
+          <AppCard style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Initial customer request</Text>
+            <Text style={styles.sectionSubtitle}>
+              These values came from the original quotation submitted by the
+              customer.
+            </Text>
 
-        <View style={styles.readOnlyRow}>
-          <Text style={styles.readOnlyLabel}>Quotation type</Text>
-          <Text style={styles.readOnlyValue}>{formatValue(quotation.quotation_type)}</Text>
-        </View>
-        <View style={styles.readOnlyRow}>
-          <Text style={styles.readOnlyLabel}>Status</Text>
-          <Text style={styles.readOnlyValue}>{formatValue(quotation.status)}</Text>
-        </View>
-        <View style={styles.readOnlyRow}>
-          <Text style={styles.readOnlyLabel}>Monthly electric bill</Text>
-          <Text style={styles.readOnlyValue}>
-            {formatValue(quotation.monthly_electric_bill)}
-          </Text>
-        </View>
-        <View style={styles.readOnlyRow}>
-          <Text style={styles.readOnlyLabel}>Monthly kWh</Text>
-          <Text style={styles.readOnlyValue}>{formatValue(quotation.monthly_kwh)}</Text>
-        </View>
-        <View style={styles.readOnlyRow}>
-          <Text style={styles.readOnlyLabel}>System kW</Text>
-          <Text style={styles.readOnlyValue}>{formatValue(quotation.system_kw)}</Text>
-        </View>
-        <View style={styles.readOnlyRow}>
-          <Text style={styles.readOnlyLabel}>Customer remarks</Text>
-          <Text style={styles.readOnlyValue}>{formatValue(quotation.remarks)}</Text>
-        </View>
-      </AppCard>
+            <View style={styles.readOnlyRow}>
+              <Text style={styles.readOnlyLabel}>Quotation type</Text>
+              <Text style={styles.readOnlyValue}>
+                {formatValue(quotation.quotation_type)}
+              </Text>
+            </View>
+            <View style={styles.readOnlyRow}>
+              <Text style={styles.readOnlyLabel}>Status</Text>
+              <Text style={styles.readOnlyValue}>
+                {formatValue(quotation.status)}
+              </Text>
+            </View>
+            <View style={styles.readOnlyRow}>
+              <Text style={styles.readOnlyLabel}>Monthly electric bill</Text>
+              <Text style={styles.readOnlyValue}>
+                {formatValue(quotation.monthly_electric_bill)}
+              </Text>
+            </View>
+            <View style={styles.readOnlyRow}>
+              <Text style={styles.readOnlyLabel}>Monthly kWh</Text>
+              <Text style={styles.readOnlyValue}>
+                {formatValue(quotation.monthly_kwh)}
+              </Text>
+            </View>
+            <View style={styles.readOnlyRow}>
+              <Text style={styles.readOnlyLabel}>System kW</Text>
+              <Text style={styles.readOnlyValue}>
+                {formatValue(quotation.system_kw)}
+              </Text>
+            </View>
+            <View style={styles.readOnlyRow}>
+              <Text style={styles.readOnlyLabel}>Customer remarks</Text>
+              <Text style={styles.readOnlyValue}>
+                {formatValue(quotation.remarks)}
+              </Text>
+            </View>
+          </AppCard>
 
-      <AppCard style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Technical fields</Text>
-        <Text style={styles.sectionSubtitle}>
-          Update the system details that convert the quotation into a final version.
-        </Text>
+          <AppCard style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Technical fields</Text>
+            <Text style={styles.sectionSubtitle}>
+              Update the system details that convert the quotation into a final
+              version.
+            </Text>
 
-        <FormField
-          label="Panel wattage"
-          value={panelWatts}
-          onChangeText={value => setPanelWatts(sanitizeNumericInput(value))}
-          placeholder="Example: 610"
-          keyboardType="decimal-pad"
-          helpText="Required for finalization."
-        />
+            <FormField
+              label="Panel wattage"
+              value={panelWatts}
+              onChangeText={value => setPanelWatts(sanitizeNumericInput(value))}
+              placeholder="Example: 610"
+              keyboardType="decimal-pad"
+              helpText="Required for finalization."
+            />
 
-        <FormField
-          label="Inverter type"
-          value={inverterType}
-          onChangeText={setInverterType}
-          placeholder="Example: Hybrid inverter"
-        />
+            <FormField
+              label="Inverter type"
+              value={inverterType}
+              onChangeText={setInverterType}
+              placeholder="Example: Hybrid inverter"
+            />
 
-        <FormField
-          label="Battery model"
-          value={batteryModel}
-          onChangeText={setBatteryModel}
-          placeholder="Example: LiFePO4 51.2V"
-        />
+            <FormField
+              label="Battery model"
+              value={batteryModel}
+              onChangeText={setBatteryModel}
+              placeholder="Example: LiFePO4 51.2V"
+            />
 
-        <FormField
-          label="Battery capacity (Ah)"
-          value={batteryCapacityAh}
-          onChangeText={value => setBatteryCapacityAh(sanitizeNumericInput(value))}
-          placeholder="Example: 200"
-          keyboardType="decimal-pad"
-        />
-      </AppCard>
+            <FormField
+              label="Battery capacity (Ah)"
+              value={batteryCapacityAh}
+              onChangeText={value =>
+                setBatteryCapacityAh(sanitizeNumericInput(value))
+              }
+              placeholder="Example: 200"
+              keyboardType="decimal-pad"
+            />
+          </AppCard>
 
-      <AppCard style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Costing and remarks</Text>
-        <Text style={styles.sectionSubtitle}>
-          Fill in the quotation costs and add any final technician notes.
-        </Text>
+          <AppCard style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Costing and remarks</Text>
+            <Text style={styles.sectionSubtitle}>
+              Fill in the quotation costs and add any final technician notes.
+            </Text>
 
-        <FormField
-          label="Panel cost"
-          value={panelCost}
-          onChangeText={value => setPanelCost(sanitizeNumericInput(value))}
-          placeholder="Example: 120000"
-          keyboardType="decimal-pad"
-        />
+            <FormField
+              label="Panel cost"
+              value={panelCost}
+              onChangeText={value => setPanelCost(sanitizeNumericInput(value))}
+              placeholder="Example: 120000"
+              keyboardType="decimal-pad"
+            />
 
-        <FormField
-          label="Inverter cost"
-          value={inverterCost}
-          onChangeText={value => setInverterCost(sanitizeNumericInput(value))}
-          placeholder="Example: 45000"
-          keyboardType="decimal-pad"
-        />
+            <FormField
+              label="Inverter cost"
+              value={inverterCost}
+              onChangeText={value =>
+                setInverterCost(sanitizeNumericInput(value))
+              }
+              placeholder="Example: 45000"
+              keyboardType="decimal-pad"
+            />
 
-        <FormField
-          label="Battery cost"
-          value={batteryCost}
-          onChangeText={value => setBatteryCost(sanitizeNumericInput(value))}
-          placeholder="Example: 80000"
-          keyboardType="decimal-pad"
-        />
+            <FormField
+              label="Battery cost"
+              value={batteryCost}
+              onChangeText={value =>
+                setBatteryCost(sanitizeNumericInput(value))
+              }
+              placeholder="Example: 80000"
+              keyboardType="decimal-pad"
+            />
 
-        <FormField
-          label="BOS cost"
-          value={bosCost}
-          onChangeText={value => setBosCost(sanitizeNumericInput(value))}
-          placeholder="Example: 15000"
-          keyboardType="decimal-pad"
-        />
+            <FormField
+              label="BOS cost"
+              value={bosCost}
+              onChangeText={value => setBosCost(sanitizeNumericInput(value))}
+              placeholder="Example: 15000"
+              keyboardType="decimal-pad"
+            />
 
-        <FormField
-          label="Materials subtotal"
-          value={materialsSubtotal}
-          onChangeText={value => setMaterialsSubtotal(sanitizeNumericInput(value))}
-          placeholder="Example: 260000"
-          keyboardType="decimal-pad"
-        />
+            <FormField
+              label="Materials subtotal"
+              value={materialsSubtotal}
+              onChangeText={value =>
+                setMaterialsSubtotal(sanitizeNumericInput(value))
+              }
+              placeholder="Example: 260000"
+              keyboardType="decimal-pad"
+            />
 
-        <FormField
-          label="Labor cost"
-          value={laborCost}
-          onChangeText={value => setLaborCost(sanitizeNumericInput(value))}
-          placeholder="Example: 30000"
-          keyboardType="decimal-pad"
-        />
+            <FormField
+              label="Labor cost"
+              value={laborCost}
+              onChangeText={value => setLaborCost(sanitizeNumericInput(value))}
+              placeholder="Example: 30000"
+              keyboardType="decimal-pad"
+            />
 
-        <FormField
-          label="Project cost"
-          value={projectCost}
-          onChangeText={value => setProjectCost(sanitizeNumericInput(value))}
-          placeholder="Example: 290000"
-          keyboardType="decimal-pad"
-          helpText="This is often the final total shown to the customer."
-        />
+            <FormField
+              label="Project cost"
+              value={projectCost}
+              onChangeText={value =>
+                setProjectCost(sanitizeNumericInput(value))
+              }
+              placeholder="Example: 290000"
+              keyboardType="decimal-pad"
+              helpText="This is often the final total shown to the customer."
+            />
 
-        <View style={styles.fieldGroup}>
-          <Text style={styles.fieldLabel}>Technician remarks</Text>
-          <TextInput
-            value={remarks}
-            onChangeText={setRemarks}
-            placeholder="Add final quotation notes"
-            placeholderTextColor="#94a3b8"
-            multiline={true}
-            numberOfLines={4}
-            style={[styles.input, styles.textArea]}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Technician remarks</Text>
+              <TextInput
+                value={remarks}
+                onChangeText={setRemarks}
+                placeholder="Add final quotation notes"
+                placeholderTextColor="#94a3b8"
+                multiline={true}
+                numberOfLines={4}
+                style={[styles.input, styles.textArea]}
+              />
+            </View>
+          </AppCard>
+
+          <View style={styles.infoCard}>
+            <Text style={styles.infoTitle}>Submission behavior</Text>
+            <Text style={styles.infoText}>
+              quotation_type will be sent as final.
+            </Text>
+            <Text style={styles.infoText}>
+              Only the technician-editable fields above will be updated.
+            </Text>
+          </View>
+
+          <AppButton
+            title={
+              submitting
+                ? 'Submitting final quotation...'
+                : 'Submit final quotation'
+            }
+            onPress={handleSubmit}
+            disabled={submitting}
           />
-        </View>
-      </AppCard>
-
-      <View style={styles.infoCard}>
-        <Text style={styles.infoTitle}>Submission behavior</Text>
-        <Text style={styles.infoText}>quotation_type will be sent as final.</Text>
-        <Text style={styles.infoText}>
-          Only the technician-editable fields above will be updated.
-        </Text>
-      </View>
-
-      <AppButton
-        title={submitting ? 'Submitting final quotation...' : 'Submit final quotation'}
-        onPress={handleSubmit}
-        disabled={submitting}
-      />
-    </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safe: {
+    backgroundColor: '#f4f7fb',
+    flex: 1,
+  },
+  flex: {
+    flex: 1,
+  },
   container: {
     backgroundColor: '#f4f7fb',
     padding: 20,

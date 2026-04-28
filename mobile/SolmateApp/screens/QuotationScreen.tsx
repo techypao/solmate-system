@@ -1,6 +1,8 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -10,8 +12,8 @@ import {
   View,
 } from 'react-native';
 
-import {ApiError} from '../src/services/api';
-import {createQuotation} from '../src/services/quotationApi';
+import { ApiError } from '../src/services/api';
+import { createQuotation } from '../src/services/quotationApi';
 
 /* ── constants ───────────────────────────────────── */
 
@@ -48,7 +50,7 @@ function formatLaravelErrors(error: ApiError) {
 
 /* ── screen ─────────────────────────────────────── */
 
-export default function QuotationScreen({navigation}: any) {
+export default function QuotationScreen({ navigation }: any) {
   const [monthlyElectricBill, setMonthlyElectricBill] = useState('');
   const [remarks, setRemarks] = useState('');
   const [billError, setBillError] = useState('');
@@ -127,113 +129,145 @@ export default function QuotationScreen({navigation}: any) {
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView
-        contentContainerStyle={s.scroll}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}>
-
-        {/* ── brand header ── */}
-        <Text style={s.brand}>
-          Sol<Text style={s.brandAccent}>Mate</Text>
-        </Text>
-
-        {/* ── back arrow ── */}
-        <Pressable
-          hitSlop={14}
-          onPress={() => navigation.goBack()}
-          style={({pressed}) => [s.backBtn, pressed && s.pressed]}>
-          <Text style={s.backIcon}>{'‹'}</Text>
-        </Pressable>
-
-        {/* ── title ── */}
-        <Text style={s.title}>Initial Quotation</Text>
-        <Text style={s.subtitle}>Input only: Monthly Electricity Bill</Text>
-
-        {/* ── input card ── */}
-        <View style={s.card}>
-          <Text style={s.inputLabel}>{'Monthly Electricity Bill (₱)'}</Text>
-
-          <View style={[s.inputRow, billError ? s.inputRowError : null]}>
-            <TextInput
-              value={monthlyElectricBill}
-              onChangeText={handleMonthlyBillChange}
-              placeholder="e.g., 2,500"
-              placeholderTextColor="#a0aec0"
-              keyboardType="decimal-pad"
-              style={s.input}
-            />
-            <View style={s.pesoBadge}>
-              <Text style={s.pesoText}>{'₱'}</Text>
-            </View>
-          </View>
-
-          {billError ? (
-            <Text style={s.errorText}>{billError}</Text>
-          ) : (
-            <Text style={s.helpText}>Enter amount from your latest bill.</Text>
-          )}
-        </View>
-
-        {/* ── buttons ── */}
-        <Pressable
-          disabled={submitting}
-          onPress={handleSubmit}
-          style={({pressed}) => [
-            s.primaryBtn,
-            submitting && s.btnDisabled,
-            pressed && !submitting && s.pressed,
-          ]}>
-          <Text style={s.primaryBtnText}>
-            {submitting ? 'Generating...' : 'Generate Initial Quotation & Roi'}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
+        style={s.flex}
+      >
+        <ScrollView
+          contentContainerStyle={s.scroll}
+          keyboardDismissMode={
+            Platform.OS === 'ios' ? 'interactive' : 'on-drag'
+          }
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* ── brand header ── */}
+          <Text style={s.brand}>
+            Sol<Text style={s.brandAccent}>Mate</Text>
           </Text>
-        </Pressable>
 
-        <Pressable
-          disabled={submitting}
-          onPress={resetForm}
-          style={({pressed}) => [s.secondaryBtn, pressed && s.pressed]}>
-          <Text style={s.secondaryBtnText}>Clear</Text>
-        </Pressable>
+          {/* ── back arrow ── */}
+          <Pressable
+            hitSlop={14}
+            onPress={() => navigation.goBack()}
+            style={({ pressed }) => [s.backBtn, pressed && s.pressed]}
+          >
+            <Text style={s.backIcon}>{'‹'}</Text>
+          </Pressable>
 
-        <Text style={s.footerHint}>No other required inputs.</Text>
+          {/* ── title ── */}
+          <Text style={s.title}>Initial Quotation</Text>
+          <Text style={s.subtitle}>Input only: Monthly Electricity Bill</Text>
 
-        {/* ── spacer before bottom area ── */}
-        <View style={s.spacer} />
+          {/* ── input card ── */}
+          <View style={s.card}>
+            <Text style={s.inputLabel}>{'Monthly Electricity Bill (₱)'}</Text>
 
-        {/* ── chatbot shortcut ── */}
-        <Pressable
-          onPress={() => navigation.navigate('Chatbot')}
-          style={({pressed}) => [s.chatRow, pressed && s.pressed]}>
-          <Text style={s.chatText}>Chat with SolBot</Text>
-          <View style={s.chatBtn}>
-            <Text style={s.chatBtnIcon}>{'🤖'}</Text>
+            <View style={[s.inputRow, billError ? s.inputRowError : null]}>
+              <TextInput
+                value={monthlyElectricBill}
+                onChangeText={handleMonthlyBillChange}
+                placeholder="e.g., 2,500"
+                placeholderTextColor="#a0aec0"
+                keyboardType="decimal-pad"
+                style={s.input}
+              />
+              <View style={s.pesoBadge}>
+                <Text style={s.pesoText}>{'₱'}</Text>
+              </View>
+            </View>
+
+            {billError ? (
+              <Text style={s.errorText}>{billError}</Text>
+            ) : (
+              <Text style={s.helpText}>
+                Enter amount from your latest bill.
+              </Text>
+            )}
           </View>
-        </Pressable>
 
-        {/* ── bottom nav ── */}
-        <View style={s.bottomNav}>
-          <Pressable style={s.navItem} onPress={() => navigation.navigate('Home')}>
-            <Text style={s.navIcon}>{'🏠'}</Text>
-            <Text style={s.navLabel}>Home</Text>
+          {/* ── buttons ── */}
+          <Pressable
+            disabled={submitting}
+            onPress={handleSubmit}
+            style={({ pressed }) => [
+              s.primaryBtn,
+              submitting && s.btnDisabled,
+              pressed && !submitting && s.pressed,
+            ]}
+          >
+            <Text style={s.primaryBtnText}>
+              {submitting
+                ? 'Generating...'
+                : 'Generate Initial Quotation & Roi'}
+            </Text>
           </Pressable>
-          <Pressable style={s.navItem} onPress={() => navigation.navigate('QuotationList')}>
-            <Text style={s.navIconActive}>{'📋'}</Text>
-            <Text style={s.navLabelActive}>Quotation</Text>
+
+          <Pressable
+            disabled={submitting}
+            onPress={resetForm}
+            style={({ pressed }) => [s.secondaryBtn, pressed && s.pressed]}
+          >
+            <Text style={s.secondaryBtnText}>Clear</Text>
           </Pressable>
-          <Pressable style={s.navItem} onPress={() => navigation.navigate('ServicesHome')}>
-            <Text style={s.navIcon}>{'⚙️'}</Text>
-            <Text style={s.navLabel}>Services</Text>
+
+          <Text style={s.footerHint}>No other required inputs.</Text>
+
+          {/* ── spacer before bottom area ── */}
+          <View style={s.spacer} />
+
+          {/* ── chatbot shortcut ── */}
+          <Pressable
+            onPress={() => navigation.navigate('Chatbot')}
+            style={({ pressed }) => [s.chatRow, pressed && s.pressed]}
+          >
+            <Text style={s.chatText}>Chat with SolBot</Text>
+            <View style={s.chatBtn}>
+              <Text style={s.chatBtnIcon}>{'🤖'}</Text>
+            </View>
           </Pressable>
-          <Pressable style={s.navItem} onPress={() => navigation.navigate('TrackingHub')}>
-            <Text style={s.navIcon}>{'📍'}</Text>
-            <Text style={s.navLabel}>Tracking</Text>
-          </Pressable>
-          <Pressable style={s.navItem} onPress={() => navigation.navigate('CustomerSettings')}>
-            <Text style={s.navIcon}>{'👤'}</Text>
-            <Text style={s.navLabel}>Profile</Text>
-          </Pressable>
-        </View>
-      </ScrollView>
+
+          {/* ── bottom nav ── */}
+          <View style={s.bottomNav}>
+            <Pressable
+              style={s.navItem}
+              onPress={() => navigation.navigate('Home')}
+            >
+              <Text style={s.navIcon}>{'🏠'}</Text>
+              <Text style={s.navLabel}>Home</Text>
+            </Pressable>
+            <Pressable
+              style={s.navItem}
+              onPress={() => navigation.navigate('QuotationList')}
+            >
+              <Text style={s.navIconActive}>{'📋'}</Text>
+              <Text style={s.navLabelActive}>Quotation</Text>
+            </Pressable>
+            <Pressable
+              style={s.navItem}
+              onPress={() => navigation.navigate('ServicesHome')}
+            >
+              <Text style={s.navIcon}>{'⚙️'}</Text>
+              <Text style={s.navLabel}>Services</Text>
+            </Pressable>
+            <Pressable
+              style={s.navItem}
+              onPress={() => navigation.navigate('TrackingHub')}
+            >
+              <Text style={s.navIcon}>{'📍'}</Text>
+              <Text style={s.navLabel}>Tracking</Text>
+            </Pressable>
+            <Pressable
+              style={s.navItem}
+              onPress={() => navigation.navigate('CustomerSettings')}
+            >
+              <Text style={s.navIcon}>{'👤'}</Text>
+              <Text style={s.navLabel}>Profile</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -241,13 +275,14 @@ export default function QuotationScreen({navigation}: any) {
 /* ── styles ──────────────────────────────────────── */
 
 const s = StyleSheet.create({
-  safe: {flex: 1, backgroundColor: BG},
-  scroll: {paddingHorizontal: 22, paddingTop: 20, paddingBottom: 30},
-  pressed: {opacity: 0.85},
+  safe: { flex: 1, backgroundColor: BG },
+  flex: { flex: 1 },
+  scroll: { paddingHorizontal: 22, paddingTop: 20, paddingBottom: 30 },
+  pressed: { opacity: 0.85 },
 
   /* brand */
-  brand: {fontSize: 22, fontWeight: '800', color: NAVY, marginBottom: 10},
-  brandAccent: {color: GOLD},
+  brand: { fontSize: 22, fontWeight: '800', color: NAVY, marginBottom: 10 },
+  brandAccent: { color: GOLD },
 
   /* back */
   backBtn: {
@@ -259,12 +294,12 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 18,
     shadowColor: '#8a9bbd',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.10,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 3,
   },
-  backIcon: {fontSize: 28, color: NAVY, fontWeight: '600', marginTop: -2},
+  backIcon: { fontSize: 28, color: NAVY, fontWeight: '600', marginTop: -2 },
 
   /* title */
   title: {
@@ -286,8 +321,8 @@ const s = StyleSheet.create({
     padding: 22,
     marginBottom: 22,
     shadowColor: '#8a9bbd',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.10,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
     shadowRadius: 14,
     elevation: 4,
   },
@@ -352,7 +387,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
     shadowColor: GOLD,
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 10,
     elevation: 4,
@@ -363,7 +398,7 @@ const s = StyleSheet.create({
     color: CARD,
     letterSpacing: 0.3,
   },
-  btnDisabled: {opacity: 0.55},
+  btnDisabled: { opacity: 0.55 },
 
   /* secondary button */
   secondaryBtn: {
@@ -390,7 +425,7 @@ const s = StyleSheet.create({
   },
 
   /* spacer */
-  spacer: {flex: 1, minHeight: 60},
+  spacer: { flex: 1, minHeight: 60 },
 
   /* chat shortcut */
   chatRow: {
@@ -400,7 +435,7 @@ const s = StyleSheet.create({
     marginBottom: 22,
     marginTop: 4,
   },
-  chatText: {fontSize: 13, color: MUTED, marginRight: 10},
+  chatText: { fontSize: 13, color: MUTED, marginRight: 10 },
   chatBtn: {
     width: 48,
     height: 48,
@@ -409,12 +444,12 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: NAVY,
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 5,
   },
-  chatBtnIcon: {fontSize: 22},
+  chatBtnIcon: { fontSize: 22 },
 
   /* bottom nav */
   bottomNav: {
@@ -424,14 +459,14 @@ const s = StyleSheet.create({
     borderRadius: R,
     paddingVertical: 10,
     shadowColor: '#8a9bbd',
-    shadowOffset: {width: 0, height: -2},
+    shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 4,
   },
-  navItem: {alignItems: 'center', paddingHorizontal: 6},
-  navIcon: {fontSize: 20, marginBottom: 2},
-  navIconActive: {fontSize: 20, marginBottom: 2},
-  navLabel: {fontSize: 11, color: MUTED, fontWeight: '600'},
-  navLabelActive: {fontSize: 11, color: NAVY, fontWeight: '700'},
+  navItem: { alignItems: 'center', paddingHorizontal: 6 },
+  navIcon: { fontSize: 20, marginBottom: 2 },
+  navIconActive: { fontSize: 20, marginBottom: 2 },
+  navLabel: { fontSize: 11, color: MUTED, fontWeight: '600' },
+  navLabelActive: { fontSize: 11, color: NAVY, fontWeight: '700' },
 });
