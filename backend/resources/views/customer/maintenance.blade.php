@@ -524,8 +524,8 @@
             grid-template-columns: 1fr;
         }
     }
-@include('customer.partials.preferred-date-picker-styles')
 </style>
+@include('customer.partials.preferred-date-picker-styles')
 
 <div class="mnt-page">
     <section class="mnt-hero" aria-label="Maintenance request hero">

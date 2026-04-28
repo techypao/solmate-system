@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Change this in one place when your Laravel API URL changes.
-export const API_BASE_URL = 'http://10.0.2.2:8000/api';
+export const API_BASE_URL = 'http://127.0.0.1:8000/api';
 export const TOKEN_STORAGE_KEY = 'token';
 
 let sessionToken: string | null = null;

@@ -1,3 +1,4 @@
+<style>
     .sdp-field-host {
         position: relative;
         display: grid;
@@ -301,3 +302,4 @@
             width: 100%;
         }
     }
+</style>

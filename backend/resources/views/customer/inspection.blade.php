@@ -453,8 +453,8 @@
     .insp-empty.show { display: flex; }
     .insp-empty svg { opacity: .4; }
     .insp-empty p { font-size: 14px; margin: 0; }
-@include('customer.partials.preferred-date-picker-styles')
 </style>
+@include('customer.partials.preferred-date-picker-styles')
 
 {{-- ═══ PAGE HERO ═══ --}}
 <div class="insp-hero">

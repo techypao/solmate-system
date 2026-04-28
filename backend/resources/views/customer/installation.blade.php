@@ -561,8 +561,8 @@
             grid-template-columns: 1fr;
         }
     }
-@include('customer.partials.preferred-date-picker-styles')
 </style>
+@include('customer.partials.preferred-date-picker-styles')
 
 <div class="inst-page">
     <section class="inst-hero" aria-label="Installation request hero">
