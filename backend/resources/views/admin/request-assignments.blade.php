@@ -638,19 +638,22 @@
                 <div class="info-box services-empty-state">No inspection requests yet.</div>
             @else
                 <div class="request-list">
-                    @foreach ($sortedInspectionRequests as $inspectionRequest)
-                        @php
-                            $requestKey = "inspection-{$inspectionRequest->id}";
-                            $statusClass = $statusClasses[$inspectionRequest->status] ?? 'badge badge-neutral';
-                            $isAssigned = filled($inspectionRequest->technician_id);
-                            $buttonLabel = $isAssigned ? 'Update assignment' : 'Assign technician';
-                            $dateNeeded = $inspectionRequest->date_needed
-                                ? \Illuminate\Support\Carbon::parse($inspectionRequest->date_needed)->format('M d, Y')
-                                : 'Not specified';
-                            $technicianSummary = $inspectionRequest->technician
-                                ? "{$inspectionRequest->technician->name} ({$inspectionRequest->technician->email})"
-                                : 'Not assigned';
-                        @endphp
+                        @foreach ($sortedInspectionRequests as $inspectionRequest)
+                            @php
+                                $requestKey = "inspection-{$inspectionRequest->id}";
+                                $statusClass = $statusClasses[$inspectionRequest->status] ?? 'badge badge-neutral';
+                                $isAssigned = filled($inspectionRequest->technician_id);
+                                $buttonLabel = $isAssigned ? 'Update assignment' : 'Assign technician';
+                                $dateNeeded = $inspectionRequest->date_needed
+                                    ? \Illuminate\Support\Carbon::parse($inspectionRequest->date_needed)->format('M d, Y')
+                                    : 'Not specified';
+                                $technicianSummary = $inspectionRequest->technician
+                                    ? "{$inspectionRequest->technician->name} ({$inspectionRequest->technician->email})"
+                                    : 'Not assigned';
+                                $inspectionWorkflowMessage = $isAssigned
+                                    ? 'Technician assignment and official inspection scheduling can be managed below.'
+                                    : 'Assign a technician first, then keep the official inspection status updated here.';
+                            @endphp
 
                         <div
                             id="inspection-request-{{ $inspectionRequest->id }}"
@@ -702,12 +705,14 @@
                                         <div class="request-summary-value" data-technician-for="{{ $requestKey }}">{{ $technicianSummary }}</div>
                                     </div>
                                     <div class="request-summary-item">
-                                        <span class="request-summary-label">Address</span>
-                                        <div class="request-summary-value">{{ $inspectionRequest->address ?: 'Not provided' }}</div>
+                                        <span class="request-summary-label">Official Status</span>
+                                        <div class="request-summary-value" data-inspection-status-summary-for="{{ $requestKey }}">
+                                            {{ \Illuminate\Support\Str::headline($inspectionRequest->status) }}
+                                        </div>
                                     </div>
                                     <div class="request-summary-item">
-                                        <span class="request-summary-label">Customer Email</span>
-                                        <div class="request-summary-value">{{ $inspectionRequest->customer?->email ?? 'Not available' }}</div>
+                                        <span class="request-summary-label">Address</span>
+                                        <div class="request-summary-value">{{ $inspectionRequest->address ?: 'Not provided' }}</div>
                                     </div>
                                     <div class="request-summary-item">
                                         <span class="request-summary-label">Request Type</span>
@@ -740,55 +745,85 @@
                                     <strong>Request details:</strong> {{ $inspectionRequest->details }}
                                 </div>
 
-                                <form
-                                    class="preferred-date-form"
-                                    data-endpoint="/api/inspection-requests/{{ $inspectionRequest->id }}/preferred-date"
-                                    data-request-key="{{ $requestKey }}"
-                                >
-                                    <label for="inspection_date_needed_{{ $inspectionRequest->id }}">Official preferred date</label>
-                                    <div class="assignment-row">
-                                        <div>
-                                            <input
-                                                id="inspection_date_needed_{{ $inspectionRequest->id }}"
-                                                name="date_needed"
-                                                type="date"
-                                                value="{{ $inspectionRequest->date_needed ? \Illuminate\Support\Carbon::parse($inspectionRequest->date_needed)->toDateString() : '' }}"
-                                                required
-                                            >
-                                            <div class="muted" style="margin-top: 8px;" data-availability-helper></div>
-                                        </div>
-                                        <button type="submit">Save preferred date</button>
-                                    </div>
-                                    <div class="field-error" data-form-error></div>
-                                </form>
+                                <div class="info-box request-detail-box">
+                                    <strong>Inspection workflow:</strong>
+                                    <span data-inspection-workflow-detail-for="{{ $requestKey }}">{{ $inspectionWorkflowMessage }}</span>
+                                </div>
 
-                                <form
-                                    class="assignment-form"
-                                    data-endpoint="/api/inspection-requests/{{ $inspectionRequest->id }}/assign-technician"
-                                    data-request-key="{{ $requestKey }}"
-                                    data-default-label="{{ $buttonLabel }}"
-                                >
-                                    <label for="inspection_technician_{{ $inspectionRequest->id }}">Technician assignment</label>
-                                    <div class="assignment-row">
-                                        <div>
-                                            <select
-                                                id="inspection_technician_{{ $inspectionRequest->id }}"
-                                                name="technician_id"
-                                                required
-                                                @disabled($technicians->isEmpty())
-                                            >
-                                                <option value="">Select technician</option>
-                                                @foreach ($technicians as $technician)
-                                                    <option value="{{ $technician->id }}" @selected($inspectionRequest->technician_id === $technician->id)>
-                                                        {{ $technician->name }} ({{ $technician->email }})
-                                                    </option>
-                                                @endforeach
-                                            </select>
+                                <div class="stack">
+                                    <form
+                                        class="preferred-date-form"
+                                        data-endpoint="/api/inspection-requests/{{ $inspectionRequest->id }}/preferred-date"
+                                        data-request-key="{{ $requestKey }}"
+                                    >
+                                        <label for="inspection_date_needed_{{ $inspectionRequest->id }}">Official preferred date</label>
+                                        <div class="assignment-row">
+                                            <div>
+                                                <input
+                                                    id="inspection_date_needed_{{ $inspectionRequest->id }}"
+                                                    name="date_needed"
+                                                    type="date"
+                                                    value="{{ $inspectionRequest->date_needed ? \Illuminate\Support\Carbon::parse($inspectionRequest->date_needed)->toDateString() : '' }}"
+                                                    required
+                                                >
+                                                <div class="muted" style="margin-top: 8px;" data-availability-helper></div>
+                                            </div>
+                                            <button type="submit">Save preferred date</button>
                                         </div>
-                                        <button type="submit" @disabled($technicians->isEmpty())>{{ $buttonLabel }}</button>
-                                    </div>
-                                    <div class="field-error" data-form-error></div>
-                                </form>
+                                        <div class="field-error" data-form-error></div>
+                                    </form>
+
+                                    <form
+                                        class="assignment-form"
+                                        data-endpoint="/api/inspection-requests/{{ $inspectionRequest->id }}/assign-technician"
+                                        data-request-key="{{ $requestKey }}"
+                                        data-default-label="{{ $buttonLabel }}"
+                                    >
+                                        <label for="inspection_technician_{{ $inspectionRequest->id }}">Technician assignment</label>
+                                        <div class="assignment-row">
+                                            <div>
+                                                <select
+                                                    id="inspection_technician_{{ $inspectionRequest->id }}"
+                                                    name="technician_id"
+                                                    required
+                                                    @disabled($technicians->isEmpty())
+                                                >
+                                                    <option value="">Select technician</option>
+                                                    @foreach ($technicians as $technician)
+                                                        <option value="{{ $technician->id }}" @selected($inspectionRequest->technician_id === $technician->id)>
+                                                            {{ $technician->name }} ({{ $technician->email }})
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <button type="submit" @disabled($technicians->isEmpty())>{{ $buttonLabel }}</button>
+                                        </div>
+                                        <div class="field-error" data-form-error></div>
+                                    </form>
+
+                                    <form
+                                        class="inspection-status-form"
+                                        data-endpoint="/api/admin/inspection-requests/{{ $inspectionRequest->id }}/status"
+                                        data-request-key="{{ $requestKey }}"
+                                    >
+                                        <label for="inspection_status_{{ $inspectionRequest->id }}">Official inspection status</label>
+                                        <div class="assignment-row">
+                                            <div>
+                                                <select
+                                                    id="inspection_status_{{ $inspectionRequest->id }}"
+                                                    name="status"
+                                                    required
+                                                >
+                                                    @foreach ($serviceStatusOptions as $value => $label)
+                                                        <option value="{{ $value }}" @selected($inspectionRequest->status === $value)>{{ $label }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <button type="submit">Save official status</button>
+                                        </div>
+                                        <div class="field-error" data-form-error></div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     @endforeach
@@ -1301,6 +1336,7 @@
         const servicePreferredDateForms = document.querySelectorAll('.service-preferred-date-form');
         const preferredDateForms = document.querySelectorAll('.preferred-date-form');
         const serviceStatusForms = document.querySelectorAll('.service-status-form');
+        const inspectionStatusForms = document.querySelectorAll('.inspection-status-form');
         const requestCards = document.querySelectorAll('[data-request-card]');
         const focusBanners = document.querySelectorAll('[data-services-focus-banner]');
         const lockingStatuses = new Set(['pending', 'approved', 'scheduled', 'assigned', 'in_progress']);
@@ -1329,7 +1365,9 @@
         }
 
         function formatStatus(status) {
-            return (status || 'unknown').replace(/_/g, ' ');
+            return (status || 'unknown')
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, (character) => character.toUpperCase());
         }
 
         function normalizeDate(value) {
@@ -1459,7 +1497,23 @@
             return 'inspection';
         }
 
+        function requestCardFromHash(hash) {
+            if (typeof hash !== 'string' || !hash.startsWith('#')) {
+                return null;
+            }
+
+            const candidate = document.getElementById(hash.slice(1));
+
+            return candidate?.matches?.('[data-request-card]') ? candidate : null;
+        }
+
         function resolveTabFromHash(hash) {
+            const requestCard = requestCardFromHash(hash);
+
+            if (requestCard?.dataset.requestTab) {
+                return requestCard.dataset.requestTab;
+            }
+
             switch (hash) {
                 case '#inspection-requests-section':
                     return 'inspection';
@@ -1542,7 +1596,14 @@
                 panel.hidden = !isActive;
             });
 
-            if (!document.querySelector(`[data-request-card].is-active[data-request-tab="${tabKey}"]`)) {
+            const hashCard = requestCardFromHash(window.location.hash);
+            const preferredCard = hashCard && hashCard.dataset.requestTab === tabKey
+                ? hashCard
+                : null;
+
+            if (preferredCard) {
+                setFocusedRequest(preferredCard);
+            } else if (!document.querySelector(`[data-request-card].is-active[data-request-tab="${tabKey}"]`)) {
                 const firstCard = document.querySelector(`[data-request-card][data-request-tab="${tabKey}"]`);
                 setFocusedRequest(firstCard || null);
             }
@@ -1783,6 +1844,9 @@
                 const assignmentStateBadge = document.querySelector(`[data-assignment-state-for="${requestKey}"]`);
                 const completionStateBadge = document.querySelector(`[data-completion-state-for="${requestKey}"]`);
                 const completionMessage = document.querySelector(`[data-completion-detail-for="${requestKey}"]`);
+                const statusBadge = document.querySelector(`[data-status-for="${requestKey}"]`);
+                const inspectionStatusSummary = document.querySelector(`[data-inspection-status-summary-for="${requestKey}"]`);
+                const inspectionWorkflowDetail = document.querySelector(`[data-inspection-workflow-detail-for="${requestKey}"]`);
                 const selectedOption = select.options[select.selectedIndex];
 
                 inlineError.textContent = '';
@@ -1812,6 +1876,15 @@
                             status: updatedStatus,
                         });
                         refreshAllAvailabilityHints();
+
+                        if (statusBadge) {
+                            statusBadge.textContent = formatStatus(updatedStatus);
+                            statusBadge.className = statusBadgeClass(updatedStatus);
+                        }
+
+                        if (inspectionStatusSummary) {
+                            inspectionStatusSummary.textContent = formatStatus(updatedStatus);
+                        }
                     }
 
                     if (completionStateBadge) {
@@ -1821,6 +1894,10 @@
 
                     if (completionMessage) {
                         completionMessage.textContent = 'No technician completion request has been submitted yet.';
+                    }
+
+                    if (inspectionWorkflowDetail) {
+                        inspectionWorkflowDetail.textContent = 'Technician assignment and official inspection scheduling can be managed below.';
                     }
 
                     form.dataset.defaultLabel = 'Update assignment';
@@ -1903,6 +1980,57 @@
                 } catch (error) {
                     inlineError.textContent = error.message || 'Could not update the official service request status.';
                     errorBox.textContent = error.message || 'Could not update the official service request status.';
+                    setVisible(errorBox, true);
+                } finally {
+                    button.disabled = false;
+                    button.textContent = 'Save official status';
+                }
+            });
+        });
+
+        inspectionStatusForms.forEach((form) => {
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                clearGlobalMessages();
+
+                const select = form.elements.namedItem('status');
+                const button = form.querySelector('button[type="submit"]');
+                const inlineError = form.querySelector('[data-form-error]');
+                const requestKey = form.dataset.requestKey;
+                const statusBadge = document.querySelector(`[data-status-for="${requestKey}"]`);
+                const inspectionStatusSummary = document.querySelector(`[data-inspection-status-summary-for="${requestKey}"]`);
+
+                inlineError.textContent = '';
+                button.disabled = true;
+                button.textContent = 'Saving...';
+
+                try {
+                    const responseBody = await submitJson(form.dataset.endpoint, {
+                        status: select.value,
+                    });
+
+                    const updatedRequest = responseBody.inspection_request || null;
+                    const updatedStatus = updatedRequest?.status || select.value;
+
+                    if (statusBadge) {
+                        statusBadge.textContent = formatStatus(updatedStatus);
+                        statusBadge.className = statusBadgeClass(updatedStatus);
+                    }
+
+                    if (inspectionStatusSummary) {
+                        inspectionStatusSummary.textContent = formatStatus(updatedStatus);
+                    }
+
+                    updateRequestRecord(requestKey, {
+                        status: updatedStatus,
+                    });
+                    refreshAllAvailabilityHints();
+
+                    successBox.textContent = responseBody.message || 'Official inspection request status updated successfully.';
+                    setVisible(successBox, true);
+                } catch (error) {
+                    inlineError.textContent = error.message || 'Could not update the official inspection request status.';
+                    errorBox.textContent = error.message || 'Could not update the official inspection request status.';
                     setVisible(errorBox, true);
                 } finally {
                     button.disabled = false;

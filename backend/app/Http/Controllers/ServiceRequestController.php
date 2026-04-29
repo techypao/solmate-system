@@ -277,8 +277,16 @@ class ServiceRequestController extends Controller
             ], 422);
         }
 
+        $previousCompletionRequestAt = $serviceRequest->technician_marked_done_at;
         $serviceRequest->technician_marked_done_at = now();
         $serviceRequest->save();
+
+        if ($previousCompletionRequestAt === null && $serviceRequest->technician_marked_done_at !== null) {
+            $this->notificationService->notifyAdminsOfServiceCompletionRequest(
+                $serviceRequest,
+                $technician->id
+            );
+        }
 
         return response()->json([
             'message' => 'Service marked as done and sent for admin review.',

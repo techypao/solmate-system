@@ -19,6 +19,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
+Route::get('/landing', function () {
+    return view('welcome');
+})->name('landing');
+
 Route::get('/', function () {
     $headers = [
         'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',

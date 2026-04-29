@@ -333,7 +333,7 @@
     <div class="solmate-footer-inner">
         <div class="solmate-footer-upper">
             <div>
-                <a href="{{ route('home') }}" class="solmate-footer-brand-link" aria-label="SolMate home">
+                <a href="{{ route('landing') }}" class="solmate-footer-brand-link" aria-label="SolMate home">
                     <span class="solmate-footer-brand-sol">Sol</span><span class="solmate-footer-brand-mate">Mate</span>
                 </a>
                 <p class="solmate-footer-desc">SolMate is a smart solar panel installation management system designed to streamline planning, monitoring, and deployment. We help installers, homeowners, and businesses transition to clean energy with efficiency and confidence.</p>
@@ -341,9 +341,9 @@
             <div>
                 <p class="solmate-footer-col-heading">Quick Links</p>
                 <ul class="solmate-footer-links">
-                    <li><a href="{{ route('home') }}">Home</a></li>
-                    <li><a href="{{ route('home') }}#about">About Us</a></li>
-                    <li><a href="{{ route('home') }}#testimonials">Testimonials</a></li>
+                    <li><a href="{{ route('landing') }}">Home</a></li>
+                    <li><a href="{{ route('landing') }}#about">About Us</a></li>
+                    <li><a href="{{ route('landing') }}#testimonials">Testimonials</a></li>
                     <li><a href="{{ route('public.testimonies') }}">All Reviews</a></li>
                     <li><a href="{{ route('public.contact') }}">Contact Us</a></li>
                     <li><a href="{{ route('login') }}">Log In</a></li>
@@ -352,11 +352,11 @@
             <div>
                 <p class="solmate-footer-col-heading">Services</p>
                 <ul class="solmate-footer-links">
-                    <li><a href="#">Solar Installation</a></li>
-                    <li><a href="#">System Maintenance</a></li>
-                    <li><a href="#">Site Assessment</a></li>
-                    <li><a href="#">ROI &amp; Quotation Estimation</a></li>
-                    <li><a href="#">Consultation</a></li>
+                    <li><a href="{{ route('landing') }}#services">Solar Installation</a></li>
+                    <li><a href="{{ route('landing') }}#services">System Maintenance</a></li>
+                    <li><a href="{{ route('landing') }}#services">Site Assessment</a></li>
+                    <li><a href="{{ route('landing') }}#services">ROI &amp; Quotation Estimation</a></li>
+                    <li><a href="{{ route('public.contact') }}">Consultation</a></li>
                 </ul>
             </div>
             <div>

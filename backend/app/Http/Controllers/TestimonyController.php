@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateTestimonyRequest;
 use App\Models\InspectionRequest;
 use App\Models\ServiceRequest;
 use App\Models\Testimony;
+use App\Services\InAppNotificationService;
 use App\Services\TestimonyImageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,8 @@ use Illuminate\Support\Facades\DB;
 class TestimonyController extends Controller
 {
     public function __construct(
-        private TestimonyImageService $testimonyImageService
+        private TestimonyImageService $testimonyImageService,
+        private InAppNotificationService $notificationService
     ) {}
 
     public function publicIndex(): JsonResponse
@@ -80,6 +82,7 @@ class TestimonyController extends Controller
         });
 
         $testimony->load($this->relationships());
+        $this->notificationService->notifyAdminsOfNewTestimony($testimony, $request->user()->id);
 
         return response()->json([
             'message' => 'Testimony submitted successfully.',

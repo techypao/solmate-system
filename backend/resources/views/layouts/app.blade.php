@@ -2076,7 +2076,7 @@
 
                 {{-- Brand + description --}}
                 <div>
-                    <a href="{{ route('home') }}" class="solmate-footer-brand-link" aria-label="SolMate home">
+                    <a href="{{ $isCustomerShell ? route('home') : route('landing') }}" class="solmate-footer-brand-link" aria-label="SolMate home">
                         <span class="solmate-footer-brand-sol">Sol</span><span class="solmate-footer-brand-mate">Mate</span>
                     </a>
                     <p class="solmate-footer-desc">
@@ -2087,15 +2087,28 @@
                     </p>
                 </div>
 
+                @php
+                    $customerFooterHomeUrl = $isCustomerShell ? route('home') : route('landing');
+                    $customerFooterServicesUrl = $isCustomerShell ? route('customer.tracking') : route('landing') . '#services';
+                    $customerFooterCalculatorUrl = $isCustomerShell ? route('customer.quotation.create') : route('login');
+                    $customerFooterAboutUrl = $isCustomerShell ? route('public.contact') : route('landing') . '#about';
+                    $customerFooterContactUrl = route('public.contact');
+                    $customerFooterInstallationUrl = $isCustomerShell ? route('customer.installation') : route('landing') . '#services';
+                    $customerFooterMaintenanceUrl = $isCustomerShell ? route('customer.maintenance') : route('landing') . '#services';
+                    $customerFooterInspectionUrl = $isCustomerShell ? route('customer.inspection') : route('landing') . '#services';
+                    $customerFooterQuotationUrl = $isCustomerShell ? route('customer.quotation.create') : route('landing') . '#services';
+                    $customerFooterConsultationUrl = route('public.contact');
+                @endphp
+
                 {{-- Quick Links --}}
                 <div>
                     <p class="solmate-footer-col-heading">Quick Links</p>
                     <ul class="solmate-footer-links">
-                        <li><a href="{{ route('home') }}">Home</a></li>
-                        <li><a href="#">Services</a></li>
-                        <li><a href="#">Solar Calculator</a></li>
-                        <li><a href="#">About Us</a></li>
-                        <li><a href="#">Contact</a></li>
+                        <li><a href="{{ $customerFooterHomeUrl }}">Home</a></li>
+                        <li><a href="{{ $customerFooterServicesUrl }}">Services</a></li>
+                        <li><a href="{{ $customerFooterCalculatorUrl }}">Solar Calculator</a></li>
+                        <li><a href="{{ $customerFooterAboutUrl }}">About Us</a></li>
+                        <li><a href="{{ $customerFooterContactUrl }}">Contact</a></li>
                     </ul>
                 </div>
 
@@ -2103,11 +2116,11 @@
                 <div>
                     <p class="solmate-footer-col-heading">Services</p>
                     <ul class="solmate-footer-links">
-                        <li><a href="#">Solar Installation</a></li>
-                        <li><a href="#">System Maintenance</a></li>
-                        <li><a href="#">Site Assessment</a></li>
-                        <li><a href="#">ROI &amp; Quotation Estimation</a></li>
-                        <li><a href="#">Consultation</a></li>
+                        <li><a href="{{ $customerFooterInstallationUrl }}">Solar Installation</a></li>
+                        <li><a href="{{ $customerFooterMaintenanceUrl }}">System Maintenance</a></li>
+                        <li><a href="{{ $customerFooterInspectionUrl }}">Site Assessment</a></li>
+                        <li><a href="{{ $customerFooterQuotationUrl }}">ROI &amp; Quotation Estimation</a></li>
+                        <li><a href="{{ $customerFooterConsultationUrl }}">Consultation</a></li>
                     </ul>
                 </div>
 

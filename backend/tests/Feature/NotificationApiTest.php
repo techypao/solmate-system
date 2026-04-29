@@ -231,6 +231,80 @@ class NotificationApiTest extends TestCase
         );
     }
 
+    public function test_admins_receive_installation_and_maintenance_completion_notifications_without_duplicates(): void
+    {
+        $customer = $this->createUser(User::ROLE_CUSTOMER, 'customer_completion');
+        $admin = $this->createUser(User::ROLE_ADMIN, 'admin_completion');
+        $technician = $this->createUser(User::ROLE_TECHNICIAN, 'technician_completion');
+
+        $installationRequest = ServiceRequest::query()->create([
+            'user_id' => $customer->id,
+            'technician_id' => $technician->id,
+            'request_type' => 'Installation',
+            'details' => 'Install new panels.',
+            'contact_number' => '0917-111-0000',
+            'status' => 'in_progress',
+        ]);
+
+        $maintenanceRequest = ServiceRequest::query()->create([
+            'user_id' => $customer->id,
+            'technician_id' => $technician->id,
+            'request_type' => 'Maintenance',
+            'details' => 'Routine inverter maintenance.',
+            'contact_number' => '0917-222-0000',
+            'status' => 'in_progress',
+        ]);
+
+        $this->actingAs($technician)
+            ->postJson("/api/technician/service-requests/{$installationRequest->id}/completion-request")
+            ->assertOk();
+
+        $this->actingAs($technician)
+            ->postJson("/api/technician/service-requests/{$maintenanceRequest->id}/completion-request")
+            ->assertOk();
+
+        $this->actingAs($technician)
+            ->postJson("/api/technician/service-requests/{$maintenanceRequest->id}/completion-request")
+            ->assertUnprocessable();
+
+        $adminNotifications = $admin->fresh()->notifications()->latest()->get();
+        $installationRequest->refresh();
+        $maintenanceRequest->refresh();
+
+        $this->assertCount(2, $adminNotifications);
+        $this->assertNotNull($installationRequest->technician_marked_done_at);
+        $this->assertNotNull($maintenanceRequest->technician_marked_done_at);
+        $this->assertEqualsCanonicalizing([
+            'installation_completed',
+            'maintenance_completed',
+        ], $adminNotifications->map(fn ($notification) => $notification->data['type'])->all());
+
+        $installationNotification = $adminNotifications->first(
+            fn ($notification) => data_get($notification->data, 'type') === 'installation_completed'
+        );
+        $maintenanceNotification = $adminNotifications->first(
+            fn ($notification) => data_get($notification->data, 'type') === 'maintenance_completed'
+        );
+
+        $this->assertSame('Installation Marked as Completed', $installationNotification->data['title']);
+        $this->assertSame(
+            'Technician_completion User marked Installation for Customer_completion User as completed.',
+            $installationNotification->data['message']
+        );
+        $this->assertSame('AdminServiceRequestDetails', $installationNotification->data['target_screen']);
+        $this->assertSame($installationRequest->id, $installationNotification->data['entity_id']);
+        $this->assertSame('installation', $installationNotification->data['target_params']['requestType']);
+
+        $this->assertSame('Maintenance Marked as Completed', $maintenanceNotification->data['title']);
+        $this->assertSame(
+            'Technician_completion User marked Maintenance for Customer_completion User as completed.',
+            $maintenanceNotification->data['message']
+        );
+        $this->assertSame('AdminServiceRequestDetails', $maintenanceNotification->data['target_screen']);
+        $this->assertSame($maintenanceRequest->id, $maintenanceNotification->data['entity_id']);
+        $this->assertSame('maintenance', $maintenanceNotification->data['target_params']['requestType']);
+    }
+
     public function test_user_cannot_mark_someone_elses_notification_as_read(): void
     {
         $admin = $this->createUser(User::ROLE_ADMIN, 'admin_owner');

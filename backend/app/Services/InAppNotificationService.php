@@ -5,9 +5,12 @@ namespace App\Services;
 use App\Models\InspectionRequest;
 use App\Models\Quotation;
 use App\Models\ServiceRequest;
+use App\Models\Testimony;
 use App\Models\User;
+use App\Notifications\AdminServiceCompletionRequestedNotification;
 use App\Notifications\AdminNewInspectionRequestNotification;
 use App\Notifications\AdminNewServiceRequestNotification;
+use App\Notifications\AdminNewTestimonyNotification;
 use App\Notifications\FinalQuotationAvailableNotification;
 use App\Notifications\InspectionRequestAssignedNotification;
 use App\Notifications\InspectionRequestStatusUpdatedNotification;
@@ -29,6 +32,24 @@ class InAppNotificationService
     {
         $this->adminRecipients()->each(
             fn (User $admin) => $admin->notify(new AdminNewInspectionRequestNotification($inspectionRequest, $actor->id))
+        );
+    }
+
+    public function notifyAdminsOfNewTestimony(Testimony $testimony, ?int $actorId = null): void
+    {
+        $testimony->loadMissing('user');
+
+        $this->adminRecipients()->each(
+            fn (User $admin) => $admin->notify(new AdminNewTestimonyNotification($testimony, $actorId))
+        );
+    }
+
+    public function notifyAdminsOfServiceCompletionRequest(ServiceRequest $serviceRequest, ?int $actorId = null): void
+    {
+        $serviceRequest->loadMissing(['customer', 'technician']);
+
+        $this->adminRecipients()->each(
+            fn (User $admin) => $admin->notify(new AdminServiceCompletionRequestedNotification($serviceRequest, $actorId))
         );
     }
 

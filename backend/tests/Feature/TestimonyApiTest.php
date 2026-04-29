@@ -27,6 +27,13 @@ class TestimonyApiTest extends TestCase
             'role' => User::ROLE_CUSTOMER,
         ]);
 
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_testimony_create@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
         $completedServiceRequest = ServiceRequest::query()->create([
             'user_id' => $customer->id,
             'request_type' => 'Solar Maintenance',
@@ -47,6 +54,30 @@ class TestimonyApiTest extends TestCase
             ->assertJsonPath('data.status', Testimony::STATUS_PENDING);
 
         $pendingTestimonyId = $createResponse->json('data.id');
+        $adminNotifications = $admin->fresh()->notifications()->latest()->get();
+
+        $this->assertCount(1, $adminNotifications);
+        $this->assertSame('testimony_created', $adminNotifications->first()->data['type']);
+        $this->assertSame('New Customer Testimony', $adminNotifications->first()->data['title']);
+        $this->assertSame(
+            "Customer User submitted a new testimony for request #{$completedServiceRequest->id}.",
+            $adminNotifications->first()->data['message']
+        );
+        $this->assertSame('testimony', $adminNotifications->first()->data['entity_type']);
+        $this->assertSame($pendingTestimonyId, $adminNotifications->first()->data['entity_id']);
+
+        $this->actingAs($admin)
+            ->getJson('/api/notifications/unread-count')
+            ->assertOk()
+            ->assertJson([
+                'success' => true,
+                'unread_count' => 1,
+            ]);
+
+        $this->actingAs($admin)
+            ->getJson('/api/notifications')
+            ->assertOk()
+            ->assertJsonPath('data.0.type', 'testimony_created');
 
         Testimony::query()->whereKey($pendingTestimonyId)->update([
             'status' => Testimony::STATUS_APPROVED,
@@ -346,6 +377,14 @@ class TestimonyApiTest extends TestCase
         $firstImageId = $createResponse->json('data.images.0.id');
         $firstImagePath = $createResponse->json('data.images.0.image_path');
         $secondImagePath = $createResponse->json('data.images.1.image_path');
+        $adminNotifications = $admin->fresh()->notifications()->latest()->get();
+
+        $this->assertCount(1, $adminNotifications);
+        $this->assertSame('testimony_created', $adminNotifications->first()->data['type']);
+        $this->assertSame(
+            "Customer User submitted a new testimony for request #{$serviceRequest->id}.",
+            $adminNotifications->first()->data['message']
+        );
 
         Storage::disk(TestimonyImage::PUBLIC_DISK)->assertExists($firstImagePath);
         Storage::disk(TestimonyImage::PUBLIC_DISK)->assertExists($secondImagePath);
@@ -369,6 +408,7 @@ class TestimonyApiTest extends TestCase
 
         $remainingPaths = collect($updateResponse->json('data.images'))->pluck('image_path')->all();
         $this->assertContains($secondImagePath, $remainingPaths);
+        $this->assertCount(1, $admin->fresh()->notifications);
 
         Testimony::query()->whereKey($testimonyId)->update([
             'status' => Testimony::STATUS_APPROVED,

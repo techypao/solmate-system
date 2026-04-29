@@ -711,6 +711,7 @@
             var label  = config.label || '';
             var metaLines = Array.isArray(config.metaLines) ? config.metaLines.filter(Boolean) : [];
             var status = String(config.status || '');
+            var showStatus = config.showStatus !== false && status !== '';
             var statusLabel = titleCase(status);
             var dc = dotClass(status);
             var bc = badgeClass(status);
@@ -723,7 +724,7 @@
                 +   '<p class="ch-act-label">' + escHtml(label) + '</p>'
                 +   metaHtml
                 + '</div>'
-                + (status ? '<span class="ch-act-badge ' + escHtml(bc) + '">' + escHtml(statusLabel) + '</span>' : '')
+                + (showStatus ? '<span class="ch-act-badge ' + escHtml(bc) + '">' + escHtml(statusLabel) + '</span>' : '')
                 + '</div>';
         }).join('');
 
@@ -738,9 +739,11 @@
             if (!Array.isArray(items)) items = [];
             items = sortLatestFirst(items);
             renderItems('ch-qt-list', 'ch-qt-loading', 'ch-qt-empty', items, function (q) {
+                var quotationType = String(q.quotation_type || 'initial').toLowerCase();
                 return {
                     label: 'Quotation #' + (q.id || '\u2014'),
                     status: q.status || '',
+                    showStatus: quotationType !== 'initial',
                     metaLines: [
                         'Type: ' + titleCase(q.quotation_type || 'Quotation'),
                         'Submitted: ' + fmtDate(q.created_at)

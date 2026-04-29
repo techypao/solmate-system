@@ -1,6 +1,8 @@
 @extends('layouts.app', ['title' => 'Admin Notifications'])
 
 @section('content')
+    <script type="application/json" id="__data_requestAssignmentsUrl">@json($requestAssignmentsUrl)</script>
+    <script type="application/json" id="__data_testimoniesUrl">@json($testimoniesUrl)</script>
     <style>
         .notification-summary-card {
             display: flex;
@@ -227,7 +229,6 @@
 @endsection
 
 @push('scripts')
-    <script type="application/json" id="__data_requestAssignmentsUrl">@json($requestAssignmentsUrl)</script>
     <script>
         const notificationsLoading = document.getElementById('notifications-loading');
         const notificationsSuccess = document.getElementById('notifications-success');
@@ -239,6 +240,7 @@
         const markAllReadButton = document.getElementById('mark-all-read-button');
         const deleteAllButton = document.getElementById('delete-all-button');
         const requestAssignmentsUrl = JSON.parse(document.getElementById('__data_requestAssignmentsUrl').textContent);
+        const testimoniesUrl = JSON.parse(document.getElementById('__data_testimoniesUrl').textContent);
         let notificationsState = [];
         let deletingAllNotifications = false;
         let deletingNotificationId = null;
@@ -383,6 +385,14 @@
                 return Number.isFinite(inspectionRequestId) && inspectionRequestId > 0
                     ? `${requestAssignmentsUrl}#inspection-request-${inspectionRequestId}`
                     : requestAssignmentsUrl;
+            }
+
+            if (notification?.target_screen === 'AdminTestimonyManagement' || notification?.entity_type === 'testimony') {
+                const testimonyId = Number(targetParams.testimonyId ?? notification?.entity_id);
+
+                return Number.isFinite(testimonyId) && testimonyId > 0
+                    ? `${testimoniesUrl}#testimony-${testimonyId}`
+                    : testimoniesUrl;
             }
 
             return requestAssignmentsUrl;

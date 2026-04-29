@@ -317,7 +317,7 @@
 </section>
 
 {{-- TRUST HIGHLIGHTS --}}
-<section class="gst-trust" aria-label="Why SolMate">
+<section class="gst-trust" id="services" aria-label="Why SolMate">
     <div class="gst-trust-inner">
         <div class="gst-trust-grid">
             <div class="gst-trust-card">
@@ -470,11 +470,11 @@
             <div>
                 <p class="solmate-footer-col-heading">Services</p>
                 <ul class="solmate-footer-links">
-                    <li><a href="#">Solar Installation</a></li>
-                    <li><a href="#">System Maintenance</a></li>
-                    <li><a href="#">Site Assessment</a></li>
-                    <li><a href="#">ROI &amp; Quotation Estimation</a></li>
-                    <li><a href="#">Consultation</a></li>
+                    <li><a href="#services">Solar Installation</a></li>
+                    <li><a href="#services">System Maintenance</a></li>
+                    <li><a href="#services">Site Assessment</a></li>
+                    <li><a href="#services">ROI &amp; Quotation Estimation</a></li>
+                    <li><a href="{{ route('public.contact') }}">Consultation</a></li>
                 </ul>
             </div>
             <div>
