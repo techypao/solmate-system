@@ -100,6 +100,13 @@ export function getTechnicianEmail(
   return inspectionRequest?.technician?.email || 'No email available';
 }
 
+function normalizeInspectionStatus(status?: string | null) {
+  return (status || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
+}
+
 export function canCreateFinalQuotation(status?: string | null) {
-  return (status || '').toLowerCase() === 'completed';
+  return normalizeInspectionStatus(status) === 'in_progress';
 }

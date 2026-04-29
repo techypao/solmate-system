@@ -18,7 +18,7 @@ class FinalQuotationDefaultsTest extends TestCase
     {
         $customer = $this->createUser(User::ROLE_CUSTOMER, 'customer');
         $technician = $this->createUser(User::ROLE_TECHNICIAN, 'technician');
-        $inspectionRequest = $this->createCompletedInspectionRequest($customer->id, $technician->id);
+        $inspectionRequest = $this->createInProgressInspectionRequest($customer->id, $technician->id);
 
         QuotationSetting::query()->update([
             'rate_per_kwh' => 15.00,
@@ -41,7 +41,9 @@ class FinalQuotationDefaultsTest extends TestCase
         ]);
 
         $response->assertCreated()
+            ->assertJsonPath('message', 'Final quotation submitted. Inspection marked as completed.')
             ->assertJsonPath('data.quotation_type', 'final')
+            ->assertJsonPath('inspection_request.status', 'completed')
             ->assertJsonPath('data.rate_per_kwh', 15)
             ->assertJsonPath('data.days_in_month', 30)
             ->assertJsonPath('data.sun_hours', 5)
@@ -70,13 +72,18 @@ class FinalQuotationDefaultsTest extends TestCase
             'battery_voltage' => 50.00,
             'panel_watts' => 500.00,
         ]);
+
+        $this->assertDatabaseHas('inspection_requests', [
+            'id' => $inspectionRequest->id,
+            'status' => 'completed',
+        ]);
     }
 
     public function test_final_quotation_preserves_technician_supplied_values_over_settings_defaults(): void
     {
         $customer = $this->createUser(User::ROLE_CUSTOMER, 'customer');
         $technician = $this->createUser(User::ROLE_TECHNICIAN, 'technician');
-        $inspectionRequest = $this->createCompletedInspectionRequest($customer->id, $technician->id);
+        $inspectionRequest = $this->createInProgressInspectionRequest($customer->id, $technician->id);
 
         QuotationSetting::query()->update([
             'rate_per_kwh' => 99.00,
@@ -141,7 +148,7 @@ class FinalQuotationDefaultsTest extends TestCase
     {
         $customer = $this->createUser(User::ROLE_CUSTOMER, 'customer');
         $technician = $this->createUser(User::ROLE_TECHNICIAN, 'technician');
-        $inspectionRequest = $this->createCompletedInspectionRequest($customer->id, $technician->id);
+        $inspectionRequest = $this->createInProgressInspectionRequest($customer->id, $technician->id);
 
         QuotationSetting::query()->delete();
 
@@ -173,6 +180,39 @@ class FinalQuotationDefaultsTest extends TestCase
             ->assertJsonPath('data.battery_required_kwh', 3.33);
 
         $this->assertEqualsWithDelta(65.04, $response->json('data.battery_required_ah'), 0.1);
+    }
+
+    public function test_final_quotation_cannot_be_created_when_inspection_is_completed(): void
+    {
+        $customer = $this->createUser(User::ROLE_CUSTOMER, 'customer');
+        $technician = $this->createUser(User::ROLE_TECHNICIAN, 'technician');
+        $inspectionRequest = $this->createCompletedInspectionRequest($customer->id, $technician->id);
+
+        Sanctum::actingAs($technician);
+
+        $response = $this->postJson('/api/technician/final-quotations', [
+            'inspection_request_id' => $inspectionRequest->id,
+            'monthly_electric_bill' => 3000,
+            'pv_system_type' => 'hybrid',
+            'with_battery' => true,
+            'remarks' => 'Should be blocked once completed',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonPath(
+                'message',
+                'Final quotation can only be created when the inspection request is in progress.'
+            );
+    }
+
+    private function createInProgressInspectionRequest(int $customerId, int $technicianId): InspectionRequest
+    {
+        return InspectionRequest::query()->create([
+            'user_id' => $customerId,
+            'technician_id' => $technicianId,
+            'details' => 'In-progress site visit',
+            'status' => 'in_progress',
+        ]);
     }
 
     private function createCompletedInspectionRequest(int $customerId, int $technicianId): InspectionRequest

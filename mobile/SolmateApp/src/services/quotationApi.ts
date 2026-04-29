@@ -169,6 +169,17 @@ type QuotationResponse = {
   data: Quotation;
 };
 
+export type SubmitFinalQuotationResponse = {
+  message?: string;
+  quotation: Quotation;
+  inspectionRequest?: InspectionRequest | null;
+};
+
+export type CompleteQuotationResponse = {
+  message?: string;
+  quotation: Quotation;
+};
+
 type ApiEnvelope<T> = {
   message?: string;
   data?: T;
@@ -206,13 +217,33 @@ export function updateQuotation(
   return apiPut<QuotationResponse>(`/quotations/${id}`, payload);
 }
 
-export async function submitFinalQuotation(payload: SubmitFinalQuotationPayload) {
-  const response = await apiPost<Quotation | ApiEnvelope<Quotation>>(
+export async function submitFinalQuotation(
+  payload: SubmitFinalQuotationPayload,
+): Promise<SubmitFinalQuotationResponse> {
+  const response = await apiPost<
+    | Quotation
+    | (ApiEnvelope<Quotation> & {inspection_request?: InspectionRequest | null})
+  >(
     '/technician/final-quotations',
     payload,
   );
 
-  return extractEnvelopeData<Quotation>(response, {} as Quotation);
+  if (
+    response &&
+    typeof response === 'object' &&
+    'data' in response
+  ) {
+    return {
+      message: response.message,
+      quotation: response.data ?? ({} as Quotation),
+      inspectionRequest: response.inspection_request ?? null,
+    };
+  }
+
+  return {
+    quotation: (response ?? {}) as Quotation,
+    inspectionRequest: null,
+  };
 }
 
 export async function getFinalQuotationOptions() {
@@ -251,6 +282,30 @@ export async function getCustomerFinalQuotation(inspectionRequestId: number) {
   );
 
   return extractEnvelopeData<Quotation>(response, {} as Quotation);
+}
+
+export async function completeQuotation(
+  quotationId: number,
+): Promise<CompleteQuotationResponse> {
+  const response = await apiPost<Quotation | ApiEnvelope<Quotation>>(
+    `/quotations/${quotationId}/complete`,
+    {},
+  );
+
+  if (
+    response &&
+    typeof response === 'object' &&
+    'data' in response
+  ) {
+    return {
+      message: response.message,
+      quotation: response.data ?? ({} as Quotation),
+    };
+  }
+
+  return {
+    quotation: (response ?? {}) as Quotation,
+  };
 }
 
 export async function replaceQuotationLineItems(

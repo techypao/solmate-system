@@ -21,8 +21,8 @@ class QuotationRoiAlignmentTest extends TestCase
         $inspectionRequest = InspectionRequest::query()->create([
             'user_id' => $customer->id,
             'technician_id' => $technician->id,
-            'details' => 'Completed site visit',
-            'status' => 'completed',
+            'details' => 'In-progress site visit',
+            'status' => 'in_progress',
         ]);
 
         Sanctum::actingAs($technician);
@@ -38,7 +38,13 @@ class QuotationRoiAlignmentTest extends TestCase
         $response->assertCreated()
             ->assertJsonPath('data.estimated_monthly_savings', 6000)
             ->assertJsonPath('data.estimated_annual_savings', 72000)
-            ->assertJsonPath('data.roi_years', 5);
+            ->assertJsonPath('data.roi_years', 5)
+            ->assertJsonPath('inspection_request.status', 'completed');
+
+        $this->assertDatabaseHas('inspection_requests', [
+            'id' => $inspectionRequest->id,
+            'status' => 'completed',
+        ]);
     }
 
     public function test_initial_quotation_update_uses_client_approved_roi_method(): void

@@ -187,7 +187,7 @@ function getFriendlyErrorMessage(error: unknown) {
     return error.message;
   }
 
-  return 'Could not load the completed inspection request for final quotation.';
+  return 'Could not load the inspection request for final quotation.';
 }
 
 function formatCategoryLabel(category: string) {
@@ -540,7 +540,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     ]),
   );
 
-  const completed = canCreateFinalQuotation(inspectionRequest?.status);
+  const canCreateQuote = canCreateFinalQuotation(inspectionRequest?.status);
   const computationDefaults = useMemo(
     () =>
       finalQuotationOptions?.computation_defaults ?? {
@@ -1004,10 +1004,10 @@ export default function FinalQuotationScreen({navigation, route}: any) {
       return;
     }
 
-    if (!completed) {
+    if (!canCreateQuote) {
       Alert.alert(
         'Not allowed yet',
-        'Final quotations can only be submitted after the inspection is completed.',
+        'Final quotations can only be submitted while the inspection is in progress.',
       );
       return;
     }
@@ -1022,12 +1022,13 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     }
 
     let createdQuotationId: number | null = null;
+    let completedInspectionRequest: TechnicianInspectionRequest | null = null;
 
     try {
       setSubmitting(true);
       setSubmitError('');
 
-      const createdQuotation = await submitFinalQuotation({
+      const submissionResult = await submitFinalQuotation({
         inspection_request_id: inspectionRequestId,
         monthly_electric_bill: toNumberOrUndefined(
           form.monthly_electric_bill,
@@ -1052,17 +1053,38 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         remarks: form.remarks.trim() || undefined,
       });
 
+      const createdQuotation = submissionResult.quotation;
+      completedInspectionRequest =
+        (submissionResult.inspectionRequest as TechnicianInspectionRequest | null) ??
+        (inspectionRequest
+          ? ({
+              ...inspectionRequest,
+              status: 'completed',
+            } as TechnicianInspectionRequest)
+          : null);
+
+      if (completedInspectionRequest) {
+        setInspectionRequest(completedInspectionRequest);
+      }
+
       if (!createdQuotation?.id) {
         Alert.alert(
           'Submission saved',
-          'The final quotation was created, but the detail screen could not be opened automatically.',
+          submissionResult.message ||
+            'Final quotation submitted. Inspection marked as completed.',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.replace('AssignedInspectionRequests'),
+            },
+          ],
         );
         return;
       }
 
       createdQuotationId = createdQuotation.id;
 
-      const syncedQuotation = await replaceQuotationLineItems(createdQuotation.id, {
+      await replaceQuotationLineItems(createdQuotation.id, {
         line_items: selectedLineItems.map(item => ({
           pricing_item_id: item.pricing_item_id,
           description: item.description,
@@ -1073,24 +1095,64 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         })),
       });
 
-      navigation.replace('AssignedInspectionRequests');
+      Alert.alert(
+        'Success',
+        submissionResult.message ||
+          'Final quotation submitted. Inspection marked as completed.',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.replace('AssignedInspectionRequests'),
+          },
+        ],
+      );
     } catch (error) {
       if (createdQuotationId) {
+        if (completedInspectionRequest) {
+          setInspectionRequest(completedInspectionRequest);
+        }
+
         const syncErrorMessage =
           error instanceof ApiError
             ? formatLaravelErrors(error)
             : 'The line items could not be saved automatically.';
 
         setSubmitError(
-          `Final quotation #${createdQuotationId} was created, but the itemized pricing sync did not complete. ${syncErrorMessage}`,
+          `Final quotation #${createdQuotationId} was created and the inspection was marked as completed, but the itemized pricing sync did not complete. ${syncErrorMessage}`,
         );
 
         Alert.alert(
           'Quotation created with sync issue',
-          `Final quotation #${createdQuotationId} was created, but the itemized pricing sync did not complete.\n\n${syncErrorMessage}`,
+          `Final quotation #${createdQuotationId} was created and the inspection was marked as completed, but the itemized pricing sync did not complete.\n\n${syncErrorMessage}`,
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.replace('AssignedInspectionRequests'),
+            },
+          ],
         );
+      } else if (error instanceof ApiError && error.status === 409) {
+        const duplicateInspectionRequest = (error.data &&
+          typeof error.data === 'object' &&
+          'inspection_request' in error.data
+          ? (error.data.inspection_request as TechnicianInspectionRequest | null)
+          : null) ?? null;
 
-        navigation.replace('AssignedInspectionRequests');
+        if (duplicateInspectionRequest) {
+          setInspectionRequest(duplicateInspectionRequest);
+        }
+
+        setSubmitError(error.message);
+        Alert.alert(
+          'Final quotation already exists',
+          `${error.message} The inspection has already been completed for this request.`,
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.replace('AssignedInspectionRequests'),
+            },
+          ],
+        );
       } else if (error instanceof ApiError) {
         const message = formatLaravelErrors(error);
         setSubmitError(message);
@@ -1739,7 +1801,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           </Text>
           <Text style={styles.heroSubtitle}>
             Build and submit the final solar quotation for{' '}
-            {getCustomerName(inspectionRequest)} based on the completed site inspection.
+            {getCustomerName(inspectionRequest)} based on the current site inspection.
           </Text>
         </View>
 
@@ -1784,7 +1846,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
 
         <FormSection
           title="Inspection summary"
-          subtitle="This final quotation stays tied directly to the completed inspection request.">
+          subtitle="This final quotation stays tied directly to the current inspection request.">
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Inspection request ID</Text>
             <Text style={styles.summaryValue}>{inspectionRequest.id}</Text>
@@ -1813,11 +1875,11 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           </View>
         </FormSection>
 
-        {!completed ? (
+        {!canCreateQuote ? (
           <AppCard style={styles.warningCard}>
-            <Text style={styles.warningTitle}>Inspection not completed yet</Text>
+            <Text style={styles.warningTitle}>Inspection not in progress</Text>
             <Text style={styles.warningText}>
-              Mark the inspection request as completed before submitting the
+              Move the inspection request to in progress before submitting the
               final quotation.
             </Text>
           </AppCard>
@@ -1863,7 +1925,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           ) : (
             <AppButton
               title={submitting ? 'Submitting...' : 'Submit'}
-              disabled={submitting || !completed}
+              disabled={submitting || !canCreateQuote}
               onPress={handleSubmit}
               style={[styles.footerActionButton, styles.submitButton]}
               textStyle={styles.submitButtonText}

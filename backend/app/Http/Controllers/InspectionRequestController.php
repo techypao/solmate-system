@@ -18,7 +18,9 @@ class InspectionRequestController extends Controller
 
     public function index(Request $request)
     {
-        $inspectionRequests = InspectionRequest::where('user_id', $request->user()->id)
+        $inspectionRequests = InspectionRequest::query()
+            ->with('technician')
+            ->where('user_id', $request->user()->id)
             ->latest()
             ->get();
 

@@ -274,7 +274,7 @@ export default function RequestDetailsScreen({navigation, route}: any) {
   }
 
   const activeStatus = selectedStatus ?? (inspectionRequest.status as TechnicianUpdatableStatus);
-  const canQuote = canCreateFinalQuotation(inspectionRequest.status);
+  const canCreateQuote = canCreateFinalQuotation(inspectionRequest.status);
 
   return (
     <View style={s.root}>
@@ -348,27 +348,18 @@ export default function RequestDetailsScreen({navigation, route}: any) {
           </View>
 
           {/* ── Action Buttons ── */}
-          <Pressable
-            style={({pressed}) => [
-              s.btnPrimary,
-              !canQuote && s.btnDisabled,
-              pressed && s.pressed,
-            ]}
-            onPress={() => {
-              if (!canQuote) {
-                Alert.alert(
-                  'Not Ready',
-                  'Mark this inspection as Completed before creating the final quotation.',
-                );
-                return;
-              }
-              navigation.navigate('FinalQuotationForm', {
-                inspectionRequestId: inspectionRequest.id,
-                inspectionRequest,
-              });
-            }}>
-            <Text style={s.btnPrimaryText}>Confirm Final Quotation</Text>
-          </Pressable>
+          {canCreateQuote ? (
+            <Pressable
+              style={({pressed}) => [s.btnPrimary, pressed && s.pressed]}
+              onPress={() => {
+                navigation.navigate('FinalQuotationForm', {
+                  inspectionRequestId: inspectionRequest.id,
+                  inspectionRequest,
+                });
+              }}>
+              <Text style={s.btnPrimaryText}>Create Final Quotation</Text>
+            </Pressable>
+          ) : null}
 
           <Pressable
             style={({pressed}) => [

@@ -749,6 +749,48 @@
         return normalized;
     }
 
+    function getAssignedTechnician(request) {
+        return request.technician
+            || request.assignedTechnician
+            || request.assigned_technician
+            || null;
+    }
+
+    function getTechnicianName(request, technician) {
+        return (technician && technician.name)
+            || request.technician_name
+            || request.assigned_technician_name
+            || '';
+    }
+
+    function getTechnicianEmail(request, technician) {
+        return (technician && technician.email)
+            || request.technician_email
+            || request.assigned_technician_email
+            || '';
+    }
+
+    function getTechnicianPhone(request, technician) {
+        return (technician && technician.contact_number)
+            || (technician && technician.phone)
+            || (technician && technician.mobile_number)
+            || request.technician_phone
+            || request.technician_mobile
+            || request.assigned_technician_phone
+            || '';
+    }
+
+    function hasAssignedTechnician(request, technician) {
+        return !!(
+            request.technician_id
+            || request.assigned_technician_id
+            || request.assigned_to
+            || getTechnicianName(request, technician)
+            || getTechnicianEmail(request, technician)
+            || getTechnicianPhone(request, technician)
+        );
+    }
+
     function buildRequestTypeLabel(request) {
         if (request.tracking_category === 'inspection') return 'Inspection';
         return headline(request.request_type || request.tracking_category || 'Service Request');
@@ -860,22 +902,33 @@
             + '</div>'
             + '<div class="trk-card-body">';
 
-        if (sr.technician) {
-            var tech     = sr.technician;
-            var initials = String(tech.name || '?').split(' ').map(function (w) { return w[0]; }).slice(0, 2).join('');
-            var techRole = String(tech.role || 'Technician').replace(/_/g, ' ');
+        var tech = getAssignedTechnician(sr);
+        var techName = getTechnicianName(sr, tech);
+        var techEmail = getTechnicianEmail(sr, tech);
+        var techPhone = getTechnicianPhone(sr, tech);
+
+        if (techName || techEmail || techPhone) {
+            var initials = String(techName || '?').split(' ').map(function (w) { return w[0]; }).slice(0, 2).join('');
+            var techRole = String((tech && tech.role) || 'Technician').replace(/_/g, ' ');
             techRole = techRole.charAt(0).toUpperCase() + techRole.slice(1);
 
             html += '<div class="trk-tech-row">'
                 + '<div class="trk-tech-avatar">' + escHtml(initials) + '</div>'
                 + '<div>'
-                + '<p class="trk-tech-name">' + escHtml(tech.name) + '</p>'
+                + '<p class="trk-tech-name">' + escHtml(techName || 'Assigned technician') + '</p>'
                 + '<p class="trk-tech-role">' + escHtml(techRole) + '</p>'
-                + '<div class="trk-tech-meta">'
-                + '<div class="trk-tech-meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' + escHtml(tech.email) + '</div>'
-                + '</div>'
+                + (techEmail || techPhone
+                    ? '<div class="trk-tech-meta">'
+                        + (techEmail
+                            ? '<div class="trk-tech-meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' + escHtml(techEmail) + '</div>'
+                            : '')
+                        + (techPhone
+                            ? '<div class="trk-tech-meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.08 4.18 2 2 0 014.06 2h3a2 2 0 012 1.72c.12.9.33 1.78.63 2.61a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.47-1.18a2 2 0 012.11-.45c.83.3 1.71.51 2.61.63A2 2 0 0122 16.92z"/></svg>' + escHtml(techPhone) + '</div>'
+                            : '')
+                        + '</div>'
+                    : '')
                 + '</div></div>';
-        } else if (sr.technician_id) {
+        } else if (hasAssignedTechnician(sr, tech)) {
             html += '<div class="trk-unassigned">'
                 + '<div class="trk-unassigned-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'
                 + '<span>A technician has been assigned to this request. Full technician details will appear here once they are available.</span>'

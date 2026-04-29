@@ -6,6 +6,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use App\Models\Quotation;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 use App\Models\ServiceRequest;
@@ -270,9 +272,11 @@ public function storeFinalQuotation(Request $request)
         ], 403);
     }
 
-    if ($inspectionRequest->status !== 'completed') {
+    $normalizedInspectionStatus = strtolower(str_replace([' ', '-'], '_', (string) $inspectionRequest->status));
+
+    if ($normalizedInspectionStatus !== 'in_progress') {
         return response()->json([
-            'message' => 'Final quotation can only be created when the inspection request is completed.'
+            'message' => 'Final quotation can only be created when the inspection request is in progress.'
         ], 422);
     }
 
@@ -281,9 +285,14 @@ public function storeFinalQuotation(Request $request)
         ->first();
 
     if ($existingFinalQuotation) {
+        $existingFinalQuotation->load(['customer', 'inspectionRequest']);
+        $this->loadLineItemsForFinalQuotation($existingFinalQuotation);
+
         return response()->json([
-            'message' => 'A final quotation already exists for this inspection request.'
-        ], 422);
+            'message' => 'A final quotation already exists for this inspection request.',
+            'data' => $existingFinalQuotation,
+            'inspection_request' => $inspectionRequest->loadMissing(['customer', 'technician']),
+        ], 409);
     }
 
     $monthlyElectricBill = $validated['monthly_electric_bill'];
@@ -315,51 +324,121 @@ public function storeFinalQuotation(Request $request)
         $monthlyElectricBill
     );
 
-    $quotation = Quotation::create([
-        'user_id' => $inspectionRequest->user_id,
-        'inspection_request_id' => $inspectionRequest->id,
-        'quotation_type' => 'final',
-        'monthly_electric_bill' => $monthlyElectricBill,
-        'rate_per_kwh' => $ratePerKwh,
-        'days_in_month' => $daysInMonth,
-        'sun_hours' => $sunHours,
-        'pv_safety_factor' => $pvSafetyFactor,
-        'battery_factor' => $batteryFactor,
-        'battery_voltage' => $batteryVoltage,
-        'pv_system_type' => $validated['pv_system_type'],
-        'with_battery' => $withBattery,
-        'inverter_type' => $validated['inverter_type'] ?? null,
-        'battery_model' => $validated['battery_model'] ?? null,
-        'battery_capacity_ah' => $validated['battery_capacity_ah'] ?? null,
-        'panel_watts' => $panelWatts,
-        'monthly_kwh' => $computedValues['monthly_kwh'],
-        'daily_kwh' => $computedValues['daily_kwh'],
-        'pv_kw_raw' => $computedValues['pv_kw_raw'],
-        'pv_kw_safe' => $computedValues['pv_kw_safe'],
-        'panel_quantity' => $computedValues['panel_quantity'],
-        'system_kw' => $computedValues['system_kw'],
-        'battery_required_kwh' => $computedValues['battery_required_kwh'],
-        'battery_required_ah' => $computedValues['battery_required_ah'],
-        'panel_cost' => $validated['panel_cost'] ?? null,
-        'inverter_cost' => $validated['inverter_cost'] ?? null,
-        'battery_cost' => $validated['battery_cost'] ?? null,
-        'bos_cost' => $validated['bos_cost'] ?? null,
-        'materials_subtotal' => $validated['materials_subtotal'] ?? null,
-        'labor_cost' => $validated['labor_cost'] ?? null,
-        'project_cost' => $validated['project_cost'] ?? null,
-        'estimated_monthly_savings' => $roiValues['estimated_monthly_savings'],
-        'estimated_annual_savings' => $roiValues['estimated_annual_savings'],
-        'roi_years' => $roiValues['roi_years'],
-        'status' => $validated['status'] ?? 'pending',
-        'remarks' => $validated['remarks'] ?? null,
-    ]);
+    $previousInspectionStatus = $inspectionRequest->status;
+
+    $result = DB::transaction(function () use (
+        $validated,
+        $technician,
+        $inspectionRequest,
+        $monthlyElectricBill,
+        $ratePerKwh,
+        $daysInMonth,
+        $sunHours,
+        $pvSafetyFactor,
+        $batteryFactor,
+        $batteryVoltage,
+        $panelWatts,
+        $withBattery,
+        $computedValues,
+        $roiValues
+    ) {
+        $lockedInspectionRequest = InspectionRequest::query()
+            ->with(['customer', 'technician'])
+            ->lockForUpdate()
+            ->findOrFail($inspectionRequest->id);
+
+        if ($lockedInspectionRequest->technician_id !== $technician->id) {
+            throw ValidationException::withMessages([
+                'inspection_request_id' => 'You are not assigned to this inspection request.',
+            ]);
+        }
+
+        $normalizedLockedStatus = strtolower(str_replace([' ', '-'], '_', (string) $lockedInspectionRequest->status));
+
+        if ($normalizedLockedStatus !== 'in_progress') {
+            throw ValidationException::withMessages([
+                'inspection_request_id' => 'Final quotation can only be created when the inspection request is in progress.',
+            ]);
+        }
+
+        $lockedExistingFinalQuotation = Quotation::query()
+            ->where('inspection_request_id', $lockedInspectionRequest->id)
+            ->where('quotation_type', 'final')
+            ->lockForUpdate()
+            ->first();
+
+        if ($lockedExistingFinalQuotation) {
+            throw ValidationException::withMessages([
+                'inspection_request_id' => 'A final quotation already exists for this inspection request.',
+            ]);
+        }
+
+        $quotation = Quotation::create([
+            'user_id' => $lockedInspectionRequest->user_id,
+            'inspection_request_id' => $lockedInspectionRequest->id,
+            'quotation_type' => 'final',
+            'monthly_electric_bill' => $monthlyElectricBill,
+            'rate_per_kwh' => $ratePerKwh,
+            'days_in_month' => $daysInMonth,
+            'sun_hours' => $sunHours,
+            'pv_safety_factor' => $pvSafetyFactor,
+            'battery_factor' => $batteryFactor,
+            'battery_voltage' => $batteryVoltage,
+            'pv_system_type' => $validated['pv_system_type'],
+            'with_battery' => $withBattery,
+            'inverter_type' => $validated['inverter_type'] ?? null,
+            'battery_model' => $validated['battery_model'] ?? null,
+            'battery_capacity_ah' => $validated['battery_capacity_ah'] ?? null,
+            'panel_watts' => $panelWatts,
+            'monthly_kwh' => $computedValues['monthly_kwh'],
+            'daily_kwh' => $computedValues['daily_kwh'],
+            'pv_kw_raw' => $computedValues['pv_kw_raw'],
+            'pv_kw_safe' => $computedValues['pv_kw_safe'],
+            'panel_quantity' => $computedValues['panel_quantity'],
+            'system_kw' => $computedValues['system_kw'],
+            'battery_required_kwh' => $computedValues['battery_required_kwh'],
+            'battery_required_ah' => $computedValues['battery_required_ah'],
+            'panel_cost' => $validated['panel_cost'] ?? null,
+            'inverter_cost' => $validated['inverter_cost'] ?? null,
+            'battery_cost' => $validated['battery_cost'] ?? null,
+            'bos_cost' => $validated['bos_cost'] ?? null,
+            'materials_subtotal' => $validated['materials_subtotal'] ?? null,
+            'labor_cost' => $validated['labor_cost'] ?? null,
+            'project_cost' => $validated['project_cost'] ?? null,
+            'estimated_monthly_savings' => $roiValues['estimated_monthly_savings'],
+            'estimated_annual_savings' => $roiValues['estimated_annual_savings'],
+            'roi_years' => $roiValues['roi_years'],
+            'status' => $validated['status'] ?? 'pending',
+            'remarks' => $validated['remarks'] ?? null,
+        ]);
+
+        $lockedInspectionRequest->status = 'completed';
+        $lockedInspectionRequest->save();
+
+        return [
+            'quotation' => $quotation,
+            'inspection_request' => $lockedInspectionRequest->fresh(['customer', 'technician']),
+        ];
+    });
+
+    $quotation = $result['quotation'];
+    $updatedInspectionRequest = $result['inspection_request'];
 
     $quotation->load(['customer', 'inspectionRequest']);
+
+    if ($previousInspectionStatus !== $updatedInspectionRequest->status) {
+        $this->notificationService->notifyCustomerOfInspectionRequestStatusUpdate(
+            $updatedInspectionRequest,
+            $technician->id
+        );
+    }
+
     $this->notificationService->notifyCustomerOfFinalQuotationAvailable($quotation, $technician->id);
 
     return response()->json([
-        'message' => 'Final quotation created successfully.',
-        'data' => $quotation
+        'message' => 'Final quotation submitted. Inspection marked as completed.',
+        'data' => $quotation,
+        'inspection_request' => $updatedInspectionRequest,
     ], 201);
 }
 
@@ -401,7 +480,43 @@ public function downloadCustomerFinalQuotationPdf(Request $request, $inspection_
         'lineItems' => $quotation->lineItems,
     ])->setPaper('a4', 'portrait');
 
-    return $pdf->download('final-quotation-' . $quotation->id . '.pdf');
+    return $pdf->download($this->finalQuotationPdfFilename($quotation));
+}
+
+public function complete(Request $request, Quotation $quotation)
+{
+    $customer = $request->user();
+
+    if ($customer->role !== 'customer') {
+        return response()->json([
+            'message' => 'Only customers can mark final quotations as completed.',
+        ], 403);
+    }
+
+    if ($quotation->quotation_type !== 'final') {
+        return response()->json([
+            'message' => 'Only final quotations can be marked as completed.',
+        ], 422);
+    }
+
+    if ((int) $quotation->user_id !== (int) $customer->id) {
+        return response()->json([
+            'message' => 'You are not allowed to complete this quotation.',
+        ], 403);
+    }
+
+    if ($quotation->status !== 'completed') {
+        $quotation->status = 'completed';
+        $quotation->save();
+    }
+
+    $quotation->load(['customer', 'inspectionRequest.technician']);
+    $this->loadLineItemsForFinalQuotation($quotation);
+
+    return response()->json([
+        'message' => 'Final quotation marked as completed.',
+        'data' => $quotation,
+    ], 200);
 }
 
 private function loadLineItemsForFinalQuotation(Quotation $quotation): void
@@ -428,6 +543,30 @@ private function findCustomerFinalQuotation(int $customerId, $inspectionRequestI
     $this->loadLineItemsForFinalQuotation($quotation);
 
     return $quotation;
+}
+
+private function finalQuotationPdfFilename(Quotation $quotation): string
+{
+    $quotation->loadMissing(['customer', 'user', 'inspectionRequest.customer']);
+
+    $customerName = $quotation->customer?->name
+        ?? $quotation->user?->name
+        ?? $quotation->inspectionRequest?->customer?->name
+        ?? null;
+
+    $safeCustomerName = null;
+
+    if (is_string($customerName) && trim($customerName) !== '') {
+        $safeCustomerName = Str::ascii(trim($customerName));
+        $safeCustomerName = preg_replace('/[^A-Za-z0-9_-]+/', '_', $safeCustomerName ?? '');
+        $safeCustomerName = preg_replace('/_+/', '_', $safeCustomerName ?? '');
+        $safeCustomerName = trim((string) $safeCustomerName, '_');
+        $safeCustomerName = $safeCustomerName !== '' ? $safeCustomerName : null;
+    }
+
+    return $safeCustomerName
+        ? "Final_Quotation_{$safeCustomerName}_{$quotation->id}.pdf"
+        : "Final_Quotation_{$quotation->id}.pdf";
 }
 
 private function storeRules(): array

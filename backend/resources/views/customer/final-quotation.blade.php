@@ -630,7 +630,7 @@
         <div class="fq-actions" id="fq-actions" style="display:none;">
             <button type="button" class="fq-btn-primary" id="fq-confirm-btn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
-                <span id="fq-confirm-text">Confirm Quotation</span>
+                <span id="fq-confirm-text">Mark as Completed</span>
             </button>
             <a class="fq-btn-secondary fq-btn-download" id="fq-download-btn" href="#">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
@@ -732,6 +732,7 @@
     var chipId       = qs('#fq-chip-id');
     var chipIdText   = qs('#fq-chip-id-text');
     var statusBadge  = qs('#fq-status-badge');
+    var currentQuotation = null;
 
     /* ── Extract inspection_request_id from URL ── */
     var pathParts    = window.location.pathname.split('/');
@@ -846,6 +847,8 @@
 
     /* ── Render full quotation ── */
     function renderQuotation(q) {
+        currentQuotation = q;
+
         /* Hero meta */
         chipIdText.textContent = 'Quotation #' + q.id;
         chipId.style.display   = '';
@@ -871,9 +874,12 @@
         var status = String(q.status || 'pending').toLowerCase();
         if (status === 'pending') {
             confirmBtn.style.display = '';
-            confirmBtn.addEventListener('click', function () { handleConfirm(q.id); });
+            confirmBtn.disabled = false;
+            confirmText.textContent = 'Mark as Completed';
+            confirmBtn.onclick = function () { handleConfirm(q.id); };
         } else {
             confirmBtn.style.display = 'none';
+            confirmBtn.onclick = null;
         }
 
         mainEl.style.display = '';
@@ -883,16 +889,23 @@
     async function handleConfirm(quotationId) {
         hideMsg(actionMsg);
         confirmBtn.disabled     = true;
-        confirmText.textContent = 'Confirming...';
+        confirmText.textContent = 'Marking as Completed...';
         try {
-            /* Endpoint: customers confirm by approving — adjust if a dedicated approve route exists */
-            await apiRequest('/api/quotations/' + quotationId + '/approve', { method: 'POST', body: {} });
-            showMsg(actionMsg, 'success', 'Quotation confirmed successfully. Our team will be in touch to schedule your installation.');
-            confirmBtn.style.display = 'none';
+            var resp = await apiRequest('/api/quotations/' + quotationId + '/complete', { method: 'POST', body: {} });
+            var updatedQuotation = resp.data || resp.quotation || resp;
+            if (currentQuotation && updatedQuotation && typeof updatedQuotation === 'object') {
+                currentQuotation = Object.assign({}, currentQuotation, updatedQuotation, { status: 'completed' });
+            } else if (updatedQuotation && typeof updatedQuotation === 'object') {
+                currentQuotation = updatedQuotation;
+            }
+            if (currentQuotation) {
+                renderQuotation(currentQuotation);
+            }
+            showMsg(actionMsg, 'success', resp.message || 'Final quotation marked as completed.');
         } catch (err) {
-            showMsg(actionMsg, 'error', err.message || 'Could not confirm. Please try again.');
+            showMsg(actionMsg, 'error', err.message || 'Could not mark the final quotation as completed. Please try again.');
             confirmBtn.disabled     = false;
-            confirmText.textContent = 'Confirm Quotation';
+            confirmText.textContent = 'Mark as Completed';
         }
     }
 

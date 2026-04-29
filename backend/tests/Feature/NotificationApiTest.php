@@ -167,18 +167,6 @@ class NotificationApiTest extends TestCase
             ->assertOk();
 
         $this->actingAs($technician)
-            ->putJson("/api/technician/inspection-requests/{$inspectionRequestId}/status", [
-                'status' => 'completed',
-            ])
-            ->assertOk();
-
-        $this->actingAs($admin)
-            ->putJson("/api/inspection-requests/{$inspectionRequestId}/preferred-date", [
-                'date_needed' => '2026-04-26',
-            ])
-            ->assertOk();
-
-        $this->actingAs($technician)
             ->postJson('/api/technician/final-quotations', [
                 'inspection_request_id' => $inspectionRequestId,
                 'monthly_electric_bill' => 5500,
@@ -187,6 +175,12 @@ class NotificationApiTest extends TestCase
                 'status' => 'pending',
             ])
             ->assertCreated();
+
+        $this->actingAs($admin)
+            ->putJson("/api/inspection-requests/{$inspectionRequestId}/preferred-date", [
+                'date_needed' => '2026-04-26',
+            ])
+            ->assertOk();
 
         $customerNotifications = $customer->fresh()->notifications()->latest()->get();
         $technicianNotifications = $technician->fresh()->notifications()->latest()->get();
