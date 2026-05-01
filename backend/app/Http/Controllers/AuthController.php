@@ -58,7 +58,7 @@ class AuthController extends Controller
         $request->session()->regenerate();
 
         return redirect($this->redirectPath($request->user()))
-            ->with('status', 'Logged in successfully.');
+            ->with('login_success', 'Logged in successfully.');
     }
 
     public function showRegisterForm()
@@ -71,23 +71,40 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email',
+            'address' => 'required|string|max:255',
+            'contact_number' => ['required', 'regex:/^[0-9]{11}$/'],
+            'landline_number' => 'nullable|string|max:30',
             'password' => PasswordValidation::required(),
-        ], PasswordValidation::messages());
+        ], array_merge(
+            PasswordValidation::messages(),
+            [
+                'contact_number.regex' => 'Contact number must be exactly 11 digits.',
+            ]
+        ));
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
+        $firstName = trim($validated['first_name']);
+        $lastName = trim($validated['last_name']);
+
+        User::create([
+            'name' => trim($firstName.' '.$lastName),
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'email' => trim($validated['email']),
             'password' => $validated['password'],
             'role' => User::ROLE_CUSTOMER,
+            'address' => trim($validated['address']),
+            'contact_number' => trim($validated['contact_number']),
+            'landline_number' => filled($validated['landline_number'] ?? null)
+                ? trim($validated['landline_number'])
+                : null,
         ]);
 
-        Auth::login($user);
-        $request->session()->regenerate();
-
-        return redirect($this->redirectPath($user))
-            ->with('status', 'Account created successfully.');
+        return redirect()
+            ->route('register')
+            ->with('registration_success', 'Account successfully created! Redirecting to login page...');
     }
 
     public function logout(Request $request)
@@ -98,7 +115,7 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login')
-            ->with('status', 'Logged out successfully.');
+            ->with('logout_success', 'Logged out successfully.');
     }
 
     private function redirectPath(User $user): string

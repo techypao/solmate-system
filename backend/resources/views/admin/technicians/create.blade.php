@@ -39,14 +39,28 @@
 
             <div class="form-grid two-columns">
                 <div>
-                    <label for="name">Full Name</label>
-                    <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus placeholder="e.g. Juan dela Cruz">
-                    <div class="field-error">@error('name') {{ $message }} @enderror</div>
+                    <label for="first_name">First Name</label>
+                    <input id="first_name" type="text" name="first_name" value="{{ old('first_name') }}" required autofocus placeholder="e.g. Juan">
+                    <div class="field-error">@error('first_name') {{ $message }} @enderror</div>
                 </div>
+                <div>
+                    <label for="last_name">Last Name</label>
+                    <input id="last_name" type="text" name="last_name" value="{{ old('last_name') }}" required placeholder="e.g. dela Cruz">
+                    <div class="field-error">@error('last_name') {{ $message }} @enderror</div>
+                </div>
+            </div>
+
+            <div class="form-grid two-columns">
                 <div>
                     <label for="email">Email Address</label>
                     <input id="email" type="email" name="email" value="{{ old('email') }}" required placeholder="technician@example.com">
                     <div class="field-error">@error('email') {{ $message }} @enderror</div>
+                </div>
+                <div>
+                    <label for="contact_number">Contact Number</label>
+                    <input id="contact_number" type="text" name="contact_number" value="{{ old('contact_number') }}" required inputmode="numeric" pattern="[0-9]{11}" maxlength="11" placeholder="09XXXXXXXXX">
+                    <div class="muted" style="font-size: 12px; margin-top: 6px; line-height: 1.5;">Enter an 11-digit mobile number.</div>
+                    <div class="field-error">@error('contact_number') {{ $message }} @enderror</div>
                 </div>
             </div>
 
@@ -57,10 +71,13 @@
                     <div class="muted" style="font-size: 12px; margin-top: 6px; line-height: 1.5;">Password must be at least 8 characters, include 1 uppercase letter, and 1 special character.</div>
                     <div class="field-error">@error('password') {{ $message }} @enderror</div>
                 </div>
+            </div>
+
+            <div class="form-grid">
                 <div>
                     <label for="password_confirmation">Confirm Password</label>
                     <input id="password_confirmation" type="password" name="password_confirmation" required>
-                    <div class="field-error"></div>
+                    <div class="field-error">@error('password_confirmation') {{ $message }} @enderror</div>
                 </div>
             </div>
 
@@ -85,10 +102,14 @@
         @else
             <div class="stack">
                 @foreach ($technicians as $tech)
+                    @php
+                        $techDisplayName = trim(implode(' ', array_filter([$tech->first_name, $tech->last_name]))) ?: $tech->name;
+                    @endphp
                     <div class="list-row">
                         <div style="flex:1; min-width:0;">
-                            <strong>{{ $tech->name }}</strong>
+                            <strong>{{ $techDisplayName }}</strong>
                             <div class="muted">{{ $tech->email }}</div>
+                            <div class="muted" style="font-size:12px;">Contact {{ $tech->contact_number ?: 'Not provided' }}</div>
                             <div class="muted" style="font-size:12px;">Joined {{ $tech->created_at->format('M d, Y') }}</div>
                         </div>
                         <span class="badge badge-neutral" style="white-space:nowrap;">Technician</span>
@@ -99,7 +120,7 @@
 
                             <form method="POST"
                                   action="{{ route('admin.technicians.destroy', $tech) }}"
-                                  onsubmit="return confirm('Remove technician {{ addslashes($tech->name) }}? This will clear their current assignments but not delete past records.')">
+                                  onsubmit="return confirm('Remove technician {{ addslashes($techDisplayName) }}? This will clear their current assignments but not delete past records.')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit"

@@ -25,7 +25,7 @@ class QuotationSettingsPageController extends Controller
                 'pv_safety_factor'     => ['label' => 'PV safety factor',                 'step' => '0.01', 'min' => '0'],
                 'battery_factor'       => ['label' => 'Battery factor',                   'step' => '0.01', 'min' => '0'],
                 'battery_voltage'      => ['label' => 'Battery voltage',                  'step' => '0.01', 'min' => '0.1'],
-                'labor_percentage'     => ['label' => 'Labor percentage (%)',              'step' => '0.01', 'min' => '0'],
+                'labor_percentage'     => ['label' => 'Labor percentage (%)',             'step' => '0.01', 'min' => '0'],
                 'default_bos_cost'     => ['label' => 'Default BOS cost',                 'step' => '0.01', 'min' => '0'],
                 'default_misc_cost'    => ['label' => 'Default misc cost',                'step' => '0.01', 'min' => '0'],
                 'default_panel_watts'  => ['label' => 'Default panel watts',              'step' => '0.01', 'min' => '1'],

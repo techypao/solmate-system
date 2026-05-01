@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminCustomerController;
+use App\Http\Controllers\Admin\ContactMessagePageController;
+use App\Http\Controllers\Admin\NewsArticlePageController;
 use App\Http\Controllers\Admin\QuotationSettingsPageController;
 use App\Http\Controllers\Admin\PricingCatalogPageController;
 use App\Http\Controllers\Admin\NotificationPageController;
@@ -9,18 +11,22 @@ use App\Http\Controllers\Admin\ReportsPageController;
 use App\Http\Controllers\Admin\RequestAssignmentPageController;
 use App\Http\Controllers\Admin\TestimonyModerationPageController;
 use App\Http\Controllers\Admin\TechnicianRegistrationController;
+use App\Http\Controllers\Admin\VisualHighlightPageController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CustomerTestimonyPageController;
 use App\Http\Controllers\PublicTestimonyPageController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\QuotationItemBuilderPageController;
+use App\Models\NewsArticle;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
 Route::get('/landing', function () {
-    return view('welcome');
+    return view('welcome', [
+        'newsArticles' => NewsArticle::query()->active()->latest()->get(),
+    ]);
 })->name('landing');
 
 Route::get('/', function () {
@@ -30,7 +36,9 @@ Route::get('/', function () {
     ];
 
     if (!Auth::check()) {
-        return response(view('welcome'), 200, $headers);
+        return response(view('welcome', [
+            'newsArticles' => NewsArticle::query()->active()->latest()->get(),
+        ]), 200, $headers);
     }
 
     if (Auth::user()->role === User::ROLE_ADMIN) {
@@ -112,6 +120,15 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/admin/reports', [ReportsPageController::class, 'show'])
             ->name('admin.reports');
+
+        Route::get('/admin/visual-highlights', [VisualHighlightPageController::class, 'show'])
+            ->name('admin.visual-highlights');
+
+        Route::get('/admin/contact-messages', [ContactMessagePageController::class, 'show'])
+            ->name('admin.contact-messages');
+
+        Route::get('/admin/news-articles', [NewsArticlePageController::class, 'show'])
+            ->name('admin.news-articles');
 
         Route::get('/admin/profile', [ProfilePageController::class, 'show'])
             ->name('admin.profile.show');

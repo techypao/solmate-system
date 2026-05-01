@@ -62,7 +62,8 @@ class PasswordValidationFlowsTest extends TestCase
     public function test_api_registration_rejects_weak_passwords(string $password, string $message): void
     {
         $this->postJson('/api/register', [
-            'name' => 'API Customer',
+            'first_name' => 'API',
+            'last_name' => 'Customer',
             'email' => 'api_customer@example.com',
             'address' => '123 Solar Street',
             'contact_number' => '09171234567',
@@ -77,7 +78,8 @@ class PasswordValidationFlowsTest extends TestCase
     public function test_api_registration_accepts_a_compliant_password(): void
     {
         $this->postJson('/api/register', [
-            'name' => 'API Customer',
+            'first_name' => 'API',
+            'last_name' => 'Customer',
             'email' => 'api_customer_valid@example.com',
             'address' => '123 Solar Street',
             'contact_number' => '09171234567',
@@ -90,6 +92,8 @@ class PasswordValidationFlowsTest extends TestCase
         $this->assertDatabaseHas('users', [
             'email' => 'api_customer_valid@example.com',
             'role' => User::ROLE_CUSTOMER,
+            'first_name' => 'API',
+            'last_name' => 'Customer',
         ]);
     }
 
@@ -97,7 +101,8 @@ class PasswordValidationFlowsTest extends TestCase
     public function test_api_registration_rejects_invalid_contact_numbers(string $contactNumber): void
     {
         $this->postJson('/api/register', [
-            'name' => 'API Customer',
+            'first_name' => 'API',
+            'last_name' => 'Customer',
             'email' => 'api_customer_contact_invalid@example.com',
             'address' => '123 Solar Street',
             'contact_number' => $contactNumber,
@@ -112,7 +117,8 @@ class PasswordValidationFlowsTest extends TestCase
     public function test_api_registration_accepts_an_eleven_digit_contact_number(): void
     {
         $this->postJson('/api/register', [
-            'name' => 'API Customer',
+            'first_name' => 'API',
+            'last_name' => 'Customer',
             'email' => 'api_customer_contact_valid@example.com',
             'address' => '123 Solar Street',
             'contact_number' => '09123456789',
@@ -121,6 +127,27 @@ class PasswordValidationFlowsTest extends TestCase
         ])
             ->assertCreated()
             ->assertJsonPath('message', 'User registered successfully');
+    }
+
+    public function test_api_registration_allows_an_empty_landline_number(): void
+    {
+        $this->postJson('/api/register', [
+            'first_name' => 'API',
+            'last_name' => 'Customer',
+            'email' => 'api_customer_landline_optional@example.com',
+            'address' => '123 Solar Street',
+            'contact_number' => '09123456789',
+            'landline_number' => '',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])
+            ->assertCreated()
+            ->assertJsonPath('message', 'User registered successfully');
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'api_customer_landline_optional@example.com',
+            'landline_number' => null,
+        ]);
     }
 
     #[DataProvider('invalidPasswordProvider')]

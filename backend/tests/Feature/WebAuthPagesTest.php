@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\NewsArticle;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -22,6 +23,19 @@ class WebAuthPagesTest extends TestCase
 
     public function test_guest_can_view_login_and_register_pages(): void
     {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Our Services')
+            ->assertSee('Inspection')
+            ->assertSee('Installation')
+            ->assertSee('Maintenance')
+            ->assertSee('SolMate by RDY')
+            ->assertSee('Loading visual highlights...')
+            ->assertSee('Latest News')
+            ->assertSee('No news articles available yet.')
+            ->assertSee('/api/public/visual-highlights', false)
+            ->assertDontSee('/api/public/testimonies', false);
+
         $this->get('/login')
             ->assertOk()
             ->assertSee('Login');
@@ -32,24 +46,67 @@ class WebAuthPagesTest extends TestCase
 
         $this->get('/testimonies')
             ->assertOk()
-            ->assertSee('Customer Testimonies')
-            ->assertSee('Loading approved testimonies');
+            ->assertSee('Customer Reviews')
+            ->assertSee('Loading approved reviews...');
+
+        $this->get('/contact')
+            ->assertOk()
+            ->assertSee('RDY Solar Installation Inc.')
+            ->assertSee('Get Directions')
+            ->assertSee('https://share.google/sUZupKfigerTD2owb', false)
+            ->assertSee('https://www.google.com/maps/embed?pb=', false);
     }
 
-    public function test_register_creates_customer_user_and_redirects_to_home(): void
+    public function test_guest_homepage_shows_only_active_news_articles(): void
+    {
+        NewsArticle::query()->create([
+            'article_url' => 'https://example.com/active-news',
+            'title' => 'Active News Article',
+            'description' => 'Active description',
+            'thumbnail_url' => 'https://example.com/active.jpg',
+            'source_name' => 'example.com',
+            'is_active' => true,
+        ]);
+
+        NewsArticle::query()->create([
+            'article_url' => 'https://example.com/inactive-news',
+            'title' => 'Inactive News Article',
+            'description' => 'Inactive description',
+            'thumbnail_url' => 'https://example.com/inactive.jpg',
+            'source_name' => 'example.com',
+            'is_active' => false,
+        ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Active News Article')
+            ->assertDontSee('Inactive News Article')
+            ->assertDontSee('No news articles available yet.');
+    }
+
+    public function test_register_creates_customer_user_and_redirects_back_with_success_flash(): void
     {
         $response = $this->post('/register', [
-            'name' => 'Web Customer',
+            'first_name' => 'Web',
+            'last_name' => 'Customer',
             'email' => 'web_customer@example.com',
+            'address' => '123 Solar Street',
+            'contact_number' => '09123456789',
+            'landline_number' => '',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
         ]);
 
-        $response->assertRedirect(route('home'));
-        $this->assertAuthenticated();
+        $response->assertRedirect(route('register'));
+        $response->assertSessionHas('registration_success', 'Account successfully created! Redirecting to login page...');
+        $this->assertGuest();
         $this->assertDatabaseHas('users', [
             'email' => 'web_customer@example.com',
             'role' => User::ROLE_CUSTOMER,
+            'first_name' => 'Web',
+            'last_name' => 'Customer',
+            'contact_number' => '09123456789',
+            'landline_number' => null,
         ]);
     }
 
@@ -57,8 +114,11 @@ class WebAuthPagesTest extends TestCase
     {
         $this->from('/register')
             ->post('/register', [
-                'name' => 'Weak Password Customer',
+                'first_name' => 'Weak',
+                'last_name' => 'Password Customer',
                 'email' => 'weak_password_customer@example.com',
+                'address' => '123 Solar Street',
+                'contact_number' => '09123456789',
                 'password' => 'password123',
                 'password_confirmation' => 'password123',
             ])
@@ -148,6 +208,22 @@ class WebAuthPagesTest extends TestCase
         ])->assertRedirect(route('admin.quotation-settings'));
 
         $this->assertAuthenticatedAs($admin);
+    }
+
+    public function test_authenticated_user_can_log_out_and_is_redirected_with_success_flash(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Web Logout Customer',
+            'email' => 'web_logout_customer@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        $response = $this->actingAs($customer)->post('/logout');
+
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHas('logout_success', 'Logged out successfully.');
+        $this->assertGuest();
     }
 
     public function test_admin_with_legacy_plain_text_password_can_log_in_and_is_upgraded(): void

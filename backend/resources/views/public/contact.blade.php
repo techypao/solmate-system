@@ -73,10 +73,17 @@
 
         /* SIDE INFO PANEL */
         .ctc-side { display: flex; flex-direction: column; gap: 24px; }
-        .ctc-side-map { background: #f0f7ff; border: 1px solid #d9e2ec; border-radius: 16px; overflow: hidden; aspect-ratio: 4/3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: #102a43; }
+        .ctc-side-map { background: #ffffff; border: 1px solid #d9e2ec; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(15,23,42,0.06); }
+        .ctc-side-map-frame { aspect-ratio: 4/3; background: linear-gradient(135deg, #e8f4ff 0%, #f8fbff 55%, #f8f4ec 100%); }
+        .ctc-side-map-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+        .ctc-side-map-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: #102a43; padding: 24px; text-align: center; }
         .ctc-side-map-icon { width: 56px; height: 56px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #d9e2ec; }
-        .ctc-side-map-label { font-size: 15px; font-weight: 700; color: #102a43; margin: 0; }
-        .ctc-side-map-sub { font-size: 13px; color: #64748b; margin: 0; text-align: center; padding: 0 20px; line-height: 1.6; }
+        .ctc-side-map-body { padding: 22px 24px 24px; border-top: 1px solid #e2e8f0; background: #f8fbff; display: flex; flex-direction: column; gap: 10px; }
+        .ctc-side-map-kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #d4a017; margin: 0; }
+        .ctc-side-map-label { font-size: 17px; font-weight: 700; color: #102a43; margin: 0; }
+        .ctc-side-map-sub { font-size: 13px; color: #64748b; margin: 0; line-height: 1.6; }
+        .ctc-side-map-btn { width: fit-content; padding: 11px 16px; font-size: 13.5px; font-weight: 700; color: #ffffff; background: #102a43; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; transition: background .15s, transform .1s; }
+        .ctc-side-map-btn:hover { background: #0d2237; color: #ffffff; text-decoration: none; transform: translateY(-1px); }
         .ctc-side-hours { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 28px; box-shadow: 0 2px 10px rgba(15,23,42,0.04); }
         .ctc-side-hours-title { font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 16px; display: flex; align-items: center; gap: 8px; }
         .ctc-side-hours-title svg { color: #d4a017; }
@@ -149,6 +156,11 @@
     </style>
 </head>
 <body>
+@php
+    $businessLocationName = 'RDY Solar Installation Inc.';
+    $businessLocationDirectionsUrl = 'https://share.google/sUZupKfigerTD2owb';
+    $businessLocationEmbedUrl = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.081599521354!2d121.0967439749922!3d14.594425977227985!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397b9ff305f3d2f%3A0xd4f69df735c4d8c0!2sRDY%20Solar%20Panel%20Installation!5e0!3m2!1sen!2sph!4v1777648847259!5m2!1sen!2sph';
+@endphp
 
 {{-- HEADER --}}
 <header class="gst-header" aria-label="Site header">
@@ -157,9 +169,11 @@
             <span class="gst-brand-sol">Sol</span><span class="gst-brand-mate">Mate</span>
         </a>
         <nav class="gst-nav-links" aria-label="Public navigation">
-            <a href="{{ route('home') }}#about" class="gst-nav-link">About</a>
-            <a href="{{ route('home') }}#testimonials" class="gst-nav-link">Testimonials</a>
+            <a href="{{ route('home') }}#rdy" class="gst-nav-link">RDY</a>
+            <a href="{{ route('home') }}#services" class="gst-nav-link">Services</a>
+            <a href="{{ route('home') }}#news" class="gst-nav-link">News</a>
             <a href="{{ route('public.testimonies') }}" class="gst-nav-link">All Reviews</a>
+            <a href="{{ route('home') }}#about" class="gst-nav-link">About</a>
             <a href="{{ route('public.contact') }}" class="gst-nav-link gst-nav-link--active">Contact</a>
         </nav>
         <div class="gst-header-actions">
@@ -194,9 +208,9 @@
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 </div>
                 <div>
-                    <p class="ctc-info-label">Office Address</p>
-                    <p class="ctc-info-value">Address, Philippines</p>
-                    <p class="ctc-info-note">Visit us at our main office during business hours.</p>
+                    <p class="ctc-info-label">Business Location</p>
+                    <p class="ctc-info-value">{{ $businessLocationName }}</p>
+                    <p class="ctc-info-note">Use Google Maps to open the latest location pin and get directions to our office.</p>
                 </div>
             </div>
             <div class="ctc-info-card">
@@ -232,7 +246,6 @@
             <h2 class="ctc-form-title">Send Us a Message</h2>
             <p class="ctc-form-sub">Fill in the form below and our team will get back to you as soon as possible.</p>
 
-            {{-- Frontend-only form: no backend submission handler exists yet --}}
             <form id="ctc-contact-form" novalidate>
                 <div class="ctc-form-row">
                     <div class="ctc-form-group ctc-form-group--half">
@@ -273,18 +286,48 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                 </button>
                 <p class="ctc-form-note">We respect your privacy. Your information will only be used to respond to your inquiry.</p>
+                <p id="ctc-success-msg" style="display:none; color:#16a34a; font-size:14px; margin-top:12px; font-weight:600;"></p>
+                <p id="ctc-error-msg"   style="display:none; color:#dc2626; font-size:14px; margin-top:12px;"></p>
             </form>
         </div>
 
         {{-- SIDE PANEL --}}
         <div class="ctc-side">
-            {{-- Map Placeholder --}}
-            <div class="ctc-side-map" aria-label="Office location placeholder">
-                <div class="ctc-side-map-icon" aria-hidden="true">
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div class="ctc-side-map" aria-label="Business location map">
+                <div class="ctc-side-map-frame">
+                    @if ($businessLocationEmbedUrl)
+                        <iframe
+                            src="{{ $businessLocationEmbedUrl }}"
+                            loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade"
+                            allowfullscreen
+                            title="RDY Solar Installation Inc. location map"
+                        ></iframe>
+                    @else
+                        <div class="ctc-side-map-placeholder">
+                            <div class="ctc-side-map-icon" aria-hidden="true">
+                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            </div>
+                            <p class="ctc-side-map-label">{{ $businessLocationName }}</p>
+                            <p class="ctc-side-map-sub">Location map will be available soon.</p>
+                        </div>
+                    @endif
                 </div>
-                <p class="ctc-side-map-label">RDY Solar Installation Inc.</p>
-                <p class="ctc-side-map-sub">Address, Philippines</p>
+                <div class="ctc-side-map-body">
+                    <p class="ctc-side-map-kicker">Business Location Map</p>
+                    <p class="ctc-side-map-label">{{ $businessLocationName }}</p>
+                    <p class="ctc-side-map-sub">
+                        @if ($businessLocationEmbedUrl)
+                            View the live map here or open Google Maps in a new tab for directions.
+                        @else
+                            Open Google Maps in a new tab for directions while the embedded map is being prepared.
+                        @endif
+                    </p>
+                    <a href="{{ $businessLocationDirectionsUrl }}" class="ctc-side-map-btn" target="_blank" rel="noopener noreferrer">
+                        Get Directions
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+                    </a>
+                </div>
             </div>
 
             {{-- Business Hours --}}
@@ -343,6 +386,7 @@
                 <ul class="solmate-footer-links">
                     <li><a href="{{ route('landing') }}">Home</a></li>
                     <li><a href="{{ route('landing') }}#about">About Us</a></li>
+                    <li><a href="{{ route('landing') }}#services">Services</a></li>
                     <li><a href="{{ route('landing') }}#testimonials">Testimonials</a></li>
                     <li><a href="{{ route('public.testimonies') }}">All Reviews</a></li>
                     <li><a href="{{ route('public.contact') }}">Contact Us</a></li>
@@ -374,7 +418,7 @@
     <div class="solmate-footer-bottom">
         <p class="solmate-footer-copyright">&copy; {{ date('Y') }} RDY Solar Installation Inc.<br>All Rights Reserved.</p>
         <div class="solmate-footer-contact-items">
-            <div class="solmate-footer-contact-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Address, Philippines</span></div>
+            <div class="solmate-footer-contact-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>{{ $businessLocationName }}</span></div>
             <div class="solmate-footer-contact-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>rdysolarpanel@gmail.com</span></div>
             <div class="solmate-footer-contact-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.68A2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span>+63 9654326865</span></div>
         </div>
@@ -386,26 +430,79 @@
     "use strict";
     var form = document.getElementById("ctc-contact-form");
     if (!form) return;
+
+    var successMsg = document.getElementById("ctc-success-msg");
+    var errorMsg   = document.getElementById("ctc-error-msg");
+
     form.addEventListener("submit", function (e) {
         e.preventDefault();
-        var name = form.querySelector("#ctc-name").value.trim();
-        var email = form.querySelector("#ctc-email").value.trim();
+
+        if (successMsg) successMsg.style.display = "none";
+        if (errorMsg)   errorMsg.style.display   = "none";
+
+        var name    = form.querySelector("#ctc-name").value.trim();
+        var email   = form.querySelector("#ctc-email").value.trim();
+        var phone   = form.querySelector("#ctc-phone").value.trim();
         var subject = form.querySelector("#ctc-subject").value;
         var message = form.querySelector("#ctc-message").value.trim();
+
         if (!name || !email || !subject || !message) {
-            alert("Please fill in all required fields.");
+            if (errorMsg) {
+                errorMsg.textContent = "Please fill in all required fields.";
+                errorMsg.style.display = "block";
+            }
             return;
         }
+
         var btn = form.querySelector(".ctc-form-btn");
         btn.disabled = true;
-        btn.textContent = "Message Sent!";
-        btn.style.background = "#16a34a";
-        setTimeout(function () {
-            btn.disabled = false;
-            btn.innerHTML = "Send Message <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><line x1=\"22\" y1=\"2\" x2=\"11\" y2=\"13\"/><polygon points=\"22 2 15 22 11 13 2 9 22 2\"/></svg>";
-            btn.style.background = "";
+        btn.textContent = "Sending…";
+
+        fetch("/api/contact-messages", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
+            body: JSON.stringify({
+                full_name:    name,
+                email:        email,
+                phone_number: phone || null,
+                subject:      subject,
+                message:      message
+            })
+        })
+        .then(function (res) {
+            if (!res.ok) {
+                return res.json().then(function (data) {
+                    throw new Error(
+                        (data.errors ? Object.values(data.errors).flat().join(" ") : null) ||
+                        data.message ||
+                        "Something went wrong. Please try again."
+                    );
+                });
+            }
+            return res.json();
+        })
+        .then(function () {
             form.reset();
-        }, 3000);
+            if (successMsg) {
+                successMsg.textContent = "Your message has been sent successfully. Our team will get back to you soon.";
+                successMsg.style.display = "block";
+            }
+            btn.disabled = false;
+            btn.innerHTML = 'Send Message <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
+        })
+        .catch(function (err) {
+            btn.disabled = false;
+            btn.innerHTML = 'Send Message <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
+            if (errorMsg) {
+                errorMsg.textContent = err.message || "Something went wrong. Please try again.";
+                errorMsg.style.display = "block";
+            }
+        });
     });
 })();
 </script>

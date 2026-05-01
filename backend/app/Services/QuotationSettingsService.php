@@ -32,7 +32,7 @@ class QuotationSettingsService
     {
         $settings = QuotationSetting::query()->first();
 
-        if (!$settings) {
+        if (! $settings) {
             return $this->defaultValues();
         }
 

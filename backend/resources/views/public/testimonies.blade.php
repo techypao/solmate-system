@@ -466,9 +466,11 @@
                     </a>
 
                     <nav class="public-home-nav" aria-label="Public navigation">
-                        <a href="{{ route('home') }}#about" class="public-home-nav-link">About</a>
-                        <a href="{{ route('home') }}#testimonials" class="public-home-nav-link">Testimonials</a>
+                        <a href="{{ route('home') }}#rdy" class="public-home-nav-link">RDY</a>
+                        <a href="{{ route('home') }}#services" class="public-home-nav-link">Services</a>
+                        <a href="{{ route('home') }}#news" class="public-home-nav-link">News</a>
                         <a href="{{ route('public.testimonies') }}" class="public-home-nav-link is-active">All Reviews</a>
+                        <a href="{{ route('home') }}#about" class="public-home-nav-link">About</a>
                         <a href="{{ route('public.contact') }}" class="public-home-nav-link">Contact</a>
                     </nav>
 
@@ -496,6 +498,11 @@
             <div class="public-reviews-filters" aria-label="Review filters">
                 <button type="button" class="public-reviews-filter-btn is-active" data-review-filter="all">All</button>
                 <button type="button" class="public-reviews-filter-btn" data-review-filter="with-images">With Images</button>
+                <button type="button" class="public-reviews-filter-btn" data-review-filter="rating-5">&#9733; 5 Stars</button>
+                <button type="button" class="public-reviews-filter-btn" data-review-filter="rating-4">&#9733; 4 Stars</button>
+                <button type="button" class="public-reviews-filter-btn" data-review-filter="rating-3">&#9733; 3 Stars</button>
+                <button type="button" class="public-reviews-filter-btn" data-review-filter="rating-2">&#9733; 2 Stars</button>
+                <button type="button" class="public-reviews-filter-btn" data-review-filter="rating-1">&#9733; 1 Star</button>
             </div>
             <div id="public-testimonies-loading" class="info-box" style="margin-bottom: 0;">Loading approved reviews...</div>
         </div>
@@ -613,6 +620,12 @@
                 return testimonies.filter((testimony) => getReviewImages(testimony).length > 0);
             }
 
+            const ratingMatch = currentFilter.match(/^rating-(\d)$/);
+            if (ratingMatch) {
+                const targetRating = parseInt(ratingMatch[1], 10);
+                return testimonies.filter((testimony) => Math.round(Number(testimony.rating)) === targetRating);
+            }
+
             return testimonies;
         }
 
@@ -626,6 +639,13 @@
             if (filteredCount === 0 && currentFilter === 'with-images') {
                 emptyTitle.textContent = 'No approved photo reviews yet.';
                 emptyCopy.textContent = 'Try the All filter to read approved customer feedback without uploaded images.';
+                return;
+            }
+
+            const ratingMatch = currentFilter.match(/^rating-(\d)$/);
+            if (filteredCount === 0 && ratingMatch) {
+                emptyTitle.textContent = 'No reviews found for this rating yet.';
+                emptyCopy.textContent = 'Try a different star filter or click All to see every approved review.';
                 return;
             }
 

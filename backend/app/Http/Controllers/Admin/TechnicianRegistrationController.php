@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\PasswordValidation;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class TechnicianRegistrationController extends Controller
 {
@@ -30,22 +31,19 @@ class TechnicianRegistrationController extends Controller
     {
         abort_unless($request->user()?->role === User::ROLE_ADMIN, 403);
 
-        $validated = $request->validate(
-            [
-                'name'     => 'required|string|max:255',
-                'email'    => 'required|email|max:255|unique:users,email',
-                'password' => PasswordValidation::required(),
-            ],
-            array_merge([
-                'email.unique' => 'A user with this email already exists.',
-            ], PasswordValidation::messages())
-        );
+        $validated = $request->validate($this->rules(), $this->messages());
+
+        $firstName = trim($validated['first_name']);
+        $lastName = trim($validated['last_name']);
 
         User::query()->create([
-            'name'     => $validated['name'],
-            'email'    => $validated['email'],
+            'name' => trim($firstName.' '.$lastName),
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'email' => trim($validated['email']),
+            'contact_number' => trim($validated['contact_number']),
             'password' => $validated['password'],
-            'role'     => User::ROLE_TECHNICIAN,
+            'role' => User::ROLE_TECHNICIAN,
         ]);
 
         return redirect()
@@ -70,20 +68,20 @@ class TechnicianRegistrationController extends Controller
         abort_unless($technician->role === User::ROLE_TECHNICIAN, 404);
 
         $validated = $request->validate(
-            [
-                'name'     => 'required|string|max:255',
-                'email'    => 'required|email|max:255|unique:users,email,' . $technician->id,
-                'password' => PasswordValidation::nullable(),
-            ],
-            array_merge([
-                'email.unique' => 'This email is already used by another account.',
-            ], PasswordValidation::messages())
+            $this->rules($technician),
+            $this->messages()
         );
 
-        $technician->name  = $validated['name'];
-        $technician->email = $validated['email'];
+        $firstName = trim($validated['first_name']);
+        $lastName = trim($validated['last_name']);
 
-        if (!empty($validated['password'])) {
+        $technician->name = trim($firstName.' '.$lastName);
+        $technician->first_name = $firstName;
+        $technician->last_name = $lastName;
+        $technician->email = $validated['email'];
+        $technician->contact_number = trim($validated['contact_number']);
+
+        if (! empty($validated['password'])) {
             $technician->password = $validated['password'];
         }
 
@@ -107,5 +105,30 @@ class TechnicianRegistrationController extends Controller
         return redirect()
             ->route('admin.technicians.create')
             ->with('status', 'Technician account removed. Existing request assignments have been cleared.');
+    }
+
+    private function rules(?User $technician = null): array
+    {
+        $emailRule = Rule::unique('users', 'email');
+
+        if ($technician) {
+            $emailRule = $emailRule->ignore($technician->id);
+        }
+
+        return [
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', $emailRule],
+            'contact_number' => ['required', 'regex:/^[0-9]{11}$/'],
+            'password' => $technician ? PasswordValidation::nullable() : PasswordValidation::required(),
+        ];
+    }
+
+    private function messages(): array
+    {
+        return array_merge([
+            'email.unique' => 'A user with this email already exists.',
+            'contact_number.regex' => 'Contact number must be exactly 11 digits.',
+        ], PasswordValidation::messages());
     }
 }

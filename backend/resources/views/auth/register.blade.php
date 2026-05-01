@@ -276,6 +276,71 @@
             margin-bottom: 18px;
         }
 
+        .auth-success-toast {
+            position: fixed;
+            top: 28px;
+            right: 28px;
+            z-index: 80;
+            display: grid;
+            gap: 8px;
+            width: min(100% - 32px, 360px);
+            padding: 18px 20px;
+            border: 1px solid rgba(212, 160, 23, .32);
+            border-radius: 22px;
+            background: linear-gradient(145deg, rgba(16, 42, 67, .98), rgba(30, 64, 104, .97));
+            box-shadow: 0 24px 54px rgba(15, 23, 42, .22);
+            color: #ffffff;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-12px);
+            transition: opacity .24s ease, transform .24s ease;
+        }
+
+        .auth-success-toast.is-visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .auth-success-toast::before {
+            content: '';
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 5px;
+            border-radius: 22px 0 0 22px;
+            background: linear-gradient(180deg, #f4c542 0%, #d4a017 100%);
+        }
+
+        .auth-success-toast-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: fit-content;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(244, 197, 66, .14);
+            color: #f8dd84;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        .auth-success-toast-title {
+            margin: 0;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 800;
+            line-height: 1.45;
+        }
+
+        .auth-success-toast-copy {
+            margin: 0;
+            color: rgba(255, 255, 255, .8);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
         .auth-form-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -427,6 +492,13 @@
                 padding: 20px 0 40px;
             }
 
+            .auth-success-toast {
+                top: 18px;
+                right: 16px;
+                left: 16px;
+                width: auto;
+            }
+
             .auth-panel-brand,
             .auth-panel-form {
                 padding: 28px 18px;
@@ -442,6 +514,12 @@
             }
         }
     </style>
+
+    <div class="auth-success-toast" id="register-success-toast" hidden role="status" aria-live="polite">
+        <span class="auth-success-toast-badge">Success</span>
+        <p class="auth-success-toast-title" id="register-success-toast-message">Account successfully created! Redirecting to login page...</p>
+        <p class="auth-success-toast-copy">You can sign in with your new SolMate account in a moment.</p>
+    </div>
 
     <section class="auth-shell" aria-label="Register page">
         <div class="auth-card">
@@ -487,23 +565,24 @@
                         id="register-form"
                         novalidate
                         data-login-page-url="{{ route('login') }}"
+                        data-registration-success-message="{{ session('registration_success', '') }}"
                     >
                         <div class="auth-field">
-                            <label for="name">Name</label>
-                            <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name" placeholder="Enter your full name">
-                            <div class="field-error" data-error-for="name">@error('name') {{ $message }} @enderror</div>
+                            <label for="first_name">First Name</label>
+                            <input id="first_name" type="text" name="first_name" value="{{ old('first_name') }}" required autofocus autocomplete="given-name" placeholder="Enter your first name">
+                            <div class="field-error" data-error-for="first_name">@error('first_name') {{ $message }} @enderror</div>
                         </div>
 
                         <div class="auth-field">
-                            <label for="email">Email</label>
-                            <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" placeholder="you@example.com">
-                            <div class="field-error" data-error-for="email">@error('email') {{ $message }} @enderror</div>
+                            <label for="last_name">Last Name</label>
+                            <input id="last_name" type="text" name="last_name" value="{{ old('last_name') }}" required autocomplete="family-name" placeholder="Enter your last name">
+                            <div class="field-error" data-error-for="last_name">@error('last_name') {{ $message }} @enderror</div>
                         </div>
 
                         <div class="auth-field auth-field-full">
-                            <label for="address">Address</label>
-                            <input id="address" type="text" name="address" value="{{ old('address') }}" required autocomplete="street-address" placeholder="House number, street, barangay, city">
-                            <div class="field-error" data-error-for="address">@error('address') {{ $message }} @enderror</div>
+                            <label for="email">Email</label>
+                            <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" placeholder="you@example.com">
+                            <div class="field-error" data-error-for="email">@error('email') {{ $message }} @enderror</div>
                         </div>
 
                         <div class="auth-field">
@@ -527,6 +606,21 @@
                         </div>
 
                         <div class="auth-field">
+                            <label for="landline_number">LANDLINE NUMBER (Optional)</label>
+                            <input id="landline_number" type="text" name="landline_number" value="{{ old('landline_number') }}" autocomplete="tel-national" placeholder="e.g. (02) 8123-4567">
+                            <div class="auth-field-support">
+                                <p class="auth-field-helper">Optional. You may enter a home or office landline number.</p>
+                                <div class="field-error" data-error-for="landline_number">@error('landline_number') {{ $message }} @enderror</div>
+                            </div>
+                        </div>
+
+                        <div class="auth-field auth-field-full">
+                            <label for="address">Address</label>
+                            <input id="address" type="text" name="address" value="{{ old('address') }}" required autocomplete="street-address" placeholder="House number, street, barangay, city">
+                            <div class="field-error" data-error-for="address">@error('address') {{ $message }} @enderror</div>
+                        </div>
+
+                        <div class="auth-field auth-field-full">
                             <label for="password">Password</label>
                             <input id="password" type="password" name="password" required autocomplete="new-password" placeholder="Create a secure password">
                             <div class="auth-field-support">
@@ -559,6 +653,8 @@
         (() => {
             const attachRegisterSubmitHandler = () => {
                 const form = document.getElementById('register-form');
+                const successToast = document.getElementById('register-success-toast');
+                const successToastMessage = document.getElementById('register-success-toast-message');
 
                 if (!form || form.dataset.submitHandlerAttached === 'true') {
                     return;
@@ -571,6 +667,26 @@
                 const submitButton = document.getElementById('register-submit-button');
                 const registerApiUrl = '/api/register';
                 const loginPageUrl = form.dataset.loginPageUrl || '/login';
+                const flashedSuccessMessage = form.dataset.registrationSuccessMessage || '';
+
+                const showSuccessToast = (message) => {
+                    if (!successToast || !successToastMessage) {
+                        return;
+                    }
+
+                    successToastMessage.textContent = message;
+                    successToast.hidden = false;
+
+                    window.requestAnimationFrame(() => {
+                        successToast.classList.add('is-visible');
+                    });
+                };
+
+                const redirectToLoginWithDelay = () => {
+                    window.setTimeout(() => {
+                        window.location.href = loginPageUrl;
+                    }, 2000);
+                };
 
                 const clearErrors = () => {
                     if (successBox) {
@@ -612,10 +728,12 @@
                     const formData = new FormData(form);
 
                     return {
-                        name: String(formData.get('name') || ''),
-                        email: String(formData.get('email') || ''),
-                        address: String(formData.get('address') || ''),
+                        first_name: String(formData.get('first_name') || '').trim(),
+                        last_name: String(formData.get('last_name') || '').trim(),
+                        email: String(formData.get('email') || '').trim(),
                         contact_number: String(formData.get('contact_number') || '').replace(/\D/g, '').slice(0, 11),
+                        address: String(formData.get('address') || '').trim(),
+                        landline_number: String(formData.get('landline_number') || '').trim(),
                         password: String(formData.get('password') || ''),
                         password_confirmation: String(formData.get('password_confirmation') || ''),
                     };
@@ -633,6 +751,11 @@
 
                         input.value = input.value.replace(/\D/g, '').slice(0, 11);
                     });
+                }
+
+                if (flashedSuccessMessage) {
+                    showSuccessToast(flashedSuccessMessage);
+                    redirectToLoginWithDelay();
                 }
 
                 form.addEventListener('submit', async event => {
@@ -668,14 +791,8 @@
                             return;
                         }
 
-                        if (successBox) {
-                            successBox.hidden = false;
-                            successBox.textContent = 'Registration successful. Redirecting to login...';
-                        }
-
-                        window.setTimeout(() => {
-                            window.location.href = loginPageUrl;
-                        }, 1000);
+                        showSuccessToast('Account successfully created! Redirecting to login page...');
+                        redirectToLoginWithDelay();
                     } catch (error) {
                         showGeneralError('We could not reach the registration service. Please try again.');
                     } finally {

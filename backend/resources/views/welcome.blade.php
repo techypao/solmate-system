@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>SolMate &mdash; Smart Solar Installation Management</title>
     <style>
+        html { scroll-behavior: smooth; scroll-padding-top: 68px; }
         *, *::before, *::after { box-sizing: border-box; }
         :root { font-family: Arial, sans-serif; line-height: 1.5; color: #1e2937; }
         body { margin: 0; background: #ffffff; }
@@ -59,12 +60,174 @@
         /* TRUST */
         .gst-trust { background: #f8fafc; padding: 68px 32px; }
         .gst-trust-inner { max-width: 1200px; margin: 0 auto; }
-        .gst-trust-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 24px; }
+        .gst-trust-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
         .gst-trust-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 28px 24px; box-shadow: 0 2px 8px rgba(15,23,42,0.04); transition: box-shadow .2s, transform .2s; }
         .gst-trust-card:hover { box-shadow: 0 8px 24px rgba(15,23,42,0.09); transform: translateY(-2px); }
         .gst-trust-icon { width: 44px; height: 44px; background: #eff6ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: #102a43; }
         .gst-trust-title { font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 8px; }
         .gst-trust-desc { font-size: 13.5px; color: #64748b; line-height: 1.65; margin: 0; }
+        .gst-services-cta { text-align: center; margin-top: 36px; }
+        .gst-services-cta a { display: inline-flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 600; color: #102a43; border: 2px solid #102a43; padding: 12px 26px; border-radius: 10px; text-decoration: none; transition: background .15s, color .15s; }
+        .gst-services-cta a:hover { background: #102a43; color: #ffffff; }
+
+        /* NEWS */
+        .gst-news { background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); padding: 80px 32px; }
+        .gst-news-inner { max-width: 1200px; margin: 0 auto; }
+        .gst-news-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+        .gst-news-card {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            min-height: 100%;
+            background: linear-gradient(180deg, #ffffff 0%, #fdfefe 100%);
+            border: 1px solid #dbe7f3;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 14px 36px rgba(15,23,42,0.07);
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+        .gst-news-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(212,160,23,0.46);
+            box-shadow: 0 20px 40px rgba(15,23,42,0.1);
+        }
+        .gst-news-card-media {
+            position: relative;
+            aspect-ratio: 16 / 9;
+            overflow: hidden;
+            background: linear-gradient(135deg, #dff1ff 0%, #f6fbff 52%, #fff5d8 100%);
+        }
+        .gst-news-card-media img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+        }
+        .gst-news-card-media-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #52606d;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.7;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.28) 100%);
+        }
+        .gst-news-card-body {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            flex: 1;
+            padding: 24px 24px 26px;
+        }
+        .gst-news-card-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: fit-content;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: #fef3c7;
+            color: #92400e;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+        .gst-news-card-tag::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #d4a017;
+            display: inline-block;
+        }
+        .gst-news-card-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.28;
+            margin: 0;
+            letter-spacing: -0.02em;
+        }
+        .gst-news-card-desc {
+            margin: 0;
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.75;
+            flex: 1;
+        }
+        .gst-news-card-meta {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            padding: 16px 0 0;
+            border-top: 1px solid #e2e8f0;
+        }
+        .gst-news-card-meta-label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+        .gst-news-card-meta-value {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #102a43;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+        .gst-news-card-link {
+            align-self: flex-start;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 18px;
+            border: 1.5px solid #102a43;
+            border-radius: 10px;
+            background: transparent;
+            color: #102a43;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background .15s ease, color .15s ease, border-color .15s ease;
+        }
+        .gst-news-card-link:hover {
+            background: #102a43;
+            color: #ffffff;
+            border-color: #102a43;
+            text-decoration: none;
+        }
+        .gst-news-empty {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 30px 28px;
+            border: 1px dashed #bfd4e7;
+            border-radius: 20px;
+            background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+            text-align: center;
+            box-shadow: 0 10px 28px rgba(15,23,42,0.05);
+        }
+        .gst-news-empty-title {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: #102a43;
+        }
+        .gst-news-empty-copy {
+            margin: 10px 0 0;
+            font-size: 14px;
+            line-height: 1.7;
+            color: #64748b;
+        }
 
         /* SECTION HEADING */
         .gst-section-heading { text-align: center; margin-bottom: 52px; }
@@ -174,6 +337,7 @@
         @media (max-width: 1000px) {
             .gst-hero-inner { gap: 40px; }
             .gst-trust-grid { grid-template-columns: repeat(2,1fr); }
+            .gst-news-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .solmate-footer-upper { grid-template-columns: 1fr 1fr; gap: 36px; }
         }
         @media (max-width: 720px) {
@@ -182,8 +346,9 @@
             .gst-hero-card-main { padding: 28px 22px; }
             .gst-hero-h1 { font-size: 34px; }
             .gst-hero { padding: 60px 20px 64px; }
-            .gst-trust, .gst-testimonies, .gst-about, .gst-cta-section { padding: 56px 20px; }
+            .gst-trust, .gst-news, .gst-testimonies, .gst-about, .gst-cta-section { padding: 56px 20px; }
             .gst-trust-grid { grid-template-columns: 1fr; }
+            .gst-news-grid { grid-template-columns: 1fr; }
             .gst-about-highlights { grid-template-columns: 1fr; }
             .gst-section-title { font-size: 26px; }
             .gst-cta-title { font-size: 28px; }
@@ -198,6 +363,7 @@
             .gst-testimony-placeholder { padding: 24px; }
             .gst-testimony-placeholder-panel { width: 118px; height: 72px; bottom: 124px; }
             .gst-testimony-placeholder-panel.is-center { bottom: 110px; }
+            .gst-news-card-body { padding: 22px 20px 24px; }
         }
         @media (max-width: 560px) {
             .solmate-footer-upper { grid-template-columns: 1fr; gap: 28px; }
@@ -212,6 +378,9 @@
             .gst-testimony-slide-meta { left: 18px; right: 18px; bottom: 18px; }
             .gst-testimony-slide-index { min-width: 48px; height: 48px; }
             .gst-testimony-placeholder-card { padding: 22px 20px; }
+            .gst-news-card-meta { grid-template-columns: 1fr; gap: 12px; }
+            .gst-news-card-link { width: 100%; justify-content: center; }
+            .gst-news-empty { padding: 24px 20px; }
         }
         @media (max-width: 480px) {
             .gst-hero-actions, .gst-cta-buttons { flex-direction: column; align-items: flex-start; }
@@ -226,13 +395,15 @@
 {{-- HEADER --}}
 <header class="gst-header" aria-label="Site header">
     <div class="gst-header-inner">
-        <a href="{{ route('home') }}" class="gst-brand" aria-label="SolMate home">
+        <a href="#home" class="gst-brand" aria-label="SolMate home">
             <span class="gst-brand-sol">Sol</span><span class="gst-brand-mate">Mate</span>
         </a>
         <nav class="gst-nav-links" aria-label="Public navigation">
-            <a href="#about" class="gst-nav-link">About</a>
-            <a href="#testimonials" class="gst-nav-link">Testimonials</a>
+            <a href="#rdy" class="gst-nav-link">RDY</a>
+            <a href="#services" class="gst-nav-link">Services</a>
+            <a href="#news" class="gst-nav-link">News</a>
             <a href="{{ route('public.testimonies') }}" class="gst-nav-link">All Reviews</a>
+            <a href="#about" class="gst-nav-link">About</a>
             <a href="{{ route('public.contact') }}" class="gst-nav-link">Contact</a>
         </nav>
         <div class="gst-header-actions">
@@ -244,13 +415,32 @@
     </div>
 </header>
 
+{{-- TESTIMONIES / RDY --}}
+<section class="gst-testimonies" id="rdy" aria-label="Visual highlights">
+        <div class="gst-testimonies-inner">
+        <div class="gst-section-heading">
+            <span class="gst-section-eyebrow">SolMate by RDY</span>
+            <h2 class="gst-section-title">SolMate by RDY</h2>
+            <p class="gst-section-sub">Take a look at real solar projects we've completed — from homes to businesses, powered by RDY.</p>
+        </div>
+        <div class="gst-testimonies-carousel-shell">
+            <div class="gst-testimonies-carousel" id="landing-testimonies-carousel">
+                <div class="gst-testimonies-state-msg" id="landing-testimonies-loading">
+                    <strong>Loading visual highlights...</strong>
+                    Preparing the latest SolMate gallery.
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 {{-- HERO --}}
-<section class="gst-hero" id="hero" aria-label="Hero">
+<section class="gst-hero" id="home" aria-label="Hero">
     <div class="gst-hero-inner">
         <div class="gst-hero-copy">
             <div class="gst-hero-tag">
                 <span class="gst-hero-tag-dot" aria-hidden="true"></span>
-                Simple Solar Planning for New Customers
+                SolMate by RDY
             </div>
             <h1 class="gst-hero-h1">
                 Start Your <span>Solar Journey</span> Today
@@ -270,7 +460,7 @@
         </div>
         <div class="gst-hero-visual" aria-label="SolMate feature overview">
             <div class="gst-hero-card-main">
-                <div class="gst-hero-card-badge">&#9728;&#65039; What You Can Do</div>
+                <div class="gst-hero-card-badge">&#9728;&#65039; SolMate by RDY</div>
                 <h2 class="gst-hero-card-title">Everything you need to begin with solar, without the noise.</h2>
                 <p class="gst-hero-card-sub">Start with the essentials: estimate your system, book a site visit, and stay informed as your request moves forward.</p>
                 <div class="gst-hero-feature-list">
@@ -316,64 +506,96 @@
     </div>
 </section>
 
-{{-- TRUST HIGHLIGHTS --}}
-<section class="gst-trust" id="services" aria-label="Why SolMate">
+{{-- SERVICES --}}
+<section class="gst-trust" id="services" aria-label="Our services">
     <div class="gst-trust-inner">
+        <div class="gst-section-heading">
+            <span class="gst-section-eyebrow">Services</span>
+            <h2 class="gst-section-title">Our Services</h2>
+            <p class="gst-section-sub">Explore the core solar services available through SolMate and the RDY Solar team.</p>
+        </div>
         <div class="gst-trust-grid">
             <div class="gst-trust-card">
                 <div class="gst-trust-icon" aria-hidden="true">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="7"/></svg>
                 </div>
-                <div class="gst-trust-title">Reliable Solar Services</div>
-                <p class="gst-trust-desc">Professional installation and maintenance from certified technicians backed by years of hands-on expertise.</p>
+                <div class="gst-trust-title">Inspection</div>
+                <p class="gst-trust-desc">Professional solar site inspection to assess system needs, safety, and installation readiness.</p>
             </div>
             <div class="gst-trust-card">
                 <div class="gst-trust-icon" aria-hidden="true">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4 6 3v15"/><path d="M9 9h.01"/><path d="M9 13h.01"/><path d="M9 17h.01"/><path d="M13 13h.01"/><path d="M13 17h.01"/></svg>
                 </div>
-                <div class="gst-trust-title">Organized Installation Workflow</div>
-                <p class="gst-trust-desc">From quotation to completion, every step is carefully managed and tracked inside one clean platform.</p>
+                <div class="gst-trust-title">Installation</div>
+                <p class="gst-trust-desc">Reliable solar panel installation handled by trained professionals for residential and commercial clients.</p>
             </div>
             <div class="gst-trust-card">
                 <div class="gst-trust-icon" aria-hidden="true">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
                 </div>
-                <div class="gst-trust-title">Easy Tracking &amp; Coordination</div>
-                <p class="gst-trust-desc">Monitor your project progress in real time and stay coordinated with your assigned service team.</p>
+                <div class="gst-trust-title">Maintenance</div>
+                <p class="gst-trust-desc">Regular maintenance services to keep solar systems efficient, safe, and performing at their best.</p>
             </div>
-            <div class="gst-trust-card">
-                <div class="gst-trust-icon" aria-hidden="true">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                </div>
-                <div class="gst-trust-title">Customer-Focused Support</div>
-                <p class="gst-trust-desc">Dedicated support from initial consultation to post-installation follow-up, every step of the way.</p>
-            </div>
+        </div>
+        <div class="gst-services-cta">
+            <a href="{{ route('public.contact') }}">
+                Contact Us
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
         </div>
     </div>
 </section>
 
-{{-- TESTIMONIES --}}
-<section class="gst-testimonies" id="testimonials" aria-label="Client testimonials">
-    <div class="gst-testimonies-inner">
+{{-- NEWS --}}
+<section class="gst-news" id="news" aria-label="Latest news">
+    <div class="gst-news-inner">
         <div class="gst-section-heading">
-            <span class="gst-section-eyebrow">Visual Highlights</span>
-            <h2 class="gst-section-title">See SolMate In Action</h2>
-            <p class="gst-section-sub">Browse customer-submitted images and service moments here, then visit All Reviews to read the full feedback.</p>
+            <span class="gst-section-eyebrow">News</span>
+            <h2 class="gst-section-title">Latest News</h2>
+            <p class="gst-section-sub">Read the latest solar updates, announcements, and articles shared by RDY Solar.</p>
         </div>
-        <div class="gst-testimonies-carousel-shell">
-            <div class="gst-testimonies-carousel" id="landing-testimonies-carousel">
-                <div class="gst-testimonies-state-msg" id="landing-testimonies-loading">
-                    <strong>Loading gallery...</strong>
-                    Preparing recent customer and service visuals.
-                </div>
+        @php
+            $publicNewsArticles = $newsArticles ?? collect();
+        @endphp
+        @if ($publicNewsArticles->isNotEmpty())
+            <div class="gst-news-grid">
+                @foreach ($publicNewsArticles as $article)
+                    <article class="gst-news-card">
+                        <div class="gst-news-card-media">
+                            @if ($article->thumbnail_url)
+                                <img src="{{ $article->thumbnail_url }}" alt="{{ $article->title }} thumbnail">
+                            @else
+                                <div class="gst-news-card-media-placeholder">No thumbnail available for this article yet.</div>
+                            @endif
+                        </div>
+                        <div class="gst-news-card-body">
+                            <span class="gst-news-card-tag">Latest Article</span>
+                            <h3 class="gst-news-card-title">{{ $article->title }}</h3>
+                            <p class="gst-news-card-desc">{{ $article->description ?: 'No description metadata was available for this article.' }}</p>
+                            <div class="gst-news-card-meta">
+                                <div>
+                                    <span class="gst-news-card-meta-label">Source</span>
+                                    <span class="gst-news-card-meta-value">{{ $article->source_name ?: 'Unknown source' }}</span>
+                                </div>
+                                <div>
+                                    <span class="gst-news-card-meta-label">Date Added</span>
+                                    <span class="gst-news-card-meta-value">{{ optional($article->created_at)->format('M d, Y') ?: 'Not available' }}</span>
+                                </div>
+                            </div>
+                            <a href="{{ $article->article_url }}" class="gst-news-card-link" target="_blank" rel="noopener noreferrer">
+                                Read Article
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>
+                            </a>
+                        </div>
+                    </article>
+                @endforeach
             </div>
-        </div>
-        <div class="gst-testimonies-view-all">
-            <a href="{{ route('public.testimonies') }}">
-                View All Reviews
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </a>
-        </div>
+        @else
+            <div class="gst-news-empty">
+                <p class="gst-news-empty-title">No news articles available yet.</p>
+                <p class="gst-news-empty-copy">New articles shared by RDY Solar will appear here once the admin starts adding article links.</p>
+            </div>
+        @endif
     </div>
 </section>
 
@@ -394,6 +616,12 @@
                 (NCR), Rizal, Bulacan, and Laguna. Our team of certified technicians is dedicated to
                 delivering quality workmanship, honest pricing, and after-sales support you can count on.
             </p>
+            <div class="gst-testimonies-view-all" style="text-align:left; margin-top: 28px;">
+                <a href="{{ route('public.testimonies') }}">
+                    View All Reviews
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+            </div>
         </div>
         <div class="gst-about-highlights">
             <div class="gst-about-highlight">
@@ -461,7 +689,9 @@
                 <ul class="solmate-footer-links">
                     <li><a href="{{ route('home') }}">Home</a></li>
                     <li><a href="#about">About Us</a></li>
-                    <li><a href="#testimonials">Testimonials</a></li>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="#news">News</a></li>
+                    <li><a href="#rdy">RDY</a></li>
                     <li><a href="{{ route('public.testimonies') }}">All Reviews</a></li>
                     <li><a href="{{ route('public.contact') }}">Contact Us</a></li>
                     <li><a href="{{ route('login') }}">Log In</a></li>
@@ -519,53 +749,24 @@
             .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
-    function normaliseSlides(testimonies) {
+    function normaliseSlides(items) {
         var imageSlides = [];
-        if (!Array.isArray(testimonies)) return imageSlides;
+        if (!Array.isArray(items)) return imageSlides;
 
-        testimonies.forEach(function (testimony) {
-            var images = Array.isArray(testimony && testimony.images) ? testimony.images : [];
-            images.forEach(function (image, index) {
-                if (!image || !image.image_url) return;
-                imageSlides.push({
-                    type: "image",
-                    src: String(image.image_url),
-                    alt: testimony && testimony.title
-                        ? String(testimony.title) + " image " + (index + 1)
-                        : "Approved testimony image " + (imageSlides.length + 1),
-                    title: "Customer Project Snapshot",
-                    subtitle: "Approved visual from the SolMate testimony gallery.",
-                    label: testimony && testimony.user && testimony.user.name
-                        ? String(testimony.user.name)
-                        : "Customer-submitted image"
-                });
+        items.forEach(function (item, index) {
+            var src = item && (item.src || item.image_url || item.url);
+            if (!src) return;
+
+            imageSlides.push({
+                type: "image",
+                src: String(src),
+                alt: item && item.alt
+                    ? String(item.alt)
+                    : "SolMate visual highlight " + (index + 1),
             });
         });
 
         return imageSlides;
-    }
-
-    function placeholderSlides() {
-        return [
-            {
-                type: "placeholder",
-                badge: "Solar Planning",
-                title: "Estimate your setup with a clearer first step.",
-                subtitle: "Start with a quotation and understand what solar could look like for your property."
-            },
-            {
-                type: "placeholder",
-                badge: "Site Inspection",
-                title: "Prepare for the site visit before installation.",
-                subtitle: "Coordinate inspection requests, confirm feasibility, and move your project forward."
-            },
-            {
-                type: "placeholder",
-                badge: "Service Tracking",
-                title: "Follow progress from request to ongoing support.",
-                subtitle: "Keep everything in one place while your solar journey takes shape."
-            }
-        ];
     }
 
     function createButton(className, label, iconPath) {
@@ -577,42 +778,13 @@
         return button;
     }
 
-    function createPlaceholderSlide(slide, index, total) {
-        var item = document.createElement("article");
-        item.className = "gst-testimony-slide";
-        item.setAttribute("aria-label", "Placeholder slide " + (index + 1) + " of " + total);
-        item.innerHTML =
-            "<div class=\"gst-testimony-placeholder\">"
-                + "<div class=\"gst-testimony-placeholder-scene\" aria-hidden=\"true\">"
-                    + "<div class=\"gst-testimony-placeholder-panel is-left\"></div>"
-                    + "<div class=\"gst-testimony-placeholder-panel is-center\"></div>"
-                    + "<div class=\"gst-testimony-placeholder-panel is-right\"></div>"
-                    + "<div class=\"gst-testimony-placeholder-ground\"></div>"
-                + "</div>"
-                + "<div class=\"gst-testimony-placeholder-card\">"
-                    + "<div class=\"gst-testimony-placeholder-chip\">" + escapeHtml(slide.badge) + "</div>"
-                    + "<h3 class=\"gst-testimony-placeholder-title\">" + escapeHtml(slide.title) + "</h3>"
-                    + "<p class=\"gst-testimony-placeholder-sub\">" + escapeHtml(slide.subtitle) + "</p>"
-                + "</div>"
-            + "</div>";
-        return item;
-    }
-
     function createImageSlide(slide, index, total) {
         var item = document.createElement("article");
         item.className = "gst-testimony-slide";
         item.setAttribute("aria-label", "Gallery slide " + (index + 1) + " of " + total);
         item.innerHTML =
             "<img src=\"" + escapeHtml(slide.src) + "\" alt=\"" + escapeHtml(slide.alt) + "\" loading=\"" + (index === 0 ? "eager" : "lazy") + "\">"
-            + "<div class=\"gst-testimony-slide-overlay\" aria-hidden=\"true\"></div>"
-            + "<div class=\"gst-testimony-slide-meta\">"
-                + "<div class=\"gst-testimony-slide-copy\">"
-                    + "<div class=\"gst-testimony-slide-kicker\">" + escapeHtml(slide.label) + "</div>"
-                    + "<p class=\"gst-testimony-slide-title\">" + escapeHtml(slide.title) + "</p>"
-                    + "<p class=\"gst-testimony-slide-sub\">" + escapeHtml(slide.subtitle) + "</p>"
-                + "</div>"
-                + "<div class=\"gst-testimony-slide-index\">" + (index + 1) + " / " + total + "</div>"
-            + "</div>";
+            + "<div class=\"gst-testimony-slide-overlay\" aria-hidden=\"true\"></div>";
         return item;
     }
 
@@ -677,7 +849,7 @@
         carousel.innerHTML = "";
 
         if (slides.length === 0) {
-            carousel.innerHTML = "<div class=\"gst-testimonies-state-msg\"><strong>Gallery unavailable</strong>Customer visuals will appear here once approved images are ready.</div>";
+            carousel.innerHTML = "<div class=\"gst-testimonies-state-msg\"><strong>No visual highlights available yet.</strong>Please check back once new admin-managed images are published.</div>";
             return;
         }
 
@@ -690,9 +862,7 @@
         viewport.appendChild(track);
 
         slides.forEach(function (slide, index) {
-            track.appendChild(slide.type === "placeholder"
-                ? createPlaceholderSlide(slide, index, slides.length)
-                : createImageSlide(slide, index, slides.length));
+            track.appendChild(createImageSlide(slide, index, slides.length));
         });
 
         if (hasMultipleSlides) {
@@ -714,12 +884,7 @@
 
         controls = document.createElement("div");
         controls.className = "gst-testimonies-controls";
-        controlMessage = hasMultipleSlides
-            ? (prefersReducedMotion
-                ? "Use the arrows or dots to browse the gallery."
-                : "Slides move automatically every 3 seconds and pause on hover.")
-            : "A featured visual is shown here.";
-        controls.innerHTML = "<div class=\"gst-testimonies-source\"><strong>" + escapeHtml(sourceLabel) + "</strong> " + escapeHtml(controlMessage) + "</div>";
+        controls.innerHTML = "";
 
         dotsWrap = document.createElement("div");
         dotsWrap.className = "gst-testimonies-dots";
@@ -745,22 +910,16 @@
         startAutoplay();
     }
 
-    fetch("/api/public/testimonies", {
+    fetch("/api/public/visual-highlights", {
         method: "GET",
         headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" }
     }).then(function (res) {
         if (!res.ok) throw new Error("HTTP " + res.status);
         return res.json();
     }).then(function (payload) {
-        var testimonies = Array.isArray(payload) ? payload : (payload.data || []);
-        var imageSlides = normaliseSlides(testimonies);
-        if (imageSlides.length > 0) {
-            render(imageSlides, "Customer-submitted gallery");
-            return;
-        }
-        render(placeholderSlides(), "SolMate visual highlights");
+        render(normaliseSlides(payload && payload.data), "Admin-managed visual highlights");
     }).catch(function () {
-        render(placeholderSlides(), "SolMate visual highlights");
+        render([], "Admin-managed visual highlights");
     });
 })();
 </script>

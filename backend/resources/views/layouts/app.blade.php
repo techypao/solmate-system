@@ -195,6 +195,72 @@
             border: 1px solid #bfdbfe;
         }
 
+        .solmate-toast {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 1200;
+            display: grid;
+            gap: 8px;
+            width: min(100% - 32px, 360px);
+            padding: 18px 20px 18px 24px;
+            border: 1px solid rgba(212, 160, 23, 0.34);
+            border-radius: 22px;
+            background: linear-gradient(145deg, rgba(16, 42, 67, 0.98), rgba(30, 64, 104, 0.97));
+            box-shadow: 0 22px 52px rgba(15, 23, 42, 0.2);
+            color: #ffffff;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-12px);
+            transition: opacity 0.24s ease, transform 0.24s ease;
+        }
+
+        .solmate-toast.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .solmate-toast::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 5px;
+            border-radius: 22px 0 0 22px;
+            background: linear-gradient(180deg, #f4c542 0%, #d4a017 100%);
+        }
+
+        .solmate-toast-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: fit-content;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(244, 197, 66, 0.14);
+            color: #f8dd84;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .solmate-toast-title {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 800;
+            line-height: 1.45;
+            color: #ffffff;
+        }
+
+        .solmate-toast-copy {
+            margin: 0;
+            font-size: 13px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
         .form-grid {
             display: grid;
             gap: 18px;
@@ -718,6 +784,13 @@
         @media (max-width: 720px) {
             .assignment-row {
                 grid-template-columns: 1fr;
+            }
+
+            .solmate-toast {
+                top: 16px;
+                right: 16px;
+                left: 16px;
+                width: auto;
             }
         }
 
@@ -1660,6 +1733,21 @@
 </head>
 <body class="{{ $isAdminShell ? 'solmate-admin-shell' : 'solmate-site-shell' }} {{ $isAdminUser ? 'solmate-role-admin' : '' }} {{ $isTechnicianUser ? 'solmate-role-technician' : '' }}">
 
+@php
+    $authToastTitle = session('login_success') ?? session('logout_success');
+    $authToastCopy = session('login_success')
+        ? 'Welcome to SolMate. Your account is ready.'
+        : (session('logout_success') ? 'You have safely signed out of your account.' : null);
+@endphp
+
+@if ($authToastTitle)
+    <div class="solmate-toast" id="solmate-auth-toast" role="status" aria-live="polite">
+        <span class="solmate-toast-badge">Success</span>
+        <p class="solmate-toast-title">{{ $authToastTitle }}</p>
+        <p class="solmate-toast-copy">{{ $authToastCopy }}</p>
+    </div>
+@endif
+
 @if ($isAdminShell)
     {{-- ===== ADMIN LAYOUT: SIDEBAR + MAIN AREA ===== --}}
 
@@ -1777,6 +1865,40 @@
                         <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
                     </svg>
                     Reports
+                </a>
+
+                {{-- Visual Highlights --}}
+                <a href="{{ route('admin.visual-highlights') }}"
+                   class="admin-sidebar-link {{ request()->routeIs('admin.visual-highlights') ? 'active' : '' }}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <path d="M21 15l-5-5L5 21"/>
+                    </svg>
+                    Visual Highlights
+                </a>
+
+                {{-- Manage News --}}
+                <a href="{{ route('admin.news-articles') }}"
+                   class="admin-sidebar-link {{ request()->routeIs('admin.news-articles') ? 'active' : '' }}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                        <path d="M8 7h8"/>
+                        <path d="M8 11h8"/>
+                        <path d="M8 15h5"/>
+                    </svg>
+                    Manage News
+                </a>
+
+                {{-- Contact Messages --}}
+                <a href="{{ route('admin.contact-messages') }}"
+                   class="admin-sidebar-link {{ request()->routeIs('admin.contact-messages') ? 'active' : '' }}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                    Contact Messages
                 </a>
 
                 {{-- Quotation Settings --}}
@@ -2175,6 +2297,30 @@
     </footer>
 
     @stack('scripts')
+
+    @if ($authToastTitle)
+        <script>
+            (function () {
+                const authToast = document.getElementById('solmate-auth-toast');
+
+                if (!authToast) {
+                    return;
+                }
+
+                window.requestAnimationFrame(function () {
+                    authToast.classList.add('is-visible');
+                });
+
+                window.setTimeout(function () {
+                    authToast.classList.remove('is-visible');
+
+                    window.setTimeout(function () {
+                        authToast.remove();
+                    }, 240);
+                }, 2200);
+            })();
+        </script>
+    @endif
 
     @auth
         <script>

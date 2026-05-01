@@ -14,11 +14,13 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => PasswordValidation::required(),
             'address' => 'required|string|max:255',
             'contact_number' => ['required', 'regex:/^[0-9]{11}$/'],
+            'landline_number' => 'nullable|string|max:30',
         ], array_merge(
             PasswordValidation::messages(),
             [
@@ -26,13 +28,21 @@ class AuthController extends Controller
             ]
         ));
 
+        $firstName = trim($validated['first_name']);
+        $lastName = trim($validated['last_name']);
+
         $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
+            'name' => trim($firstName.' '.$lastName),
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'email' => trim($validated['email']),
             'password' => Hash::make($validated['password']),
             'role' => $request->role ?? 'customer',
             'address' => trim($validated['address']),
             'contact_number' => trim($validated['contact_number']),
+            'landline_number' => filled($validated['landline_number'] ?? null)
+                ? trim($validated['landline_number'])
+                : null,
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
