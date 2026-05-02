@@ -189,6 +189,7 @@ class RequestWorkflowTest extends TestCase
                 'request_type' => 'Maintenance',
                 'details' => 'Inspect inverter and roof wiring',
                 'contact_number' => '0917-999-0200',
+                'address' => '222 Summit Street, Teresa, Rizal',
                 'date_needed' => '2026-04-24',
             ])
             ->assertCreated();
@@ -225,6 +226,120 @@ class RequestWorkflowTest extends TestCase
         $this->assertStringStartsWith('2026-04-30', (string) $customerResponse->json('0.date_needed'));
     }
 
+    public function test_installation_service_request_can_store_optional_map_coordinates(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Installation Coordinate Customer',
+            'email' => 'service_coordinates@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+            'address' => '12 Helios Street, Antipolo City',
+        ]);
+
+        $response = $this->actingAs($customer)
+            ->postJson('/api/service-requests', [
+                'request_type' => 'installation',
+                'details' => 'Coordinate rooftop installation access',
+                'contact_number' => '0917-123-4567',
+                'address' => '12 Helios Street, Antipolo City',
+                'latitude' => 14.5878500,
+                'longitude' => 121.1764500,
+                'date_needed' => '2026-04-25',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.address', '12 Helios Street, Antipolo City');
+
+        $this->assertDatabaseHas('service_requests', [
+            'id' => $response->json('data.id'),
+            'latitude' => '14.5878500',
+            'longitude' => '121.1764500',
+        ]);
+    }
+
+    public function test_installation_service_request_coordinates_remain_optional_with_manual_address(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Installation Manual Address Customer',
+            'email' => 'service_coordinates_optional@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+            'address' => '45 Suncrest Avenue, Cainta, Rizal',
+        ]);
+
+        $response = $this->actingAs($customer)
+            ->postJson('/api/service-requests', [
+                'request_type' => 'installation',
+                'details' => 'Schedule installation coordination',
+                'contact_number' => '0917-765-4321',
+                'address' => '45 Suncrest Avenue, Cainta, Rizal',
+                'date_needed' => '2026-04-26',
+            ])
+            ->assertCreated();
+
+        $this->assertDatabaseHas('service_requests', [
+            'id' => $response->json('data.id'),
+            'latitude' => null,
+            'longitude' => null,
+        ]);
+    }
+
+    public function test_maintenance_service_request_can_store_optional_map_coordinates(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Maintenance Coordinate Customer',
+            'email' => 'maintenance_coordinates@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+            'address' => '77 Aurora Lane, Taytay, Rizal',
+        ]);
+
+        $response = $this->actingAs($customer)
+            ->postJson('/api/service-requests', [
+                'request_type' => 'maintenance',
+                'details' => 'Need inverter and panel maintenance review',
+                'contact_number' => '0917-888-1010',
+                'address' => '77 Aurora Lane, Taytay, Rizal',
+                'latitude' => 14.5692000,
+                'longitude' => 121.1324000,
+                'date_needed' => '2026-04-27',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.address', '77 Aurora Lane, Taytay, Rizal');
+
+        $this->assertDatabaseHas('service_requests', [
+            'id' => $response->json('data.id'),
+            'latitude' => '14.5692000',
+            'longitude' => '121.1324000',
+        ]);
+    }
+
+    public function test_maintenance_service_request_coordinates_remain_optional_with_manual_address(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Maintenance Manual Address Customer',
+            'email' => 'maintenance_coordinates_optional@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+            'address' => '88 Ridgeview Street, Angono, Rizal',
+        ]);
+
+        $response = $this->actingAs($customer)
+            ->postJson('/api/service-requests', [
+                'request_type' => 'maintenance',
+                'details' => 'Routine maintenance visit request',
+                'contact_number' => '0917-222-9090',
+                'address' => '88 Ridgeview Street, Angono, Rizal',
+                'date_needed' => '2026-04-28',
+            ])
+            ->assertCreated();
+
+        $this->assertDatabaseHas('service_requests', [
+            'id' => $response->json('data.id'),
+            'latitude' => null,
+            'longitude' => null,
+        ]);
+    }
+
     public function test_inspection_request_flow_still_allows_customer_creation_admin_assignment_and_technician_completion(): void
     {
         $customer = User::query()->create([
@@ -252,11 +367,13 @@ class RequestWorkflowTest extends TestCase
             ->postJson('/api/inspection-requests', [
                 'details' => 'Inspect the roof and inverter placement',
                 'contact_number' => '0917-555-0100',
+                'address' => '100 Solar Drive, Antipolo City',
                 'date_needed' => '2026-04-21',
             ])
             ->assertCreated()
             ->assertJsonPath('data.status', 'pending')
-            ->assertJsonPath('data.contact_number', '0917-555-0100');
+            ->assertJsonPath('data.contact_number', '0917-555-0100')
+            ->assertJsonPath('data.address', '100 Solar Drive, Antipolo City');
 
         $inspectionRequestId = $createResponse->json('data.id');
 
@@ -295,6 +412,61 @@ class RequestWorkflowTest extends TestCase
         ]);
     }
 
+    public function test_inspection_request_can_store_optional_map_coordinates(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Coordinate Customer',
+            'email' => 'inspection_coordinates@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+            'address' => '123 Solar Street, Quezon City',
+        ]);
+
+        $response = $this->actingAs($customer)
+            ->postJson('/api/inspection-requests', [
+                'details' => 'Inspect the shaded roof area',
+                'contact_number' => '0917-555-0111',
+                'address' => '123 Solar Street, Quezon City',
+                'latitude' => 14.6760413,
+                'longitude' => 121.0437003,
+                'date_needed' => '2026-04-27',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.address', '123 Solar Street, Quezon City');
+
+        $this->assertDatabaseHas('inspection_requests', [
+            'id' => $response->json('data.id'),
+            'latitude' => '14.6760413',
+            'longitude' => '121.0437003',
+        ]);
+    }
+
+    public function test_inspection_request_coordinates_remain_optional(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Optional Coordinate Customer',
+            'email' => 'inspection_coordinates_optional@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+            'address' => '456 Sunbeam Avenue, Pasig City',
+        ]);
+
+        $response = $this->actingAs($customer)
+            ->postJson('/api/inspection-requests', [
+                'details' => 'Inspect the garage roof',
+                'contact_number' => '0917-555-0222',
+                'address' => '456 Sunbeam Avenue, Pasig City',
+                'date_needed' => '2026-04-28',
+            ])
+            ->assertCreated();
+
+        $this->assertDatabaseHas('inspection_requests', [
+            'id' => $response->json('data.id'),
+            'latitude' => null,
+            'longitude' => null,
+        ]);
+    }
+
     public function test_admin_can_reschedule_inspection_request_and_existing_customer_and_technician_views_receive_updated_date(): void
     {
         $customer = User::query()->create([
@@ -322,6 +494,7 @@ class RequestWorkflowTest extends TestCase
             ->postJson('/api/inspection-requests', [
                 'details' => 'Inspect roof access and panel layout',
                 'contact_number' => '0917-999-0100',
+                'address' => '300 Ridge Road, Binangonan, Rizal',
                 'date_needed' => '2026-04-22',
             ])
             ->assertCreated()
@@ -375,6 +548,7 @@ class RequestWorkflowTest extends TestCase
         $this->actingAs($customer)
             ->postJson('/api/inspection-requests', [
                 'details' => 'Inspect rooftop setup',
+                'address' => '500 Mercury Avenue, Pasig City',
             ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['contact_number']);

@@ -8,6 +8,7 @@ use App\Services\InAppNotificationService;
 use App\Services\PreferredDateLockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ServiceRequestController extends Controller
 {
@@ -33,7 +34,18 @@ class ServiceRequestController extends Controller
             'request_type' => 'required|string|max:255',
             'details' => 'required|string',
             'contact_number' => 'required|string|max:30',
-            'address' => 'nullable|string|max:255',
+            'address' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::requiredIf(function () use ($request) {
+                    $requestType = strtolower((string) $request->input('request_type'));
+
+                    return in_array($requestType, ['installation', 'maintenance'], true);
+                }),
+            ],
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'date_needed' => 'nullable|date',
         ]);
 
@@ -53,6 +65,8 @@ class ServiceRequestController extends Controller
                         'details' => $validated['details'],
                         'contact_number' => trim($validated['contact_number']),
                         'address' => $resolvedAddress,
+                        'latitude' => $validated['latitude'] ?? null,
+                        'longitude' => $validated['longitude'] ?? null,
                         'date_needed' => $validated['date_needed'] ?? null,
                         'status' => 'pending',
                     ]);

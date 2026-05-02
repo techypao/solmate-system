@@ -1,6 +1,12 @@
 @extends('layouts.app', ['title' => 'Request Site Inspection'])
 
 @section('content')
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+>
 <style>
     /* ── Customer Inspection Request Page (insp- prefix) ── */
 
@@ -195,6 +201,46 @@
         color: #94a3b8;
         margin-top: 6px;
     }
+    .insp-address-row {
+        display: flex;
+        align-items: stretch;
+        gap: 12px;
+    }
+    .insp-address-row .insp-input {
+        flex: 1;
+    }
+    .insp-address-pin-btn {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 48px;
+        padding: 0 16px;
+        border: 1px solid #e7c35a;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #fff8dc, #f6e3a1);
+        color: #8a6510;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform .15s, box-shadow .2s, border-color .2s;
+        white-space: nowrap;
+    }
+    .insp-address-pin-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(212,160,23,.16);
+        border-color: #d4a017;
+    }
+    .insp-address-pin-btn:focus {
+        outline: none;
+        border-color: #d4a017;
+        box-shadow: 0 0 0 3px rgba(212,160,23,.12);
+    }
+    .insp-address-pin-btn:active {
+        transform: translateY(0);
+        box-shadow: none;
+    }
     .insp-field-error {
         font-size: 12px;
         color: #dc2626;
@@ -202,6 +248,22 @@
         display: none;
     }
     .insp-field-error.show { display: block; }
+    .insp-field-note {
+        display: none;
+        margin-top: 8px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+    .insp-field-note.show {
+        display: block;
+    }
+    .insp-field-note-info {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #124e78;
+    }
 
     /* Two-column field row */
     .insp-field-row {
@@ -212,6 +274,215 @@
     }
     @media (max-width: 560px) { .insp-field-row { grid-template-columns: 1fr; } }
     .insp-field-row .insp-field { margin-bottom: 0; }
+    @media (max-width: 640px) {
+        .insp-address-row {
+            flex-direction: column;
+        }
+        .insp-address-pin-btn {
+            width: 100%;
+        }
+    }
+
+    /* Map modal */
+    .insp-map-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 16px;
+        background: rgba(15, 23, 42, .58);
+        backdrop-filter: blur(4px);
+    }
+    .insp-map-modal.show {
+        display: flex;
+    }
+    .insp-map-dialog {
+        width: min(100%, 760px);
+        max-height: min(90vh, 760px);
+        background: linear-gradient(180deg, #f8fbff 0%, #ffffff 28%);
+        border: 1px solid #dbe7f3;
+        border-radius: 22px;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, .24);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .insp-map-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 20px 24px 16px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .insp-map-title {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 800;
+        color: #102a43;
+    }
+    .insp-map-subtitle {
+        margin: 6px 0 0;
+        font-size: 13px;
+        color: #64748b;
+        line-height: 1.6;
+    }
+    .insp-map-close {
+        width: 40px;
+        height: 40px;
+        border: 1px solid #dbe7f3;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #64748b;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: border-color .2s, color .2s, transform .15s;
+    }
+    .insp-map-close:hover {
+        border-color: #d4a017;
+        color: #8a6510;
+        transform: translateY(-1px);
+    }
+    .insp-map-close:focus {
+        outline: none;
+        border-color: #d4a017;
+        box-shadow: 0 0 0 3px rgba(212,160,23,.12);
+    }
+    .insp-map-body {
+        padding: 20px 24px 24px;
+        display: grid;
+        gap: 16px;
+    }
+    .insp-map-feedback {
+        display: none;
+        padding: 12px 14px;
+        border-radius: 12px;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+    .insp-map-feedback.show {
+        display: block;
+    }
+    .insp-map-feedback-error {
+        background: #fff1f2;
+        border: 1px solid #fecdd3;
+        color: #9f1239;
+    }
+    .insp-map-feedback-info {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #124e78;
+    }
+    .insp-map-search {
+        display: flex;
+        align-items: stretch;
+        gap: 12px;
+    }
+    .insp-map-search-input {
+        flex: 1;
+    }
+    .insp-map-canvas {
+        height: 420px;
+        border: 1px solid #dbe7f3;
+        border-radius: 18px;
+        overflow: hidden;
+        background: #eaf2fb;
+    }
+    .insp-map-canvas .leaflet-container {
+        width: 100%;
+        height: 100%;
+        font-family: inherit;
+        border-radius: 18px;
+    }
+    .insp-map-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .insp-map-actions-primary {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .insp-map-btn {
+        min-height: 44px;
+        padding: 10px 16px;
+        border-radius: 12px;
+        border: 1px solid #dbe7f3;
+        background: #ffffff;
+        color: #29527a;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform .15s, box-shadow .2s, border-color .2s;
+    }
+    .insp-map-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(15, 23, 42, .08);
+    }
+    .insp-map-btn:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(41,82,122,.12);
+    }
+    .insp-map-btn-gold {
+        border-color: #d4a017;
+        background: linear-gradient(135deg, #d4a017, #b8880f);
+        color: #ffffff;
+    }
+    .insp-map-btn-gold:focus {
+        box-shadow: 0 0 0 3px rgba(212,160,23,.18);
+    }
+    .insp-map-btn-soft-gold {
+        border-color: #e7c35a;
+        background: linear-gradient(135deg, #fff8dc, #f6e3a1);
+        color: #8a6510;
+    }
+    body.insp-modal-open {
+        overflow: hidden;
+    }
+    @media (max-width: 640px) {
+        .insp-map-modal {
+            padding: 12px;
+        }
+        .insp-map-dialog {
+            width: 100%;
+            max-height: calc(100vh - 24px);
+            border-radius: 18px;
+        }
+        .insp-map-header,
+        .insp-map-body {
+            padding-left: 16px;
+            padding-right: 16px;
+        }
+        .insp-map-title {
+            font-size: 18px;
+        }
+        .insp-map-canvas {
+            height: 320px;
+            border-radius: 16px;
+        }
+        .insp-map-canvas .leaflet-container {
+            border-radius: 16px;
+        }
+        .insp-map-search {
+            flex-direction: column;
+        }
+        .insp-map-actions,
+        .insp-map-actions-primary {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .insp-map-btn {
+            width: 100%;
+        }
+    }
 
     /* Quote summary box */
     .insp-quote-summary {
@@ -569,6 +840,7 @@
                                 maxlength="30"
                                 required
                                 autocomplete="tel"
+                                value="{{ auth()->user()->contact_number ?: (auth()->user()->landline_number ?: '') }}"
                             >
                             <div class="insp-field-error" id="insp-contact-error" role="alert"></div>
                         </div>
@@ -593,20 +865,33 @@
                         <label class="insp-label" for="insp-address">
                             Address <span style="color:#ef4444;font-weight:700;">*</span>
                         </label>
-                        <input
-                            id="insp-address"
-                            class="insp-input"
-                            type="text"
-                            name="address"
-                            maxlength="255"
-                            required
-                            autocomplete="street-address"
-                            placeholder="e.g. 123 Rizal Street, Quezon City"
-                            value="{{ auth()->user()->address ?? '' }}"
-                        >
-                        <p class="insp-field-hint">Use the inspection site address. You can update the pre-filled value if needed.</p>
+                        <div class="insp-address-row">
+                            <input
+                                id="insp-address"
+                                class="insp-input"
+                                type="text"
+                                name="address"
+                                maxlength="255"
+                                required
+                                autocomplete="street-address"
+                                placeholder="e.g. 123 Rizal Street, Quezon City"
+                                value="{{ auth()->user()->address ?? '' }}"
+                            >
+                            <button type="button" class="insp-address-pin-btn" id="insp-pin-location-btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 21s-6-4.35-6-10a6 6 0 1 1 12 0c0 5.65-6 10-6 10z"/>
+                                    <circle cx="12" cy="11" r="2.5"/>
+                                </svg>
+                                <span>Pin Location on Map</span>
+                            </button>
+                        </div>
+                        <p class="insp-field-hint">You may type your address manually or pin your exact inspection location on the map.</p>
+                        <div class="insp-field-note" id="insp-address-note" role="status" aria-live="polite"></div>
                         <div class="insp-field-error" id="insp-address-error" role="alert"></div>
                     </div>
+
+                    <input type="hidden" name="latitude" id="latitude">
+                    <input type="hidden" name="longitude" id="longitude">
 
                     <div class="insp-field">
                         <label class="insp-label" for="insp-details">
@@ -720,9 +1005,52 @@
 
 </div>{{-- /.insp-layout --}}
 
+<div class="insp-map-modal" id="insp-map-modal" aria-hidden="true">
+    <div class="insp-map-dialog" role="dialog" aria-modal="true" aria-labelledby="insp-map-title">
+        <div class="insp-map-header">
+            <div>
+                <h2 class="insp-map-title" id="insp-map-title">Pin Inspection Location</h2>
+                <p class="insp-map-subtitle">Move the marker to your exact inspection spot, then confirm to save the coordinates.</p>
+            </div>
+            <button type="button" class="insp-map-close" id="insp-map-close-btn" aria-label="Close location picker">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M18 6 6 18"/>
+                    <path d="m6 6 12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="insp-map-body">
+            <div class="insp-map-feedback" id="insp-map-feedback" role="status" aria-live="polite"></div>
+            <div class="insp-map-search">
+                <input
+                    type="text"
+                    id="insp-map-search-input"
+                    class="insp-input insp-map-search-input"
+                    placeholder="Search address or landmark"
+                    autocomplete="off"
+                >
+                <button type="button" class="insp-map-btn insp-map-btn-soft-gold" id="insp-map-search-btn">Search</button>
+            </div>
+            <div class="insp-map-canvas" id="insp-map-canvas"></div>
+            <div class="insp-map-actions">
+                <button type="button" class="insp-map-btn insp-map-btn-soft-gold" id="insp-use-location-btn">Use Current Location</button>
+                <div class="insp-map-actions-primary">
+                    <button type="button" class="insp-map-btn" id="insp-map-cancel-btn">Cancel</button>
+                    <button type="button" class="insp-map-btn insp-map-btn-gold" id="insp-map-confirm-btn">Confirm Location</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+></script>
 @include('customer.partials.preferred-date-picker-script')
 <script>
 (function () {
@@ -799,6 +1127,19 @@
     var formMsg      = qs('#insp-form-msg');
     var submitBtn    = qs('#insp-submit-btn');
     var submitText   = qs('#insp-submit-text');
+    var addressInput = qs('#insp-address');
+    var addressNote  = qs('#insp-address-note');
+    var latitudeInput = qs('#latitude');
+    var longitudeInput = qs('#longitude');
+    var mapOpenBtn   = qs('#insp-pin-location-btn');
+    var mapModal     = qs('#insp-map-modal');
+    var mapCloseBtn  = qs('#insp-map-close-btn');
+    var mapCancelBtn = qs('#insp-map-cancel-btn');
+    var mapConfirmBtn = qs('#insp-map-confirm-btn');
+    var mapSearchInput = qs('#insp-map-search-input');
+    var mapSearchBtn = qs('#insp-map-search-btn');
+    var useLocationBtn = qs('#insp-use-location-btn');
+    var mapFeedback  = qs('#insp-map-feedback');
     var datePicker   = window.createPreferredDatePicker({
         inputId: 'insp-date',
         mountId: 'insp-date-picker',
@@ -808,6 +1149,292 @@
     });
 
     var allQuotations = [];
+    var locationMap = null;
+    var locationMarker = null;
+    var pendingCoords = null;
+    var defaultCoords = { lat: 14.2784, lng: 121.4169, zoom: 10 };
+    var activeModalTrigger = null;
+    var mapSearchInFlight = false;
+    var reverseInFlight = false;
+
+    function parseCoordinate(value) {
+        var parsed = parseFloat(value);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    function getPreferredLanguage() {
+        if (Array.isArray(navigator.languages) && navigator.languages.length > 0) {
+            return navigator.languages.join(',');
+        }
+
+        if (navigator.language) {
+            return navigator.language;
+        }
+
+        return document.documentElement.lang || 'en';
+    }
+
+    function getStoredCoords() {
+        var lat = parseCoordinate(latitudeInput && latitudeInput.value);
+        var lng = parseCoordinate(longitudeInput && longitudeInput.value);
+        if (lat === null || lng === null) return null;
+        return { lat: lat, lng: lng, zoom: 16 };
+    }
+
+    function setPendingCoords(latlng) {
+        pendingCoords = {
+            lat: Number(latlng.lat),
+            lng: Number(latlng.lng),
+        };
+    }
+
+    function clearMapFeedback() {
+        if (!mapFeedback) return;
+        mapFeedback.className = 'insp-map-feedback';
+        mapFeedback.textContent = '';
+    }
+
+    function showMapFeedback(message, type) {
+        if (!mapFeedback) return;
+        mapFeedback.className = 'insp-map-feedback show insp-map-feedback-' + (type || 'info');
+        mapFeedback.textContent = message;
+    }
+
+    function clearAddressNote() {
+        if (!addressNote) return;
+        addressNote.className = 'insp-field-note';
+        addressNote.textContent = '';
+    }
+
+    function showAddressNote(message, type) {
+        if (!addressNote) return;
+        addressNote.className = 'insp-field-note show insp-field-note-' + (type || 'info');
+        addressNote.textContent = message;
+    }
+
+    function buildNominatimUrl(path, params) {
+        var query = new URLSearchParams(params);
+        query.set('format', 'jsonv2');
+        query.set('accept-language', getPreferredLanguage());
+
+        return 'https://nominatim.openstreetmap.org/' + path + '?' + query.toString();
+    }
+
+    async function nominatimRequest(path, params) {
+        var response = await fetch(buildNominatimUrl(path, params), {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error('Nominatim request failed.');
+        }
+
+        return response.json();
+    }
+
+    function syncMarker(latlng, options) {
+        if (!locationMap || !locationMarker) return;
+        var shouldCenter = !options || options.center !== false;
+        var normalized = L.latLng(latlng.lat, latlng.lng);
+        locationMarker.setLatLng(normalized);
+        setPendingCoords(normalized);
+        if (shouldCenter) {
+            locationMap.setView(normalized, (options && options.zoom) || locationMap.getZoom(), { animate: false });
+        }
+    }
+
+    function ensureMap() {
+        if (typeof window.L === 'undefined') {
+            showMapFeedback('Map could not be loaded right now. Please try again later.', 'error');
+            return false;
+        }
+
+        if (!locationMap) {
+            locationMap = L.map('insp-map-canvas', {
+                zoomControl: true,
+                attributionControl: true,
+            });
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors',
+            }).addTo(locationMap);
+
+            locationMarker = L.marker([defaultCoords.lat, defaultCoords.lng], {
+                draggable: true,
+            }).addTo(locationMap);
+
+            locationMap.on('click', function (event) {
+                syncMarker(event.latlng);
+            });
+
+            locationMarker.on('dragend', function () {
+                syncMarker(locationMarker.getLatLng(), { center: false });
+            });
+        }
+
+        return true;
+    }
+
+    function openMapModal() {
+        activeModalTrigger = document.activeElement;
+        clearMapFeedback();
+        mapModal.classList.add('show');
+        mapModal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('insp-modal-open');
+
+        if (!ensureMap()) return;
+
+        var existingCoords = getStoredCoords();
+        var initialCoords = existingCoords || defaultCoords;
+        syncMarker({ lat: initialCoords.lat, lng: initialCoords.lng }, { zoom: initialCoords.zoom || 16 });
+
+        window.setTimeout(function () {
+            if (!locationMap) return;
+            locationMap.invalidateSize();
+            locationMap.setView([pendingCoords.lat, pendingCoords.lng], initialCoords.zoom || locationMap.getZoom(), { animate: false });
+            if (mapSearchInput) {
+                mapSearchInput.focus();
+            }
+        }, 120);
+    }
+
+    function closeMapModal() {
+        mapModal.classList.remove('show');
+        mapModal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('insp-modal-open');
+        clearMapFeedback();
+
+        if (activeModalTrigger && typeof activeModalTrigger.focus === 'function') {
+            activeModalTrigger.focus();
+        }
+        activeModalTrigger = null;
+    }
+
+    async function applyConfirmedCoords() {
+        if (!pendingCoords) return;
+
+        if (reverseInFlight) return;
+        reverseInFlight = true;
+        mapConfirmBtn.disabled = true;
+        mapConfirmBtn.textContent = 'Saving...';
+
+        latitudeInput.value = pendingCoords.lat.toFixed(7);
+        longitudeInput.value = pendingCoords.lng.toFixed(7);
+
+        try {
+            var result = await nominatimRequest('reverse', {
+                lat: pendingCoords.lat,
+                lon: pendingCoords.lng,
+                zoom: 18,
+                addressdetails: 1,
+            });
+
+            if (result && result.display_name) {
+                addressInput.value = result.display_name;
+                clearAddressNote();
+            } else {
+                throw new Error('Reverse geocoding returned no display name.');
+            }
+        } catch (error) {
+            showAddressNote('Coordinates saved. Please review or type the address manually.', 'info');
+        } finally {
+            reverseInFlight = false;
+            mapConfirmBtn.disabled = false;
+            mapConfirmBtn.textContent = 'Confirm Location';
+            closeMapModal();
+        }
+    }
+
+    function useCurrentLocation() {
+        clearMapFeedback();
+
+        if (!navigator.geolocation) {
+            showMapFeedback('Geolocation is not supported by this browser.', 'error');
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            function (position) {
+                if (!ensureMap()) return;
+
+                var coords = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                };
+
+                syncMarker(coords, { zoom: 17 });
+                locationMap.invalidateSize();
+            },
+            function (error) {
+                if (error && error.code === error.PERMISSION_DENIED) {
+                    showMapFeedback('Location access denied. Please pin manually.', 'error');
+                    return;
+                }
+
+                showMapFeedback('Location could not be determined. Please pin manually.', 'info');
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0,
+            }
+        );
+    }
+
+    async function searchLocation() {
+        if (!mapSearchInput) return;
+
+        var query = mapSearchInput.value.trim();
+        clearMapFeedback();
+
+        if (!query) {
+            showMapFeedback('Please enter an address or landmark.', 'error');
+            mapSearchInput.focus();
+            return;
+        }
+
+        if (mapSearchInFlight) return;
+        mapSearchInFlight = true;
+        mapSearchBtn.disabled = true;
+        mapSearchBtn.textContent = 'Searching...';
+
+        try {
+            if (!ensureMap()) return;
+
+            var results = await nominatimRequest('search', {
+                q: query,
+                limit: 1,
+                addressdetails: 1,
+            });
+
+            if (!Array.isArray(results) || results.length === 0) {
+                showMapFeedback('No location found. Try a more specific address.', 'info');
+                return;
+            }
+
+            var firstResult = results[0];
+            var lat = parseCoordinate(firstResult.lat);
+            var lng = parseCoordinate(firstResult.lon);
+
+            if (lat === null || lng === null) {
+                showMapFeedback('No location found. Try a more specific address.', 'info');
+                return;
+            }
+
+            syncMarker({ lat: lat, lng: lng }, { zoom: 17 });
+            locationMap.invalidateSize();
+        } catch (error) {
+            showMapFeedback('Unable to search location right now. Please try again or pin manually.', 'error');
+        } finally {
+            mapSearchInFlight = false;
+            mapSearchBtn.disabled = false;
+            mapSearchBtn.textContent = 'Search';
+        }
+    }
 
     /* Populate quotation dropdown */
     function populateQuoteSelect(quotations) {
@@ -898,6 +1525,59 @@
         });
     }
 
+    if (mapOpenBtn && mapModal && mapConfirmBtn && mapCancelBtn && mapCloseBtn && useLocationBtn) {
+        mapOpenBtn.addEventListener('click', function () {
+            openMapModal();
+        });
+
+        mapConfirmBtn.addEventListener('click', async function () {
+            await applyConfirmedCoords();
+        });
+
+        mapCancelBtn.addEventListener('click', function () {
+            closeMapModal();
+        });
+
+        mapCloseBtn.addEventListener('click', function () {
+            closeMapModal();
+        });
+
+        useLocationBtn.addEventListener('click', function () {
+            useCurrentLocation();
+        });
+
+        if (mapSearchBtn && mapSearchInput) {
+            mapSearchBtn.addEventListener('click', function () {
+                searchLocation();
+            });
+
+            mapSearchInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    searchLocation();
+                }
+            });
+        }
+
+        mapModal.addEventListener('click', function (event) {
+            if (event.target === mapModal) {
+                closeMapModal();
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && mapModal.classList.contains('show')) {
+                closeMapModal();
+            }
+        });
+    }
+
+    if (addressInput) {
+        addressInput.addEventListener('input', function () {
+            clearAddressNote();
+        });
+    }
+
     /* Form submit */
     form.addEventListener('submit', async function (e) {
         e.preventDefault();
@@ -906,7 +1586,7 @@
 
         var details    = qs('#insp-details').value.trim();
         var contact    = qs('#insp-contact').value.trim();
-        var address    = qs('#insp-address').value.trim();
+        var address    = addressInput.value.trim();
         await datePicker.refreshAvailability();
         var dateNeeded = datePicker.getValue();
 
@@ -944,14 +1624,22 @@
         submitBtn.disabled = true;
         submitText.textContent = 'Submitting...';
 
-        var body = { details: details, contact_number: contact };
-        if (address) body.address = address;
+        var latitude = latitudeInput ? latitudeInput.value.trim() : '';
+        var longitude = longitudeInput ? longitudeInput.value.trim() : '';
+        var body = {
+            details: details,
+            contact_number: contact,
+            address: address,
+            latitude: latitude || null,
+            longitude: longitude || null
+        };
         if (dateNeeded) body.date_needed = dateNeeded;
 
         try {
             await apiRequest('/api/inspection-requests', { method: 'POST', body: body });
             showMsg(formMsg, 'success', 'Your inspection request has been submitted. Our team will contact you to confirm the schedule.');
             form.reset();
+            clearAddressNote();
             datePicker.clear();
             quoteSelect.value = '';
             quoteSummary.style.display = 'none';

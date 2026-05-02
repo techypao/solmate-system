@@ -32,13 +32,13 @@ class InspectionRequestController extends Controller
         $validated = $request->validate([
             'details' => 'required|string',
             'contact_number' => 'required|string|max:30',
-            'address' => 'nullable|string|max:255',
+            'address' => 'required|string|max:255',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'date_needed' => 'nullable|date',
         ]);
 
-        $userAddress = trim((string) ($request->user()->address ?? ''));
-        $providedAddress = trim((string) ($validated['address'] ?? ''));
-        $resolvedAddress = $providedAddress !== '' ? $providedAddress : ($userAddress !== '' ? $userAddress : null);
+        $resolvedAddress = trim((string) $validated['address']);
 
         $inspectionRequest = $this->preferredDateLockService->withLockedDates(
             [$validated['date_needed'] ?? null],
@@ -51,6 +51,8 @@ class InspectionRequestController extends Controller
                         'details' => $validated['details'],
                         'contact_number' => trim($validated['contact_number']),
                         'address' => $resolvedAddress,
+                        'latitude' => $validated['latitude'] ?? null,
+                        'longitude' => $validated['longitude'] ?? null,
                         'date_needed' => $validated['date_needed'] ?? null,
                         'status' => 'pending',
                     ]);

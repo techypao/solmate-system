@@ -31,6 +31,7 @@ class NotificationApiTest extends TestCase
             ->postJson('/api/inspection-requests', [
                 'details' => 'Inspect roof access and inverter location.',
                 'contact_number' => '0917-222-3333',
+                'address' => '101 Solar Avenue, Taytay, Rizal',
                 'date_needed' => '2026-04-22',
             ])
             ->assertCreated();
@@ -116,6 +117,7 @@ class NotificationApiTest extends TestCase
                 'request_type' => 'Maintenance',
                 'details' => 'Inspect wiring and inverter.',
                 'contact_number' => '0917-333-4444',
+                'address' => '303 Service Road, Antipolo City',
                 'date_needed' => '2026-04-24',
             ])
             ->assertCreated()
@@ -149,6 +151,7 @@ class NotificationApiTest extends TestCase
             ->postJson('/api/inspection-requests', [
                 'details' => 'Check roof layout and panel placement.',
                 'contact_number' => '0917-444-5555',
+                'address' => '202 Sunbeam Street, Calamba, Laguna',
                 'date_needed' => '2026-04-22',
             ])
             ->assertCreated()

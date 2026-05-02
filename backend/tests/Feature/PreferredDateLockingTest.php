@@ -33,6 +33,7 @@ class PreferredDateLockingTest extends TestCase
                 'request_type' => 'Maintenance',
                 'details' => 'Need inverter checkup',
                 'contact_number' => '0917-200-0002',
+                'address' => '66 Service Lane, Morong, Rizal',
                 'date_needed' => '2026-05-10',
             ])
             ->assertUnprocessable()
@@ -126,6 +127,7 @@ class PreferredDateLockingTest extends TestCase
             ->postJson('/api/inspection-requests', [
                 'details' => 'Need a site inspection',
                 'contact_number' => '0917-400-0004',
+                'address' => '11 Rizal Street, Tanay, Rizal',
                 'date_needed' => '2026-05-11',
             ])
             ->assertUnprocessable()
@@ -155,6 +157,7 @@ class PreferredDateLockingTest extends TestCase
             ->postJson('/api/inspection-requests', [
                 'details' => 'New inspection should be blocked by assigned request',
                 'contact_number' => '0917-410-0004',
+                'address' => '22 Mabini Street, Pililla, Rizal',
                 'date_needed' => '2026-05-15',
             ])
             ->assertUnprocessable()
@@ -186,6 +189,7 @@ class PreferredDateLockingTest extends TestCase
             ->postJson('/api/inspection-requests', [
                 'details' => 'Date should be reusable now',
                 'contact_number' => '0917-600-0006',
+                'address' => '33 Bonifacio Street, Jalajala, Rizal',
                 'date_needed' => '2026-05-12',
             ])
             ->assertCreated()
@@ -376,6 +380,7 @@ class PreferredDateLockingTest extends TestCase
             ->postJson('/api/inspection-requests', [
                 'details' => 'Old service date should now be available',
                 'contact_number' => '0917-830-0013',
+                'address' => '55 Renewal Street, San Pablo, Laguna',
                 'date_needed' => '2026-05-22',
             ])
             ->assertCreated()
@@ -528,6 +533,7 @@ class PreferredDateLockingTest extends TestCase
             ->postJson('/api/inspection-requests', [
                 'details' => "Date should be reusable after service is {$releasedStatus}",
                 'contact_number' => '0917-980-0019',
+                'address' => '44 Lakeshore Road, Los Banos, Laguna',
                 'date_needed' => $dateNeeded,
             ])
             ->assertCreated();

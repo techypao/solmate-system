@@ -16,6 +16,8 @@ class InspectionRequest extends Model
         'details',
         'contact_number',
         'address',
+        'latitude',
+        'longitude',
         'date_needed',
         'status',
     ];

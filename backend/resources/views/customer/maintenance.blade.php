@@ -1,6 +1,12 @@
 @extends('layouts.app', ['title' => 'Book Maintenance Service'])
 
 @section('content')
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+>
 <style>
     /* Maintenance request page */
     .mnt-page {
@@ -209,6 +215,60 @@
         color: #dc2626;
     }
     .mnt-field-error.show { display: block; }
+    .mnt-field-note {
+        display: none;
+        margin-top: 8px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+    .mnt-field-note.show { display: block; }
+    .mnt-field-note-info {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #124e78;
+    }
+    .mnt-address-row {
+        display: flex;
+        align-items: stretch;
+        gap: 12px;
+    }
+    .mnt-address-row .mnt-input {
+        flex: 1;
+    }
+    .mnt-address-pin-btn {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 48px;
+        padding: 0 16px;
+        border: 1px solid #e7c35a;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #fff8dc, #f6e3a1);
+        color: #8a6510;
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform 0.15s, box-shadow 0.2s, border-color 0.2s;
+        white-space: nowrap;
+    }
+    .mnt-address-pin-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(212, 160, 23, 0.16);
+        border-color: #d4a017;
+    }
+    .mnt-address-pin-btn:focus {
+        outline: none;
+        border-color: #d4a017;
+        box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.12);
+    }
+    .mnt-address-pin-btn:active {
+        transform: translateY(0);
+        box-shadow: none;
+    }
 
     .mnt-choice-grid {
         display: grid;
@@ -314,6 +374,166 @@
         opacity: 0.65;
         cursor: not-allowed;
         transform: none;
+    }
+
+    .mnt-map-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 16px;
+        background: rgba(15, 23, 42, 0.58);
+        backdrop-filter: blur(4px);
+    }
+    .mnt-map-modal.show { display: flex; }
+    .mnt-map-dialog {
+        width: min(100%, 760px);
+        max-height: min(90vh, 760px);
+        background: linear-gradient(180deg, #f8fbff 0%, #ffffff 28%);
+        border: 1px solid #dbe7f3;
+        border-radius: 22px;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .mnt-map-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 20px 24px 16px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .mnt-map-title {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 800;
+        color: #102a43;
+    }
+    .mnt-map-subtitle {
+        margin: 6px 0 0;
+        font-size: 13px;
+        color: #64748b;
+        line-height: 1.6;
+    }
+    .mnt-map-close {
+        width: 40px;
+        height: 40px;
+        border: 1px solid #dbe7f3;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #64748b;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: border-color 0.2s, color 0.2s, transform 0.15s;
+    }
+    .mnt-map-close:hover {
+        border-color: #d4a017;
+        color: #8a6510;
+        transform: translateY(-1px);
+    }
+    .mnt-map-close:focus {
+        outline: none;
+        border-color: #d4a017;
+        box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.12);
+    }
+    .mnt-map-body {
+        padding: 20px 24px 24px;
+        display: grid;
+        gap: 16px;
+    }
+    .mnt-map-feedback {
+        display: none;
+        padding: 12px 14px;
+        border-radius: 12px;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+    .mnt-map-feedback.show { display: block; }
+    .mnt-map-feedback-error {
+        background: #fff1f2;
+        border: 1px solid #fecdd3;
+        color: #9f1239;
+    }
+    .mnt-map-feedback-info {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #124e78;
+    }
+    .mnt-map-search {
+        display: flex;
+        align-items: stretch;
+        gap: 12px;
+    }
+    .mnt-map-search-input {
+        flex: 1;
+    }
+    .mnt-map-canvas {
+        height: 420px;
+        border: 1px solid #dbe7f3;
+        border-radius: 18px;
+        overflow: hidden;
+        background: #eaf2fb;
+    }
+    .mnt-map-canvas .leaflet-container {
+        width: 100%;
+        height: 100%;
+        font-family: inherit;
+        border-radius: 18px;
+    }
+    .mnt-map-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .mnt-map-actions-primary {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .mnt-map-btn {
+        min-height: 44px;
+        padding: 10px 16px;
+        border-radius: 12px;
+        border: 1px solid #dbe7f3;
+        background: #ffffff;
+        color: #29527a;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.15s, box-shadow 0.2s, border-color 0.2s;
+    }
+    .mnt-map-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+    }
+    .mnt-map-btn:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(41, 82, 122, 0.12);
+    }
+    .mnt-map-btn-gold {
+        border-color: #d4a017;
+        background: linear-gradient(135deg, #d4a017, #b8880f);
+        color: #ffffff;
+    }
+    .mnt-map-btn-gold:focus {
+        box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.18);
+    }
+    .mnt-map-btn-soft-gold {
+        border-color: #e7c35a;
+        background: linear-gradient(135deg, #fff8dc, #f6e3a1);
+        color: #8a6510;
+    }
+    body.mnt-modal-open {
+        overflow: hidden;
     }
 
     .mnt-panel {
@@ -523,6 +743,40 @@
         .mnt-history-meta {
             grid-template-columns: 1fr;
         }
+        .mnt-address-row,
+        .mnt-map-search,
+        .mnt-map-actions,
+        .mnt-map-actions-primary {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .mnt-address-pin-btn,
+        .mnt-map-btn {
+            width: 100%;
+        }
+        .mnt-map-modal {
+            padding: 12px;
+        }
+        .mnt-map-dialog {
+            width: 100%;
+            max-height: calc(100vh - 24px);
+            border-radius: 18px;
+        }
+        .mnt-map-header,
+        .mnt-map-body {
+            padding-left: 16px;
+            padding-right: 16px;
+        }
+        .mnt-map-title {
+            font-size: 18px;
+        }
+        .mnt-map-canvas {
+            height: 320px;
+            border-radius: 16px;
+        }
+        .mnt-map-canvas .leaflet-container {
+            border-radius: 16px;
+        }
     }
 </style>
 @include('customer.partials.preferred-date-picker-styles')
@@ -670,7 +924,7 @@
                         <div class="mnt-field-row">
                             <div class="mnt-field">
                                 <label class="mnt-label" for="mnt-contact">Contact Number</label>
-                                <input id="mnt-contact" class="mnt-input" type="tel" maxlength="30" autocomplete="tel" placeholder="e.g. 09171234567">
+                                <input id="mnt-contact" class="mnt-input" type="tel" maxlength="30" autocomplete="tel" placeholder="e.g. 09171234567" value="{{ auth()->user()->contact_number ?: (auth()->user()->landline_number ?: '') }}">
                                 <div class="mnt-field-error" id="mnt-contact-error" role="alert"></div>
                             </div>
                             <div class="mnt-field">
@@ -682,10 +936,24 @@
                         </div>
 
                         <div class="mnt-field">
-                            <label class="mnt-label" for="mnt-address">Address</label>
-                            <input id="mnt-address" class="mnt-input" type="text" maxlength="255" autocomplete="street-address" placeholder="e.g. 123 Rizal Street, Quezon City" value="{{ auth()->user()->address ?? '' }}">
+                            <label class="mnt-label" for="mnt-address">Address <span style="color:#ef4444;font-weight:700;">*</span></label>
+                            <div class="mnt-address-row">
+                                <input id="mnt-address" class="mnt-input" type="text" maxlength="255" autocomplete="street-address" placeholder="e.g. 123 Rizal Street, Quezon City" value="{{ auth()->user()->address ?? '' }}">
+                                <button type="button" class="mnt-address-pin-btn" id="mnt-pin-location-btn">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 21s-6-4.35-6-10a6 6 0 1 1 12 0c0 5.65-6 10-6 10z"/>
+                                        <circle cx="12" cy="11" r="2.5"/>
+                                    </svg>
+                                    <span>Pin Location on Map</span>
+                                </button>
+                            </div>
+                            <p class="mnt-field-hint">You may type your address manually or pin your exact maintenance location on the map.</p>
+                            <div class="mnt-field-note" id="mnt-address-note" role="status" aria-live="polite"></div>
                             <div class="mnt-field-error" id="mnt-address-error" role="alert"></div>
                         </div>
+
+                        <input type="hidden" name="latitude" id="mnt-latitude">
+                        <input type="hidden" name="longitude" id="mnt-longitude">
 
                         <div class="mnt-field-row">
                             <div class="mnt-field">
@@ -780,10 +1048,53 @@
         </aside>
     </div>
 
+    <div class="mnt-map-modal" id="mnt-map-modal" aria-hidden="true">
+        <div class="mnt-map-dialog" role="dialog" aria-modal="true" aria-labelledby="mnt-map-title">
+            <div class="mnt-map-header">
+                <div>
+                    <h2 class="mnt-map-title" id="mnt-map-title">Pin Maintenance Location</h2>
+                    <p class="mnt-map-subtitle">Move the marker to your exact maintenance spot, then confirm to save the coordinates.</p>
+                </div>
+                <button type="button" class="mnt-map-close" id="mnt-map-close-btn" aria-label="Close location picker">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <path d="M18 6 6 18"/>
+                        <path d="m6 6 12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="mnt-map-body">
+                <div class="mnt-map-feedback" id="mnt-map-feedback" role="status" aria-live="polite"></div>
+                <div class="mnt-map-search">
+                    <input
+                        type="text"
+                        id="mnt-map-search-input"
+                        class="mnt-input mnt-map-search-input"
+                        placeholder="Search address or landmark"
+                        autocomplete="off"
+                    >
+                    <button type="button" class="mnt-map-btn mnt-map-btn-soft-gold" id="mnt-map-search-btn">Search</button>
+                </div>
+                <div class="mnt-map-canvas" id="mnt-map-canvas"></div>
+                <div class="mnt-map-actions">
+                    <button type="button" class="mnt-map-btn mnt-map-btn-soft-gold" id="mnt-use-location-btn">Use Current Location</button>
+                    <div class="mnt-map-actions-primary">
+                        <button type="button" class="mnt-map-btn" id="mnt-map-cancel-btn">Cancel</button>
+                        <button type="button" class="mnt-map-btn mnt-map-btn-gold" id="mnt-map-confirm-btn">Confirm Location</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 @endsection
 
 @push('scripts')
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+></script>
 @include('customer.partials.preferred-date-picker-script')
 <script>
 (function () {
@@ -898,6 +1209,19 @@
     var formMsg = qs('#mnt-form-msg');
     var submitBtn = qs('#mnt-submit-btn');
     var submitText = qs('#mnt-submit-text');
+    var addressInput = qs('#mnt-address');
+    var addressNote = qs('#mnt-address-note');
+    var latitudeInput = qs('#mnt-latitude');
+    var longitudeInput = qs('#mnt-longitude');
+    var mapOpenBtn = qs('#mnt-pin-location-btn');
+    var mapModal = qs('#mnt-map-modal');
+    var mapCloseBtn = qs('#mnt-map-close-btn');
+    var mapCancelBtn = qs('#mnt-map-cancel-btn');
+    var mapConfirmBtn = qs('#mnt-map-confirm-btn');
+    var mapSearchInput = qs('#mnt-map-search-input');
+    var mapSearchBtn = qs('#mnt-map-search-btn');
+    var useLocationBtn = qs('#mnt-use-location-btn');
+    var mapFeedback = qs('#mnt-map-feedback');
     var datePicker = window.createPreferredDatePicker({
         inputId: 'mnt-date',
         mountId: 'mnt-date-picker',
@@ -905,6 +1229,293 @@
         fetchErrorText: 'Schedule availability could not be refreshed right now. The backend will still verify your preferred date when you submit.',
         placeholder: 'Select a preferred date'
     });
+    var locationMap = null;
+    var locationMarker = null;
+    var pendingCoords = null;
+    var defaultCoords = { lat: 14.2784, lng: 121.4169, zoom: 10 };
+    var activeModalTrigger = null;
+    var mapSearchInFlight = false;
+    var reverseInFlight = false;
+
+    function parseCoordinate(value) {
+        var parsed = parseFloat(value);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    function getPreferredLanguage() {
+        if (Array.isArray(navigator.languages) && navigator.languages.length > 0) {
+            return navigator.languages.join(',');
+        }
+
+        if (navigator.language) {
+            return navigator.language;
+        }
+
+        return document.documentElement.lang || 'en';
+    }
+
+    function getStoredCoords() {
+        var lat = parseCoordinate(latitudeInput && latitudeInput.value);
+        var lng = parseCoordinate(longitudeInput && longitudeInput.value);
+        if (lat === null || lng === null) return null;
+        return { lat: lat, lng: lng, zoom: 16 };
+    }
+
+    function setPendingCoords(latlng) {
+        pendingCoords = {
+            lat: Number(latlng.lat),
+            lng: Number(latlng.lng)
+        };
+    }
+
+    function clearMapFeedback() {
+        if (!mapFeedback) return;
+        mapFeedback.className = 'mnt-map-feedback';
+        mapFeedback.textContent = '';
+    }
+
+    function showMapFeedback(message, type) {
+        if (!mapFeedback) return;
+        mapFeedback.className = 'mnt-map-feedback show mnt-map-feedback-' + (type || 'info');
+        mapFeedback.textContent = message;
+    }
+
+    function clearAddressNote() {
+        if (!addressNote) return;
+        addressNote.className = 'mnt-field-note';
+        addressNote.textContent = '';
+    }
+
+    function showAddressNote(message, type) {
+        if (!addressNote) return;
+        addressNote.className = 'mnt-field-note show mnt-field-note-' + (type || 'info');
+        addressNote.textContent = message;
+    }
+
+    function buildNominatimUrl(path, params) {
+        var query = new URLSearchParams(params);
+        query.set('format', 'jsonv2');
+        query.set('accept-language', getPreferredLanguage());
+
+        return 'https://nominatim.openstreetmap.org/' + path + '?' + query.toString();
+    }
+
+    async function nominatimRequest(path, params) {
+        var response = await fetch(buildNominatimUrl(path, params), {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Nominatim request failed.');
+        }
+
+        return response.json();
+    }
+
+    function syncMarker(latlng, options) {
+        if (!locationMap || !locationMarker) return;
+        var shouldCenter = !options || options.center !== false;
+        var normalized = L.latLng(latlng.lat, latlng.lng);
+        locationMarker.setLatLng(normalized);
+        setPendingCoords(normalized);
+
+        if (shouldCenter) {
+            locationMap.setView(normalized, (options && options.zoom) || locationMap.getZoom(), { animate: false });
+        }
+    }
+
+    function ensureMap() {
+        if (typeof window.L === 'undefined') {
+            showMapFeedback('Map could not be loaded right now. Please try again later.', 'error');
+            return false;
+        }
+
+        if (!locationMap) {
+            locationMap = L.map('mnt-map-canvas', {
+                zoomControl: true,
+                attributionControl: true
+            });
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(locationMap);
+
+            locationMarker = L.marker([defaultCoords.lat, defaultCoords.lng], {
+                draggable: true
+            }).addTo(locationMap);
+
+            locationMap.on('click', function (event) {
+                syncMarker(event.latlng);
+            });
+
+            locationMarker.on('dragend', function () {
+                syncMarker(locationMarker.getLatLng(), { center: false });
+            });
+        }
+
+        return true;
+    }
+
+    function openMapModal() {
+        activeModalTrigger = document.activeElement;
+        clearMapFeedback();
+        mapModal.classList.add('show');
+        mapModal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('mnt-modal-open');
+
+        if (!ensureMap()) return;
+
+        var existingCoords = getStoredCoords();
+        var initialCoords = existingCoords || defaultCoords;
+        syncMarker({ lat: initialCoords.lat, lng: initialCoords.lng }, { zoom: initialCoords.zoom || 16 });
+
+        window.setTimeout(function () {
+            if (!locationMap) return;
+            locationMap.invalidateSize();
+            locationMap.setView([pendingCoords.lat, pendingCoords.lng], initialCoords.zoom || locationMap.getZoom(), { animate: false });
+            if (mapSearchInput) {
+                mapSearchInput.focus();
+            }
+        }, 120);
+    }
+
+    function closeMapModal() {
+        mapModal.classList.remove('show');
+        mapModal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('mnt-modal-open');
+        clearMapFeedback();
+
+        if (activeModalTrigger && typeof activeModalTrigger.focus === 'function') {
+            activeModalTrigger.focus();
+        }
+
+        activeModalTrigger = null;
+    }
+
+    async function applyConfirmedCoords() {
+        if (!pendingCoords || reverseInFlight) return;
+
+        reverseInFlight = true;
+        mapConfirmBtn.disabled = true;
+        mapConfirmBtn.textContent = 'Saving...';
+
+        latitudeInput.value = pendingCoords.lat.toFixed(7);
+        longitudeInput.value = pendingCoords.lng.toFixed(7);
+
+        try {
+            var result = await nominatimRequest('reverse', {
+                lat: pendingCoords.lat,
+                lon: pendingCoords.lng,
+                zoom: 18,
+                addressdetails: 1
+            });
+
+            if (result && result.display_name) {
+                addressInput.value = result.display_name;
+                clearAddressNote();
+            } else {
+                throw new Error('Reverse geocoding returned no display name.');
+            }
+        } catch (error) {
+            showAddressNote('Coordinates saved. Please review or type the address manually.', 'info');
+        } finally {
+            reverseInFlight = false;
+            mapConfirmBtn.disabled = false;
+            mapConfirmBtn.textContent = 'Confirm Location';
+            closeMapModal();
+        }
+    }
+
+    function useCurrentLocation() {
+        clearMapFeedback();
+
+        if (!navigator.geolocation) {
+            showMapFeedback('Geolocation is not supported by this browser.', 'error');
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            function (position) {
+                if (!ensureMap()) return;
+
+                var coords = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+
+                syncMarker(coords, { zoom: 17 });
+                locationMap.invalidateSize();
+            },
+            function (error) {
+                if (error && error.code === error.PERMISSION_DENIED) {
+                    showMapFeedback('Location access denied. Please pin manually.', 'error');
+                    return;
+                }
+
+                showMapFeedback('Location could not be determined. Please pin manually.', 'info');
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    }
+
+    async function searchLocation() {
+        if (!mapSearchInput) return;
+
+        var query = mapSearchInput.value.trim();
+        clearMapFeedback();
+
+        if (!query) {
+            showMapFeedback('Please enter an address or landmark.', 'error');
+            mapSearchInput.focus();
+            return;
+        }
+
+        if (mapSearchInFlight) return;
+        mapSearchInFlight = true;
+        mapSearchBtn.disabled = true;
+        mapSearchBtn.textContent = 'Searching...';
+
+        try {
+            if (!ensureMap()) return;
+
+            var results = await nominatimRequest('search', {
+                q: query,
+                limit: 1,
+                addressdetails: 1
+            });
+
+            if (!Array.isArray(results) || results.length === 0) {
+                showMapFeedback('No location found. Try a more specific address.', 'info');
+                return;
+            }
+
+            var firstResult = results[0];
+            var lat = parseCoordinate(firstResult.lat);
+            var lng = parseCoordinate(firstResult.lon);
+
+            if (lat === null || lng === null) {
+                showMapFeedback('No location found. Try a more specific address.', 'info');
+                return;
+            }
+
+            syncMarker({ lat: lat, lng: lng }, { zoom: 17 });
+            locationMap.invalidateSize();
+        } catch (error) {
+            showMapFeedback('Unable to search location right now. Please try again or pin manually.', 'error');
+        } finally {
+            mapSearchInFlight = false;
+            mapSearchBtn.disabled = false;
+            mapSearchBtn.textContent = 'Search';
+        }
+    }
 
     qsa('.mnt-choice').forEach(function (choice) {
         var radio = qs('input[type="radio"]', choice);
@@ -922,6 +1533,59 @@
         });
     });
 
+    if (mapOpenBtn && mapModal && mapConfirmBtn && mapCancelBtn && mapCloseBtn && useLocationBtn) {
+        mapOpenBtn.addEventListener('click', function () {
+            openMapModal();
+        });
+
+        mapConfirmBtn.addEventListener('click', async function () {
+            await applyConfirmedCoords();
+        });
+
+        mapCancelBtn.addEventListener('click', function () {
+            closeMapModal();
+        });
+
+        mapCloseBtn.addEventListener('click', function () {
+            closeMapModal();
+        });
+
+        useLocationBtn.addEventListener('click', function () {
+            useCurrentLocation();
+        });
+
+        if (mapSearchBtn && mapSearchInput) {
+            mapSearchBtn.addEventListener('click', function () {
+                searchLocation();
+            });
+
+            mapSearchInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    searchLocation();
+                }
+            });
+        }
+
+        mapModal.addEventListener('click', function (event) {
+            if (event.target === mapModal) {
+                closeMapModal();
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && mapModal.classList.contains('show')) {
+                closeMapModal();
+            }
+        });
+    }
+
+    if (addressInput) {
+        addressInput.addEventListener('input', function () {
+            clearAddressNote();
+        });
+    }
+
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
         clearFieldErrors();
@@ -936,7 +1600,9 @@
         var dateNeeded = datePicker.getValue();
         var time = qs('#mnt-time').value.trim();
         var visitNote = qs('#mnt-visit-note').value.trim();
-        var address = qs('#mnt-address').value.trim();
+        var address = addressInput.value.trim();
+        var latitude = latitudeInput ? latitudeInput.value.trim() : '';
+        var longitude = longitudeInput ? longitudeInput.value.trim() : '';
 
         var hasError = false;
         if (!selectedType) {
@@ -963,6 +1629,10 @@
             showFieldError('mnt-time', 'mnt-time-error', 'Please choose a preferred time.');
             hasError = true;
         }
+        if (!address) {
+            showFieldError('mnt-address', 'mnt-address-error', 'Address is required.');
+            hasError = true;
+        }
         if (hasError) return;
 
         var detailLines = [
@@ -984,12 +1654,15 @@
                     contact_number: contact,
                     date_needed: dateNeeded,
                     details: detailLines.join('\n'),
-                    address: address || undefined
+                    address: address,
+                    latitude: latitude || null,
+                    longitude: longitude || null
                 }
             });
 
             showMsg(formMsg, 'success', 'Your maintenance request has been submitted. SolMate will review the concern and confirm your appointment.');
             form.reset();
+            clearAddressNote();
             datePicker.clear();
             qsa('.mnt-choice').forEach(function (item) {
                 item.classList.remove('is-selected');
@@ -1004,6 +1677,9 @@
             }
             if (error.errors && error.errors.details) {
                 showFieldError('mnt-description', 'mnt-description-error', error.errors.details[0]);
+            }
+            if (error.errors && error.errors.address) {
+                showFieldError('mnt-address', 'mnt-address-error', error.errors.address[0]);
             }
             showMsg(formMsg, 'error', error.message || 'Could not submit the maintenance request.');
         } finally {
