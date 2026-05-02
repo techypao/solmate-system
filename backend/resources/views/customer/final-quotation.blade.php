@@ -1,8 +1,8 @@
-@extends('layouts.app', ['title' => 'Final Quotation Summary'])
+@extends('layouts.app', ['title' => 'Inspection-Based Quotation Summary'])
 
 @section('content')
 <style>
-    /* ── Customer Final Quotation Summary Page (fq- prefix) ── */
+    /* ── Customer Inspection-Based Quotation Summary Page (fq- prefix) ── */
 
     /* Hero */
     .fq-hero {
@@ -487,8 +487,8 @@
 {{-- ═══ PAGE HERO ═══ --}}
 <div class="fq-hero">
     <p class="fq-hero-eyebrow">Solar System Proposal</p>
-    <h1 class="fq-hero-title">Final Quotation <span>Summary</span></h1>
-    <p class="fq-hero-sub">Review your custom solar system configuration, itemised cost breakdown, and projected return on investment before confirming.</p>
+    <h1 class="fq-hero-title">Inspection-Based Quotation <span>Summary</span></h1>
+    <p class="fq-hero-sub">Review your custom solar system configuration, itemised cost breakdown, and projected return on investment before confirming. This quotation is based on the technician's actual inspection and assessment.</p>
     <div class="fq-hero-meta">
         <span class="fq-hero-meta-chip" id="fq-chip-id" style="display:none;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
@@ -501,7 +501,7 @@
 {{-- ═══ CONTENT ═══ --}}
 <div class="fq-content">
 
-    <div id="fq-loading" class="fq-loading">Loading your final quotation...</div>
+    <div id="fq-loading" class="fq-loading">Loading your inspection-based quotation...</div>
     <div id="fq-page-msg" class="fq-msg" role="alert"></div>
 
     {{-- Empty / not-found state --}}
@@ -511,8 +511,8 @@
             <rect x="9" y="3" width="6" height="4" rx="1"/>
             <path d="M9 12h6M9 16h4"/>
         </svg>
-        <p class="fq-empty-title">Final Quotation Not Available</p>
-        <p class="fq-empty-sub">The final quotation for this inspection has not been prepared yet. You will be notified once it is ready for your review.</p>
+        <p class="fq-empty-title">Inspection-Based Quotation Not Available</p>
+        <p class="fq-empty-sub">The inspection-based quotation for this inspection has not been prepared yet. You will be notified once it is ready for your review.</p>
     </div>
 
     {{-- Main quotation content (hidden until loaded) --}}
@@ -865,7 +865,7 @@
             remarksCard.style.display = '';
         }
 
-        downloadBtn.href = '{{ url('/customer/final-quotation') }}/' + encodeURIComponent(inspectionId) + '/download-pdf';
+        downloadBtn.href = '{{ url("/customer/final-quotation") }}/' + encodeURIComponent(inspectionId) + '/download-pdf';
 
         /* Action buttons */
         actionsEl.style.display = '';
@@ -901,9 +901,9 @@
             if (currentQuotation) {
                 renderQuotation(currentQuotation);
             }
-            showMsg(actionMsg, 'success', resp.message || 'Final quotation marked as completed.');
+            showMsg(actionMsg, 'success', resp.message || 'Inspection-based quotation marked as completed.');
         } catch (err) {
-            showMsg(actionMsg, 'error', err.message || 'Could not mark the final quotation as completed. Please try again.');
+            showMsg(actionMsg, 'error', err.message || 'Could not mark the inspection-based quotation as completed. Please try again.');
             confirmBtn.disabled     = false;
             confirmText.textContent = 'Mark as Completed';
         }
@@ -927,7 +927,7 @@
             if (err.status === 404) {
                 emptyEl.classList.add('show');
             } else {
-                showMsg(pageMsg, 'error', err.message || 'Could not load final quotation. Please refresh.');
+                showMsg(pageMsg, 'error', err.message || 'Could not load the inspection-based quotation. Please refresh.');
             }
         } finally {
             loadingEl.classList.remove('show');

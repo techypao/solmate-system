@@ -145,7 +145,7 @@ class QuotationController extends Controller
         
     }
 
-    public function show($id)
+    public function show(int $id)
     {
         $user = Auth::user();
 
@@ -171,12 +171,12 @@ class QuotationController extends Controller
     public function getFinalQuotationOptions()
     {
         return response()->json([
-            'message' => 'Final quotation options retrieved successfully.',
+            'message' => 'Inspection-based quotation options retrieved successfully.',
             'data' => $this->finalQuotationOptions(),
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
         $user = Auth::user();
 
@@ -260,7 +260,7 @@ public function storeFinalQuotation(Request $request)
 
     if ($technician->role !== 'technician') {
         return response()->json([
-            'message' => 'Only technicians can create final quotations.'
+            'message' => 'Only technicians can create inspection-based quotations.'
         ], 403);
     }
 
@@ -276,7 +276,7 @@ public function storeFinalQuotation(Request $request)
 
     if ($normalizedInspectionStatus !== 'in_progress') {
         return response()->json([
-            'message' => 'Final quotation can only be created when the inspection request is in progress.'
+            'message' => 'Inspection-based quotations can only be created when the inspection request is in progress.'
         ], 422);
     }
 
@@ -289,7 +289,7 @@ public function storeFinalQuotation(Request $request)
         $this->loadLineItemsForFinalQuotation($existingFinalQuotation);
 
         return response()->json([
-            'message' => 'A final quotation already exists for this inspection request.',
+            'message' => 'An inspection-based quotation already exists for this inspection request.',
             'data' => $existingFinalQuotation,
             'inspection_request' => $inspectionRequest->loadMissing(['customer', 'technician']),
         ], 409);
@@ -357,7 +357,7 @@ public function storeFinalQuotation(Request $request)
 
         if ($normalizedLockedStatus !== 'in_progress') {
             throw ValidationException::withMessages([
-                'inspection_request_id' => 'Final quotation can only be created when the inspection request is in progress.',
+                'inspection_request_id' => 'Inspection-based quotations can only be created when the inspection request is in progress.',
             ]);
         }
 
@@ -369,7 +369,7 @@ public function storeFinalQuotation(Request $request)
 
         if ($lockedExistingFinalQuotation) {
             throw ValidationException::withMessages([
-                'inspection_request_id' => 'A final quotation already exists for this inspection request.',
+                'inspection_request_id' => 'An inspection-based quotation already exists for this inspection request.',
             ]);
         }
 
@@ -436,40 +436,40 @@ public function storeFinalQuotation(Request $request)
     $this->notificationService->notifyCustomerOfFinalQuotationAvailable($quotation, $technician->id);
 
     return response()->json([
-        'message' => 'Final quotation submitted. Inspection marked as completed.',
+        'message' => 'Inspection-based quotation submitted. Inspection marked as completed.',
         'data' => $quotation,
         'inspection_request' => $updatedInspectionRequest,
     ], 201);
 }
 
-public function getCustomerFinalQuotation(Request $request, $inspection_request_id)
+public function getCustomerFinalQuotation(Request $request, int $inspectionRequestId)
 {
     $customer = $request->user();
 
-    $quotation = $this->findCustomerFinalQuotation($customer->id, $inspection_request_id);
+    $quotation = $this->findCustomerFinalQuotation($customer->id, $inspectionRequestId);
 
     if (!$quotation) {
         return response()->json([
-            'message' => 'Final quotation not found.'
+            'message' => 'Inspection-based quotation not found.'
         ], 404);
     }
 
     $this->loadLineItemsForFinalQuotation($quotation);
 
     return response()->json([
-        'message' => 'Final quotation retrieved successfully.',
+        'message' => 'Inspection-based quotation retrieved successfully.',
         'data' => $quotation
     ], 200);
 }
 
-public function downloadCustomerFinalQuotationPdf(Request $request, $inspection_request_id)
+public function downloadCustomerFinalQuotationPdf(Request $request, int $inspectionRequestId)
 {
     $customer = $request->user();
 
-    $quotation = $this->findCustomerFinalQuotation($customer->id, $inspection_request_id);
+    $quotation = $this->findCustomerFinalQuotation($customer->id, $inspectionRequestId);
 
     if (! $quotation) {
-        abort(404, 'Final quotation not found.');
+        abort(404, 'Inspection-based quotation not found.');
     }
 
     $pdf = Pdf::loadView('customer.final-quotation-pdf', [
@@ -489,13 +489,13 @@ public function complete(Request $request, Quotation $quotation)
 
     if ($customer->role !== 'customer') {
         return response()->json([
-            'message' => 'Only customers can mark final quotations as completed.',
+            'message' => 'Only customers can mark inspection-based quotations as completed.',
         ], 403);
     }
 
     if ($quotation->quotation_type !== 'final') {
         return response()->json([
-            'message' => 'Only final quotations can be marked as completed.',
+            'message' => 'Only inspection-based quotations can be marked as completed.',
         ], 422);
     }
 
@@ -514,7 +514,7 @@ public function complete(Request $request, Quotation $quotation)
     $this->loadLineItemsForFinalQuotation($quotation);
 
     return response()->json([
-        'message' => 'Final quotation marked as completed.',
+        'message' => 'Inspection-based quotation marked as completed.',
         'data' => $quotation,
     ], 200);
 }
@@ -528,7 +528,7 @@ private function loadLineItemsForFinalQuotation(Quotation $quotation): void
     $quotation->loadMissing(['lineItems.pricingItem']);
 }
 
-private function findCustomerFinalQuotation(int $customerId, $inspectionRequestId): ?Quotation
+private function findCustomerFinalQuotation(int $customerId, int $inspectionRequestId): ?Quotation
 {
     $quotation = Quotation::with(['customer', 'inspectionRequest.technician'])
         ->where('inspection_request_id', $inspectionRequestId)

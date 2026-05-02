@@ -778,7 +778,7 @@
                         </div>
                         <div>
                             <p class="inst-check-title">Confirm your quotation</p>
-                            <p class="inst-check-desc">Select your quotation reference if your installation request is tied to an approved or final quotation.</p>
+                            <p class="inst-check-desc">Select your quotation reference if your installation request is tied to an approved or inspection-based quotation.</p>
                         </div>
                     </div>
                     <div class="inst-check">

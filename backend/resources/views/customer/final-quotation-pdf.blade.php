@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Final Quotation #{{ $quotation->id }}</title>
+    <title>Inspection-Based Quotation #{{ $quotation->id }}</title>
     <style>
         @page {
             margin: 28px 30px;
@@ -204,7 +204,7 @@
 
 <div class="brand-header">
     <p class="brand-name">Sol<span class="accent">Mate</span></p>
-    <p class="brand-subtitle">Final solar quotation summary and cost breakdown</p>
+    <p class="brand-subtitle">Inspection-based solar quotation summary and cost breakdown</p>
 </div>
 
 <div class="section">
@@ -214,7 +214,7 @@
             <td>
                 <table class="meta-table">
                     <tr><td class="label">Quotation ID</td><td class="value">#{{ $quotation->id }}</td></tr>
-                    <tr><td class="label">Quotation Type</td><td class="value">Final</td></tr>
+                    <tr><td class="label">Quotation Type</td><td class="value">Inspection-Based</td></tr>
                     <tr><td class="label">Created Date</td><td class="value">{{ $createdDate }}</td></tr>
                     <tr><td class="label">Status</td><td class="value">{{ $quotation->status ? ucfirst($quotation->status) : '—' }}</td></tr>
                 </table>
@@ -236,7 +236,7 @@
 </div>
 
 <div class="section">
-    <p class="section-title">Final Quotation Details</p>
+    <p class="section-title">Inspection-Based Quotation Details</p>
     <table class="grid">
         <tr>
             <td>

@@ -74,8 +74,8 @@ class QuotationSettingsController extends Controller
             'default_misc_cost.min' => 'Default misc cost must be at least 0.',
             'default_panel_watts.numeric' => 'Default panel watts must be a valid number.',
             'default_panel_watts.min' => 'Default panel watts must be at least 1.',
-            'initial_price_per_kw.numeric' => 'Initial quotation price per kW must be a valid number.',
-            'initial_price_per_kw.min' => 'Initial quotation price per kW must be at least 0.',
+            'initial_price_per_kw.numeric' => 'Pre-inspection estimate price per kW must be a valid number.',
+            'initial_price_per_kw.min' => 'Pre-inspection estimate price per kW must be at least 0.',
         ];
     }
 }

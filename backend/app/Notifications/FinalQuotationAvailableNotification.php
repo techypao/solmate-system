@@ -17,8 +17,8 @@ class FinalQuotationAvailableNotification extends BaseDatabaseNotification
     {
         return $this->buildPayload([
             'type' => 'final_quotation_available',
-            'title' => 'Final Quotation Available',
-            'message' => 'Your final quotation is now available for review.',
+            'title' => 'Inspection-Based Quotation Available',
+            'message' => 'Your inspection-based quotation is now available for review.',
             'entity_type' => 'quotation',
             'entity_id' => $this->quotation->id,
             'target_screen' => 'CustomerFinalQuotationDetails',

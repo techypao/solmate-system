@@ -426,7 +426,7 @@
     <div>
         <p class="cql-eyebrow">Quotation History</p>
         <h1 class="cql-title">View all your quotations in one place</h1>
-        <p class="cql-sub">Review your submitted initial quotations and any final quotations prepared by our technicians. The latest quotations appear first so you can quickly pick up where you left off.</p>
+        <p class="cql-sub">Review your submitted pre-inspection estimates and any inspection-based quotations prepared by our technicians. The latest quotations appear first so you can quickly pick up where you left off.</p>
     </div>
     <div class="cql-actions">
         <a href="{{ route('customer.quotation.create') }}" class="cql-btn cql-btn-primary">Create Quotation</a>
@@ -436,11 +436,11 @@
 
 <section aria-label="Quotation list">
     <div class="cql-toolbar">
-        <div class="cql-toolbar-copy">Initial and final quotations are shown together and sorted by the most recent creation date.</div>
+        <div class="cql-toolbar-copy">Pre-inspection estimates and inspection-based quotations are shown together and sorted by the most recent creation date.</div>
         <div class="cql-filters">
             <button type="button" class="cql-chip active" data-filter="all">All</button>
-            <button type="button" class="cql-chip" data-filter="initial">Initial</button>
-            <button type="button" class="cql-chip" data-filter="final">Final</button>
+            <button type="button" class="cql-chip" data-filter="initial">Pre-Inspection Estimate</button>
+            <button type="button" class="cql-chip" data-filter="final">Inspection-Based Quotation</button>
         </div>
     </div>
 
@@ -545,8 +545,9 @@
 
     function typeBadge(type) {
         var normalized = String(type || 'initial').toLowerCase();
-        var label = normalized === 'final' ? 'Final' : 'Initial';
-        var badgeClass = normalized === 'final' ? 'cql-badge-final' : 'cql-badge-initial';
+        var isFinal = normalized === 'final' || normalized.indexOf('inspection-based') !== -1;
+        var label = isFinal ? 'Inspection-Based Quotation' : 'Pre-Inspection Estimate';
+        var badgeClass = isFinal ? 'cql-badge-final' : 'cql-badge-initial';
         return '<span class="cql-badge ' + badgeClass + '">' + escHtml(label) + '</span>';
     }
 
@@ -590,7 +591,7 @@
     function renderInitialDetail(quotation) {
         var summaryCards = [
             ['Quotation ID', '#' + quotation.id, ''],
-            ['Quotation Type', 'Initial', ''],
+            ['Quotation Type', 'Pre-Inspection Estimate', ''],
             ['Submitted Date', fmtDate(quotation.created_at), ''],
             ['Monthly Electric Bill', fmtPeso(quotation.monthly_electric_bill), ''],
             ['Estimated System Size', quotation.system_kw ? Number(quotation.system_kw).toFixed(2) + ' kW' : '-', ''],
@@ -649,8 +650,8 @@
         var isFinal = !isInitialQuotation(quotation);
         if (isFinal && quotation.inspection_request_id) {
             return '<div class="cql-action-group">'
-                + '<a class="cql-detail-btn" href="{{ url('/customer/final-quotation') }}/' + encodeURIComponent(quotation.inspection_request_id) + '">View Details</a>'
-                + '<a class="cql-detail-btn cql-detail-btn-download" href="{{ url('/customer/final-quotation') }}/' + encodeURIComponent(quotation.inspection_request_id) + '/download-pdf">Download PDF</a>'
+                + '<a class="cql-detail-btn" href="{{ url("/customer/final-quotation") }}/' + encodeURIComponent(quotation.inspection_request_id) + '">View Details</a>'
+                + '<a class="cql-detail-btn cql-detail-btn-download" href="{{ url("/customer/final-quotation") }}/' + encodeURIComponent(quotation.inspection_request_id) + '/download-pdf">Download PDF</a>'
                 + '</div>';
         }
 
@@ -663,7 +664,7 @@
         var projectedCost = fmtPeso(quotation.project_cost);
         var relatedRequest = relatedRequestLabel(quotation);
         var initial = isInitialQuotation(quotation);
-        var typeText = initial ? 'Initial' : 'Final';
+        var typeText = initial ? 'Pre-Inspection Estimate' : 'Inspection-Based Quotation';
         var detailWrapperClass = initial ? 'cql-detail-content-full' : 'cql-detail-grid';
         var metaItems = [
             ['Quotation ID', '#' + quotation.id],
@@ -683,7 +684,7 @@
             + '<h2 class="cql-quote-id">Quotation #' + escHtml(quotation.id) + '</h2>'
             + '<div class="cql-quote-date">Submitted ' + escHtml(createdDate) + '</div>'
             + '</div>'
-            + '<div class="cql-badges">' + typeBadge(typeText) + (initial ? '' : statusBadge(quotation.status)) + '</div>'
+            + '<div class="cql-badges">' + typeBadge(quotation.quotation_type) + (initial ? '' : statusBadge(quotation.status)) + '</div>'
             + '</div>'
             + '<div class="cql-meta-grid">'
             + metaItems.map(function (item) {

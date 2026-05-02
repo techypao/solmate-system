@@ -328,6 +328,14 @@
         line-height: 1.3;
         max-width: 72px;
     }
+    .trk-step-meta {
+        margin-top: 4px;
+        font-size: 11px;
+        color: #94a3b8;
+        text-align: center;
+        line-height: 1.45;
+        max-width: 120px;
+    }
     .trk-step.done   .trk-step-label  { color: #15803d; }
     .trk-step.active .trk-step-label  { color: #92400e; font-weight: 700; }
     .trk-step.cancelled-step .trk-step-label { color: #dc2626; }
@@ -546,6 +554,13 @@
         }
         .trk-section-title { font-size: 19px; }
         .trk-section-pill { width: 100%; justify-content: center; }
+        .trk-step {
+            min-width: 92px;
+        }
+        .trk-step-label,
+        .trk-step-meta {
+            max-width: 88px;
+        }
     }
 </style>
 
@@ -796,8 +811,111 @@
         return headline(request.request_type || request.tracking_category || 'Service Request');
     }
 
+    function pickFirstAvailable(source, keys) {
+        for (var i = 0; i < keys.length; i++) {
+            var value = source[keys[i]];
+            if (value !== undefined && value !== null && String(value).trim() !== '') {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    function getCurrentStatusFallbackDate(request, statuses) {
+        var currentStatus = String(request.status || 'pending').toLowerCase();
+        for (var i = 0; i < statuses.length; i++) {
+            if (currentStatus === statuses[i]) {
+                return pickFirstAvailable(request, ['updated_at']);
+            }
+        }
+        return null;
+    }
+
+    function getCompletedActor(request) {
+        return request.tracking_category === 'inspection' ? 'Technician' : 'Admin';
+    }
+
+    function getRequestStepDetails(request) {
+        var status = String(request.status || 'pending').toLowerCase();
+        var stepState = TERMINAL[status] ? -1 : getStepState(status);
+
+        var submittedDate = pickFirstAvailable(request, ['submitted_at', 'created_at']);
+        var explicitApprovedDate = pickFirstAvailable(request, ['approved_at']);
+        var approvedDate = explicitApprovedDate || getCurrentStatusFallbackDate(request, ['approved']);
+        var explicitScheduledDate = pickFirstAvailable(request, ['scheduled_at']);
+        var scheduledDate = explicitScheduledDate
+            || pickFirstAvailable(request, ['preferred_date', 'date_needed'])
+            || getCurrentStatusFallbackDate(request, ['scheduled', 'assigned']);
+        var explicitStartedDate = pickFirstAvailable(request, ['started_at', 'in_progress_at']);
+        var startedDate = explicitStartedDate || getCurrentStatusFallbackDate(request, ['in_progress']);
+        var explicitCompletedDate = pickFirstAvailable(request, ['completed_at']);
+        var completedDate = explicitCompletedDate || getCurrentStatusFallbackDate(request, ['completed']);
+        var completedActor = getCompletedActor(request);
+
+        var details = {};
+
+        if (submittedDate) {
+            details.submitted = {
+                text: 'Submitted by Customer on ' + fmtDate(submittedDate),
+                summaryLabel: 'Submitted'
+            };
+        }
+
+        if (approvedDate && (explicitApprovedDate || stepState >= 1)) {
+            details.approved = {
+                text: 'Approved by Admin on ' + fmtDate(approvedDate),
+                summaryLabel: 'Approved'
+            };
+        }
+
+        if (scheduledDate && (explicitScheduledDate || stepState >= 2)) {
+            details.scheduled = {
+                text: 'Scheduled by Admin for ' + fmtDate(scheduledDate),
+                summaryLabel: 'Scheduled'
+            };
+        }
+
+        if (startedDate && (explicitStartedDate || stepState >= 3)) {
+            details.in_progress = {
+                text: 'Started by Technician on ' + fmtDate(startedDate),
+                summaryLabel: 'Started'
+            };
+        }
+
+        if (completedDate && (explicitCompletedDate || status === 'completed')) {
+            details.completed = {
+                text: 'Completed by ' + completedActor + ' on ' + fmtDate(completedDate),
+                summaryLabel: 'Completed'
+            };
+        }
+
+        return details;
+    }
+
+    function buildRequestSummaryMeta(request) {
+        var details = getRequestStepDetails(request);
+        var items = [];
+        var order = ['submitted', 'approved', 'scheduled', 'in_progress', 'completed'];
+
+        for (var i = 0; i < order.length; i++) {
+            var detail = details[order[i]];
+            if (!detail) continue;
+
+            items.push(
+                '<div class="trk-notes-meta-item">'
+                + '<div class="trk-notes-meta-label">' + escHtml(detail.summaryLabel) + '</div>'
+                + '<div class="trk-notes-meta-value">' + escHtml(detail.text) + '</div>'
+                + '</div>'
+            );
+        }
+
+        return items.join('');
+    }
+
     /* ── HTML builders ── */
-    function buildStepper(status) {
+    function buildStepper(request) {
+        var status    = String(request.status || 'pending').toLowerCase();
+        var details   = getRequestStepDetails(request);
         var s         = String(status || 'pending').toLowerCase();
         var isCancel  = TERMINAL[s];
         var stepPos   = isCancel ? -1 : getStepState(s);
@@ -829,6 +947,9 @@
             html += '<div class="' + stepClass + '" role="listitem">'
                   + '<div class="trk-step-circle">' + icon + '</div>'
                   + '<span class="trk-step-label">' + escHtml(step.label) + '</span>'
+            + (details[step.key]
+                ? '<span class="trk-step-meta">' + escHtml(details[step.key].text) + '</span>'
+                : '')
                   + '</div>';
         }
         html += '</div>';
@@ -875,7 +996,7 @@
             + '<div class="trk-card-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg></div>'
             + '<div><p class="trk-card-title">Request Status</p><p class="trk-card-subtitle">Live progress of your service request</p></div>'
             + '</div>'
-            + '<div class="trk-card-body">' + buildStepper(status);
+            + '<div class="trk-card-body">' + buildStepper(sr);
 
         /* Preferred date if set */
         if (sr.date_needed) {
@@ -951,9 +1072,9 @@
             + '<div class="trk-card-body">'
             + '<pre class="trk-notes-text">' + escHtml(sr.details || 'No details provided.') + '</pre>'
             + '<div class="trk-notes-meta">'
+            + buildRequestSummaryMeta(sr)
             + '<div class="trk-notes-meta-item"><div class="trk-notes-meta-label">Contact Number</div><div class="trk-notes-meta-value">' + escHtml(sr.contact_number || '\u2014') + '</div></div>'
             + '<div class="trk-notes-meta-item"><div class="trk-notes-meta-label">Preferred Date</div><div class="trk-notes-meta-value">' + escHtml(fmtDate(sr.date_needed)) + '</div></div>'
-            + '<div class="trk-notes-meta-item"><div class="trk-notes-meta-label">Submitted</div><div class="trk-notes-meta-value">' + escHtml(fmtDate(sr.created_at)) + '</div></div>'
             + '</div>'
             + '</div></div>'; /* end card 3 */
 
@@ -983,7 +1104,7 @@
             subtitle: 'Review the latest status, assigned technician details, and next steps for your inspection bookings.',
             emptyTitle: 'No inspection requests yet.',
             emptySubtitle: 'Start with an inspection request so the SolMate team can assess your property and guide your next step.',
-            emptyHref: '{{ route('customer.inspection') }}',
+            emptyHref: '{{ route("customer.inspection") }}',
             emptyCta: 'Request an Inspection'
         },
         installation: {
@@ -992,7 +1113,7 @@
             subtitle: 'See which installation requests are approved, scheduled, or already moving toward completion.',
             emptyTitle: 'No installation requests yet.',
             emptySubtitle: 'Book an installation request when you are ready for site coordination or solar setup scheduling.',
-            emptyHref: '{{ route('customer.installation') }}',
+            emptyHref: '{{ route("customer.installation") }}',
             emptyCta: 'Request Installation'
         },
         maintenance: {
@@ -1001,7 +1122,7 @@
             subtitle: 'Follow maintenance progress, technician assignment, and the latest service updates in one place.',
             emptyTitle: 'No maintenance requests yet.',
             emptySubtitle: 'Submit a maintenance request whenever your system needs servicing, support, or follow-up work.',
-            emptyHref: '{{ route('customer.maintenance') }}',
+            emptyHref: '{{ route("customer.maintenance") }}',
             emptyCta: 'Request Maintenance'
         }
     };

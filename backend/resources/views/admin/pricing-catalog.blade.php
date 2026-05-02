@@ -5,7 +5,7 @@
     <div class="card admin-hero-card">
         <p class="admin-page-eyebrow">Admin Catalog</p>
         <h1 class="page-title">Admin Pricing Catalog</h1>
-        <p class="page-copy">Manage pricing items for future final quotation itemization. This page uses the existing admin pricing API.</p>
+        <p class="page-copy">Manage pricing items for future inspection-based quotation itemization. This page uses the existing admin pricing API.</p>
     </div>
 
     <style>

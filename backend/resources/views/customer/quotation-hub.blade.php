@@ -202,7 +202,7 @@
 <section class="qh-hero">
     <p class="qh-eyebrow">Quotation Center</p>
     <h1 class="qh-title">Choose how you want to manage your quotation</h1>
-    <p class="qh-sub">Start with an instant solar estimate or review the quotations already prepared for your account, including technician-prepared final quotations after inspection.</p>
+    <p class="qh-sub">Start with a pre-inspection estimate or review the quotations already prepared for your account, including technician-prepared inspection-based quotations after inspection.</p>
     <div class="qh-steps">
         <span class="qh-step"><span class="qh-step-num">1</span>Estimate your system</span>
         <span class="qh-step"><span class="qh-step-num">2</span>Review your submissions</span>
@@ -217,7 +217,7 @@
                 <path d="M13 2L3 14h8l-1 8 11-14h-8l1-6z"/>
             </svg>
         </div>
-        <h2 class="qh-card-title">Create Initial Quotation</h2>
+        <h2 class="qh-card-title">Create Pre-Inspection Estimate</h2>
         <p class="qh-card-desc">Estimate your solar system size, projected cost, and ROI based on your monthly electric bill.</p>
         <ul class="qh-card-points">
             <li>
@@ -230,7 +230,7 @@
             </li>
             <li>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>
-                Keeps the existing initial quotation submission flow
+                Keeps the existing pre-inspection estimate flow
             </li>
         </ul>
         <div class="qh-card-footer">
@@ -249,11 +249,11 @@
             </svg>
         </div>
         <h2 class="qh-card-title">View My Quotations</h2>
-        <p class="qh-card-desc">View your submitted initial quotations and technician-prepared final quotations.</p>
+        <p class="qh-card-desc">View your submitted pre-inspection estimates and technician-prepared inspection-based quotations.</p>
         <ul class="qh-card-points">
             <li>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>
-                See initial and final quotations in one place
+                See both quotation types in one place
             </li>
             <li>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>
@@ -261,7 +261,7 @@
             </li>
             <li>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>
-                Open final quotations prepared after inspection
+                Open inspection-based quotations prepared after inspection
             </li>
         </ul>
         <div class="qh-card-footer">
@@ -272,6 +272,6 @@
 </section>
 
 <div class="qh-tip">
-    <strong>Tip:</strong> Your initial quotation is an estimate based on your electric bill. After a site inspection, our team can prepare a more detailed final quotation for approval.
+    <strong>Tip:</strong> The pre-inspection estimate is only a guide and may change after the technician's actual inspection.
 </div>
 @endsection

@@ -119,7 +119,7 @@ class QuotationLineItemApiTest extends TestCase
         ]);
 
         $response->assertStatus(422)
-            ->assertJsonPath('message', 'Line items can only be attached to final quotations.');
+            ->assertJsonPath('message', 'Line items can only be attached to inspection-based quotations.');
 
         $this->assertDatabaseCount('quotation_line_items', 0);
     }

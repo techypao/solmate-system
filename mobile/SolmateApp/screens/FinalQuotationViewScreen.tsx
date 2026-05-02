@@ -106,11 +106,11 @@ function fmtYears(value?: number | null) {
 function getFriendlyErrorMessage(error: unknown) {
   if (error instanceof ApiError) {
     if (error.status === 404) {
-      return 'No final quotation has been submitted for this inspection request yet.';
+      return 'No inspection-based quotation has been submitted for this inspection request yet.';
     }
     return error.message;
   }
-  return 'Could not load the final quotation right now.';
+  return 'Could not load the inspection-based quotation right now.';
 }
 
 /* ── sub-components ── */
@@ -214,7 +214,7 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
       <SafeAreaView style={s.safe}>
         <View style={s.center}>
           <ActivityIndicator size="large" color={GOLD} />
-          <Text style={s.loadingText}>Loading final quotation...</Text>
+          <Text style={s.loadingText}>Loading inspection-based quotation...</Text>
         </View>
       </SafeAreaView>
     );
@@ -226,9 +226,9 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
     return (
       <SafeAreaView style={s.safe}>
         <View style={s.center}>
-          <Text style={s.errTitle}>Final quotation unavailable</Text>
+          <Text style={s.errTitle}>Inspection-based quotation unavailable</Text>
           <Text style={s.errText}>
-            {errorMessage || 'No final quotation was returned for this request.'}
+            {errorMessage || 'No inspection-based quotation was returned for this request.'}
           </Text>
           <Pressable
             onPress={() => navigation.goBack()}
@@ -249,7 +249,7 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
 
     Alert.alert(
       'Mark as Completed',
-      'Mark this final quotation as completed?',
+      'Mark this inspection-based quotation as completed?',
       [
         {text: 'Cancel', style: 'cancel'},
         {
@@ -272,14 +272,14 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
 
               Alert.alert(
                 'Success',
-                response.message || 'Final quotation marked as completed.',
+                response.message || 'Inspection-based quotation marked as completed.',
               );
             } catch (error) {
               Alert.alert(
                 'Update failed',
                 error instanceof ApiError
                   ? error.message
-                  : 'Could not mark the final quotation as completed.',
+                  : 'Could not mark the inspection-based quotation as completed.',
               );
             } finally {
               setSubmitting(false);
@@ -324,9 +324,9 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
         </Pressable>
 
         {/* ── title ── */}
-        <Text style={s.title}>Final Quotation</Text>
+        <Text style={s.title}>Inspection-Based Quotation</Text>
         <Text style={s.subtitle}>
-          Detailed post-inspection quotation submitted by the assigned technician.
+          This quotation is based on the technician's actual inspection and assessment.
         </Text>
 
         {/* ── 1. Inspection Summary ── */}

@@ -328,12 +328,12 @@
                         ],
                         'quotationsByType' => [
                             'title' => 'Quotations by Type',
-                            'copy' => 'Compare how many quotations are still initial estimates versus completed final quotations.',
+                            'copy' => 'Compare how many quotations are still pre-inspection estimates versus completed inspection-based quotations.',
                             'dataset' => $quotationTypeChart,
                         ],
                         'quotationsByStatus' => [
                             'title' => 'Quotations by Status',
-                            'copy' => 'Monitor final quotation decisions and follow-up needs across the current reporting window.',
+                            'copy' => 'Monitor inspection-based quotation decisions and follow-up needs across the current reporting window.',
                             'dataset' => $quotationStatusChart,
                         ],
                     ];

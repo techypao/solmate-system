@@ -705,14 +705,14 @@
     <div class="dash-tab-panel" id="tab-quotations">
         <div class="dash-filter-chips">
             <button class="dash-chip active" data-filter="all">All</button>
-            <button class="dash-chip" data-filter="initial">Initial</button>
-            <button class="dash-chip" data-filter="final">Final</button>
+            <button class="dash-chip" data-filter="initial">Pre-Inspection Estimate</button>
+            <button class="dash-chip" data-filter="final">Inspection-Based Quotation</button>
             <button class="dash-chip" data-filter="completed">Completed</button>
             <button class="dash-chip chip-gold" id="generate-new-chip">+ Generate New</button>
         </div>
 
         <div class="dash-new-q-panel" id="new-quotation-panel">
-            <h3 class="dash-form-title" style="margin-bottom:4px;">Get an Initial Quotation</h3>
+            <h3 class="dash-form-title" style="margin-bottom:4px;">Get a Pre-Inspection Estimate</h3>
             <p style="font-size:13px;color:#92400e;margin:0 0 16px;">Enter your average monthly electricity bill and we will compute a solar system sizing estimate for you.</p>
             <div id="new-q-msg" class="dash-msg"></div>
             <form id="new-quotation-form">
@@ -1256,7 +1256,7 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f4c542" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             </div>
             <p class="adm-link-title">Quotation Item Builder</p>
-            <p class="adm-link-copy">Open the existing quotation item builder to review and edit final quotation line items.</p>
+            <p class="adm-link-copy">Open the existing quotation item builder to review and edit inspection-based quotation line items.</p>
         </a>
     </div>
 </div>

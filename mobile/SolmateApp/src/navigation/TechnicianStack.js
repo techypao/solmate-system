@@ -59,7 +59,7 @@ export default function TechnicianStack() {
       <Stack.Screen
         name="TechnicianQuotationDetail"
         component={QuotationDetailScreen}
-        options={{title: 'Final Quotation Details'}}
+        options={{title: 'Inspection-Based Quotation Details'}}
       />
       <Stack.Screen
         name="TechnicianServiceRequestDetail"

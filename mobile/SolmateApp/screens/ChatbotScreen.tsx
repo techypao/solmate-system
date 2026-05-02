@@ -37,10 +37,10 @@ const QUICK_HELP = [
 ];
 
 const QUICK_PROMPTS = [
-  'What is an initial quotation?',
+  'What is a pre-inspection estimate?',
   'How do I request an inspection?',
   'What is the difference between inspection and service request?',
-  'Who creates the final quotation?',
+  'Who creates the inspection-based quotation?',
   'How do testimonies work?',
   'What do notifications mean?',
 ];

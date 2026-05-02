@@ -1,4 +1,4 @@
-@extends('layouts.app', ['title' => 'Create Initial Quotation'])
+@extends('layouts.app', ['title' => 'Create Pre-Inspection Estimate'])
 
 @section('content')
 <style>
@@ -220,6 +220,20 @@
         display: block;
     }
 
+    .cqc-disclaimer {
+        margin: 0 0 20px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: #f8fafc;
+        border: 1px solid #dbeafe;
+        color: #475569;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+    .cqc-disclaimer strong {
+        color: #102a43;
+    }
+
     .cqc-submit {
         display: inline-flex;
         align-items: center;
@@ -372,9 +386,9 @@
 
 <section class="cqc-hero">
     <div>
-        <p class="cqc-eyebrow">Create Initial Quotation</p>
+        <p class="cqc-eyebrow">Create Pre-Inspection Estimate</p>
         <h1 class="cqc-title">Estimate your solar system size, cost, and ROI</h1>
-        <p class="cqc-sub">Enter your average monthly electric bill and we’ll generate the same initial quotation estimate flow you already use today, including projected savings and return on investment.</p>
+        <p class="cqc-sub">Enter your average monthly electric bill and we’ll generate a pre-inspection estimate, including projected savings and return on investment.</p>
     </div>
     <div class="cqc-actions">
         <a href="{{ route('customer.quotation.index') }}" class="cqc-link-btn cqc-link-btn-primary">View My Quotations</a>
@@ -383,7 +397,7 @@
 </section>
 
 <div class="cqc-layout">
-    <section class="cqc-card" aria-label="Initial quotation form">
+    <section class="cqc-card" aria-label="Pre-inspection estimate">
         <div class="cqc-card-header">
             <div class="cqc-card-icon" aria-hidden="true">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -391,7 +405,7 @@
                 </svg>
             </div>
             <div>
-                <h2 class="cqc-card-title">Initial Quotation Form</h2>
+                <h2 class="cqc-card-title">Pre-Inspection Estimate</h2>
                 <p class="cqc-card-subtitle">Your existing automated sizing and ROI computation stays the same.</p>
             </div>
         </div>
@@ -420,17 +434,8 @@
                     <div id="cqc-bill-error" class="cqc-field-error"></div>
                 </div>
 
-                <div class="cqc-field">
-                    <label class="cqc-label" for="cqc-remarks-input">Remarks</label>
-                    <textarea
-                        id="cqc-remarks-input"
-                        class="cqc-textarea"
-                        name="remarks"
-                        placeholder="Optional notes, questions, or special requirements"
-                        rows="4"
-                    ></textarea>
-                    <p class="cqc-field-hint">Optional. Add any details that may help our team understand your request.</p>
-                    <div id="cqc-remarks-error" class="cqc-field-error"></div>
+                <div class="cqc-disclaimer">
+                    <strong>Disclaimer:</strong> Tax is not yet included in the estimate.
                 </div>
 
                 <button type="submit" class="cqc-submit" id="cqc-submit-btn">
@@ -489,11 +494,15 @@
                         </svg>
                     </div>
                     <div>
-                        <p class="cqc-info-title">Move to final quotation later</p>
-                        <p class="cqc-info-copy">After a site inspection, our technicians can prepare a more detailed final quotation for your approval.</p>
+                        <p class="cqc-info-title">Inspection-based quotation later</p>
+                        <p class="cqc-info-copy">After a site inspection, our technicians can prepare an inspection-based quotation for your approval.</p>
                     </div>
                 </div>
             </div>
+        </section>
+
+        <section class="cqc-note">
+            <strong>Note:</strong> The pre-inspection estimate is only a guide and may change after the technician's actual inspection.
         </section>
 
         <section class="cqc-note">
@@ -585,13 +594,13 @@
     }
 
     function clearErrors() {
-        ['#cqc-bill-error', '#cqc-remarks-error'].forEach(function (selector) {
+        ['#cqc-bill-error'].forEach(function (selector) {
             var el = qs(selector);
             el.textContent = '';
             el.classList.remove('show');
         });
 
-        ['#cqc-bill-input', '#cqc-remarks-input'].forEach(function (selector) {
+        ['#cqc-bill-input'].forEach(function (selector) {
             qs(selector).classList.remove('has-error');
         });
     }
@@ -603,11 +612,6 @@
             qs('#cqc-bill-input').classList.add('has-error');
         }
 
-        if (errors.remarks) {
-            qs('#cqc-remarks-error').textContent = Array.isArray(errors.remarks) ? errors.remarks[0] : errors.remarks;
-            qs('#cqc-remarks-error').classList.add('show');
-            qs('#cqc-remarks-input').classList.add('has-error');
-        }
     }
 
     function renderResultItem(label, value) {
@@ -620,7 +624,6 @@
     var form = qs('#cqc-form');
     var formMsg = qs('#cqc-form-msg');
     var billInput = qs('#cqc-bill-input');
-    var remarksInput = qs('#cqc-remarks-input');
     var submitBtn = qs('#cqc-submit-btn');
     var submitText = qs('#cqc-submit-text');
     var resultBox = qs('#cqc-result');
@@ -636,10 +639,6 @@
         var body = {
             monthly_electric_bill: parseFloat(billInput.value)
         };
-        var remarks = (remarksInput.value || '').trim();
-        if (remarks) {
-            body.remarks = remarks;
-        }
 
         try {
             var response = await apiRequest('/api/quotations', {
@@ -655,7 +654,7 @@
                 renderResultItem('ROI', quotation.roi_years ? Number(quotation.roi_years).toFixed(1) + ' years' : '-');
 
             resultBox.classList.add('show');
-            showMsg(formMsg, 'success', 'Your initial quotation has been generated successfully.');
+            showMsg(formMsg, 'success', 'Your pre-inspection estimate has been generated successfully.');
             form.reset();
             resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } catch (error) {

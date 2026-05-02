@@ -5,7 +5,7 @@
     <div class="card admin-hero-card">
         <p class="admin-page-eyebrow">Quotation Workspace</p>
         <h1 class="page-title">Quotation Item Builder</h1>
-        <p class="page-copy">Load an existing final quotation, edit its itemized line items, and save them through the existing backend sync endpoint.</p>
+        <p class="page-copy">Load an existing inspection-based quotation, edit its itemized line items, and save them through the existing backend sync endpoint.</p>
 
         <div id="builder-success" class="status" style="display: none;"></div>
         <div id="builder-error" class="error-box" style="display: none;"></div>
@@ -415,7 +415,7 @@
             if (quotationState.quotation_type !== 'final') {
                 setVisible(builderContent, false);
                 setVisible(builderLocked, true);
-                builderLockedMessage.textContent = 'Only final quotations can be edited in the item builder. This quotation is not editable here.';
+                builderLockedMessage.textContent = 'Only inspection-based quotations can be edited in the item builder. This quotation is not editable here.';
                 return;
             }
 
@@ -451,7 +451,7 @@
 
         async function saveLineItems() {
             if (!quotationState || quotationState.quotation_type !== 'final') {
-                showError('Only final quotations can be saved in the item builder.');
+                showError('Only inspection-based quotations can be saved in the item builder.');
                 return;
             }
 

@@ -147,14 +147,14 @@ export default function InspectionRequestListScreen({navigation}: any) {
           <Text style={s.outlineBtnText}>View Request Details</Text>
         </Pressable>
 
-        {/* final quotation section */}
+        {/* inspection-based quotation section */}
         <View style={s.quotationSection}>
           <View style={s.quotationDivider} />
-          <Text style={s.quotationTitle}>Final Quotation</Text>
+          <Text style={s.quotationTitle}>Inspection-Based Quotation</Text>
           <Text style={s.quotationText}>
             {canOpenFinalQuotation
-              ? 'Open the technician-submitted final quotation for this inspection request.'
-              : 'The final quotation becomes viewable here after the inspection is completed.'}
+              ? 'Open the technician-submitted inspection-based quotation for this inspection request.'
+              : 'The inspection-based quotation becomes viewable here after the inspection is completed.'}
           </Text>
           <Pressable
             disabled={!canOpenFinalQuotation}
@@ -173,7 +173,7 @@ export default function InspectionRequestListScreen({navigation}: any) {
                   ? s.primaryBtnText
                   : s.disabledBtnText,
               ]}>
-              View Final Quotation
+              View Inspection-Based Quotation
             </Text>
           </Pressable>
         </View>
@@ -215,7 +215,7 @@ export default function InspectionRequestListScreen({navigation}: any) {
         {/* title block */}
         <Text style={s.title}>My Inspection Requests</Text>
         <Text style={s.subtitle}>
-          Review inspection request progress and open the final quotation when
+          Review inspection request progress and open the inspection-based quotation when
           the technician has completed the visit.
         </Text>
       </View>

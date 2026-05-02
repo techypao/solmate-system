@@ -28,7 +28,7 @@ class QuotationLineItemController extends Controller
 
         if ($quotation->quotation_type !== 'final') {
             return response()->json([
-                'message' => 'Line items can only be attached to final quotations.',
+                'message' => 'Line items can only be attached to inspection-based quotations.',
             ], 422);
         }
 

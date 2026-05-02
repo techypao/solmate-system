@@ -230,12 +230,12 @@ export default function TechnicianQuotationScreen({ route }: any) {
       setQuotation(updatedQuotation);
       hydrateForm(updatedQuotation);
 
-      Alert.alert('Success', 'Final quotation submitted successfully.');
+      Alert.alert('Success', 'Inspection-based quotation submitted successfully.');
     } catch (error) {
       if (error instanceof ApiError) {
         Alert.alert('Submit failed', error.message);
       } else {
-        Alert.alert('Submit failed', 'Could not submit the final quotation.');
+        Alert.alert('Submit failed', 'Could not submit the inspection-based quotation.');
       }
     } finally {
       setSubmitting(false);
@@ -281,8 +281,8 @@ export default function TechnicianQuotationScreen({ route }: any) {
             <Text style={styles.eyebrow}>Technician review</Text>
             <Text style={styles.title}>Finalize quotation #{quotation.id}</Text>
             <Text style={styles.subtitle}>
-              Review the customer&apos;s initial request, then fill in the
-              technical and cost fields needed for the final quotation.
+              Review the customer's pre-inspection estimate, then fill in the
+              technical and cost fields needed for the inspection-based quotation.
             </Text>
           </View>
 
@@ -334,7 +334,7 @@ export default function TechnicianQuotationScreen({ route }: any) {
           <AppCard style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Technical fields</Text>
             <Text style={styles.sectionSubtitle}>
-              Update the system details that convert the quotation into a final
+              Update the system details that convert the quotation into an inspection-based
               version.
             </Text>
 
@@ -448,7 +448,7 @@ export default function TechnicianQuotationScreen({ route }: any) {
               <TextInput
                 value={remarks}
                 onChangeText={setRemarks}
-                placeholder="Add final quotation notes"
+                placeholder="Add inspection-based quotation notes"
                 placeholderTextColor="#94a3b8"
                 multiline={true}
                 numberOfLines={4}
@@ -465,13 +465,16 @@ export default function TechnicianQuotationScreen({ route }: any) {
             <Text style={styles.infoText}>
               Only the technician-editable fields above will be updated.
             </Text>
+            <Text style={styles.infoText}>
+              This quotation is based on the technician's actual inspection and assessment.
+            </Text>
           </View>
 
           <AppButton
             title={
               submitting
-                ? 'Submitting final quotation...'
-                : 'Submit final quotation'
+                ? 'Submitting inspection-based quotation...'
+                : 'Submit inspection-based quotation'
             }
             onPress={handleSubmit}
             disabled={submitting}

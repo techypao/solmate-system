@@ -247,13 +247,13 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
           </View>
         </View>
 
-        {/* \u2500\u2500 Final Quotation \u2500\u2500 */}
+        {/* \u2500\u2500 Inspection-Based Quotation \u2500\u2500 */}
         <View style={s.card}>
-          <Text style={s.cardTitle}>Final Quotation</Text>
+          <Text style={s.cardTitle}>Inspection-Based Quotation</Text>
           <Text style={s.cardSubtitle}>
             {canOpenFinalQuotation
-              ? 'The inspection is completed. You can now view the technician-submitted final quotation.'
-              : 'The final quotation becomes available after the inspection is marked as completed by the assigned technician.'}
+              ? 'The inspection is completed. You can now view the technician-submitted inspection-based quotation.'
+              : 'The inspection-based quotation becomes available after the inspection is marked as completed by the assigned technician.'}
           </Text>
 
           <Pressable
@@ -271,7 +271,7 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
               style={
                 canOpenFinalQuotation ? s.goldBtnText : s.disabledBtnText
               }>
-              View Final Quotation
+              View Inspection-Based Quotation
             </Text>
           </Pressable>
         </View>

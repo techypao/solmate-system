@@ -65,9 +65,9 @@ function formatDate(value?: string) {
 function formatTypeLabel(type?: string | null) {
   switch ((type || '').toLowerCase()) {
     case 'final':
-      return 'Final';
+      return 'Inspection-Based Quotation';
     case 'initial':
-      return 'Initial';
+      return 'Pre-Inspection Estimate';
     default:
       return 'Quote';
   }
@@ -90,7 +90,7 @@ function formatStatusLabel(status?: string | null) {
 }
 
 function getQuoteIdLabel(item: Quotation) {
-  const prefix = item.quotation_type === 'final' ? 'FINAL' : 'INIT';
+  const prefix = item.quotation_type === 'final' ? 'INSP' : 'PRE';
   return prefix + '-' + item.id;
 }
 
@@ -120,17 +120,17 @@ function getStatusBadgeColors(status?: string | null) {
 
 function getPrimaryActionLabel(item: Quotation) {
   if (item.quotation_type === 'final') {
-    return 'View Final';
+    return 'View Inspection-Based';
   }
-  return 'View Initial';
+  return 'View Estimate';
 }
 
 /* ── filter chips config ── */
 
 const FILTERS: {key: FilterKey; label: string}[] = [
   {key: 'all', label: 'All'},
-  {key: 'initial', label: 'Initial'},
-  {key: 'final', label: 'Final'},
+  {key: 'initial', label: 'Pre-Inspection Estimate'},
+  {key: 'final', label: 'Inspection-Based Quotation'},
   {key: 'completed', label: 'Completed'},
 ];
 
@@ -349,7 +349,7 @@ export default function QuotationListScreen({navigation}: any) {
             <View style={s.emptyIcon} />
             <Text style={s.emptyTitle}>No quotations yet</Text>
             <Text style={s.emptyText}>
-              Your initial and final quotations will appear here once they are
+              Your pre-inspection estimates and inspection-based quotations will appear here once they are
               created.
             </Text>
           </View>

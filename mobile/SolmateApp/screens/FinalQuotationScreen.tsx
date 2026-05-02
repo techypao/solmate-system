@@ -136,7 +136,7 @@ const WIZARD_STEPS = [
   {
     number: 4,
     label: 'Review & Submit',
-    subtitle: 'Check the full quotation summary, remarks, and submit the final quotation.',
+    subtitle: 'Check the full quotation summary, remarks, and submit the inspection-based quotation.',
   },
 ] as const;
 
@@ -187,7 +187,7 @@ function getFriendlyErrorMessage(error: unknown) {
     return error.message;
   }
 
-  return 'Could not load the inspection request for final quotation.';
+  return 'Could not load the inspection request for the inspection-based quotation.';
 }
 
 function formatCategoryLabel(category: string) {
@@ -460,7 +460,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         setOptionsError('');
         const options = await withTimeout(
           getFinalQuotationOptions(),
-          'Final quotation options',
+          'Inspection-based quotation options',
         );
         setFinalQuotationOptions(options);
         setForm(current => {
@@ -483,7 +483,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         if (error instanceof ApiError) {
           setOptionsError(error.message);
         } else {
-          setOptionsError('Could not load final quotation form options.');
+          setOptionsError('Could not load the inspection-based quotation options.');
         }
       } finally {
         setOptionsLoading(false);
@@ -1007,7 +1007,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     if (!canCreateQuote) {
       Alert.alert(
         'Not allowed yet',
-        'Final quotations can only be submitted while the inspection is in progress.',
+        'Inspection-based quotations can only be submitted while the inspection is in progress.',
       );
       return;
     }
@@ -1071,7 +1071,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         Alert.alert(
           'Submission saved',
           submissionResult.message ||
-            'Final quotation submitted. Inspection marked as completed.',
+            'Inspection-based quotation submitted. Inspection marked as completed.',
           [
             {
               text: 'OK',
@@ -1098,7 +1098,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
       Alert.alert(
         'Success',
         submissionResult.message ||
-          'Final quotation submitted. Inspection marked as completed.',
+          'Inspection-based quotation submitted. Inspection marked as completed.',
         [
           {
             text: 'OK',
@@ -1118,12 +1118,12 @@ export default function FinalQuotationScreen({navigation, route}: any) {
             : 'The line items could not be saved automatically.';
 
         setSubmitError(
-          `Final quotation #${createdQuotationId} was created and the inspection was marked as completed, but the itemized pricing sync did not complete. ${syncErrorMessage}`,
+          `Inspection-based quotation #${createdQuotationId} was created and the inspection was marked as completed, but the itemized pricing sync did not complete. ${syncErrorMessage}`,
         );
 
         Alert.alert(
           'Quotation created with sync issue',
-          `Final quotation #${createdQuotationId} was created and the inspection was marked as completed, but the itemized pricing sync did not complete.\n\n${syncErrorMessage}`,
+          `Inspection-based quotation #${createdQuotationId} was created and the inspection was marked as completed, but the itemized pricing sync did not complete.\n\n${syncErrorMessage}`,
           [
             {
               text: 'OK',
@@ -1144,7 +1144,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
 
         setSubmitError(error.message);
         Alert.alert(
-          'Final quotation already exists',
+          'Inspection-based quotation already exists',
           `${error.message} The inspection has already been completed for this request.`,
           [
             {
@@ -1158,8 +1158,8 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         setSubmitError(message);
         Alert.alert('Submission failed', message);
       } else {
-        setSubmitError('Could not submit the final quotation.');
-        Alert.alert('Submission failed', 'Could not submit the final quotation.');
+        setSubmitError('Could not submit the inspection-based quotation.');
+        Alert.alert('Submission failed', 'Could not submit the inspection-based quotation.');
       }
     } finally {
       setSubmitting(false);
@@ -1170,7 +1170,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     return (
       <SafeAreaView style={styles.centeredContainer}>
         <ActivityIndicator size="large" color={GOLD} />
-        <Text style={styles.loadingText}>Loading final quotation form...</Text>
+        <Text style={styles.loadingText}>Loading inspection-based quotation...</Text>
       </SafeAreaView>
     );
   }
@@ -1184,12 +1184,12 @@ export default function FinalQuotationScreen({navigation, route}: any) {
   ) {
     return (
       <SafeAreaView style={styles.centeredContainer}>
-        <Text style={styles.errorTitle}>Final quotation unavailable</Text>
+        <Text style={styles.errorTitle}>Inspection-based quotation unavailable</Text>
         <Text style={styles.errorText}>
           {errorMessage ||
             optionsError ||
             catalogError ||
-            'The final quotation form could not be loaded.'}
+            'The inspection-based quotation could not be loaded.'}
         </Text>
         <AppButton
           title="Retry"
@@ -1481,7 +1481,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
   const selectedLineItemsSection = (
     <FormSection
       title="Selected line items"
-      subtitle="Anything with a quantity greater than zero will be saved as an itemized final quotation line item.">
+      subtitle="Anything with a quantity greater than zero will be saved as an itemized inspection-based quotation line item.">
       {selectedLineItems.length > 0 ? (
         selectedLineItems.map(item => (
           <View key={item.pricing_item_id} style={styles.selectedItemCard}>
@@ -1694,7 +1694,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     <>
       <FormSection
         title="System choices"
-        subtitle="Review the technician inputs that drive the final quotation.">
+        subtitle="Review the technician inputs that drive the inspection-based quotation.">
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Monthly bill</Text>
           <Text style={styles.summaryValue}>
@@ -1795,12 +1795,12 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         </View>
 
         <View style={styles.heroCard}>
-          <Text style={styles.eyebrow}>Final Quotation</Text>
+          <Text style={styles.eyebrow}>Inspection-Based Quotation</Text>
           <Text style={styles.heroTitle}>
             Inspection #{inspectionRequest.id}
           </Text>
           <Text style={styles.heroSubtitle}>
-            Build and submit the final solar quotation for{' '}
+            Build and submit the inspection-based solar quotation for{' '}
             {getCustomerName(inspectionRequest)} based on the current site inspection.
           </Text>
         </View>
@@ -1846,7 +1846,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
 
         <FormSection
           title="Inspection summary"
-          subtitle="This final quotation stays tied directly to the current inspection request.">
+          subtitle="This quotation is based on the technician's actual inspection and assessment.">
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Inspection request ID</Text>
             <Text style={styles.summaryValue}>{inspectionRequest.id}</Text>
@@ -1880,7 +1880,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
             <Text style={styles.warningTitle}>Inspection not in progress</Text>
             <Text style={styles.warningText}>
               Move the inspection request to in progress before submitting the
-              final quotation.
+              inspection-based quotation.
             </Text>
           </AppCard>
         ) : null}

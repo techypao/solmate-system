@@ -39,7 +39,7 @@ class CustomerFinalQuotationCompletionTest extends TestCase
         $response = $this->postJson("/api/quotations/{$quotation->id}/complete");
 
         $response->assertOk()
-            ->assertJsonPath('message', 'Final quotation marked as completed.')
+            ->assertJsonPath('message', 'Inspection-based quotation marked as completed.')
             ->assertJsonPath('data.id', $quotation->id)
             ->assertJsonPath('data.status', 'completed')
             ->assertJsonPath('data.quotation_type', 'final');

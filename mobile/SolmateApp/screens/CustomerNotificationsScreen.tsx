@@ -430,7 +430,7 @@ export default function CustomerNotificationsScreen({navigation}: any) {
       <View style={s.introSection}>
         <Text style={s.pageTitle}>Notifications</Text>
         <Text style={s.pageSubtitle}>
-          Stay updated on your requests, schedules, and final quotations.
+          Stay updated on your requests, schedules, and inspection-based quotations.
         </Text>
       </View>
 

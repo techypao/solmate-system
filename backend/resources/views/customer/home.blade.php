@@ -472,7 +472,7 @@
             </span>
         </a>
 
-        {{-- 3. Final Quotation --}}
+        {{-- 3. Inspection-Based Quotation --}}
         <a href="{{ route('customer.quotation.index') }}" class="ch-action-card">
             <div class="ch-action-icon">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2" aria-hidden="true">
@@ -483,8 +483,8 @@
                     <polyline points="10 9 9 9 8 9"/>
                 </svg>
             </div>
-            <p class="ch-action-title">Final Quotation</p>
-            <p class="ch-action-desc">View your custom solar quotation after site inspection is complete</p>
+            <p class="ch-action-title">Inspection-Based Quotation</p>
+            <p class="ch-action-desc">View your custom solar quotation after the technician completes the site inspection</p>
             <span class="ch-action-cta">
                 View
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -740,12 +740,15 @@
             items = sortLatestFirst(items);
             renderItems('ch-qt-list', 'ch-qt-loading', 'ch-qt-empty', items, function (q) {
                 var quotationType = String(q.quotation_type || 'initial').toLowerCase();
+                var quotationTypeLabel = quotationType === 'final'
+                    ? 'Inspection-Based Quotation'
+                    : 'Pre-Inspection Estimate';
                 return {
                     label: 'Quotation #' + (q.id || '\u2014'),
                     status: q.status || '',
                     showStatus: quotationType !== 'initial',
                     metaLines: [
-                        'Type: ' + titleCase(q.quotation_type || 'Quotation'),
+                        'Type: ' + quotationTypeLabel,
                         'Submitted: ' + fmtDate(q.created_at)
                     ]
                 };

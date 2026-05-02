@@ -157,7 +157,7 @@ export default function QuotationScreen({ navigation }: any) {
           </Pressable>
 
           {/* ── title ── */}
-          <Text style={s.title}>Initial Quotation</Text>
+          <Text style={s.title}>Pre-Inspection Estimate</Text>
           <Text style={s.subtitle}>Input only: Monthly Electricity Bill</Text>
 
           {/* ── input card ── */}
@@ -200,7 +200,7 @@ export default function QuotationScreen({ navigation }: any) {
             <Text style={s.primaryBtnText}>
               {submitting
                 ? 'Generating...'
-                : 'Generate Initial Quotation & Roi'}
+                : 'Generate Pre-Inspection Estimate & ROI'}
             </Text>
           </Pressable>
 
@@ -212,7 +212,9 @@ export default function QuotationScreen({ navigation }: any) {
             <Text style={s.secondaryBtnText}>Clear</Text>
           </Pressable>
 
-          <Text style={s.footerHint}>No other required inputs.</Text>
+          <Text style={s.footerHint}>
+            The pre-inspection estimate is only a guide and may change after the technician's actual inspection.
+          </Text>
 
           {/* ── spacer before bottom area ── */}
           <View style={s.spacer} />

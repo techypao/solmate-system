@@ -357,7 +357,7 @@ export default function RequestDetailsScreen({navigation, route}: any) {
                   inspectionRequest,
                 });
               }}>
-              <Text style={s.btnPrimaryText}>Create Final Quotation</Text>
+              <Text style={s.btnPrimaryText}>Create Inspection-Based Quotation</Text>
             </Pressable>
           ) : null}
 

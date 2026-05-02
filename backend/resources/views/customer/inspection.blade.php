@@ -466,7 +466,7 @@
             <span class="insp-hero-step-num">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M5 13l4 4L19 7"/></svg>
             </span>
-            <span>Initial Quotation</span>
+            <span>Pre-Inspection Estimate</span>
         </div>
         <div class="insp-step-connector"></div>
         <div class="insp-hero-step insp-step-active">
@@ -476,7 +476,7 @@
         <div class="insp-step-connector"></div>
         <div class="insp-hero-step">
             <span class="insp-hero-step-num">3</span>
-            <span>Final Quotation</span>
+            <span>Inspection-Based Quotation</span>
         </div>
     </div>
 </div>
@@ -497,7 +497,7 @@
                 </div>
                 <div>
                     <p class="insp-card-title">Select Quotation</p>
-                    <p class="insp-card-subtitle">Choose the initial quotation this inspection is for</p>
+                    <p class="insp-card-subtitle">Choose the pre-inspection estimate this inspection is for</p>
                 </div>
             </div>
             <div class="insp-card-body">
@@ -703,8 +703,8 @@
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
                         </div>
                         <div class="insp-check-body">
-                            <p class="insp-check-title">Final Quotation Preparation</p>
-                            <p class="insp-check-desc">All findings are compiled into an accurate, itemised final quotation for your approval.</p>
+                            <p class="insp-check-title">Inspection-Based Quotation Preparation</p>
+                            <p class="insp-check-desc">All findings are compiled into an accurate, itemised inspection-based quotation for your approval.</p>
                         </div>
                     </div>
 
@@ -818,7 +818,7 @@
         var ph = document.createElement('option');
         ph.value = '';
         ph.textContent = initialOnly.length === 0
-            ? '\u2014 No initial quotations found \u2014'
+            ? '\u2014 No pre-inspection estimates found \u2014'
             : '\u2014 Select a quotation (optional) \u2014';
         quoteSelect.appendChild(ph);
         initialOnly.forEach(function (q) {

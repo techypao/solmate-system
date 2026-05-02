@@ -41,7 +41,7 @@ class FinalQuotationDefaultsTest extends TestCase
         ]);
 
         $response->assertCreated()
-            ->assertJsonPath('message', 'Final quotation submitted. Inspection marked as completed.')
+            ->assertJsonPath('message', 'Inspection-based quotation submitted. Inspection marked as completed.')
             ->assertJsonPath('data.quotation_type', 'final')
             ->assertJsonPath('inspection_request.status', 'completed')
             ->assertJsonPath('data.rate_per_kwh', 15)
@@ -201,7 +201,7 @@ class FinalQuotationDefaultsTest extends TestCase
         $response->assertStatus(422)
             ->assertJsonPath(
                 'message',
-                'Final quotation can only be created when the inspection request is in progress.'
+                'Inspection-based quotations can only be created when the inspection request is in progress.'
             );
     }
 
