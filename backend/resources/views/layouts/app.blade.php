@@ -1824,7 +1824,7 @@
                     Quotations
                 </a>
 
-                {{-- Pricing Catalog --}}
+                {{-- Pricing Management --}}
                 <a href="{{ route('admin.pricing-catalog') }}"
                    class="admin-sidebar-link {{ request()->routeIs('admin.pricing-catalog') ? 'active' : '' }}">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1835,7 +1835,7 @@
                         <line x1="3" y1="12" x2="3.01" y2="12"/>
                         <line x1="3" y1="18" x2="3.01" y2="18"/>
                     </svg>
-                    Pricing Catalog
+                    Pricing Management
                 </a>
 
                 {{-- Testimonies --}}
@@ -2126,7 +2126,7 @@
                         <a href="{{ route('customer.testimonies') }}"
                            class="solmate-nav-link {{ request()->routeIs('customer.testimonies') ? 'active' : '' }}">Feedback</a>
                         <a href="{{ route('dashboard') }}"
-                           class="solmate-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
+                           class="solmate-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">Profile</a>
                     </div>
 
                     {{-- Right: profile icon with dropdown --}}

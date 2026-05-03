@@ -1,6 +1,240 @@
 @extends('layouts.app', ['title' => 'Quotation Item Builder'])
 
 @section('content')
+    <style>
+        .ib-available-card {
+            margin-top: 18px;
+            padding: 18px;
+            border: 1px solid #dbe7f3;
+            border-radius: 18px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+        }
+
+        .ib-available-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .ib-available-title {
+            margin: 0;
+            color: #102a43;
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .ib-available-copy {
+            margin: 6px 0 0;
+            color: #52606d;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .ib-available-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+            padding: 0 12px;
+            border-radius: 999px;
+            background: #eef6ff;
+            color: #173b63;
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .ib-helper-text {
+            margin: 8px 0 0;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .ib-loader-form {
+            margin-top: 8px;
+        }
+
+        .ib-loader-field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .ib-loader-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            align-items: start;
+        }
+
+        .ib-loader-input {
+            width: 100%;
+            height: 48px;
+            min-height: 48px;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        .ib-loader-actions {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .ib-loader-submit {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: auto;
+            height: 48px;
+            min-width: 180px;
+            min-height: 48px;
+            padding: 0 18px;
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1;
+            white-space: nowrap;
+            box-sizing: border-box;
+        }
+
+        .ib-select-wrap {
+            margin-top: 14px;
+        }
+
+        .ib-select-wrap label {
+            display: block;
+            margin-bottom: 6px;
+            color: #102a43;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .ib-select-wrap select {
+            width: 100%;
+        }
+        .ib-table-wrap {
+            margin-top: 16px;
+            overflow-x: auto;
+        }
+
+        .ib-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ib-table th,
+        .ib-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #e8eff7;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .ib-table th {
+            background: #f7fafd;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .ib-table td {
+            color: #334155;
+            font-size: 13px;
+        }
+
+        .ib-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .ib-table-id {
+            color: #102a43;
+            font-weight: 800;
+        }
+
+        .ib-meta-stack {
+            display: grid;
+            gap: 4px;
+        }
+
+        .ib-inline-note {
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .ib-use-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+            padding: 0 12px;
+            border-radius: 10px;
+            border: 1px solid #d4e4f3;
+            background: #f4f9ff;
+            color: #1e4068;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .ib-use-btn:hover,
+        .ib-use-btn:focus-visible {
+            border-color: #d4a017;
+            background: #fff7e0;
+            color: #102a43;
+            outline: none;
+        }
+
+        .ib-empty-state {
+            margin-top: 14px;
+            padding: 18px;
+            border: 1px dashed #d5e2ef;
+            border-radius: 14px;
+            background: #fbfdff;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.7;
+            text-align: center;
+        }
+
+        .ib-empty-state p {
+            margin: 0;
+        }
+
+        @media (max-width: 720px) {
+            .ib-available-card {
+                padding: 16px;
+            }
+
+            .ib-loader-form {
+                margin-top: 6px;
+            }
+
+            .ib-loader-actions {
+                width: 100%;
+            }
+
+            .ib-loader-submit {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .ib-table th,
+            .ib-table td {
+                padding: 10px 12px;
+            }
+        }
+    </style>
+
     <div class="admin-page-stack">
     <div class="card admin-hero-card">
         <p class="admin-page-eyebrow">Quotation Workspace</p>
@@ -10,17 +244,98 @@
         <div id="builder-success" class="status" style="display: none;"></div>
         <div id="builder-error" class="error-box" style="display: none;"></div>
 
-        <form id="quotation-loader-form" class="form-grid two-columns">
-            <div>
+        <form id="quotation-loader-form" class="ib-loader-form">
+            <div class="ib-loader-field">
                 <label for="quotation_id">Quotation ID</label>
-                <input id="quotation_id" name="quotation_id" type="number" min="1" value="{{ $initialQuotationId }}" required>
+                <div class="ib-loader-row">
+                    <input
+                        id="quotation_id"
+                        name="quotation_id"
+                        class="ib-loader-input"
+                        type="number"
+                        min="1"
+                        value="{{ $initialQuotationId }}"
+                        required
+                    >
+                    <div class="actions ib-loader-actions">
+                        <button id="load-quotation-button" class="ib-loader-submit" type="submit">Load quotation</button>
+                    </div>
+                </div>
+                <p class="ib-helper-text">Select or enter an existing quotation ID from the list below.</p>
                 <div class="field-error" data-loader-error></div>
             </div>
-
-            <div class="actions" style="align-self: end;">
-                <button id="load-quotation-button" type="submit">Load quotation</button>
-            </div>
         </form>
+
+        <section class="ib-available-card" aria-label="Available quotation IDs">
+            <div class="ib-available-head">
+                <div>
+                    <h2 class="ib-available-title">Available Quotation IDs</h2>
+                    <p class="ib-available-copy">Choose from the latest inspection-based quotations to auto-fill the input, then click <strong>Load quotation</strong>.</p>
+                </div>
+                <span class="ib-available-pill">Latest {{ $availableQuotations->count() }}</span>
+            </div>
+
+            @if ($availableQuotations->isNotEmpty())
+                <div class="ib-select-wrap">
+                    <label for="available_quotation_id">Quick Select</label>
+                    <select id="available_quotation_id" name="available_quotation_id">
+                        <option value="">Select a quotation ID</option>
+                        @foreach ($availableQuotations as $availableQuotation)
+                            <option value="{{ $availableQuotation->id }}">
+                                #{{ $availableQuotation->id }}
+                                @if ($availableQuotation->customer?->name)
+                                    · {{ $availableQuotation->customer->name }}
+                                @endif
+                                · {{ strtolower((string) ($availableQuotation->quotation_type ?? 'initial')) === 'final' ? 'Inspection-Based Quotation' : 'Pre-Inspection Estimate' }}
+                                · {{ \Illuminate\Support\Str::headline($availableQuotation->status ?? 'pending') }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="ib-table-wrap">
+                    <table class="ib-table">
+                        <thead>
+                            <tr>
+                                <th>Quotation ID</th>
+                                <th>Customer</th>
+                                <th>Type / Status</th>
+                                <th>Created</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($availableQuotations as $availableQuotation)
+                                <tr>
+                                    <td class="ib-table-id">#{{ $availableQuotation->id }}</td>
+                                    <td>{{ $availableQuotation->customer?->name ?? '—' }}</td>
+                                    <td>
+                                        <div class="ib-meta-stack">
+                                            <span>{{ strtolower((string) ($availableQuotation->quotation_type ?? 'initial')) === 'final' ? 'Inspection-Based Quotation' : 'Pre-Inspection Estimate' }}</span>
+                                            <span class="ib-inline-note">{{ \Illuminate\Support\Str::headline($availableQuotation->status ?? 'pending') }}</span>
+                                        </div>
+                                    </td>
+                                    <td>{{ optional($availableQuotation->created_at)->format('M d, Y h:i A') ?? '—' }}</td>
+                                    <td>
+                                        <button
+                                            type="button"
+                                            class="ib-use-btn"
+                                            data-quotation-fill="{{ $availableQuotation->id }}"
+                                        >
+                                            Use ID
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="ib-empty-state">
+                    <p>No inspection-based quotations available yet.</p>
+                </div>
+            @endif
+        </section>
     </div>
 
     <div id="builder-loading" class="info-box" style="display: none; margin-top: 16px;">Loading quotation builder data...</div>
@@ -71,6 +386,8 @@
         const initialQuotationId = JSON.parse(document.getElementById('__ib-quotation-id').textContent);
         const quotationLoaderForm = document.getElementById('quotation-loader-form');
         const quotationIdInput = document.getElementById('quotation_id');
+        const availableQuotationSelect = document.getElementById('available_quotation_id');
+        const quotationFillButtons = document.querySelectorAll('[data-quotation-fill]');
         const loaderError = document.querySelector('[data-loader-error]');
         const loadQuotationButton = document.getElementById('load-quotation-button');
         const builderLoading = document.getElementById('builder-loading');
@@ -165,6 +482,14 @@
             return Number(value || 0).toFixed(2);
         }
 
+        function formatQuotationTypeLabel(type) {
+            const normalized = String(type || 'initial').trim().toLowerCase();
+
+            return normalized === 'final'
+                ? 'Inspection-Based Quotation'
+                : 'Pre-Inspection Estimate';
+        }
+
         function updateUrl(quotationId) {
             const url = new URL(window.location.href);
 
@@ -175,6 +500,22 @@
             }
 
             window.history.replaceState({}, '', url.toString());
+        }
+
+        function applyQuotationId(quotationId) {
+            const normalizedId = Number(quotationId);
+
+            if (!normalizedId) {
+                return;
+            }
+
+            quotationIdInput.value = normalizedId;
+
+            if (availableQuotationSelect) {
+                availableQuotationSelect.value = String(normalizedId);
+            }
+
+            loaderError.textContent = '';
         }
 
         function categoryOptions(selectedValue) {
@@ -272,7 +613,7 @@
 
             quotationSummary.innerHTML = `
                 <div><strong>Quotation ID:</strong> ${quotationState.id}</div>
-                <div><strong>Type:</strong> ${escapeHtml(quotationState.quotation_type)}</div>
+                <div><strong>Type:</strong> ${escapeHtml(formatQuotationTypeLabel(quotationState.quotation_type))}</div>
                 <div><strong>Status:</strong> ${escapeHtml(quotationState.status || 'pending')}</div>
                 <div><strong>Monthly electric bill:</strong> ${formatMoney(quotationState.monthly_electric_bill)}</div>
                 <div><strong>Saved materials subtotal:</strong> ${formatMoney(quotationState.materials_subtotal)}</div>
@@ -388,7 +729,7 @@
             const responseBody = await response.json();
 
             if (!response.ok) {
-                throw new Error(responseBody.message || 'Could not load pricing catalog.');
+                throw new Error(responseBody.message || 'Could not load pricing management data.');
             }
 
             pricingCatalog = responseBody.data || [];
@@ -534,6 +875,19 @@
             await loadBuilder(quotationId);
         });
 
+        if (availableQuotationSelect) {
+            availableQuotationSelect.addEventListener('change', (event) => {
+                applyQuotationId(event.target.value);
+            });
+        }
+
+        quotationFillButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                applyQuotationId(button.dataset.quotationFill);
+                quotationIdInput.focus();
+            });
+        });
+
         addLineItemButton.addEventListener('click', () => {
             clearMessages();
             addLineItem();
@@ -542,6 +896,7 @@
         saveLineItemsButton.addEventListener('click', saveLineItems);
 
         if (initialQuotationId) {
+            applyQuotationId(initialQuotationId);
             loadBuilder(initialQuotationId);
         }
     </script>

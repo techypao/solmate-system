@@ -208,6 +208,18 @@
         box-shadow: 0 0 0 3px rgba(212,160,23,.1);
     }
     .dash-form-group .field-error { color: #dc2626; font-size: 12px; margin-top: 4px; }
+    .dash-readonly-value {
+        width: 100%;
+        min-height: 47px;
+        padding: 12px 16px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 14px;
+        color: #1e293b;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+    }
     .dash-form-actions { display: flex; gap: 10px; margin-top: 16px; }
     .dash-form-helper {
         margin: 8px 0 0;
@@ -579,8 +591,12 @@
             <div id="dash-profile-msg" class="dash-msg"></div>
             <div class="dash-info-grid">
                 <div class="dash-info-row">
-                    <span class="dash-info-label">Full Name</span>
-                    <span class="dash-info-value" id="di-name">{{ $user->name }}</span>
+                    <span class="dash-info-label">First Name</span>
+                    <span class="dash-info-value">{{ $user->first_name ?: 'Not provided' }}</span>
+                </div>
+                <div class="dash-info-row">
+                    <span class="dash-info-label">Last Name</span>
+                    <span class="dash-info-value">{{ $user->last_name ?: 'Not provided' }}</span>
                 </div>
                 <div class="dash-info-row">
                     <span class="dash-info-label">Email Address</span>
@@ -593,6 +609,10 @@
                 <div class="dash-info-row">
                     <span class="dash-info-label">Contact Number</span>
                     <span class="dash-info-value" id="di-contact-number">{{ $user->contact_number ?: 'Not provided' }}</span>
+                </div>
+                <div class="dash-info-row">
+                    <span class="dash-info-label">Landline Number</span>
+                    <span class="dash-info-value" id="di-landline-number">{{ $user->landline_number ?: 'Not provided' }}</span>
                 </div>
                 <div class="dash-info-row">
                     <span class="dash-info-label">Account Role</span>
@@ -639,26 +659,37 @@
             <form id="edit-profile-form">
                 <div class="dash-form-row">
                     <div class="dash-form-group">
-                        <label for="ep-name">Full Name</label>
-                        <input type="text" id="ep-name" name="name" value="{{ $user->name }}" placeholder="Your full name" required>
-                        <div class="field-error" id="ep-name-error"></div>
-                    </div>
-                    <div class="dash-form-group">
                         <label for="ep-email">Email Address</label>
                         <input type="email" id="ep-email" name="email" value="{{ $user->email }}" placeholder="your@email.com" required>
                         <div class="field-error" id="ep-email-error"></div>
                     </div>
-                </div>
-                <div class="dash-form-row">
                     <div class="dash-form-group">
                         <label for="ep-address">Address</label>
                         <input type="text" id="ep-address" name="address" value="{{ $user->address }}" placeholder="Your address">
                         <div class="field-error" id="ep-address-error"></div>
                     </div>
+                </div>
+                <div class="dash-form-row">
+                    <div class="dash-form-group">
+                        <label>First Name</label>
+                        <div class="dash-readonly-value">{{ $user->first_name ?: 'Not provided' }}</div>
+                    </div>
+                    <div class="dash-form-group">
+                        <label>Last Name</label>
+                        <div class="dash-readonly-value">{{ $user->last_name ?: 'Not provided' }}</div>
+                    </div>
+                </div>
+                <div class="dash-form-row">
                     <div class="dash-form-group">
                         <label for="ep-contact-number">Contact Number</label>
                         <input type="text" id="ep-contact-number" name="contact_number" value="{{ $user->contact_number }}" placeholder="Your contact number">
                         <div class="field-error" id="ep-contact_number-error"></div>
+                    </div>
+                    <div class="dash-form-group">
+                        <label for="ep-landline-number">Landline Number</label>
+                        <input type="text" id="ep-landline-number" name="landline_number" value="{{ $user->landline_number }}" placeholder="e.g. (02) 8123-4567" inputmode="tel" maxlength="30">
+                        <p class="dash-form-helper">Optional. Use your home or office landline if you have one.</p>
+                        <div class="field-error" id="ep-landline_number-error"></div>
                     </div>
                 </div>
                 <div class="dash-form-actions">
@@ -679,13 +710,15 @@
                         <div class="field-error" id="cp-current-error"></div>
                     </div>
                 </div>
-                <div class="dash-form-row">
+                <div class="dash-form-row single">
                     <div class="dash-form-group">
                         <label for="cp-new">New Password</label>
                         <input type="password" id="cp-new" name="new_password" placeholder="Min 8 characters" required>
                         <p class="dash-form-helper">Password must be at least 8 characters, include 1 uppercase letter, and 1 special character.</p>
                         <div class="field-error" id="cp-new-error"></div>
                     </div>
+                </div>
+                <div class="dash-form-row single">
                     <div class="dash-form-group">
                         <label for="cp-confirm">Confirm New Password</label>
                         <input type="password" id="cp-confirm" name="new_password_confirmation" placeholder="Repeat new password" required>
@@ -766,20 +799,6 @@
 </div>{{-- end .dash-wrapper --}}
 
 @elseif ($user->role === \App\Models\User::ROLE_ADMIN)
-@php
-    $adm_totalCustomers   = \App\Models\User::where('role', \App\Models\User::ROLE_CUSTOMER)->count();
-    $adm_totalTechnicians = \App\Models\User::where('role', \App\Models\User::ROLE_TECHNICIAN)->count();
-    $adm_pendingInspCount = \App\Models\InspectionRequest::where('status', 'pending')->count();
-    $adm_pendingServiceCount = \App\Models\ServiceRequest::where('status', 'pending')->count();
-    $adm_initialQuotations = \App\Models\Quotation::where('quotation_type', 'initial')->count();
-    $adm_finalQuotations   = \App\Models\Quotation::where('quotation_type', 'final')->count();
-    $adm_pendingInspections = \App\Models\InspectionRequest::with(['customer', 'technician'])
-        ->where('status', 'pending')->latest()->limit(5)->get();
-    $adm_pendingServices = \App\Models\ServiceRequest::with(['customer', 'technician'])
-        ->where('status', 'pending')->latest()->limit(5)->get();
-    $adm_recentQuotations = \App\Models\Quotation::with('customer')
-        ->latest()->limit(5)->get();
-@endphp
 <style>
     /* ── Admin Dashboard (adm2- prefix) ── */
     .adm2-wrap { display: grid; gap: 22px; width: 100%; min-width: 0; box-sizing: border-box; }
@@ -898,6 +917,12 @@
         color: #102a43;
         margin: 0 0 16px;
     }
+    .adm2-panel-copy {
+        margin: -8px 0 0;
+        color: #52606d;
+        font-size: 13px;
+        line-height: 1.6;
+    }
 
     /* Quick action buttons */
     .adm2-action-btn {
@@ -942,6 +967,71 @@
         box-shadow: 0 5px 16px rgba(212,160,23,0.28);
     }
     .adm2-cta-btn:hover { background: #b8880f; text-decoration: none; color: #fff; }
+
+    /* Monthly report */
+    .adm2-monthly-card {
+        display: grid;
+        gap: 18px;
+    }
+    .adm2-monthly-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+    .adm2-monthly-period {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: #eef6ff;
+        color: #173b63;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+    .adm2-monthly-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .adm2-monthly-metric {
+        padding: 15px 16px;
+        border: 1px solid #dbe7f3;
+        border-radius: 14px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    }
+    .adm2-monthly-label {
+        margin-bottom: 8px;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+    .adm2-monthly-value {
+        color: #102a43;
+        font-size: 28px;
+        line-height: 1;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+    }
+    .adm2-monthly-empty {
+        padding: 20px;
+        border: 1px dashed #d5e2ef;
+        border-radius: 14px;
+        background: #fbfdff;
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.7;
+        text-align: center;
+    }
+    .adm2-monthly-empty p {
+        margin: 0;
+    }
 
     /* Panel tables */
     .adm2-table-wrap { overflow-x: auto; }
@@ -1040,6 +1130,7 @@
     @media (max-width: 1100px) {
         .adm2-row       { grid-template-columns: 1fr; }
         .adm2-row-equal { grid-template-columns: 1fr; }
+        .adm2-monthly-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 640px) {
         .adm2-stats { gap: 10px; }
@@ -1047,6 +1138,7 @@
         .adm2-hero { padding: 20px 18px; }
         .adm2-hero-title { font-size: 22px; }
         .adm2-panel { padding: 16px; }
+        .adm2-monthly-grid { grid-template-columns: 1fr; }
     }
 </style>
 
@@ -1096,6 +1188,35 @@
         </div>
     </div>
 
+    <section class="adm2-panel adm2-monthly-card" aria-label="Monthly Report Summary">
+        <div class="adm2-monthly-head">
+            <div>
+                <h2 class="adm2-panel-title" style="margin-bottom: 6px;">Monthly Report</h2>
+                <p class="adm2-panel-copy">A short current-month snapshot using the same request and quotation data shown on the full Reports page.</p>
+            </div>
+            <span class="adm2-monthly-period">{{ $monthlyReport['monthLabel'] }}</span>
+        </div>
+
+        @if ($monthlyReport['hasData'])
+            <div class="adm2-monthly-grid">
+                @foreach ($monthlyReport['metrics'] as $metric)
+                    <div class="adm2-monthly-metric">
+                        <div class="adm2-monthly-label">{{ $metric['label'] }}</div>
+                        <div class="adm2-monthly-value">{{ number_format($metric['value']) }}</div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="adm2-monthly-empty">
+                <p>No inspection requests, service requests, or quotations have been recorded for {{ $monthlyReport['monthLabel'] }} yet. All monthly values are currently at 0.</p>
+            </div>
+        @endif
+
+        <div class="adm2-panel-footer" style="margin-top: 0; padding-top: 0; border-top: none;">
+            <a href="{{ route('admin.reports', ['range' => 'this_month']) }}" class="adm2-view-all">View Full Report</a>
+        </div>
+    </section>
+
     {{-- ROW: Quick Actions + Pending Inspection Request --}}
     <div class="adm2-row">
 
@@ -1105,7 +1226,7 @@
             <a href="{{ route('admin.request-assignments') }}" class="adm2-action-btn">Assign Technician</a>
             <a href="{{ route('admin.request-assignments') }}" class="adm2-action-btn">Approve Inspection Request</a>
             <a href="{{ route('admin.request-assignments') }}" class="adm2-action-btn">Approve Service Request</a>
-            <a href="{{ route('admin.notifications') }}"      class="adm2-action-btn">View Reports</a>
+            <a href="{{ route('admin.reports', ['range' => 'this_month']) }}" class="adm2-action-btn">View Reports</a>
             <a href="{{ route('admin.quotation-settings') }}" class="adm2-action-btn">Rule Configuration</a>
             <a href="{{ route('admin.quotation-settings') }}" class="adm2-cta-btn">Go to Rule Configurations</a>
         </div>
@@ -1562,20 +1683,21 @@
             var resp = await apiRequest('/api/customer/account', {
                 method: 'PUT',
                 body: {
-                    name: qs('#ep-name').value.trim(),
                     email: qs('#ep-email').value.trim(),
                     address: qs('#ep-address').value.trim(),
                     contact_number: qs('#ep-contact-number').value.trim(),
+                    landline_number: qs('#ep-landline-number').value.trim(),
                 },
             });
-            qs('#di-name').textContent  = resp.user.name;
             qs('#di-email').textContent = resp.user.email;
             qs('#di-address').textContent = resp.user.address || 'Not provided';
             qs('#di-contact-number').textContent = resp.user.contact_number || 'Not provided';
+            qs('#di-landline-number').textContent = resp.user.landline_number || 'Not provided';
             qs('#dash-banner-name').textContent  = resp.user.name;
             qs('#dash-banner-email').textContent = resp.user.email;
             qs('#ep-address').value = resp.user.address || '';
             qs('#ep-contact-number').value = resp.user.contact_number || '';
+            qs('#ep-landline-number').value = resp.user.landline_number || '';
             renderProfilePicture(resp.user.profile_picture, resp.user.name);
             setVisible(editProfileCard, false);
             showMsg(profileMsg, 'success', resp.message || 'Profile updated successfully.');

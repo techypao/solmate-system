@@ -1,10 +1,10 @@
-@extends('layouts.app', ['title' => 'Admin Pricing Catalog'])
+@extends('layouts.app', ['title' => 'Admin Pricing Management'])
 
 @section('content')
     <div class="admin-page-stack">
     <div class="card admin-hero-card">
         <p class="admin-page-eyebrow">Admin Catalog</p>
-        <h1 class="page-title">Admin Pricing Catalog</h1>
+        <h1 class="page-title">Admin Pricing Management</h1>
         <p class="page-copy">Manage pricing items for future inspection-based quotation itemization. This page uses the existing admin pricing API.</p>
     </div>
 
@@ -20,7 +20,7 @@
 
     <div class="card admin-section-surface">
 
-        <div id="catalog-loading" class="info-box">Loading pricing catalog...</div>
+        <div id="catalog-loading" class="info-box">Loading pricing management data...</div>
         <div id="catalog-success" class="status" style="display: none;"></div>
         <div id="catalog-error" class="error-box" style="display: none;"></div>
 

@@ -15,7 +15,6 @@ class CustomerAccountController extends Controller
         $user = $request->user();
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required',
                 'string',
@@ -25,13 +24,16 @@ class CustomerAccountController extends Controller
             ],
             'address' => ['nullable', 'string', 'max:255'],
             'contact_number' => ['nullable', 'string', 'max:20'],
+            'landline_number' => ['nullable', 'string', 'max:30', 'regex:/^(?=(?:.*\\d){7,})[0-9()+\\-\\s]+$/'],
+        ], [
+            'landline_number.regex' => 'Please enter a valid landline number using digits, spaces, parentheses, or hyphens.',
         ]);
 
         $user->fill([
-            'name' => $validated['name'],
             'email' => $validated['email'],
             'address' => isset($validated['address']) ? trim($validated['address']) : null,
             'contact_number' => isset($validated['contact_number']) ? trim($validated['contact_number']) : null,
+            'landline_number' => isset($validated['landline_number']) ? trim($validated['landline_number']) : null,
         ]);
         $user->save();
 

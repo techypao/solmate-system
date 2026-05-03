@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\TechnicianRegistrationController;
 use App\Http\Controllers\Admin\VisualHighlightPageController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CustomerTestimonyPageController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PublicTestimonyPageController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\QuotationItemBuilderPageController;
@@ -21,7 +22,6 @@ use App\Models\NewsArticle;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
 
 Route::get('/landing', function () {
     return view('welcome', [
@@ -64,11 +64,7 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', function (Request $request) {
-        return view('dashboard', [
-            'user' => $request->user(),
-        ]);
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'show'])->name('dashboard');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
