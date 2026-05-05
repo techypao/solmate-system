@@ -22,6 +22,8 @@ type ChatMessage = {
   sender: ChatSender;
   timestamp: number;
   status?: 'default' | 'error';
+  suggestions?: string[];
+  suggestionsEnabled?: boolean;
 };
 
 const NAVY = '#152a4a';
@@ -36,15 +38,6 @@ const QUICK_HELP = [
   {title: 'ROI Explanation', subtitle: 'Understand payback and savings.', prompt: 'Can you explain ROI for solar panels?'},
 ];
 
-const QUICK_PROMPTS = [
-  'What is a pre-inspection estimate?',
-  'How do I request an inspection?',
-  'What is the difference between inspection and service request?',
-  'Who creates the inspection-based quotation?',
-  'How do testimonies work?',
-  'What do notifications mean?',
-];
-
 const WELCOME_TEXT = "Hi! I\u2019m SolBot";
 const WELCOME_SUB = 'Ask about quotation, ROI or any solar related.';
 
@@ -52,9 +45,22 @@ const INITIAL_MESSAGES: ChatMessage[] = [];
 
 /* \u2500\u2500 message bubble \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
 
-function MessageBubble({message}: {message: ChatMessage}) {
+function MessageBubble({
+  message,
+  isSending,
+  onSuggestionPress,
+}: {
+  message: ChatMessage;
+  isSending: boolean;
+  onSuggestionPress: (messageId: string, suggestion: string) => void;
+}) {
   const isUser = message.sender === 'user';
   const isError = message.status === 'error';
+  const showSuggestions =
+    !isUser
+    && message.suggestionsEnabled
+    && Array.isArray(message.suggestions)
+    && message.suggestions.length > 0;
 
   return (
     <View
@@ -80,6 +86,24 @@ function MessageBubble({message}: {message: ChatMessage}) {
           <Text style={[cs.msgTime, isUser ? cs.userTime : cs.botTime]}>
             {formatTimestamp(message.timestamp)}
           </Text>
+          {showSuggestions ? (
+            <View style={cs.suggestionWrap}>
+              {message.suggestions?.map(suggestion => (
+                <Pressable
+                  key={`${message.id}-${suggestion}`}
+                  accessibilityRole="button"
+                  disabled={isSending}
+                  onPress={() => onSuggestionPress(message.id, suggestion)}
+                  style={({pressed}) => [
+                    cs.suggestionChip,
+                    isSending && cs.suggestionChipDisabled,
+                    pressed && !isSending && cs.pressed,
+                  ]}>
+                  <Text style={cs.suggestionChipText}>{suggestion}</Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
         </View>
       </View>
     </View>
@@ -113,13 +137,21 @@ export default function ChatbotScreen({navigation}: any) {
   const listRef = useRef<FlatList<ChatMessage>>(null);
   const isMountedRef = useRef(true);
 
+  const deactivateSuggestionChips = (items: ChatMessage[]) =>
+    items.map(item =>
+      item.suggestionsEnabled ? {...item, suggestionsEnabled: false} : item,
+    );
+
   const sendMessage = async (rawText: string, clearDraft = true) => {
     const trimmedText = rawText.trim();
     if (!trimmedText || isSending) {
       return;
     }
 
-    setMessages(cur => [...cur, createMessage(trimmedText, 'user')]);
+    setMessages(cur => [
+      ...deactivateSuggestionChips(cur),
+      createMessage(trimmedText, 'user'),
+    ]);
     if (clearDraft) {
       setDraftMessage('');
     }
@@ -128,11 +160,16 @@ export default function ChatbotScreen({navigation}: any) {
     try {
       setIsSending(true);
       const botReply = await sendChatbotMessage(trimmedText);
-      console.log('[SolBot] Full response length:', botReply.length, '| Text:', botReply);
       if (!isMountedRef.current) {
         return;
       }
-      setMessages(cur => [...cur, createMessage(botReply, 'bot')]);
+      setMessages(cur => [
+        ...cur,
+        createMessage(botReply.text, 'bot', 'default', {
+          suggestions: botReply.suggestions,
+          suggestionsEnabled: botReply.suggestions.length > 0,
+        }),
+      ]);
     } catch (error: any) {
       if (!isMountedRef.current) {
         return;
@@ -155,6 +192,20 @@ export default function ChatbotScreen({navigation}: any) {
         setIsSending(false);
       }
     }
+  };
+
+  const handleSuggestionPress = (messageId: string, suggestion: string) => {
+    setMessages(cur =>
+      cur.map(item =>
+        (item.id === messageId || item.suggestionsEnabled)
+          ? {
+              ...item,
+              suggestionsEnabled: false,
+            }
+          : item,
+      ),
+    );
+    sendMessage(suggestion);
   };
 
   useEffect(() => {
@@ -204,7 +255,7 @@ export default function ChatbotScreen({navigation}: any) {
           {!hasMessages && (
             <ScrollView
               style={cs.msgList}
-              contentContainerStyle={{paddingBottom: 16}}
+              contentContainerStyle={cs.quickScrollContent}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled">
               <View style={cs.quickSection}>
@@ -241,8 +292,14 @@ export default function ChatbotScreen({navigation}: any) {
               keyboardShouldPersistTaps="handled"
               onContentSizeChange={() => listRef.current?.scrollToEnd({animated: true})}
               removeClippedSubviews={false}
-              ListFooterComponent={isSending ? <TypingBubble /> : <View style={{height: 8}} />}
-              renderItem={({item}) => <MessageBubble message={item} />}
+              ListFooterComponent={isSending ? <TypingBubble /> : <View style={cs.listFooterSpacer} />}
+              renderItem={({item}) => (
+                <MessageBubble
+                  isSending={isSending}
+                  message={item}
+                  onSuggestionPress={handleSuggestionPress}
+                />
+              )}
               showsVerticalScrollIndicator={false}
               style={cs.msgList}
             />
@@ -282,7 +339,7 @@ export default function ChatbotScreen({navigation}: any) {
                 accessibilityRole="button"
                 onPress={() => sendMessage(lastFailedMessage, false)}
                 style={({pressed}) => [cs.retryCard, pressed && cs.pressed]}>
-                <View style={{flex: 1, paddingRight: 12}}>
+                <View style={cs.retryTextWrap}>
                   <Text style={cs.retryTitle}>Message not delivered</Text>
                   <Text style={cs.retryText}>Tap to retry your last question.</Text>
                 </View>
@@ -302,6 +359,7 @@ function createMessage(
   text: string,
   sender: ChatSender,
   status: ChatMessage['status'] = 'default',
+  extras: Pick<ChatMessage, 'suggestions' | 'suggestionsEnabled'> = {},
 ): ChatMessage {
   return {
     id: sender + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
@@ -309,6 +367,8 @@ function createMessage(
     sender,
     status,
     timestamp: Date.now(),
+    suggestions: extras.suggestions,
+    suggestionsEnabled: extras.suggestionsEnabled,
   };
 }
 
@@ -383,6 +443,7 @@ const cs = StyleSheet.create({
   closeBtnText: {fontSize: 16, color: NAVY, fontWeight: '700'},
 
   /* quick help */
+  quickScrollContent: {paddingBottom: 16},
   quickSection: {paddingHorizontal: 20, paddingTop: 16},
   quickTitle: {fontSize: 16, fontWeight: '800', color: NAVY, marginBottom: 10},
   quickCard: {
@@ -413,6 +474,7 @@ const cs = StyleSheet.create({
   /* message list */
   msgList: {flex: 1},
   msgListContent: {paddingHorizontal: 20, paddingTop: 12, paddingBottom: 20},
+  listFooterSpacer: {height: 8},
   msgRow: {flexDirection: 'row', alignItems: 'flex-end', marginBottom: 12},
   msgRowBot: {},
   msgRowUser: {justifyContent: 'flex-end'},
@@ -471,6 +533,29 @@ const cs = StyleSheet.create({
   msgTime: {fontSize: 10, fontWeight: '600', marginTop: 6, alignSelf: 'flex-start'},
   botTime: {color: '#94a3b8'},
   userTime: {color: '#8fa8d0'},
+  suggestionWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 10,
+  },
+  suggestionChip: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#d8e3f0',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  suggestionChipDisabled: {
+    opacity: 0.55,
+  },
+  suggestionChipText: {
+    color: NAVY,
+    fontSize: 12,
+    fontWeight: '700',
+  },
   typingRow: {flexDirection: 'row', alignItems: 'center'},
   typingText: {color: MUTED, fontSize: 13, marginLeft: 8},
 
@@ -529,6 +614,7 @@ const cs = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
+  retryTextWrap: {flex: 1, paddingRight: 12},
   retryTitle: {color: '#9a3412', fontSize: 13, fontWeight: '700', marginBottom: 2},
   retryText: {color: '#c2410c', fontSize: 12, lineHeight: 17},
   retryAction: {color: '#9a3412', fontSize: 13, fontWeight: '800'},

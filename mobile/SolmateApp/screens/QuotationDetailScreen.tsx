@@ -79,6 +79,18 @@ function fmtSystemType(value?: string | null) {
   return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 }
 
+function getQuotationScreenTitle(quotationType?: string | null) {
+  return (quotationType || '').toLowerCase() === 'final'
+    ? 'Inspection-Based Quotation'
+    : 'Pre-Inspection Estimate';
+}
+
+function getQuotationScreenSubtitle(quotationType?: string | null) {
+  return (quotationType || '').toLowerCase() === 'final'
+    ? 'Based on the technician inspection and finalized system configuration.'
+    : 'Based on your monthly bill + default system configuration.';
+}
+
 /* ── sub-components ── */
 
 function InfoRow({label, value, bold}: {label: string; value: string; bold?: boolean}) {
@@ -163,6 +175,10 @@ export default function QuotationDetailScreen({route, navigation}: any) {
   const monthlyKwh = fmtKwh(quotation.monthly_kwh);
   const systemType = fmtSystemType(quotation.pv_system_type);
   const panelQty = fmtVal(quotation.panel_quantity);
+  const screenTitle = getQuotationScreenTitle(quotation.quotation_type);
+  const screenSubtitle = getQuotationScreenSubtitle(quotation.quotation_type);
+  const showEstimateDisclaimer =
+    (quotation.quotation_type || '').toLowerCase() !== 'final';
 
   /* ── handlers ── */
 
@@ -195,8 +211,16 @@ export default function QuotationDetailScreen({route, navigation}: any) {
         </Pressable>
 
         {/* ── title ── */}
-        <Text style={s.title}>Initial Results</Text>
-        <Text style={s.subtitle}>Based on your monthly bill + default system configuration.</Text>
+        <Text style={s.title}>{screenTitle}</Text>
+        <Text style={s.subtitle}>{screenSubtitle}</Text>
+        {showEstimateDisclaimer ? (
+          <View style={s.disclaimerCard}>
+            <Text style={s.disclaimerTitle}>Disclaimer</Text>
+            <Text style={s.disclaimerText}>
+              Taxes are not yet included. This is only a pre-inspection estimate and may change after a site inspection.
+            </Text>
+          </View>
+        ) : null}
 
         {/* ── Quick Summary ── */}
         <View style={s.card}>
@@ -306,6 +330,26 @@ const s = StyleSheet.create({
   /* title */
   title: {fontSize: 26, fontWeight: '900', color: NAVY, marginBottom: 4},
   subtitle: {fontSize: 14, color: MUTED, lineHeight: 20, marginBottom: 22},
+  disclaimerCard: {
+    backgroundColor: '#fff7e0',
+    borderColor: '#f2d48a',
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  disclaimerTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: NAVY,
+    marginBottom: 4,
+  },
+  disclaimerText: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: '#6f5a1a',
+  },
 
   /* card */
   card: {

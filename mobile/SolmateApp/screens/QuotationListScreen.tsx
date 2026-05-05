@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 
@@ -129,9 +130,8 @@ function getPrimaryActionLabel(item: Quotation) {
 
 const FILTERS: {key: FilterKey; label: string}[] = [
   {key: 'all', label: 'All'},
-  {key: 'initial', label: 'Pre-Inspection Estimate'},
-  {key: 'final', label: 'Inspection-Based Quotation'},
-  {key: 'completed', label: 'Completed'},
+  {key: 'initial', label: 'Pre-Inspection'},
+  {key: 'final', label: 'Inspection-Based'},
 ];
 
 /* ══════════════════════════════════════════
@@ -139,11 +139,13 @@ const FILTERS: {key: FilterKey; label: string}[] = [
    ══════════════════════════════════════════ */
 
 export default function QuotationListScreen({navigation}: any) {
+  const {width} = useWindowDimensions();
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
+  const isCompactLayout = width < 390;
 
   /* ── fetch (preserved) ── */
 
@@ -315,27 +317,33 @@ export default function QuotationListScreen({navigation}: any) {
 
       {/* content area */}
       <View style={s.contentArea}>
-        {/* filter chips row */}
-        <View style={s.filterRow}>
-          {FILTERS.map(f => {
-            const active = activeFilter === f.key;
-            return (
-              <Pressable
-                key={f.key}
-                onPress={() => setActiveFilter(f.key)}
-                style={[s.chip, active && s.chipActive]}>
-                <Text style={[s.chipText, active && s.chipTextActive]}>
-                  {f.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-
-          <Pressable
-            onPress={() => navigation.navigate('Quotations')}
-            style={({pressed}) => [s.chipGenerate, pressed && s.pressed]}>
-            <Text style={s.chipGenerateText}>Generate New</Text>
-          </Pressable>
+        {/* filter chips */}
+        <View style={s.filterSection}>
+          <View style={s.filterRow}>
+            {FILTERS.map(f => {
+              const active = activeFilter === f.key;
+              return (
+                <Pressable
+                  key={f.key}
+                  onPress={() => setActiveFilter(f.key)}
+                  style={({pressed}) => [
+                    s.chip,
+                    isCompactLayout && s.chipCompact,
+                    active && s.chipActive,
+                    pressed && s.pressed,
+                  ]}>
+                  <Text
+                    style={[
+                      s.chipText,
+                      isCompactLayout && s.chipTextCompact,
+                      active && s.chipTextActive,
+                    ]}>
+                    {f.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
 
         {/* error */}
@@ -447,20 +455,30 @@ const s = StyleSheet.create({
   },
 
   /* filter row */
+  filterSection: {
+    gap: 12,
+    marginBottom: 16,
+  },
   filterRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
+    alignItems: 'stretch',
     flexWrap: 'wrap',
     gap: 8,
   },
   chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    minHeight: 44,
+    maxWidth: '100%',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 22,
     backgroundColor: CARD,
     borderWidth: 1,
-    borderColor: DIVIDER,
+    borderColor: '#c9d5e6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  chipCompact: {
+    width: '100%',
   },
   chipActive: {
     backgroundColor: NAVY,
@@ -469,21 +487,15 @@ const s = StyleSheet.create({
   chipText: {
     fontSize: 13,
     fontWeight: '700',
-    color: MUTED,
+    lineHeight: 18,
+    color: NAVY,
+    textAlign: 'center',
+    flexShrink: 1,
+  },
+  chipTextCompact: {
+    fontSize: 12.5,
   },
   chipTextActive: {
-    color: CARD,
-  },
-  chipGenerate: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: GOLD,
-    marginLeft: 'auto',
-  },
-  chipGenerateText: {
-    fontSize: 13,
-    fontWeight: '800',
     color: CARD,
   },
 
