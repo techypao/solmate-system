@@ -96,6 +96,9 @@ Route::middleware('auth')->group(function () {
         ->name('admin.request-assignments');
 
     Route::middleware('role:admin')->group(function () {
+        Route::post('/admin/request-assignments/service-popup', [RequestAssignmentPageController::class, 'flashServicePopup'])
+            ->name('admin.request-assignments.service-popup');
+
         Route::get('/admin/customers', [AdminCustomerController::class, 'index'])
             ->name('admin.customers');
 

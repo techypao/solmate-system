@@ -1176,11 +1176,11 @@
             <div class="adm2-stat-label">Quotations Generated</div>
             <div class="adm2-stat-value-pair">
                 <div>
-                    <div class="adm2-stat-pair-label">Initial</div>
+                    <div class="adm2-stat-pair-label">Pre-Inspection</div>
                     <div class="adm2-stat-pair-value">{{ $adm_initialQuotations }}</div>
                 </div>
                 <div>
-                    <div class="adm2-stat-pair-label">Final</div>
+                    <div class="adm2-stat-pair-label">Inspection-Based</div>
                     <div class="adm2-stat-pair-value">{{ $adm_finalQuotations }}</div>
                 </div>
             </div>
@@ -1338,7 +1338,7 @@
                         @forelse ($adm_recentQuotations as $q)
                             <tr>
                                 <td class="adm2-table-id">Q-{{ str_pad($q->id, 3, '0', STR_PAD_LEFT) }}</td>
-                                <td>{{ ucfirst($q->quotation_type ?? 'Initial') }}</td>
+                                <td>{{ strtolower((string) ($q->quotation_type ?? 'initial')) === 'final' ? 'Inspection-Based' : 'Pre-Inspection' }}</td>
                                 <td>{{ $q->customer?->name ?? 'N/A' }}</td>
                                 <td style="white-space:nowrap;">{{ $q->created_at->format('M d, Y') }}</td>
                                 <td style="white-space:nowrap;">{{ $q->project_cost ? '₱'.number_format($q->project_cost) : '—' }}</td>
@@ -1498,7 +1498,12 @@
         var map = { inspection:'inspection', installation:'installation', maintenance:'maintenance', initial:'initial', final:'final' };
         var key = String(type||'').toLowerCase();
         var cls = map[key] || 'default';
-        var label = String(type||'Unknown').replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+        var labelMap = {
+            initial: 'Pre-Inspection',
+            final: 'Inspection-Based',
+        };
+        var label = labelMap[key]
+            || String(type||'Unknown').replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
         return '<span class="dash-badge dash-badge-type-' + cls + '">' + escHtml(label) + '</span>';
     }
 

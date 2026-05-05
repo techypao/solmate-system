@@ -54,9 +54,9 @@ class WebAdminAssignmentsTest extends TestCase
         $this->actingAs($admin)
             ->get('/admin/request-assignments')
             ->assertOk()
-            ->assertSee('Admin Request Assignments')
-            ->assertSee('Service Requests')
-            ->assertSee('Inspection Requests')
+            ->assertSee('Admin Services')
+            ->assertSee('Services')
+            ->assertSee('Inspection')
             ->assertSee($technician->email)
             ->assertSee('0917-222-1000')
             ->assertSee('0917-333-2000');
@@ -390,8 +390,94 @@ class WebAdminAssignmentsTest extends TestCase
             ->assertSee('Preferred Date')
             ->assertSee('Official preferred date')
             ->assertSee('Save preferred date')
-            ->assertSee("Adjust this when the customer's requested service date needs to move for technician availability.", false)
+            ->assertSee('Requests stay compact by default. Open one request at a time to focus on assignment, date, and status updates.', false)
             ->assertSee('Apr 27, 2026');
+    }
+
+    public function test_admin_can_flash_service_assignment_popup_message(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_popup_assign@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $this->actingAs($admin)
+            ->post('/admin/request-assignments/service-popup', [
+                'action' => 'technician_assigned',
+                'redirect_to' => '#service-request-14',
+            ])
+            ->assertRedirect('/admin/request-assignments#service-request-14')
+            ->assertSessionHas('admin_service_popup', [
+                'action' => 'technician_assigned',
+                'message' => 'Technician has been successfully assigned.',
+            ]);
+    }
+
+    public function test_admin_can_flash_service_preferred_date_popup_message(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_popup_date@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $this->actingAs($admin)
+            ->post('/admin/request-assignments/service-popup', [
+                'action' => 'preferred_date_changed',
+                'redirect_to' => '#service-request-15',
+            ])
+            ->assertRedirect('/admin/request-assignments#service-request-15')
+            ->assertSessionHas('admin_service_popup', [
+                'action' => 'preferred_date_changed',
+                'message' => 'Preferred date has been successfully updated.',
+            ]);
+    }
+
+    public function test_admin_can_flash_service_status_popup_message(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_popup_status@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $this->actingAs($admin)
+            ->post('/admin/request-assignments/service-popup', [
+                'action' => 'status_changed',
+                'redirect_to' => '#service-request-16',
+            ])
+            ->assertRedirect('/admin/request-assignments#service-request-16')
+            ->assertSessionHas('admin_service_popup', [
+                'action' => 'status_changed',
+                'message' => 'Service status has been successfully updated.',
+            ]);
+    }
+
+    public function test_admin_request_assignments_page_renders_flashed_service_popup_message(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_popup_render@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $this->actingAs($admin)
+            ->withSession([
+                'admin_service_popup' => [
+                    'action' => 'status_changed',
+                    'message' => 'Service status has been successfully updated.',
+                ],
+            ])
+            ->get('/admin/request-assignments')
+            ->assertOk()
+            ->assertSee('Service status has been successfully updated.')
+            ->assertSee('admin-service-popup-toast')
+            ->assertSee('Your update was saved and this notice will only appear once.');
     }
 
     public function test_admin_request_assignments_page_shows_inspection_preferred_date_controls(): void

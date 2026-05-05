@@ -2,6 +2,7 @@ import React, {useCallback, useMemo, useRef, useState} from 'react';
 import {
   ActivityIndicator,
   Alert,
+  useWindowDimensions,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -54,9 +55,17 @@ type FinalQuotationFormState = {
   panel_watts: string;
   status: QuotationStatus;
   remarks: string;
+  optional_items: OptionalQuotationItemState[];
 };
 
 type CatalogQuantityState = Record<number, string>;
+
+type OptionalQuotationItemState = {
+  id: number;
+  description: string;
+  quantity: string;
+  unit_price: string;
+};
 
 type SelectedCatalogLineItem = {
   pricing_item_id: number;
@@ -69,6 +78,16 @@ type SelectedCatalogLineItem = {
   pricing_item: PricingItemSummary;
 };
 
+type OptionalQuotationLineItem = {
+  id: number;
+  description: string;
+  qty: number;
+  unit: string;
+  unit_amount: number;
+  total_amount: number;
+  category: string;
+};
+
 type ComputedTotals = {
   panelCost: number;
   inverterCost: number;
@@ -77,6 +96,8 @@ type ComputedTotals = {
   materialsSubtotal: number;
   laborCost: number;
   projectCost: number;
+  optionalItemsSubtotal: number;
+  finalProjectCost: number;
   roiYears: number | null;
 };
 
@@ -98,13 +119,6 @@ const GOLD = '#e8a800';
 const MUTED = '#7b8699';
 const BG = '#e0e8f5';
 const DIVIDER = '#edf1f7';
-
-const STATUS_OPTIONS: QuotationStatus[] = [
-  'pending',
-  'approved',
-  'rejected',
-  'completed',
-];
 
 const CATEGORY_ORDER = [
   'panel',
@@ -317,6 +331,16 @@ function buildInitialFormState(): FinalQuotationFormState {
     panel_watts: '',
     status: 'pending',
     remarks: '',
+    optional_items: [],
+  };
+}
+
+function buildOptionalQuotationItem(id: number): OptionalQuotationItemState {
+  return {
+    id,
+    description: '',
+    quantity: '',
+    unit_price: '',
   };
 }
 
@@ -349,31 +373,82 @@ function FormSection({
   );
 }
 
-function OptionChip({
+function SelectField({
   label,
-  selected,
-  onPress,
+  valueLabel,
+  placeholder,
+  isOpen,
+  onToggle,
+  options,
+  disabled = false,
 }: {
   label: string;
-  selected: boolean;
-  onPress: () => void;
+  valueLabel?: string;
+  placeholder: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  options: Array<{
+    key: string;
+    label: string;
+    selected: boolean;
+    onPress: () => void;
+  }>;
+  disabled?: boolean;
 }) {
   return (
-    <Pressable
-      onPress={onPress}
-      style={({pressed}) => [
-        styles.optionChip,
-        selected ? styles.optionChipSelected : null,
-        pressed ? styles.optionChipPressed : null,
-      ]}>
-      <Text
-        style={[
-          styles.optionChipText,
-          selected ? styles.optionChipTextSelected : null,
+    <View style={styles.selectFieldWrap}>
+      <Text style={styles.optionLabel}>{label}</Text>
+      <Pressable
+        disabled={disabled}
+        onPress={onToggle}
+        style={({pressed}) => [
+          styles.selectTrigger,
+          isOpen ? styles.selectTriggerOpen : null,
+          disabled ? styles.selectTriggerDisabled : null,
+          pressed && !disabled ? styles.selectTriggerPressed : null,
         ]}>
-        {label}
-      </Text>
-    </Pressable>
+        <Text
+          numberOfLines={1}
+          style={[
+            styles.selectTriggerText,
+            !valueLabel ? styles.selectPlaceholderText : null,
+            disabled ? styles.selectTriggerTextDisabled : null,
+          ]}>
+          {valueLabel || placeholder}
+        </Text>
+        <Text
+          style={[
+            styles.selectChevron,
+            disabled ? styles.selectChevronDisabled : null,
+          ]}>
+          {isOpen ? '▲' : '▼'}
+        </Text>
+      </Pressable>
+
+      {isOpen && !disabled ? (
+        <View style={styles.selectMenu}>
+          {options.map((option, index) => (
+            <Pressable
+              key={option.key}
+              onPress={option.onPress}
+              style={({pressed}) => [
+                styles.selectOption,
+                option.selected ? styles.selectOptionSelected : null,
+                index === options.length - 1 ? styles.selectOptionLast : null,
+                pressed ? styles.selectOptionPressed : null,
+              ]}>
+              <Text
+                style={[
+                  styles.selectOptionText,
+                  option.selected ? styles.selectOptionTextSelected : null,
+                ]}>
+                {option.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+    </View>
   );
 }
 
@@ -382,6 +457,8 @@ export default function FinalQuotationScreen({navigation, route}: any) {
   const initialInspectionRequest = route?.params?.inspectionRequest as
     | TechnicianInspectionRequest
     | undefined;
+  const {width} = useWindowDimensions();
+  const useSingleColumnStepper = width < 768;
 
   const [inspectionRequest, setInspectionRequest] =
     useState<TechnicianInspectionRequest | null>(initialInspectionRequest || null);
@@ -403,7 +480,11 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     buildInitialFormState(),
   );
   const scrollViewRef = useRef<ScrollView>(null);
+  const optionalItemIdRef = useRef(1);
   const [currentStep, setCurrentStep] = useState(1);
+  const [openSelectField, setOpenSelectField] = useState<
+    'pv-system-type' | 'panel-preset' | 'inverter-option' | 'battery-preset' | null
+  >(null);
 
   const loadInspectionRequest = useCallback(
     async (showLoadingState = false) => {
@@ -741,6 +822,28 @@ export default function FinalQuotationScreen({navigation, route}: any) {
       .filter((item): item is SelectedCatalogLineItem => item !== null);
   }, [effectiveCatalogQuantities, pricingCatalog, supportsBatteryFlow]);
 
+  const optionalLineItems = useMemo<OptionalQuotationLineItem[]>(() => {
+    return form.optional_items.map(item => {
+      const qty = Math.max(0, toNumberOrUndefined(item.quantity) ?? 0);
+      const unitAmount = Math.max(0, toNumberOrUndefined(item.unit_price) ?? 0);
+
+      return {
+        id: item.id,
+        description: item.description.trim() || 'Optional item',
+        qty: Number(qty.toFixed(2)),
+        unit: 'item',
+        unit_amount: Number(unitAmount.toFixed(2)),
+        total_amount: Number((qty * unitAmount).toFixed(2)),
+        category: 'optional',
+      };
+    });
+  }, [form.optional_items]);
+
+  const syncedOptionalLineItems = useMemo(
+    () => optionalLineItems.filter(item => item.qty > 0),
+    [optionalLineItems],
+  );
+
   const computedTotals = useMemo<ComputedTotals>(() => {
     const totals = {
       panelCost: 0,
@@ -750,6 +853,8 @@ export default function FinalQuotationScreen({navigation, route}: any) {
       materialsSubtotal: 0,
       laborCost: 0,
       projectCost: 0,
+      optionalItemsSubtotal: 0,
+      finalProjectCost: 0,
       roiYears: null as number | null,
     };
 
@@ -780,16 +885,24 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     totals.projectCost = Number(
       (totals.materialsSubtotal + totals.laborCost).toFixed(2),
     );
+    totals.optionalItemsSubtotal = Number(
+      optionalLineItems
+        .reduce((sum, item) => sum + item.total_amount, 0)
+        .toFixed(2),
+    );
+    totals.finalProjectCost = Number(
+      (totals.projectCost + totals.optionalItemsSubtotal).toFixed(2),
+    );
 
     const monthlyBill = toNumberOrUndefined(form.monthly_electric_bill);
-    if (monthlyBill && monthlyBill > 0 && totals.projectCost > 0) {
+    if (monthlyBill && monthlyBill > 0 && totals.finalProjectCost > 0) {
       totals.roiYears = Number(
-        ((totals.projectCost / monthlyBill) / 12).toFixed(2),
+        ((totals.finalProjectCost / monthlyBill) / 12).toFixed(2),
       );
     }
 
     return totals;
-  }, [form.monthly_electric_bill, selectedLineItems]);
+  }, [form.monthly_electric_bill, optionalLineItems, selectedLineItems]);
 
   const validationMessage = useMemo(() => {
     if (!form.monthly_electric_bill) {
@@ -863,15 +976,40 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     finalQuotationOptions?.system_types.find(
       option => option.value === form.pv_system_type,
     )?.label ?? 'Not selected';
+  const selectedPanelPresetOption =
+    finalQuotationOptions?.panel_options.find(
+      option => String(option.value) === form.panel_watts,
+    ) ?? null;
+  const selectedPanelPresetValueLabel = !form.panel_watts
+    ? 'Use admin default'
+    : selectedPanelPresetOption?.label ?? `${form.panel_watts}W Solar Panel`;
   const selectedPanelPresetLabel = form.panel_watts
     ? `${form.panel_watts} W`
     : 'Admin default';
+  const selectedBatteryPresetOption =
+    finalQuotationOptions?.battery_options.find(
+      option => option.value === form.battery_model,
+    ) ?? null;
+  const selectedBatteryPresetValueLabel = !supportsBatteryFlow
+    ? 'No preset'
+    : selectedBatteryPresetOption?.label ||
+      form.battery_model.trim() ||
+      (form.battery_capacity_ah
+        ? `${form.battery_voltage || '51.2'}V ${form.battery_capacity_ah}Ah`
+        : 'No preset');
   const selectedBatteryPresetLabel = supportsBatteryFlow
     ? form.battery_model.trim() ||
       (form.battery_capacity_ah
         ? `${form.battery_capacity_ah} Ah`
         : 'No preset')
     : 'Not included';
+  const selectedInverterOption =
+    finalQuotationOptions?.inverter_options.find(
+      option => option.value === form.inverter_type,
+    ) ?? null;
+  const selectedInverterValueLabel = !form.inverter_type.trim()
+    ? 'No preset'
+    : selectedInverterOption?.label ?? form.inverter_type;
   const selectedInverterLabel =
     form.inverter_type.trim() ||
     suggestedInverterItem?.name ||
@@ -884,6 +1022,45 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     setForm(current => ({
       ...current,
       [key]: value,
+    }));
+  };
+
+  const addOptionalItem = () => {
+    const nextId = optionalItemIdRef.current;
+    optionalItemIdRef.current += 1;
+
+    setForm(current => ({
+      ...current,
+      optional_items: [
+        ...current.optional_items,
+        buildOptionalQuotationItem(nextId),
+      ],
+    }));
+  };
+
+  const updateOptionalItemField = (
+    itemId: number,
+    key: 'description' | 'quantity' | 'unit_price',
+    value: string,
+  ) => {
+    setForm(current => ({
+      ...current,
+      optional_items: current.optional_items.map(item =>
+        item.id === itemId
+          ? {
+              ...item,
+              [key]:
+                key === 'description' ? value : sanitizeNumericInput(value),
+            }
+          : item,
+      ),
+    }));
+  };
+
+  const removeOptionalItem = (itemId: number) => {
+    setForm(current => ({
+      ...current,
+      optional_items: current.optional_items.filter(item => item.id !== itemId),
     }));
   };
 
@@ -1085,14 +1262,23 @@ export default function FinalQuotationScreen({navigation, route}: any) {
       createdQuotationId = createdQuotation.id;
 
       await replaceQuotationLineItems(createdQuotation.id, {
-        line_items: selectedLineItems.map(item => ({
-          pricing_item_id: item.pricing_item_id,
-          description: item.description,
-          category: item.category,
-          qty: item.qty,
-          unit: item.unit,
-          unit_amount: item.unit_amount,
-        })),
+        line_items: [
+          ...selectedLineItems.map(item => ({
+            pricing_item_id: item.pricing_item_id,
+            description: item.description,
+            category: item.category,
+            qty: item.qty,
+            unit: item.unit,
+            unit_amount: item.unit_amount,
+          })),
+          ...syncedOptionalLineItems.map(item => ({
+            description: item.description,
+            category: item.category,
+            qty: item.qty,
+            unit: item.unit,
+            unit_amount: item.unit_amount,
+          })),
+        ],
       });
 
       Alert.alert(
@@ -1291,34 +1477,58 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     <FormSection
       title="System setup"
       subtitle="Use backend-provided options where available, or type optional custom values if needed.">
-      <Text style={styles.optionLabel}>PV system type</Text>
-      <View style={styles.optionRow}>
-        {finalQuotationOptions.system_types.map(option => (
-          <OptionChip
-            key={option.value}
-            label={option.label}
-            selected={form.pv_system_type === option.value}
-            onPress={() => handlePvSystemTypeChange(option.value as PvSystemType)}
-          />
-        ))}
-      </View>
+      <SelectField
+        label="PV system type"
+        valueLabel={selectedPvSystemLabel === 'Not selected' ? undefined : selectedPvSystemLabel}
+        placeholder="Select a PV system type"
+        isOpen={openSelectField === 'pv-system-type'}
+        onToggle={() =>
+          setOpenSelectField(current =>
+            current === 'pv-system-type' ? null : 'pv-system-type',
+          )
+        }
+        options={finalQuotationOptions.system_types.map(option => ({
+          key: option.value,
+          label: option.label,
+          selected: form.pv_system_type === option.value,
+          onPress: () => {
+            handlePvSystemTypeChange(option.value as PvSystemType);
+            setOpenSelectField(null);
+          },
+        }))}
+      />
 
-      <Text style={styles.optionLabel}>Panel watt preset</Text>
-      <View style={styles.optionRow}>
-        <OptionChip
-          label="Use admin default"
-          selected={!form.panel_watts}
-          onPress={() => updateField('panel_watts', '')}
-        />
-        {finalQuotationOptions.panel_options.map(option => (
-          <OptionChip
-            key={option.value}
-            label={option.label}
-            selected={form.panel_watts === String(option.value)}
-            onPress={() => updateField('panel_watts', String(option.value))}
-          />
-        ))}
-      </View>
+      <SelectField
+        label="Panel watt preset"
+        valueLabel={selectedPanelPresetValueLabel}
+        placeholder="Select a panel preset"
+        isOpen={openSelectField === 'panel-preset'}
+        onToggle={() =>
+          setOpenSelectField(current =>
+            current === 'panel-preset' ? null : 'panel-preset',
+          )
+        }
+        options={[
+          {
+            key: 'admin-default',
+            label: 'Use admin default',
+            selected: !form.panel_watts,
+            onPress: () => {
+              updateField('panel_watts', '');
+              setOpenSelectField(null);
+            },
+          },
+          ...finalQuotationOptions.panel_options.map(option => ({
+            key: String(option.value),
+            label: option.label,
+            selected: form.panel_watts === String(option.value),
+            onPress: () => {
+              updateField('panel_watts', String(option.value));
+              setOpenSelectField(null);
+            },
+          })),
+        ]}
+      />
 
       <View style={styles.switchRow}>
         <View style={styles.switchTextWrap}>
@@ -1338,46 +1548,73 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         />
       </View>
 
-      <Text style={styles.optionLabel}>Inverter option</Text>
-      <View style={styles.optionRow}>
-        <OptionChip
-          label="No preset"
-          selected={!form.inverter_type.trim()}
-          onPress={() => updateField('inverter_type', '')}
-        />
-        {finalQuotationOptions.inverter_options.map(option => (
-          <OptionChip
-            key={option.value}
-            label={option.label}
-            selected={form.inverter_type === option.value}
-            onPress={() => updateField('inverter_type', option.value)}
-          />
-        ))}
-      </View>
+      <SelectField
+        label="Inverter option"
+        valueLabel={selectedInverterValueLabel}
+        placeholder="Select an inverter preset"
+        isOpen={openSelectField === 'inverter-option'}
+        onToggle={() =>
+          setOpenSelectField(current =>
+            current === 'inverter-option' ? null : 'inverter-option',
+          )
+        }
+        options={[
+          {
+            key: 'no-inverter-preset',
+            label: 'No preset',
+            selected: !form.inverter_type.trim(),
+            onPress: () => {
+              updateField('inverter_type', '');
+              setOpenSelectField(null);
+            },
+          },
+          ...finalQuotationOptions.inverter_options.map(option => ({
+            key: option.value,
+            label: option.label,
+            selected: form.inverter_type === option.value,
+            onPress: () => {
+              updateField('inverter_type', option.value);
+              setOpenSelectField(null);
+            },
+          })),
+        ]}
+      />
 
       {supportsBatteryFlow ? (
-        <>
-          <Text style={styles.optionLabel}>Battery preset</Text>
-          <View style={styles.optionRow}>
-            <OptionChip
-              label="No preset"
-              selected={
+        <SelectField
+          label="Battery preset"
+          valueLabel={selectedBatteryPresetValueLabel}
+          placeholder="Select a battery preset"
+          isOpen={openSelectField === 'battery-preset'}
+          onToggle={() =>
+            setOpenSelectField(current =>
+              current === 'battery-preset' ? null : 'battery-preset',
+            )
+          }
+          options={[
+            {
+              key: 'no-battery-preset',
+              label: 'No preset',
+              selected:
                 !form.battery_model.trim() &&
                 !form.battery_capacity_ah &&
-                !form.battery_voltage
-              }
-              onPress={() => applyBatteryPreset(null)}
-            />
-            {finalQuotationOptions.battery_options.map(option => (
-              <OptionChip
-                key={option.value}
-                label={option.label}
-                selected={form.battery_model === option.value}
-                onPress={() => applyBatteryPreset(option)}
-              />
-            ))}
-          </View>
-        </>
+                !form.battery_voltage,
+              onPress: () => {
+                applyBatteryPreset(null);
+                setOpenSelectField(null);
+              },
+            },
+            ...finalQuotationOptions.battery_options.map(option => ({
+              key: option.value,
+              label: option.label,
+              selected: form.battery_model === option.value,
+              onPress: () => {
+                applyBatteryPreset(option);
+                setOpenSelectField(null);
+              },
+            })),
+          ]}
+        />
       ) : null}
 
       <AppInput
@@ -1604,10 +1841,156 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     </FormSection>
   );
 
+  const optionalItemsSection = (
+    <FormSection
+      title="Optional Items"
+      subtitle="Add extra items that should be included on top of the catalog-based quotation totals.">
+      <AppButton
+        title="+ Add optional item"
+        variant="outline"
+        onPress={addOptionalItem}
+        style={styles.addOptionalItemButton}
+        textStyle={styles.addOptionalItemButtonText}
+      />
+
+      {form.optional_items.length > 0 ? (
+        form.optional_items.map((item, index) => {
+          const previewItem =
+            optionalLineItems.find(optionalItem => optionalItem.id === item.id) ?? null;
+
+          return (
+            <View key={item.id} style={styles.optionalItemCard}>
+              <View style={styles.optionalItemHeader}>
+                <View style={styles.optionalItemHeaderTextWrap}>
+                  <Text style={styles.optionalItemTitle}>
+                    Optional Item {index + 1}
+                  </Text>
+                  <Text style={styles.optionalItemHint}>
+                    Added to the final quotation total only when needed.
+                  </Text>
+                </View>
+                <AppButton
+                  title="Remove"
+                  onPress={() => removeOptionalItem(item.id)}
+                  style={styles.optionalRemoveButton}
+                  textStyle={styles.removeButtonText}
+                />
+              </View>
+
+              <AppInput
+                label="Item name / description"
+                placeholder="Optional item"
+                onChangeText={value =>
+                  updateOptionalItemField(item.id, 'description', value)
+                }
+                value={item.description}
+                containerStyle={styles.fieldSpacing}
+              />
+              <AppInput
+                label="Quantity"
+                placeholder="0"
+                keyboardType="decimal-pad"
+                onChangeText={value =>
+                  updateOptionalItemField(item.id, 'quantity', value)
+                }
+                value={item.quantity}
+                containerStyle={styles.fieldSpacing}
+              />
+              <AppInput
+                label="Unit price"
+                placeholder="0.00"
+                keyboardType="decimal-pad"
+                onChangeText={value =>
+                  updateOptionalItemField(item.id, 'unit_price', value)
+                }
+                value={item.unit_price}
+              />
+
+              <View style={styles.optionalItemTotalRow}>
+                <Text style={styles.optionalItemTotalLabel}>Total</Text>
+                <Text style={styles.optionalItemTotalValue}>
+                  {formatQuotationCurrency(previewItem?.total_amount ?? 0, {
+                    currency: 'PHP',
+                    fallback: 'PHP 0.00',
+                    spaceAfterCurrency: true,
+                  })}
+                </Text>
+              </View>
+            </View>
+          );
+        })
+      ) : (
+        <Text style={styles.emptyCatalogText}>
+          No optional items added yet. Add one only if it needs to be included
+          on top of the catalog subtotal.
+        </Text>
+      )}
+    </FormSection>
+  );
+
+  const optionalItemsReviewSection = (
+    <FormSection
+      title="Optional Items"
+      subtitle="Extra technician-added items that will be included in the final quotation computation.">
+      {form.optional_items.length > 0 ? (
+        <>
+          {optionalLineItems.map((item, index) => (
+            <View key={item.id} style={styles.selectedItemCard}>
+              <View style={styles.selectedItemHeader}>
+                <View style={styles.selectedItemTextWrap}>
+                  <Text style={styles.selectedItemName}>
+                    {item.description || `Optional Item ${index + 1}`}
+                  </Text>
+                  <Text style={styles.selectedItemMeta}>
+                    Qty {item.qty.toFixed(2).replace(/\.00$/, '')} •{' '}
+                    {formatQuotationCurrency(item.unit_amount, {
+                      currency: 'PHP',
+                      fallback: 'PHP 0.00',
+                      spaceAfterCurrency: true,
+                    })}{' '}
+                    each
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.selectedItemTotalsRow}>
+                <Text style={styles.selectedItemTotalsLabel}>Optional total</Text>
+                <Text style={styles.selectedItemTotalsValue}>
+                  {formatQuotationCurrency(item.total_amount, {
+                    currency: 'PHP',
+                    fallback: 'PHP 0.00',
+                    spaceAfterCurrency: true,
+                  })}
+                </Text>
+              </View>
+            </View>
+          ))}
+
+          <View style={styles.optionalItemsSubtotalCard}>
+            <Text style={styles.optionalItemsSubtotalLabel}>
+              Optional Items Subtotal
+            </Text>
+            <Text style={styles.optionalItemsSubtotalValue}>
+              {formatQuotationCurrency(computedTotals.optionalItemsSubtotal, {
+                currency: 'PHP',
+                fallback: 'PHP 0.00',
+                spaceAfterCurrency: true,
+              })}
+            </Text>
+          </View>
+        </>
+      ) : (
+        <Text style={styles.emptyCatalogText}>
+          No optional items were added for this quotation.
+        </Text>
+      )}
+    </FormSection>
+  );
+
   const computedTotalsSection = (
     <FormSection
       title="Computed totals"
-      subtitle="These totals are previewed from the selected catalog items and will be recomputed by the backend after save.">
+      subtitle="These totals are previewed from the selected catalog items plus any technician-added optional items, and will be recomputed by the backend after save.">
       <View style={styles.totalsGrid}>
         <View style={styles.totalCard}>
           <Text style={styles.totalLabel}>Panel cost</Text>
@@ -1669,17 +2052,37 @@ export default function FinalQuotationScreen({navigation, route}: any) {
             })}
           </Text>
         </View>
+        <View style={styles.totalCard}>
+          <Text style={styles.totalLabel}>Optional items subtotal</Text>
+          <Text style={styles.totalValue}>
+            {formatQuotationCurrency(computedTotals.optionalItemsSubtotal, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
+          </Text>
+        </View>
       </View>
 
       <View style={styles.projectTotalCard}>
         <Text style={styles.projectTotalLabel}>Estimated project cost</Text>
         <Text style={styles.projectTotalValue}>
-          {formatQuotationCurrency(computedTotals.projectCost, {
+          {formatQuotationCurrency(computedTotals.finalProjectCost, {
             currency: 'PHP',
             fallback: 'PHP 0.00',
             spaceAfterCurrency: true,
           })}
         </Text>
+        {computedTotals.optionalItemsSubtotal > 0 ? (
+          <Text style={styles.projectTotalSubtext}>
+            Base project cost:{' '}
+            {formatQuotationCurrency(computedTotals.projectCost, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
+          </Text>
+        ) : null}
         <Text style={styles.projectTotalHint}>
           ROI preview:{' '}
           {computedTotals.roiYears !== null
@@ -1734,6 +2137,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
 
       {computedRequirementSection}
       {selectedLineItemsSection}
+      {optionalItemsReviewSection}
       {computedTotalsSection}
     </>
   );
@@ -1766,6 +2170,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
             </AppCard>
             {selectedLineItemsSection}
             {pricingCatalogSection}
+            {optionalItemsSection}
             {computedTotalsSection}
           </>
         );
@@ -1812,30 +2217,30 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           <Text style={styles.stepHeaderTitle}>{activeStep.label}</Text>
           <Text style={styles.stepHeaderSubtitle}>{activeStep.subtitle}</Text>
 
-          <View style={styles.stepPillGrid}>
+          <View
+            style={[
+              styles.stepPillGrid,
+              useSingleColumnStepper ? styles.stepPillGridSingleColumn : null,
+            ]}>
             {WIZARD_STEPS.map(step => (
               <View
                 key={step.number}
                 style={[
                   styles.stepPill,
                   step.number === currentStep ? styles.stepPillActive : null,
-                  step.number < currentStep ? styles.stepPillComplete : null,
+                  useSingleColumnStepper ? styles.stepPillFullWidth : null,
                 ]}>
                 <Text
                   style={[
                     styles.stepPillNumber,
-                    step.number === currentStep || step.number < currentStep
-                      ? styles.stepPillNumberActive
-                      : null,
+                    step.number === currentStep ? styles.stepPillNumberActive : null,
                   ]}>
                   {step.number}
                 </Text>
                 <Text
                   style={[
                     styles.stepPillLabel,
-                    step.number === currentStep || step.number < currentStep
-                      ? styles.stepPillLabelActive
-                      : null,
+                    step.number === currentStep ? styles.stepPillLabelActive : null,
                   ]}>
                   {step.label}
                 </Text>
@@ -2061,7 +2466,11 @@ const styles = StyleSheet.create({
   stepPillGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 12,
+  },
+  stepPillGridSingleColumn: {
+    flexDirection: 'column',
+    flexWrap: 'nowrap',
   },
   stepPill: {
     backgroundColor: '#f8fafc',
@@ -2069,16 +2478,16 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     minWidth: '47%',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  stepPillFullWidth: {
+    minWidth: '100%',
+    width: '100%',
   },
   stepPillActive: {
     backgroundColor: '#fffbeb',
     borderColor: GOLD,
-  },
-  stepPillComplete: {
-    backgroundColor: '#dcfce7',
-    borderColor: '#22c55e',
   },
   stepPillNumber: {
     color: MUTED,
@@ -2203,35 +2612,84 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textTransform: 'uppercase',
   },
-  optionRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
+  selectFieldWrap: {
     marginBottom: 16,
   },
-  optionChip: {
-    backgroundColor: '#ffffff',
-    borderColor: '#cbd5e1',
-    borderRadius: 999,
+  selectTrigger: {
+    alignItems: 'center',
+    backgroundColor: '#f8fbff',
+    borderColor: DIVIDER,
+    borderRadius: 18,
     borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    minHeight: 54,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
-  optionChipSelected: {
+  selectTriggerOpen: {
     backgroundColor: '#fffbeb',
     borderColor: GOLD,
   },
-  optionChipPressed: {
+  selectTriggerDisabled: {
+    backgroundColor: '#f8fafc',
+    opacity: 0.7,
+  },
+  selectTriggerPressed: {
     opacity: 0.85,
   },
-  optionChipText: {
-    color: '#475569',
+  selectTriggerText: {
+    color: NAVY,
     fontSize: 14,
+    fontWeight: '700',
+    flex: 1,
+    paddingRight: 12,
+  },
+  selectPlaceholderText: {
+    color: '#9aa7bb',
     fontWeight: '600',
   },
-  optionChipTextSelected: {
-    color: '#7a5700',
+  selectTriggerTextDisabled: {
+    color: MUTED,
+  },
+  selectChevron: {
+    color: MUTED,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  selectChevronDisabled: {
+    color: '#94a3b8',
+  },
+  selectMenu: {
+    marginTop: 10,
+    backgroundColor: '#f8fbff',
+    borderColor: DIVIDER,
+    borderRadius: 16,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  selectOption: {
+    borderBottomColor: DIVIDER,
+    borderBottomWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  selectOptionLast: {
+    borderBottomWidth: 0,
+  },
+  selectOptionSelected: {
+    backgroundColor: '#fff4cf',
+  },
+  selectOptionPressed: {
+    opacity: 0.85,
+  },
+  selectOptionText: {
+    color: NAVY,
+    fontSize: 14,
     fontWeight: '700',
+  },
+  selectOptionTextSelected: {
+    fontWeight: '800',
   },
   switchRow: {
     alignItems: 'center',
@@ -2264,6 +2722,69 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 13,
     lineHeight: 19,
+  },
+  addOptionalItemButton: {
+    borderColor: GOLD,
+    borderRadius: 18,
+    marginBottom: 16,
+    width: '100%',
+  },
+  addOptionalItemButtonText: {
+    color: '#7a5700',
+    fontWeight: '800',
+  },
+  optionalItemCard: {
+    backgroundColor: '#f8fafc',
+    borderColor: DIVIDER,
+    borderRadius: 18,
+    borderWidth: 1,
+    marginBottom: 12,
+    padding: 14,
+  },
+  optionalItemHeader: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  optionalItemHeaderTextWrap: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  optionalItemTitle: {
+    color: NAVY,
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  optionalItemHint: {
+    color: MUTED,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  optionalRemoveButton: {
+    minHeight: 42,
+    minWidth: 92,
+  },
+  optionalItemTotalRow: {
+    alignItems: 'center',
+    borderTopColor: DIVIDER,
+    borderTopWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 14,
+    paddingTop: 12,
+  },
+  optionalItemTotalLabel: {
+    color: MUTED,
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  optionalItemTotalValue: {
+    color: NAVY,
+    fontSize: 16,
+    fontWeight: '800',
   },
   selectedItemCard: {
     backgroundColor: '#f8fafc',
@@ -2523,10 +3044,35 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginBottom: 6,
   },
+  projectTotalSubtext: {
+    color: '#7a5700',
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
   projectTotalHint: {
     color: MUTED,
     fontSize: 14,
     lineHeight: 20,
+  },
+  optionalItemsSubtotalCard: {
+    alignItems: 'center',
+    borderTopColor: DIVIDER,
+    borderTopWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 12,
+  },
+  optionalItemsSubtotalLabel: {
+    color: MUTED,
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  optionalItemsSubtotalValue: {
+    color: NAVY,
+    fontSize: 16,
+    fontWeight: '800',
   },
   textArea: {
     minHeight: 120,

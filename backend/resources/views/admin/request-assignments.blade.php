@@ -71,6 +71,8 @@
         ])
         ->values()
         ->all();
+
+    $adminServicePopup = session('admin_service_popup');
 @endphp
 
 @section('content')
@@ -523,6 +525,20 @@
             }
         }
     </style>
+
+    <form id="service-popup-redirect-form" method="POST" action="{{ route('admin.request-assignments.service-popup') }}" hidden>
+        @csrf
+        <input type="hidden" name="action" value="">
+        <input type="hidden" name="redirect_to" value="">
+    </form>
+
+    @if (! empty($adminServicePopup['message']))
+        <div class="solmate-toast" id="admin-service-popup-toast" role="status" aria-live="polite">
+            <span class="solmate-toast-badge">Success</span>
+            <p class="solmate-toast-title">{{ $adminServicePopup['message'] }}</p>
+            <p class="solmate-toast-copy">Your update was saved and this notice will only appear once.</p>
+        </div>
+    @endif
 
     <div class="assignment-page">
     <div class="card admin-hero-card">
@@ -1351,9 +1367,13 @@
     <script type="application/json" id="__data_inspectionRequestRecords">@json($inspectionRequestRecords)</script>
     <script type="application/json" id="__data_serviceTabCounts">@json($serviceTabCounts)</script>
     <script>
+        const adminServicePopup = @json($adminServicePopup);
         const reservedDateMessage = 'Selected date is already reserved. Please choose another date.';
         const successBox = document.getElementById('assignment-success');
         const errorBox = document.getElementById('assignment-error');
+        const popupRedirectForm = document.getElementById('service-popup-redirect-form');
+        const popupActionInput = popupRedirectForm?.querySelector('input[name="action"]');
+        const popupRedirectInput = popupRedirectForm?.querySelector('input[name="redirect_to"]');
         const serviceTabLinks = document.querySelectorAll('[data-services-tab-link]');
         const serviceTabPanels = document.querySelectorAll('[data-services-panel]');
         const assignmentForms = document.querySelectorAll('.assignment-form');
@@ -1368,6 +1388,39 @@
         const inspectionRequestRecords = JSON.parse(document.getElementById('__data_inspectionRequestRecords').textContent);
         const serviceTabCounts = JSON.parse(document.getElementById('__data_serviceTabCounts').textContent);
         const requestRecords = serviceRequestRecords.concat(inspectionRequestRecords);
+
+        const adminServicePopupToast = document.getElementById('admin-service-popup-toast');
+
+        if (adminServicePopup?.message) {
+            window.addEventListener('load', () => {
+                if (window.Swal && typeof window.Swal.fire === 'function') {
+                    window.requestAnimationFrame(() => {
+                        window.Swal.fire({
+                            icon: 'success',
+                            text: adminServicePopup.message,
+                            confirmButtonText: 'OK',
+                        });
+                    });
+                    return;
+                }
+
+                if (!adminServicePopupToast) {
+                    return;
+                }
+
+                window.requestAnimationFrame(() => {
+                    adminServicePopupToast.classList.add('is-visible');
+                });
+
+                window.setTimeout(() => {
+                    adminServicePopupToast.classList.remove('is-visible');
+
+                    window.setTimeout(() => {
+                        adminServicePopupToast.remove();
+                    }, 240);
+                }, 2600);
+            }, { once: true });
+        }
 
         function getCookie(name) {
             const prefix = `${name}=`;
@@ -1688,6 +1741,23 @@
             return responseBody;
         }
 
+        function redirectWithServicePopup(action, form) {
+            if (!popupRedirectForm || !popupActionInput || !popupRedirectInput) {
+                return false;
+            }
+
+            const requestCard = form?.closest?.('[data-request-card]');
+            const redirectHash = requestCard?.id
+                ? `#${requestCard.id}`
+                : (window.location.hash || '#services-section');
+
+            popupActionInput.value = action;
+            popupRedirectInput.value = redirectHash;
+            popupRedirectForm.submit();
+
+            return true;
+        }
+
         if (serviceTabLinks.length && serviceTabPanels.length) {
             serviceTabLinks.forEach((link) => {
                 link.addEventListener('click', (event) => {
@@ -1781,7 +1851,12 @@
                         date_needed: normalizeDate(updatedDate),
                     });
                     refreshAllAvailabilityHints();
-                    successBox.textContent = responseBody.message || 'Service preferred date updated successfully.';
+
+                    if (redirectWithServicePopup('preferred_date_changed', form)) {
+                        return;
+                    }
+
+                    successBox.textContent = 'Preferred date has been successfully updated.';
                     setVisible(successBox, true);
                 } catch (error) {
                     inlineError.textContent = error.message || 'Could not update the preferred date.';
@@ -1925,6 +2000,11 @@
                     }
 
                     form.dataset.defaultLabel = 'Update assignment';
+
+                    if (requestKey.startsWith('service-') && redirectWithServicePopup('technician_assigned', form)) {
+                        return;
+                    }
+
                     successBox.textContent = responseBody.message || 'Technician assigned successfully.';
                     setVisible(successBox, true);
                 } catch (error) {
@@ -1999,7 +2079,11 @@
                         }
                     }
 
-                    successBox.textContent = responseBody.message || 'Official service request status updated successfully.';
+                    if (redirectWithServicePopup('status_changed', form)) {
+                        return;
+                    }
+
+                    successBox.textContent = 'Service status has been successfully updated.';
                     setVisible(successBox, true);
                 } catch (error) {
                     inlineError.textContent = error.message || 'Could not update the official service request status.';
