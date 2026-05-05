@@ -999,6 +999,13 @@
                             <div class="inst-field-error" id="inst-address-error" role="alert"></div>
                         </div>
 
+                        <div class="inst-field">
+                            <label class="inst-label" for="inst-address-details">Address Additional Details</label>
+                            <input id="inst-address-details" class="inst-input" type="text" maxlength="255" placeholder="Unit, floor, landmark, gate code, or nearby reference">
+                            <p class="inst-field-hint">Optional landmark or access details help the team locate the exact installation spot.</p>
+                            <div class="inst-field-error" id="inst-address-details-error" role="alert"></div>
+                        </div>
+
                         <input type="hidden" name="latitude" id="inst-latitude">
                         <input type="hidden" name="longitude" id="inst-longitude">
 
@@ -1712,6 +1719,7 @@
         var extra = qs('#inst-extra').value.trim();
         var quotationId = quoteSelect.value;
         var address = addressInput.value.trim();
+        var addressDetails = qs('#inst-address-details').value.trim();
         var latitude = latitudeInput ? latitudeInput.value.trim() : '';
         var longitude = longitudeInput ? longitudeInput.value.trim() : '';
 
@@ -1766,6 +1774,7 @@
                     date_needed: dateNeeded,
                     details: detailLines.join('\n'),
                     address: address,
+                    address_details: addressDetails || null,
                     latitude: latitude || null,
                     longitude: longitude || null
                 }
@@ -1793,6 +1802,9 @@
             }
             if (error.errors && error.errors.address) {
                 showFieldError('inst-address', 'inst-address-error', error.errors.address[0]);
+            }
+            if (error.errors && error.errors.address_details) {
+                showFieldError('inst-address-details', 'inst-address-details-error', error.errors.address_details[0]);
             }
             showMsg(formMsg, 'error', error.message || 'Could not submit the installation request.');
         } finally {

@@ -33,17 +33,19 @@ class InspectionRequestController extends Controller
             'details' => 'required|string',
             'contact_number' => 'required|string|max:30',
             'address' => 'required|string|max:255',
+            'address_details' => 'nullable|string|max:255',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'date_needed' => 'nullable|date',
         ]);
 
         $resolvedAddress = trim((string) $validated['address']);
+        $resolvedAddressDetails = trim((string) ($validated['address_details'] ?? ''));
 
         $inspectionRequest = $this->preferredDateLockService->withLockedDates(
             [$validated['date_needed'] ?? null],
-            function () use ($request, $validated, $resolvedAddress) {
-                return DB::transaction(function () use ($request, $validated, $resolvedAddress) {
+            function () use ($request, $validated, $resolvedAddress, $resolvedAddressDetails) {
+                return DB::transaction(function () use ($request, $validated, $resolvedAddress, $resolvedAddressDetails) {
                     $this->preferredDateLockService->ensureDateIsAvailable($validated['date_needed'] ?? null);
 
                     return InspectionRequest::create([
@@ -51,6 +53,7 @@ class InspectionRequestController extends Controller
                         'details' => $validated['details'],
                         'contact_number' => trim($validated['contact_number']),
                         'address' => $resolvedAddress,
+                        'address_details' => $resolvedAddressDetails !== '' ? $resolvedAddressDetails : null,
                         'latitude' => $validated['latitude'] ?? null,
                         'longitude' => $validated['longitude'] ?? null,
                         'date_needed' => $validated['date_needed'] ?? null,

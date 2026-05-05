@@ -242,15 +242,18 @@ class RequestWorkflowTest extends TestCase
                 'details' => 'Coordinate rooftop installation access',
                 'contact_number' => '0917-123-4567',
                 'address' => '12 Helios Street, Antipolo City',
+                'address_details' => 'Gate 2, beside the covered basketball court',
                 'latitude' => 14.5878500,
                 'longitude' => 121.1764500,
                 'date_needed' => '2026-04-25',
             ])
             ->assertCreated()
-            ->assertJsonPath('data.address', '12 Helios Street, Antipolo City');
+            ->assertJsonPath('data.address', '12 Helios Street, Antipolo City')
+            ->assertJsonPath('data.address_details', 'Gate 2, beside the covered basketball court');
 
         $this->assertDatabaseHas('service_requests', [
             'id' => $response->json('data.id'),
+            'address_details' => 'Gate 2, beside the covered basketball court',
             'latitude' => '14.5878500',
             'longitude' => '121.1764500',
         ]);
@@ -427,15 +430,18 @@ class RequestWorkflowTest extends TestCase
                 'details' => 'Inspect the shaded roof area',
                 'contact_number' => '0917-555-0111',
                 'address' => '123 Solar Street, Quezon City',
+                'address_details' => 'Blue gate, 2nd floor office entrance',
                 'latitude' => 14.6760413,
                 'longitude' => 121.0437003,
                 'date_needed' => '2026-04-27',
             ])
             ->assertCreated()
-            ->assertJsonPath('data.address', '123 Solar Street, Quezon City');
+            ->assertJsonPath('data.address', '123 Solar Street, Quezon City')
+            ->assertJsonPath('data.address_details', 'Blue gate, 2nd floor office entrance');
 
         $this->assertDatabaseHas('inspection_requests', [
             'id' => $response->json('data.id'),
+            'address_details' => 'Blue gate, 2nd floor office entrance',
             'latitude' => '14.6760413',
             'longitude' => '121.0437003',
         ]);

@@ -3,18 +3,21 @@ import {apiPut} from './api';
 export type AccountUser = {
   id: number;
   name?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
   email?: string | null;
   role?: string | null;
   address?: string | null;
   contact_number?: string | null;
+  landline_number?: string | null;
   profile_picture?: string | null;
 };
 
 export type UpdateCustomerAccountPayload = {
-  name: string;
   email: string;
   address?: string;
   contact_number?: string;
+  landline_number?: string;
 };
 
 export type UpdateCustomerPasswordPayload = {

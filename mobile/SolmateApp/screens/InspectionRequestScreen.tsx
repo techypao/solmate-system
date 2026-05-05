@@ -12,10 +12,11 @@ import {
   View,
 } from 'react-native';
 
-import { PreferredDateCalendar } from '../components';
+import { MapLocationPickerModal, PreferredDateCalendar } from '../components';
 import { AuthContext } from '../src/context/AuthContext';
 import { ApiError } from '../src/services/api';
 import { getUnavailablePreferredDates } from '../src/services/preferredDateAvailabilityApi';
+import { getDefaultContactNumber } from '../src/utils/contactNumber';
 import { createInspectionRequest } from '../src/services/inspectionRequestApi';
 
 /* ── design tokens ── */
@@ -33,8 +34,14 @@ type FieldErrors = {
   details?: string;
   contactNumber?: string;
   address?: string;
+  addressDetails?: string;
   dateNeeded?: string;
 };
+
+type AddressNote = {
+  message: string;
+  tone: 'info' | 'error';
+} | null;
 
 const RESERVED_DATE_MESSAGE =
   'Selected date is already reserved. Please choose another date.';
@@ -68,28 +75,44 @@ function getFieldValidationMessage(error: unknown, field: string) {
 
 export default function InspectionRequestScreen({ navigation }: any) {
   const { user } = useContext(AuthContext);
+  const defaultContactNumber = getDefaultContactNumber(user);
   const [details, setDetails] = useState('');
-  const [contactNumber, setContactNumber] = useState('');
+  const [contactNumber, setContactNumber] = useState(defaultContactNumber);
   const [address, setAddress] = useState(user?.address || '');
+  const [addressDetails, setAddressDetails] = useState('');
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
   const [dateNeeded, setDateNeeded] = useState('');
   const [unavailableDates, setUnavailableDates] = useState<string[]>([]);
   const [availabilityMessage, setAvailabilityMessage] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [addressNote, setAddressNote] = useState<AddressNote>(null);
+  const [isMapModalVisible, setIsMapModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
   const resetForm = () => {
     setDetails('');
-    setContactNumber('');
+    setContactNumber(defaultContactNumber);
     setAddress(user?.address || '');
+    setAddressDetails('');
+    setLatitude(null);
+    setLongitude(null);
     setDateNeeded('');
     setFieldErrors({});
+    setAddressNote(null);
   };
 
   useEffect(() => {
     setAddress(user?.address || '');
   }, [user?.address]);
+
+  useEffect(() => {
+    if (!contactNumber.trim() && defaultContactNumber) {
+      setContactNumber(defaultContactNumber);
+    }
+  }, [contactNumber, defaultContactNumber]);
 
   const loadUnavailableDates = useCallback(async () => {
     try {
@@ -163,10 +186,24 @@ export default function InspectionRequestScreen({ navigation }: any) {
   const handleAddressChange = (value: string) => {
     setAddress(value);
     clearStatusMessages();
+    if (addressNote) {
+      setAddressNote(null);
+    }
     if (fieldErrors.address) {
       setFieldErrors(currentErrors => ({
         ...currentErrors,
         address: undefined,
+      }));
+    }
+  };
+
+  const handleAddressDetailsChange = (value: string) => {
+    setAddressDetails(value);
+    clearStatusMessages();
+    if (fieldErrors.addressDetails) {
+      setFieldErrors(currentErrors => ({
+        ...currentErrors,
+        addressDetails: undefined,
       }));
     }
   };
@@ -229,6 +266,7 @@ export default function InspectionRequestScreen({ navigation }: any) {
     const trimmedDetails = details.trim();
     const trimmedContactNumber = contactNumber.trim();
     const trimmedAddress = address.trim();
+    const trimmedAddressDetails = addressDetails.trim();
     const trimmedDateNeeded = dateNeeded.trim();
 
     if (trimmedDateNeeded && unavailableDates.includes(trimmedDateNeeded)) {
@@ -252,6 +290,9 @@ export default function InspectionRequestScreen({ navigation }: any) {
           ? { contact_number: trimmedContactNumber }
           : {}),
         address: trimmedAddress,
+        address_details: trimmedAddressDetails || null,
+        latitude,
+        longitude,
         ...(trimmedDateNeeded ? { date_needed: trimmedDateNeeded } : {}),
       });
 
@@ -272,12 +313,23 @@ export default function InspectionRequestScreen({ navigation }: any) {
       );
     } catch (error) {
       const addressFieldMessage = getFieldValidationMessage(error, 'address');
+      const addressDetailsFieldMessage = getFieldValidationMessage(
+        error,
+        'address_details',
+      );
       const dateFieldMessage = getFieldValidationMessage(error, 'date_needed');
 
       if (addressFieldMessage) {
         setFieldErrors(currentErrors => ({
           ...currentErrors,
           address: addressFieldMessage,
+        }));
+      }
+
+      if (addressDetailsFieldMessage) {
+        setFieldErrors(currentErrors => ({
+          ...currentErrors,
+          addressDetails: addressDetailsFieldMessage,
         }));
       }
 
@@ -291,12 +343,48 @@ export default function InspectionRequestScreen({ navigation }: any) {
 
       setErrorMessage(
         addressFieldMessage ||
+          addressDetailsFieldMessage ||
           dateFieldMessage ||
           getFriendlyErrorMessage(error),
       );
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleMapLocationConfirm = ({
+    latitude: selectedLatitude,
+    longitude: selectedLongitude,
+    resolvedAddress,
+    reverseGeocodeFailed,
+  }: {
+    latitude: number;
+    longitude: number;
+    resolvedAddress: string | null;
+    reverseGeocodeFailed: boolean;
+  }) => {
+    setLatitude(selectedLatitude);
+    setLongitude(selectedLongitude);
+
+    if (resolvedAddress) {
+      setAddress(resolvedAddress);
+      setAddressNote(null);
+      if (fieldErrors.address) {
+        setFieldErrors(currentErrors => ({
+          ...currentErrors,
+          address: undefined,
+        }));
+      }
+    } else if (reverseGeocodeFailed) {
+      setAddressNote({
+        message:
+          'Coordinates saved. Please review or type the address manually.',
+        tone: 'info',
+      });
+    }
+
+    clearStatusMessages();
+    setIsMapModalVisible(false);
   };
 
   return (
@@ -409,6 +497,24 @@ export default function InspectionRequestScreen({ navigation }: any) {
                 <Text style={s.fieldLabel}>Address</Text>
                 <Text style={s.requiredTag}>Required</Text>
               </View>
+              <View style={s.addressActionRow}>
+                <Text style={s.helpText}>
+                  You may type your address manually or pin your exact
+                  inspection location on the map.
+                </Text>
+                <Pressable
+                  onPress={() => {
+                    clearStatusMessages();
+                    setIsMapModalVisible(true);
+                  }}
+                  style={({ pressed }) => [
+                    s.mapPinButton,
+                    pressed && s.pressed,
+                  ]}
+                >
+                  <Text style={s.mapPinButtonText}>Pin Location on Map</Text>
+                </Pressable>
+              </View>
               <TextInput
                 onChangeText={handleAddressChange}
                 placeholder="Enter the service address"
@@ -420,8 +526,43 @@ export default function InspectionRequestScreen({ navigation }: any) {
                 This is pre-filled from your profile when available, and you can
                 still edit it.
               </Text>
+              {addressNote ? (
+                <Text
+                  style={[
+                    s.addressNote,
+                    addressNote.tone === 'error'
+                      ? s.addressNoteError
+                      : s.addressNoteInfo,
+                  ]}
+                >
+                  {addressNote.message}
+                </Text>
+              ) : null}
               {fieldErrors.address ? (
                 <Text style={s.fieldErrorText}>{fieldErrors.address}</Text>
+              ) : null}
+            </View>
+
+            <View style={s.fieldGroup}>
+              <View style={s.fieldHeader}>
+                <Text style={s.fieldLabel}>Address Additional Details</Text>
+                <Text style={s.optionalTag}>Optional</Text>
+              </View>
+              <TextInput
+                onChangeText={handleAddressDetailsChange}
+                placeholder="Unit, floor, landmark, gate code, or nearby reference"
+                placeholderTextColor={MUTED}
+                style={[s.input, fieldErrors.addressDetails && s.inputError]}
+                value={addressDetails}
+              />
+              <Text style={s.helpText}>
+                Add landmark or access details to help the team locate your
+                exact inspection spot.
+              </Text>
+              {fieldErrors.addressDetails ? (
+                <Text style={s.fieldErrorText}>
+                  {fieldErrors.addressDetails}
+                </Text>
               ) : null}
             </View>
 
@@ -514,6 +655,14 @@ export default function InspectionRequestScreen({ navigation }: any) {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <MapLocationPickerModal
+        initialLatitude={latitude}
+        initialLongitude={longitude}
+        onCancel={() => setIsMapModalVisible(false)}
+        onConfirm={handleMapLocationConfirm}
+        visible={isMapModalVisible}
+      />
     </SafeAreaView>
   );
 }
@@ -611,6 +760,12 @@ const s = StyleSheet.create({
     color: '#dc2626',
     textTransform: 'uppercase',
   },
+  optionalTag: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: MUTED,
+    textTransform: 'uppercase',
+  },
 
   /* inputs */
   input: {
@@ -628,6 +783,34 @@ const s = StyleSheet.create({
 
   /* help / error text */
   helpText: { color: MUTED, fontSize: 13, lineHeight: 18, marginTop: 6 },
+  addressActionRow: {
+    marginBottom: 10,
+  },
+  mapPinButton: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#fce7a8',
+    borderRadius: 18,
+    marginTop: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  mapPinButtonText: {
+    color: NAVY,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  addressNote: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 6,
+  },
+  addressNoteInfo: {
+    color: '#1d4ed8',
+  },
+  addressNoteError: {
+    color: '#b91c1c',
+  },
   fieldErrorText: {
     color: '#dc2626',
     fontSize: 13,

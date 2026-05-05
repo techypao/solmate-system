@@ -16,6 +16,9 @@ export type ServiceRequest = {
   details: string;
   contact_number?: string | null;
   address?: string | null;
+  address_details?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   date_needed?: string | null;
   status: string;
   technician_marked_done_at?: string | null;
@@ -30,6 +33,9 @@ export type CreateServiceRequestPayload = {
   details: string;
   contact_number?: string;
   address?: string;
+  address_details?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   date_needed?: string;
 };
 

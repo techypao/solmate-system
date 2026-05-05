@@ -890,6 +890,22 @@
                         <div class="insp-field-error" id="insp-address-error" role="alert"></div>
                     </div>
 
+                    <div class="insp-field">
+                        <label class="insp-label" for="insp-address-details">
+                            Address Additional Details <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#94a3b8;">(optional)</span>
+                        </label>
+                        <input
+                            id="insp-address-details"
+                            class="insp-input"
+                            type="text"
+                            name="address_details"
+                            maxlength="255"
+                            placeholder="Unit, floor, landmark, gate code, or nearby reference"
+                        >
+                        <p class="insp-field-hint">Add landmark or access details to help the team find the exact location faster.</p>
+                        <div class="insp-field-error" id="insp-address-details-error" role="alert"></div>
+                    </div>
+
                     <input type="hidden" name="latitude" id="latitude">
                     <input type="hidden" name="longitude" id="longitude">
 
@@ -1494,6 +1510,7 @@
     var fieldErrorMap = {
         contact_number: 'insp-contact-error',
         address:        'insp-address-error',
+        address_details:'insp-address-details-error',
         date_needed:    'insp-date-error',
         details:        'insp-details-error',
     };
@@ -1501,6 +1518,7 @@
     var fieldInputMap = {
         contact_number: 'insp-contact',
         address:        'insp-address',
+        address_details:'insp-address-details',
         date_needed:    'insp-date-picker',
         details:        'insp-details',
     };
@@ -1587,6 +1605,8 @@
         var details    = qs('#insp-details').value.trim();
         var contact    = qs('#insp-contact').value.trim();
         var address    = addressInput.value.trim();
+        var addressDetailsInput = qs('#insp-address-details');
+        var addressDetails = addressDetailsInput ? addressDetailsInput.value.trim() : '';
         await datePicker.refreshAvailability();
         var dateNeeded = datePicker.getValue();
 
@@ -1630,6 +1650,7 @@
             details: details,
             contact_number: contact,
             address: address,
+            address_details: addressDetails || null,
             latitude: latitude || null,
             longitude: longitude || null
         };

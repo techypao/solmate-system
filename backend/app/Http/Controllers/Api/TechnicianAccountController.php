@@ -15,7 +15,6 @@ class TechnicianAccountController extends Controller
         $user = $request->user();
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required',
                 'string',
@@ -25,7 +24,9 @@ class TechnicianAccountController extends Controller
             ],
         ]);
 
-        $user->fill($validated);
+        $user->fill([
+            'email' => $validated['email'],
+        ]);
         $user->save();
 
         return response()->json([

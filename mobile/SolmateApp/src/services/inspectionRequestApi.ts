@@ -21,6 +21,9 @@ export type InspectionRequest = {
   details: string;
   contact_number?: string | null;
   address?: string | null;
+  address_details?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   date_needed?: string | null;
   status?: InspectionRequestStatus | null;
   created_at?: string;
@@ -33,6 +36,9 @@ export type CreateInspectionRequestPayload = {
   details: string;
   contact_number?: string;
   address?: string;
+  address_details?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   date_needed?: string;
 };
 

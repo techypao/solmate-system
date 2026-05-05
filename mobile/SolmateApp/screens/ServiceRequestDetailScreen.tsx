@@ -492,6 +492,10 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
             value={serviceRequest.address || 'Not provided'}
           />
           <InlineRow
+            label="Address Additional Details"
+            value={serviceRequest.address_details || 'Not provided'}
+          />
+          <InlineRow
             label="Technician Assigned"
             value={serviceRequest.technician?.name || 'Not assigned'}
           />

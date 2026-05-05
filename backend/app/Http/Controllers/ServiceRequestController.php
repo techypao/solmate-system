@@ -44,6 +44,7 @@ class ServiceRequestController extends Controller
                     return in_array($requestType, ['installation', 'maintenance'], true);
                 }),
             ],
+            'address_details' => 'nullable|string|max:255',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'date_needed' => 'nullable|date',
@@ -52,11 +53,12 @@ class ServiceRequestController extends Controller
         $userAddress = trim((string) ($request->user()->address ?? ''));
         $providedAddress = trim((string) ($validated['address'] ?? ''));
         $resolvedAddress = $providedAddress !== '' ? $providedAddress : ($userAddress !== '' ? $userAddress : null);
+        $resolvedAddressDetails = trim((string) ($validated['address_details'] ?? ''));
 
         $serviceRequest = $this->preferredDateLockService->withLockedDates(
             [$validated['date_needed'] ?? null],
-            function () use ($request, $validated, $resolvedAddress) {
-                return DB::transaction(function () use ($request, $validated, $resolvedAddress) {
+            function () use ($request, $validated, $resolvedAddress, $resolvedAddressDetails) {
+                return DB::transaction(function () use ($request, $validated, $resolvedAddress, $resolvedAddressDetails) {
                     $this->preferredDateLockService->ensureDateIsAvailable($validated['date_needed'] ?? null);
 
                     return ServiceRequest::query()->create([
@@ -65,6 +67,7 @@ class ServiceRequestController extends Controller
                         'details' => $validated['details'],
                         'contact_number' => trim($validated['contact_number']),
                         'address' => $resolvedAddress,
+                        'address_details' => $resolvedAddressDetails !== '' ? $resolvedAddressDetails : null,
                         'latitude' => $validated['latitude'] ?? null,
                         'longitude' => $validated['longitude'] ?? null,
                         'date_needed' => $validated['date_needed'] ?? null,

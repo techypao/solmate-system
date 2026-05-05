@@ -150,6 +150,86 @@ class PasswordValidationFlowsTest extends TestCase
         ]);
     }
 
+    public function test_customer_profile_update_ignores_name_fields_and_updates_landline(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Original Customer',
+            'first_name' => 'Original',
+            'last_name' => 'Customer',
+            'email' => 'customer_profile_update@example.com',
+            'password' => 'Current123!',
+            'role' => User::ROLE_CUSTOMER,
+            'address' => '123 Solar Street',
+            'contact_number' => '09171234567',
+            'landline_number' => null,
+        ]);
+
+        Sanctum::actingAs($customer);
+
+        $this->putJson('/api/customer/account', [
+            'name' => 'Changed Name',
+            'first_name' => 'Changed',
+            'last_name' => 'Person',
+            'email' => 'customer_profile_updated@example.com',
+            'address' => '456 Updated Avenue',
+            'contact_number' => '09991234567',
+            'landline_number' => '(02) 8123-4567',
+        ])
+            ->assertOk()
+            ->assertJsonPath('message', 'Account information updated successfully.')
+            ->assertJsonPath('user.name', 'Original Customer')
+            ->assertJsonPath('user.first_name', 'Original')
+            ->assertJsonPath('user.last_name', 'Customer')
+            ->assertJsonPath('user.email', 'customer_profile_updated@example.com')
+            ->assertJsonPath('user.address', '456 Updated Avenue')
+            ->assertJsonPath('user.contact_number', '09991234567')
+            ->assertJsonPath('user.landline_number', '(02) 8123-4567');
+
+        $customer->refresh();
+
+        $this->assertSame('Original Customer', $customer->name);
+        $this->assertSame('Original', $customer->first_name);
+        $this->assertSame('Customer', $customer->last_name);
+        $this->assertSame('customer_profile_updated@example.com', $customer->email);
+        $this->assertSame('456 Updated Avenue', $customer->address);
+        $this->assertSame('09991234567', $customer->contact_number);
+        $this->assertSame('(02) 8123-4567', $customer->landline_number);
+    }
+
+    public function test_technician_profile_update_ignores_name_fields_and_updates_email(): void
+    {
+        $technician = User::query()->create([
+            'name' => 'Original Technician',
+            'first_name' => 'Original',
+            'last_name' => 'Technician',
+            'email' => 'technician_profile_update@example.com',
+            'password' => 'Current123!',
+            'role' => User::ROLE_TECHNICIAN,
+        ]);
+
+        Sanctum::actingAs($technician);
+
+        $this->putJson('/api/technician/account', [
+            'name' => 'Changed Technician',
+            'first_name' => 'Changed',
+            'last_name' => 'Person',
+            'email' => 'technician_profile_updated@example.com',
+        ])
+            ->assertOk()
+            ->assertJsonPath('message', 'Technician account information updated successfully.')
+            ->assertJsonPath('user.name', 'Original Technician')
+            ->assertJsonPath('user.first_name', 'Original')
+            ->assertJsonPath('user.last_name', 'Technician')
+            ->assertJsonPath('user.email', 'technician_profile_updated@example.com');
+
+        $technician->refresh();
+
+        $this->assertSame('Original Technician', $technician->name);
+        $this->assertSame('Original', $technician->first_name);
+        $this->assertSame('Technician', $technician->last_name);
+        $this->assertSame('technician_profile_updated@example.com', $technician->email);
+    }
+
     #[DataProvider('invalidPasswordProvider')]
     public function test_customer_password_update_rejects_weak_passwords(string $password, string $message): void
     {

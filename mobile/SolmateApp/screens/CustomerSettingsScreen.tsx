@@ -54,6 +54,10 @@ function formatProfileValue(value?: string | null) {
   return value.trim();
 }
 
+function isValidLandlineNumber(value: string) {
+  return /^(?=(?:.*\d){7,})[0-9()+\-\s]+$/.test(value);
+}
+
 type LocalProfileImageAsset = {
   uri: string;
   type?: string | null;
@@ -116,11 +120,20 @@ export default function CustomerSettingsScreen() {
   const { logout, setUser, user } = useContext(AuthContext);
 
   /* \u2500\u2500 profile form state (preserved) \u2500\u2500 */
-  const [name, setName] = useState(user?.name || '');
+  const displayName =
+    [user?.first_name, user?.last_name]
+      .map(value => String(value || '').trim())
+      .filter(Boolean)
+      .join(' ') ||
+    user?.name ||
+    'Customer';
   const [email, setEmail] = useState(user?.email || '');
   const [address, setAddress] = useState(user?.address || '');
   const [contactNumber, setContactNumber] = useState(
     user?.contact_number || '',
+  );
+  const [landlineNumber, setLandlineNumber] = useState(
+    user?.landline_number || '',
   );
   const [profileSubmitting, setProfileSubmitting] = useState(false);
   const [pictureSubmitting, setPictureSubmitting] = useState(false);
@@ -136,22 +149,27 @@ export default function CustomerSettingsScreen() {
   const [passwordExpanded, setPasswordExpanded] = useState(false);
 
   useEffect(() => {
-    setName(user?.name || '');
     setEmail(user?.email || '');
     setAddress(user?.address || '');
     setContactNumber(user?.contact_number || '');
-  }, [user?.address, user?.contact_number, user?.email, user?.name]);
+    setLandlineNumber(user?.landline_number || '');
+  }, [
+    user?.address,
+    user?.contact_number,
+    user?.email,
+    user?.landline_number,
+  ]);
 
   /* \u2500\u2500 handlers (100 % preserved) \u2500\u2500 */
 
   const handleSaveProfile = async () => {
-    const trimmedName = name.trim();
     const trimmedEmail = email.trim().toLowerCase();
+    const trimmedLandlineNumber = landlineNumber.trim();
 
     if (profileSubmitting) return;
 
-    if (!trimmedName || !trimmedEmail) {
-      Alert.alert('Incomplete form', 'Please provide both name and email.');
+    if (!trimmedEmail) {
+      Alert.alert('Incomplete form', 'Please provide your email address.');
       return;
     }
 
@@ -161,13 +179,24 @@ export default function CustomerSettingsScreen() {
       return;
     }
 
+    if (
+      trimmedLandlineNumber &&
+      !isValidLandlineNumber(trimmedLandlineNumber)
+    ) {
+      Alert.alert(
+        'Invalid landline',
+        'Please enter a valid landline number using digits, spaces, parentheses, or hyphens.',
+      );
+      return;
+    }
+
     try {
       setProfileSubmitting(true);
       const response = await updateCustomerAccount({
-        name: trimmedName,
         email: trimmedEmail,
         address: address.trim(),
         contact_number: contactNumber.trim(),
+        landline_number: trimmedLandlineNumber,
       });
       setUser((currentUser: typeof user) =>
         currentUser ? { ...currentUser, ...response.user } : response.user,
@@ -239,7 +268,7 @@ export default function CustomerSettingsScreen() {
 
   /* \u2500\u2500 derived \u2500\u2500 */
 
-  const initial = getUserInitial(user?.name, 'C');
+  const initial = getUserInitial(displayName, 'C');
   const profilePictureUrl = getProfilePictureUrl(user?.profile_picture);
 
   const handleUploadProfilePicture = async () => {
@@ -326,7 +355,7 @@ export default function CustomerSettingsScreen() {
               )}
             </View>
             <View style={s.profileInfo}>
-              <Text style={s.profileName}>{user?.name || 'Customer'}</Text>
+              <Text style={s.profileName}>{displayName}</Text>
               <Text style={s.profileEmail}>
                 {user?.email || 'Not available'}
               </Text>
@@ -342,6 +371,12 @@ export default function CustomerSettingsScreen() {
                   <Text style={s.profileDetailLabel}>Contact Number</Text>
                   <Text style={s.profileDetailValue}>
                     {formatProfileValue(user?.contact_number)}
+                  </Text>
+                </View>
+                <View style={s.profileDetailRow}>
+                  <Text style={s.profileDetailLabel}>Landline</Text>
+                  <Text style={s.profileDetailValue}>
+                    {formatProfileValue(user?.landline_number)}
                   </Text>
                 </View>
               </View>
@@ -363,13 +398,6 @@ export default function CustomerSettingsScreen() {
                 </Text>
               </Pressable>
             </View>
-            <Pressable
-              hitSlop={12}
-              onPress={() => setEditExpanded(!editExpanded)}
-              style={({ pressed }) => [pressed && s.pressed]}
-            >
-              <Text style={s.editLink}>Edit</Text>
-            </Pressable>
           </View>
 
           {/* \u2500\u2500 inline edit form (expanded) \u2500\u2500 */}
@@ -377,18 +405,8 @@ export default function CustomerSettingsScreen() {
             <View style={s.expandedCard}>
               <Text style={s.expandedTitle}>Update Account</Text>
               <Text style={s.expandedSub}>
-                Edit your account details. Changes are saved directly.
+                Update your contact details below.
               </Text>
-
-              <FormLabel text="Full Name" />
-              <TextInput
-                autoCapitalize="words"
-                onChangeText={setName}
-                placeholder="Enter your full name"
-                placeholderTextColor="#a8b4c8"
-                style={s.input}
-                value={name}
-              />
 
               <FormLabel text="Email Address" />
               <TextInput
@@ -418,6 +436,16 @@ export default function CustomerSettingsScreen() {
                 placeholderTextColor="#a8b4c8"
                 style={s.input}
                 value={contactNumber}
+              />
+
+              <FormLabel text="Landline Number" />
+              <TextInput
+                keyboardType="phone-pad"
+                onChangeText={setLandlineNumber}
+                placeholder="Enter your landline number (optional)"
+                placeholderTextColor="#a8b4c8"
+                style={s.input}
+                value={landlineNumber}
               />
 
               <Pressable
@@ -663,7 +691,6 @@ const s = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
   },
-  editLink: { fontSize: 15, fontWeight: '700', color: NAVY },
 
   /* menu rows */
   menuRow: {

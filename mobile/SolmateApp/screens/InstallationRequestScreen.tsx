@@ -13,10 +13,11 @@ import {
   View,
 } from 'react-native';
 
-import { PreferredDateCalendar } from '../components';
+import { MapLocationPickerModal, PreferredDateCalendar } from '../components';
 import { AuthContext } from '../src/context/AuthContext';
 import { ApiError } from '../src/services/api';
 import { getUnavailablePreferredDates } from '../src/services/preferredDateAvailabilityApi';
+import { getDefaultContactNumber } from '../src/utils/contactNumber';
 import { createServiceRequest } from '../src/services/serviceRequestApi';
 import { getQuotations, Quotation } from '../src/services/quotationApi';
 
@@ -45,8 +46,14 @@ type FieldErrors = {
   details?: string;
   contactNumber?: string;
   address?: string;
+  addressDetails?: string;
   preferredDate?: string;
 };
+
+type AddressNote = {
+  message: string;
+  tone: 'info' | 'error';
+} | null;
 
 const RESERVED_DATE_MESSAGE =
   'Selected date is already reserved. Please choose another date.';
@@ -114,6 +121,7 @@ function ChoiceChip({
 
 export default function InstallationRequestScreen({ navigation }: any) {
   const { user } = useContext(AuthContext);
+  const defaultContactNumber = getDefaultContactNumber(user);
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [quotationsLoading, setQuotationsLoading] = useState(true);
   const [quotationMessage, setQuotationMessage] = useState('');
@@ -123,14 +131,19 @@ export default function InstallationRequestScreen({ navigation }: any) {
   );
   const [installationType, setInstallationType] = useState('');
   const [details, setDetails] = useState('');
-  const [contactNumber, setContactNumber] = useState('');
+  const [contactNumber, setContactNumber] = useState(defaultContactNumber);
   const [address, setAddress] = useState(user?.address || '');
+  const [addressDetails, setAddressDetails] = useState('');
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
   const [preferredDate, setPreferredDate] = useState('');
   const [preferredTime, setPreferredTime] = useState('');
   const [extraNotes, setExtraNotes] = useState('');
   const [unavailableDates, setUnavailableDates] = useState<string[]>([]);
   const [availabilityMessage, setAvailabilityMessage] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [addressNote, setAddressNote] = useState<AddressNote>(null);
+  const [isMapModalVisible, setIsMapModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -142,17 +155,27 @@ export default function InstallationRequestScreen({ navigation }: any) {
     setSelectedQuotationId(null);
     setInstallationType('');
     setDetails('');
-    setContactNumber('');
+    setContactNumber(defaultContactNumber);
     setAddress(user?.address || '');
+    setAddressDetails('');
+    setLatitude(null);
+    setLongitude(null);
     setPreferredDate('');
     setPreferredTime('');
     setExtraNotes('');
     setFieldErrors({});
+    setAddressNote(null);
   };
 
   useEffect(() => {
     setAddress(user?.address || '');
   }, [user?.address]);
+
+  useEffect(() => {
+    if (!contactNumber.trim() && defaultContactNumber) {
+      setContactNumber(defaultContactNumber);
+    }
+  }, [contactNumber, defaultContactNumber]);
 
   const loadUnavailableDates = useCallback(async () => {
     try {
@@ -265,6 +288,7 @@ export default function InstallationRequestScreen({ navigation }: any) {
     const trimmedDetails = details.trim();
     const trimmedContactNumber = contactNumber.trim();
     const trimmedAddress = address.trim();
+    const trimmedAddressDetails = addressDetails.trim();
     const trimmedPreferredDate = preferredDate.trim();
     const trimmedPreferredTime = preferredTime.trim();
     const trimmedExtraNotes = extraNotes.trim();
@@ -305,6 +329,9 @@ export default function InstallationRequestScreen({ navigation }: any) {
         details: detailLines.join('\n'),
         contact_number: trimmedContactNumber,
         address: trimmedAddress,
+        address_details: trimmedAddressDetails || null,
+        latitude,
+        longitude,
         date_needed: trimmedPreferredDate,
       });
 
@@ -320,6 +347,10 @@ export default function InstallationRequestScreen({ navigation }: any) {
         'contact_number',
       );
       const addressFieldMessage = getFieldValidationMessage(error, 'address');
+      const addressDetailsFieldMessage = getFieldValidationMessage(
+        error,
+        'address_details',
+      );
       const dateFieldMessage = getFieldValidationMessage(error, 'date_needed');
       const detailsFieldMessage = getFieldValidationMessage(error, 'details');
 
@@ -327,6 +358,9 @@ export default function InstallationRequestScreen({ navigation }: any) {
         ...current,
         ...(contactFieldMessage ? { contactNumber: contactFieldMessage } : {}),
         ...(addressFieldMessage ? { address: addressFieldMessage } : {}),
+        ...(addressDetailsFieldMessage
+          ? { addressDetails: addressDetailsFieldMessage }
+          : {}),
         ...(dateFieldMessage ? { preferredDate: dateFieldMessage } : {}),
         ...(detailsFieldMessage ? { details: detailsFieldMessage } : {}),
       }));
@@ -338,6 +372,7 @@ export default function InstallationRequestScreen({ navigation }: any) {
       setErrorMessage(
         contactFieldMessage ||
           addressFieldMessage ||
+          addressDetailsFieldMessage ||
           dateFieldMessage ||
           detailsFieldMessage ||
           getFriendlyErrorMessage(error),
@@ -346,6 +381,40 @@ export default function InstallationRequestScreen({ navigation }: any) {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleMapLocationConfirm = ({
+    latitude: selectedLatitude,
+    longitude: selectedLongitude,
+    resolvedAddress,
+    reverseGeocodeFailed,
+  }: {
+    latitude: number;
+    longitude: number;
+    resolvedAddress: string | null;
+    reverseGeocodeFailed: boolean;
+  }) => {
+    setLatitude(selectedLatitude);
+    setLongitude(selectedLongitude);
+
+    if (resolvedAddress) {
+      setAddress(resolvedAddress);
+      setAddressNote(null);
+      if (fieldErrors.address) {
+        setFieldErrors(current => ({
+          ...current,
+          address: undefined,
+        }));
+      }
+    } else if (reverseGeocodeFailed) {
+      setAddressNote({
+        message: 'Coordinates saved. Please review or type the address manually.',
+        tone: 'info',
+      });
+    }
+
+    clearStatusMessages();
+    setIsMapModalVisible(false);
   };
 
   return (
@@ -584,10 +653,31 @@ export default function InstallationRequestScreen({ navigation }: any) {
               <Text style={styles.fieldLabel}>Address</Text>
               <Text style={styles.requiredTag}>Required</Text>
             </View>
+            <View style={styles.addressActionRow}>
+              <Text style={styles.helperText}>
+                You may type your address manually or pin your exact
+                installation location on the map.
+              </Text>
+              <Pressable
+                onPress={() => {
+                  clearStatusMessages();
+                  setIsMapModalVisible(true);
+                }}
+                style={({ pressed }) => [
+                  styles.mapPinButton,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text style={styles.mapPinButtonText}>Pin Location on Map</Text>
+              </Pressable>
+            </View>
             <TextInput
               onChangeText={value => {
                 setAddress(value);
                 clearStatusMessages();
+                if (addressNote) {
+                  setAddressNote(null);
+                }
                 clearFieldError('address');
               }}
               placeholder="Enter the installation address"
@@ -599,8 +689,46 @@ export default function InstallationRequestScreen({ navigation }: any) {
               This is pre-filled from your profile when available, and you can
               still edit it.
             </Text>
+            {addressNote ? (
+              <View
+                style={[
+                  styles.addressNote,
+                  addressNote.tone === 'error'
+                    ? styles.addressNoteError
+                    : styles.addressNoteInfo,
+                ]}
+              >
+                <Text style={styles.addressNoteText}>{addressNote.message}</Text>
+              </View>
+            ) : null}
             {fieldErrors.address ? (
               <Text style={styles.fieldError}>{fieldErrors.address}</Text>
+            ) : null}
+
+            <View style={styles.fieldHeader}>
+              <Text style={styles.fieldLabel}>Address Additional Details</Text>
+              <Text style={styles.optionalTag}>Optional</Text>
+            </View>
+            <TextInput
+              onChangeText={value => {
+                setAddressDetails(value);
+                clearStatusMessages();
+                clearFieldError('addressDetails');
+              }}
+              placeholder="Unit, floor, landmark, gate code, or nearby reference"
+              placeholderTextColor="#a8b4c8"
+              style={[
+                styles.input,
+                fieldErrors.addressDetails && styles.inputError,
+              ]}
+              value={addressDetails}
+            />
+            <Text style={styles.helperText}>
+              Add landmark or access details to help the team locate your exact
+              installation spot.
+            </Text>
+            {fieldErrors.addressDetails ? (
+              <Text style={styles.fieldError}>{fieldErrors.addressDetails}</Text>
             ) : null}
 
             <PreferredDateCalendar
@@ -726,6 +854,17 @@ export default function InstallationRequestScreen({ navigation }: any) {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <MapLocationPickerModal
+        initialLatitude={latitude}
+        initialLongitude={longitude}
+        onCancel={() => setIsMapModalVisible(false)}
+        onConfirm={handleMapLocationConfirm}
+        permissionMessage="SolMate needs your location so you can pin your installation spot on the map."
+        subtitle="Search or move the pin to your exact installation spot, then confirm to fill the form."
+        title="Pin Installation Location"
+        visible={isMapModalVisible}
+      />
     </SafeAreaView>
   );
 }
@@ -809,6 +948,12 @@ const styles = StyleSheet.create({
     color: '#b45309',
     textTransform: 'uppercase',
   },
+  optionalTag: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: MUTED,
+    textTransform: 'uppercase',
+  },
   input: {
     backgroundColor: '#f4f7fc',
     borderRadius: 14,
@@ -824,6 +969,42 @@ const styles = StyleSheet.create({
   },
   textArea: { minHeight: 110 },
   helperText: { fontSize: 12, color: MUTED, lineHeight: 18, marginTop: 10 },
+  addressActionRow: {
+    gap: 10,
+    marginBottom: 10,
+  },
+  mapPinButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#fff4cf',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#f2cd59',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  mapPinButtonText: {
+    color: NAVY,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  addressNote: {
+    borderRadius: 14,
+    marginTop: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  addressNoteInfo: {
+    backgroundColor: '#eff6ff',
+  },
+  addressNoteError: {
+    backgroundColor: '#fef2f2',
+  },
+  addressNoteText: {
+    color: NAVY,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: '600',
+  },
   referenceBox: {
     backgroundColor: '#f4f7fc',
     borderRadius: 14,

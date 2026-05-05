@@ -3,13 +3,14 @@ import {apiPut} from './api';
 export type TechnicianAccountUser = {
   id: number;
   name?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
   email?: string | null;
   role?: string | null;
   profile_picture?: string | null;
 };
 
 export type UpdateTechnicianAccountPayload = {
-  name: string;
   email: string;
 };
 

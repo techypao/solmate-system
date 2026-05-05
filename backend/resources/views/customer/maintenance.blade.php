@@ -952,6 +952,13 @@
                             <div class="mnt-field-error" id="mnt-address-error" role="alert"></div>
                         </div>
 
+                        <div class="mnt-field">
+                            <label class="mnt-label" for="mnt-address-details">Address Additional Details</label>
+                            <input id="mnt-address-details" class="mnt-input" type="text" maxlength="255" placeholder="Unit, floor, landmark, gate code, or nearby reference">
+                            <p class="mnt-field-hint">Optional landmark or access details help the team locate the exact maintenance spot.</p>
+                            <div class="mnt-field-error" id="mnt-address-details-error" role="alert"></div>
+                        </div>
+
                         <input type="hidden" name="latitude" id="mnt-latitude">
                         <input type="hidden" name="longitude" id="mnt-longitude">
 
@@ -1601,6 +1608,7 @@
         var time = qs('#mnt-time').value.trim();
         var visitNote = qs('#mnt-visit-note').value.trim();
         var address = addressInput.value.trim();
+        var addressDetails = qs('#mnt-address-details').value.trim();
         var latitude = latitudeInput ? latitudeInput.value.trim() : '';
         var longitude = longitudeInput ? longitudeInput.value.trim() : '';
 
@@ -1655,6 +1663,7 @@
                     date_needed: dateNeeded,
                     details: detailLines.join('\n'),
                     address: address,
+                    address_details: addressDetails || null,
                     latitude: latitude || null,
                     longitude: longitude || null
                 }
@@ -1680,6 +1689,9 @@
             }
             if (error.errors && error.errors.address) {
                 showFieldError('mnt-address', 'mnt-address-error', error.errors.address[0]);
+            }
+            if (error.errors && error.errors.address_details) {
+                showFieldError('mnt-address-details', 'mnt-address-details-error', error.errors.address_details[0]);
             }
             showMsg(formMsg, 'error', error.message || 'Could not submit the maintenance request.');
         } finally {

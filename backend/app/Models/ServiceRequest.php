@@ -17,6 +17,7 @@ class ServiceRequest extends Model
         'details',
         'contact_number',
         'address',
+        'address_details',
         'latitude',
         'longitude',
         'date_needed',

@@ -148,9 +148,15 @@ function BottomNav({active, onPress}: {active: Tab; onPress: (t: Tab) => void}) 
 /* ── main screen ── */
 export default function TechnicianSettingsScreen({navigation}: any) {
   const {logout, setUser, user} = useContext(AuthContext);
+  const displayName =
+    [user?.first_name, user?.last_name]
+      .map(value => String(value || '').trim())
+      .filter(Boolean)
+      .join(' ') ||
+    user?.name ||
+    'Technician';
 
   /* form state */
-  const [name, setName]                         = useState(user?.name || '');
   const [email, setEmail]                       = useState(user?.email || '');
   const [currentPassword, setCurrentPassword]   = useState('');
   const [newPassword, setNewPassword]           = useState('');
@@ -173,12 +179,11 @@ export default function TechnicianSettingsScreen({navigation}: any) {
   const profilePictureUrl = getProfilePictureUrl(user?.profile_picture);
 
   const handleSaveProfile = async () => {
-    const trimmedName  = name.trim();
     const trimmedEmail = email.trim().toLowerCase();
 
     if (profileSubmitting) {return;}
-    if (!trimmedName || !trimmedEmail) {
-      Alert.alert('Incomplete form', 'Please provide both name and email.');
+    if (!trimmedEmail) {
+      Alert.alert('Incomplete form', 'Please provide your email address.');
       return;
     }
     const emailPattern = /\S+@\S+\.\S+/;
@@ -189,7 +194,7 @@ export default function TechnicianSettingsScreen({navigation}: any) {
 
     try {
       setProfileSubmitting(true);
-      const response = await updateTechnicianAccount({name: trimmedName, email: trimmedEmail});
+      const response = await updateTechnicianAccount({email: trimmedEmail});
       setUser((currentUser: typeof user) =>
         currentUser ? {...currentUser, ...response.user} : response.user,
       );
@@ -326,17 +331,9 @@ export default function TechnicianSettingsScreen({navigation}: any) {
 
               {/* name + contact */}
               <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>{user?.name || 'Technician'}</Text>
+                <Text style={styles.profileName}>{displayName}</Text>
                 <Text style={styles.profileMeta}>{user?.email || 'No email on file'}</Text>
               </View>
-
-              {/* edit button */}
-              <Pressable
-                hitSlop={10}
-                onPress={() => togglePanel('info')}
-                style={({pressed}) => [styles.editBtn, pressed && {opacity: 0.6}]}>
-                <Text style={styles.editBtnText}>Edit</Text>
-              </Pressable>
             </View>
 
             <View style={styles.profileDivider} />
@@ -381,14 +378,6 @@ export default function TechnicianSettingsScreen({navigation}: any) {
           {/* personal info expanded form */}
           {expandedPanel === 'info' ? (
             <View style={styles.expandedPanel}>
-              <AppInput
-                autoCapitalize="words"
-                containerStyle={styles.inputSpacing}
-                label="Full name"
-                onChangeText={setName}
-                placeholder="Enter your full name"
-                value={name}
-              />
               <AppInput
                 autoCapitalize="none"
                 containerStyle={styles.inputSpacing}
@@ -675,15 +664,6 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 12,
     lineHeight: 18,
-  },
-  editBtn: {
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-  },
-  editBtnText: {
-    color: GOLD,
-    fontSize: 14,
-    fontWeight: '700',
   },
   profileDivider: {
     height: 1,

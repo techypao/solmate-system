@@ -715,6 +715,10 @@
                                         <div class="request-summary-value">{{ $inspectionRequest->address ?: 'Not provided' }}</div>
                                     </div>
                                     <div class="request-summary-item">
+                                        <span class="request-summary-label">Address Details</span>
+                                        <div class="request-summary-value">{{ $inspectionRequest->address_details ?: 'Not provided' }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
                                         <span class="request-summary-label">Request Type</span>
                                         <div class="request-summary-value">Inspection</div>
                                     </div>
@@ -734,6 +738,10 @@
                                     <div class="detail-item">
                                         <span class="detail-label">Address</span>
                                         <strong>{{ $inspectionRequest->address ?: 'Not provided' }}</strong>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Address Details</span>
+                                        <strong>{{ $inspectionRequest->address_details ?: 'Not provided' }}</strong>
                                     </div>
                                     <div class="detail-item">
                                         <span class="detail-label">Request Type</span>
@@ -959,6 +967,10 @@
                                         <div class="request-summary-value">{{ $serviceRequest->address ?: 'Not provided' }}</div>
                                     </div>
                                     <div class="request-summary-item">
+                                        <span class="request-summary-label">Address Details</span>
+                                        <div class="request-summary-value">{{ $serviceRequest->address_details ?: 'Not provided' }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
                                         <span class="request-summary-label">Request Type</span>
                                         <div class="request-summary-value">{{ $serviceRequest->request_type ?: 'Installation' }}</div>
                                     </div>
@@ -978,6 +990,10 @@
                                     <div class="detail-item">
                                         <span class="detail-label">Address</span>
                                         <strong>{{ $serviceRequest->address ?: 'Not provided' }}</strong>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Address Details</span>
+                                        <strong>{{ $serviceRequest->address_details ?: 'Not provided' }}</strong>
                                     </div>
                                     <div class="detail-item">
                                         <span class="detail-label">Request Type</span>
@@ -1203,6 +1219,10 @@
                                         <div class="request-summary-value">{{ $serviceRequest->address ?: 'Not provided' }}</div>
                                     </div>
                                     <div class="request-summary-item">
+                                        <span class="request-summary-label">Address Details</span>
+                                        <div class="request-summary-value">{{ $serviceRequest->address_details ?: 'Not provided' }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
                                         <span class="request-summary-label">Request Type</span>
                                         <div class="request-summary-value">{{ $serviceRequest->request_type ?: 'Maintenance' }}</div>
                                     </div>
@@ -1222,6 +1242,10 @@
                                     <div class="detail-item">
                                         <span class="detail-label">Address</span>
                                         <strong>{{ $serviceRequest->address ?: 'Not provided' }}</strong>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Address Details</span>
+                                        <strong>{{ $serviceRequest->address_details ?: 'Not provided' }}</strong>
                                     </div>
                                     <div class="detail-item">
                                         <span class="detail-label">Request Type</span>
