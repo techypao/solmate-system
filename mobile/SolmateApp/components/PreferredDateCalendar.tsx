@@ -74,7 +74,7 @@ export default function PreferredDateCalendar({
         disabled: true,
         disableTouchEvent: true,
         marked: true,
-        dotColor: '#cbd5e1',
+        dotColor: '#DDE7EE',
       };
     });
 
@@ -84,7 +84,7 @@ export default function PreferredDateCalendar({
       nextMarkedDates[selectedDate] = {
         ...nextMarkedDates[selectedDate],
         selected: true,
-        selectedColor: selectedDateIsUnavailable ? '#fecaca' : '#152a4a',
+        selectedColor: selectedDateIsUnavailable ? '#fecaca' : '#123A5A',
         selectedTextColor: selectedDateIsUnavailable ? '#991b1b' : '#ffffff',
       };
     }
@@ -164,10 +164,10 @@ export default function PreferredDateCalendar({
             </View>
           )}
           theme={{
-            arrowColor: '#152a4a',
+            arrowColor: '#123A5A',
             calendarBackground: '#ffffff',
-            dayTextColor: '#152a4a',
-            monthTextColor: '#152a4a',
+            dayTextColor: '#123A5A',
+            monthTextColor: '#123A5A',
             textDayFontSize: 15,
             textDayFontWeight: '600',
             textDayHeaderFontSize: 12,
@@ -175,8 +175,8 @@ export default function PreferredDateCalendar({
             textDisabledColor: '#c5cdd9',
             textMonthFontSize: 16,
             textMonthFontWeight: '800',
-            textSectionTitleColor: '#7b8699',
-            todayTextColor: '#e8a800',
+            textSectionTitleColor: '#5E7288',
+            todayTextColor: '#F4D000',
           }}
         />
       </View>
@@ -204,19 +204,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   fieldLabel: {
-    color: '#152a4a',
+    color: '#123A5A',
     fontSize: 15,
     fontWeight: '800',
   },
   optionalText: {
-    color: '#7b8699',
+    color: '#5E7288',
     fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
   calendarCard: {
     backgroundColor: '#ffffff',
-    borderColor: '#edf1f7',
+    borderColor: '#DDE7EE',
     borderRadius: 18,
     borderWidth: 1,
     overflow: 'hidden',
@@ -232,26 +232,26 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   selectedDateLabel: {
-    color: '#7b8699',
+    color: '#5E7288',
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 4,
     textTransform: 'uppercase',
   },
   selectedDateValue: {
-    color: '#152a4a',
+    color: '#123A5A',
     fontSize: 16,
     fontWeight: '700',
   },
   placeholderText: {
-    color: '#7b8699',
+    color: '#5E7288',
   },
   clearDateButton: {
     paddingHorizontal: 4,
     paddingVertical: 4,
   },
   clearDateText: {
-    color: '#e8a800',
+    color: '#F4D000',
     fontSize: 13,
     fontWeight: '700',
   },
@@ -272,21 +272,21 @@ const styles = StyleSheet.create({
     width: 10,
   },
   legendSelected: {
-    backgroundColor: '#152a4a',
+    backgroundColor: '#123A5A',
   },
   legendUnavailable: {
-    backgroundColor: '#e2e8f0',
+    backgroundColor: '#DDE7EE',
     borderColor: '#c5cdd9',
     borderWidth: 1,
   },
   legendText: {
-    color: '#7b8699',
+    color: '#5E7288',
     fontSize: 12,
     fontWeight: '600',
   },
   arrowButton: {
     alignItems: 'center',
-    backgroundColor: '#e0e8f5',
+    backgroundColor: '#F8FAFC',
     borderColor: '#c5cdd9',
     borderRadius: 999,
     borderWidth: 1,
@@ -295,13 +295,13 @@ const styles = StyleSheet.create({
     width: 30,
   },
   arrowText: {
-    color: '#152a4a',
+    color: '#123A5A',
     fontSize: 18,
     fontWeight: '800',
     lineHeight: 20,
   },
   helpText: {
-    color: '#7b8699',
+    color: '#5E7288',
     fontSize: 13,
     lineHeight: 18,
     marginTop: 6,

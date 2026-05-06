@@ -11,6 +11,7 @@ import TechnicianServiceRequestListScreen from '../../screens/TechnicianServiceR
 import TechnicianDashboardScreen from '../../screens/TechnicianDashboardScreen';
 import TechnicianNotificationsScreen from '../../screens/TechnicianNotificationsScreen';
 import TechnicianSettingsScreen from '../../screens/TechnicianSettingsScreen';
+import {solmateColors} from '../theme/colors';
 
 const Stack = createNativeStackNavigator();
 
@@ -20,6 +21,19 @@ export default function TechnicianStack() {
       initialRouteName="TechnicianDashboard"
       screenOptions={{
         headerBackTitle: 'Back',
+        headerTitleAlign: 'center',
+        headerShadowVisible: false,
+        headerStyle: {
+          backgroundColor: solmateColors.white,
+        },
+        headerTintColor: solmateColors.navy,
+        headerTitleStyle: {
+          color: solmateColors.text,
+          fontWeight: '700',
+        },
+        contentStyle: {
+          backgroundColor: solmateColors.background,
+        },
       }}>
       <Stack.Screen
         name="TechnicianDashboard"

@@ -23,6 +23,7 @@ import ServiceRequestDetailScreen from '../../screens/ServiceRequestDetailScreen
 import ServiceRequestListScreen from '../../screens/ServiceRequestListScreen';
 import ServiceRequestScreen from '../../screens/ServiceRequestScreen';
 import TrackingHubScreen from '../../screens/TrackingHubScreen';
+import {solmateColors} from '../theme/colors';
 
 const Stack = createNativeStackNavigator();
 
@@ -34,6 +35,19 @@ export default function CustomerStack() {
       initialRouteName="Home"
       screenOptions={{
         headerBackTitle: 'Back',
+        headerTitleAlign: 'center',
+        headerShadowVisible: false,
+        headerStyle: {
+          backgroundColor: solmateColors.white,
+        },
+        headerTintColor: solmateColors.navy,
+        headerTitleStyle: {
+          color: solmateColors.text,
+          fontWeight: '700',
+        },
+        contentStyle: {
+          backgroundColor: solmateColors.background,
+        },
       }}
     >
       {/* Main customer entry screen */}

@@ -16,8 +16,8 @@
             width: 96px;
             height: 96px;
             border-radius: 50%;
-            border: 3px solid #d4a017;
-            background: #102a43;
+            border: 3px solid #F4D000;
+            background: #123A5A;
             color: #ffffff;
             font-size: 32px;
             font-weight: 700;
@@ -42,7 +42,7 @@
 
         .admin-profile-picture-copy {
             margin: 0;
-            color: #52606d;
+            color: #5E7288;
             font-size: 14px;
             line-height: 1.7;
         }
@@ -80,7 +80,7 @@
         .admin-profile-picture-helper {
             margin: 0;
             font-size: 12px;
-            color: #64748b;
+            color: #5E7288;
         }
 
         @media (max-width: 700px) {
@@ -112,15 +112,15 @@
             </div>
             <div class="summary-card">
                 <div class="summary-label">Email</div>
-                <div class="muted" style="font-size: 16px; color: #102a43;">{{ $user->email }}</div>
+                <div class="muted" style="font-size: 16px; color: #123A5A;">{{ $user->email }}</div>
             </div>
             <div class="summary-card">
                 <div class="summary-label">Role</div>
-                <div class="muted" style="font-size: 16px; color: #102a43;">{{ \Illuminate\Support\Str::headline($user->role) }}</div>
+                <div class="muted" style="font-size: 16px; color: #123A5A;">{{ \Illuminate\Support\Str::headline($user->role) }}</div>
             </div>
             <div class="summary-card">
                 <div class="summary-label">Session</div>
-                <div class="muted" style="font-size: 16px; color: #102a43;">Signed in</div>
+                <div class="muted" style="font-size: 16px; color: #123A5A;">Signed in</div>
             </div>
         </div>
     </div>

@@ -13,12 +13,12 @@
         border-radius: 22px;
         background:
             radial-gradient(circle at top right, rgba(212, 160, 23, 0.18), transparent 34%),
-            linear-gradient(135deg, #f0f9ff 0%, #eff6ff 58%, #f8fafc 100%);
-        border: 1px solid #dbeafe;
+            linear-gradient(135deg, #f0f9ff 0%, #EAF9FD 58%, #f8fafc 100%);
+        border: 1px solid #EAF9FD;
     }
     .cqc-eyebrow {
         margin: 0 0 10px;
-        color: #d4a017;
+        color: #F4D000;
         font-size: 12px;
         font-weight: 700;
         letter-spacing: 1.2px;
@@ -26,7 +26,7 @@
     }
     .cqc-title {
         margin: 0 0 10px;
-        color: #102a43;
+        color: #123A5A;
         font-size: 32px;
         font-weight: 800;
         line-height: 1.15;
@@ -34,7 +34,7 @@
     .cqc-sub {
         max-width: 650px;
         margin: 0;
-        color: #475569;
+        color: #5E7288;
         font-size: 15px;
         line-height: 1.7;
     }
@@ -62,11 +62,11 @@
         box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
     }
     .cqc-link-btn-primary {
-        background: #102a43;
+        background: #123A5A;
         color: #fff;
     }
     .cqc-link-btn-secondary {
-        background: linear-gradient(135deg, #d4a017, #b8880f);
+        background: linear-gradient(135deg, #F4D000, #E6C200);
         color: #fff;
     }
 
@@ -78,7 +78,7 @@
     }
     .cqc-card {
         background: #fff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 20px;
         box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
         overflow: hidden;
@@ -98,18 +98,18 @@
         justify-content: center;
         border-radius: 14px;
         background: linear-gradient(135deg, rgba(16, 42, 67, 0.12), rgba(212, 160, 23, 0.18));
-        color: #102a43;
+        color: #123A5A;
         flex-shrink: 0;
     }
     .cqc-card-title {
         margin: 0;
-        color: #102a43;
+        color: #123A5A;
         font-size: 18px;
         font-weight: 800;
     }
     .cqc-card-subtitle {
         margin: 4px 0 0;
-        color: #64748b;
+        color: #5E7288;
         font-size: 13px;
     }
     .cqc-card-body {
@@ -144,7 +144,7 @@
     .cqc-label {
         display: block;
         margin-bottom: 8px;
-        color: #475569;
+        color: #5E7288;
         font-size: 12px;
         font-weight: 700;
         letter-spacing: .6px;
@@ -158,7 +158,7 @@
         top: 50%;
         left: 14px;
         transform: translateY(-50%);
-        color: #64748b;
+        color: #5E7288;
         font-size: 15px;
         font-weight: 700;
         pointer-events: none;
@@ -166,11 +166,11 @@
     .cqc-input,
     .cqc-textarea {
         width: 100%;
-        border: 1.5px solid #cbd5e1;
+        border: 1.5px solid #DDE7EE;
         border-radius: 12px;
         box-sizing: border-box;
         background: #fff;
-        color: #102a43;
+        color: #123A5A;
         transition: border-color .15s ease, box-shadow .15s ease;
     }
     .cqc-input {
@@ -196,7 +196,7 @@
     .cqc-input:focus,
     .cqc-textarea:focus {
         outline: none;
-        border-color: #d4a017;
+        border-color: #F4D000;
         box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.12);
     }
     .cqc-input.has-error,
@@ -205,7 +205,7 @@
     }
     .cqc-field-hint {
         margin-top: 7px;
-        color: #94a3b8;
+        color: #7F92A3;
         font-size: 12px;
         line-height: 1.5;
     }
@@ -225,13 +225,13 @@
         padding: 12px 14px;
         border-radius: 12px;
         background: #f8fafc;
-        border: 1px solid #dbeafe;
-        color: #475569;
+        border: 1px solid #EAF9FD;
+        color: #5E7288;
         font-size: 13px;
         line-height: 1.6;
     }
     .cqc-disclaimer strong {
-        color: #102a43;
+        color: #123A5A;
     }
 
     .cqc-submit {
@@ -243,7 +243,7 @@
         min-height: 50px;
         border: none;
         border-radius: 12px;
-        background: linear-gradient(135deg, #d4a017, #b8880f);
+        background: linear-gradient(135deg, #F4D000, #E6C200);
         color: #fff;
         font-size: 15px;
         font-weight: 800;
@@ -266,14 +266,14 @@
         padding: 18px;
         border-radius: 18px;
         background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
     }
     .cqc-result.show {
         display: block;
     }
     .cqc-result-title {
         margin: 0 0 14px;
-        color: #102a43;
+        color: #123A5A;
         font-size: 16px;
         font-weight: 800;
     }
@@ -286,11 +286,11 @@
         padding: 14px;
         border-radius: 14px;
         background: #fff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
     }
     .cqc-result-label {
         margin: 0 0 6px;
-        color: #94a3b8;
+        color: #7F92A3;
         font-size: 11px;
         font-weight: 700;
         letter-spacing: .45px;
@@ -298,7 +298,7 @@
     }
     .cqc-result-value {
         margin: 0;
-        color: #102a43;
+        color: #123A5A;
         font-size: 18px;
         font-weight: 800;
     }
@@ -333,18 +333,18 @@
         justify-content: center;
         border-radius: 12px;
         background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         flex-shrink: 0;
     }
     .cqc-info-title {
         margin: 0 0 4px;
-        color: #102a43;
+        color: #123A5A;
         font-size: 14px;
         font-weight: 700;
     }
     .cqc-info-copy {
         margin: 0;
-        color: #64748b;
+        color: #5E7288;
         font-size: 13px;
         line-height: 1.6;
     }
@@ -462,7 +462,7 @@
             <div class="cqc-info-list">
                 <div class="cqc-info-row">
                     <div class="cqc-info-icon" aria-hidden="true">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2">
                             <path d="M20 6L9 17l-5-5"/>
                         </svg>
                     </div>

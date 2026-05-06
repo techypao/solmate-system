@@ -17,10 +17,10 @@ import { createQuotation } from '../src/services/quotationApi';
 
 /* ── constants ───────────────────────────────────── */
 
-const NAVY = '#152a4a';
-const GOLD = '#e8a800';
-const MUTED = '#7b8699';
-const BG = '#e0e8f5';
+const NAVY = '#123A5A';
+const GOLD = '#F4D000';
+const MUTED = '#5E7288';
+const BG = '#F8FAFC';
 const CARD = '#ffffff';
 const R = 18;
 

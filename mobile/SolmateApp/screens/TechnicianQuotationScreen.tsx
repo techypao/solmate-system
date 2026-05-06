@@ -99,7 +99,7 @@ function FormField({
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#94a3b8"
+        placeholderTextColor="#7F92A3"
         keyboardType={keyboardType}
         style={styles.input}
       />
@@ -449,7 +449,7 @@ export default function TechnicianQuotationScreen({ route }: any) {
                 value={remarks}
                 onChangeText={setRemarks}
                 placeholder="Add inspection-based quotation notes"
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor="#7F92A3"
                 multiline={true}
                 numberOfLines={4}
                 style={[styles.input, styles.textArea]}
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   loadingText: {
-    color: '#475569',
+    color: '#5E7288',
     fontSize: 14,
     marginTop: 12,
   },
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   subtitle: {
-    color: '#475569',
+    color: '#5E7288',
     fontSize: 14,
     lineHeight: 21,
   },
@@ -558,18 +558,18 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   sectionSubtitle: {
-    color: '#64748b',
+    color: '#5E7288',
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 16,
   },
   readOnlyRow: {
-    borderTopColor: '#e2e8f0',
+    borderTopColor: '#DDE7EE',
     borderTopWidth: 1,
     paddingVertical: 12,
   },
   readOnlyLabel: {
-    color: '#64748b',
+    color: '#5E7288',
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 4,
@@ -592,7 +592,7 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: '#f8fafc',
-    borderColor: '#cbd5e1',
+    borderColor: '#DDE7EE',
     borderRadius: 14,
     borderWidth: 1,
     color: '#0f172a',
@@ -605,13 +605,13 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   helpText: {
-    color: '#64748b',
+    color: '#5E7288',
     fontSize: 13,
     lineHeight: 18,
     marginTop: 6,
   },
   infoCard: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#EAF9FD',
     borderRadius: 18,
     marginBottom: 14,
     padding: 16,

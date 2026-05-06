@@ -13,8 +13,8 @@
         border-radius: 22px;
         background:
             radial-gradient(circle at right top, rgba(212, 160, 23, 0.18), transparent 34%),
-            linear-gradient(135deg, #eff6ff 0%, #f8fafc 55%, #fefce8 100%);
-        border: 1px solid #e2e8f0;
+            linear-gradient(135deg, #EAF9FD 0%, #f8fafc 55%, #fefce8 100%);
+        border: 1px solid #DDE7EE;
     }
     .cql-eyebrow {
         margin: 0 0 10px;
@@ -22,19 +22,19 @@
         font-weight: 700;
         letter-spacing: 1.2px;
         text-transform: uppercase;
-        color: #d4a017;
+        color: #F4D000;
     }
     .cql-title {
         margin: 0 0 10px;
         font-size: 32px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
         line-height: 1.15;
     }
     .cql-sub {
         max-width: 650px;
         margin: 0;
-        color: #475569;
+        color: #5E7288;
         font-size: 15px;
         line-height: 1.7;
     }
@@ -62,11 +62,11 @@
         box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
     }
     .cql-btn-primary {
-        background: linear-gradient(135deg, #d4a017, #b8880f);
+        background: linear-gradient(135deg, #F4D000, #E6C200);
         color: #fff;
     }
     .cql-btn-secondary {
-        background: #102a43;
+        background: #123A5A;
         color: #fff;
     }
 
@@ -79,7 +79,7 @@
         margin-bottom: 18px;
     }
     .cql-toolbar-copy {
-        color: #64748b;
+        color: #5E7288;
         font-size: 14px;
     }
     .cql-filters {
@@ -90,10 +90,10 @@
     .cql-chip {
         min-height: 36px;
         padding: 0 14px;
-        border: 1px solid #cbd5e1;
+        border: 1px solid #DDE7EE;
         border-radius: 999px;
         background: #fff;
-        color: #475569;
+        color: #5E7288;
         font-size: 12px;
         font-weight: 700;
         cursor: pointer;
@@ -101,8 +101,8 @@
     }
     .cql-chip.active,
     .cql-chip:hover {
-        background: #102a43;
-        border-color: #102a43;
+        background: #123A5A;
+        border-color: #123A5A;
         color: #fff;
     }
 
@@ -126,7 +126,7 @@
         display: none;
         padding: 30px 18px;
         text-align: center;
-        color: #64748b;
+        color: #5E7288;
         font-size: 14px;
     }
     .cql-loading.show {
@@ -139,9 +139,9 @@
         min-height: 240px;
         padding: 32px 22px;
         border-radius: 22px;
-        border: 1px dashed #cbd5e1;
+        border: 1px dashed #DDE7EE;
         background: #fff;
-        color: #64748b;
+        color: #5E7288;
         text-align: center;
         font-size: 18px;
         font-weight: 700;
@@ -156,7 +156,7 @@
     }
     .cql-card {
         background: #fff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 20px;
         box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
         overflow: hidden;
@@ -174,13 +174,13 @@
     }
     .cql-quote-id {
         margin: 0;
-        color: #102a43;
+        color: #123A5A;
         font-size: 20px;
         font-weight: 800;
     }
     .cql-quote-date {
         margin-top: 4px;
-        color: #64748b;
+        color: #5E7288;
         font-size: 13px;
     }
     .cql-badges {
@@ -208,13 +208,13 @@
         background: currentColor;
         opacity: .78;
     }
-    .cql-badge-initial { background: #e0f2fe; color: #0284c7; }
+    .cql-badge-initial { background: #e0f2fe; color: #20A7C9; }
     .cql-badge-final { background: #dcfce7; color: #15803d; }
-    .cql-badge-pending { background: #fef9c3; color: #a16207; }
+    .cql-badge-pending { background: #FFF7CC; color: #a16207; }
     .cql-badge-approved { background: #dcfce7; color: #15803d; }
     .cql-badge-completed { background: #d1fae5; color: #065f46; }
     .cql-badge-rejected { background: #fee2e2; color: #dc2626; }
-    .cql-badge-default { background: #e2e8f0; color: #475569; }
+    .cql-badge-default { background: #DDE7EE; color: #5E7288; }
 
     .cql-meta-grid {
         display: grid;
@@ -225,11 +225,11 @@
         padding: 14px 14px 12px;
         border-radius: 14px;
         background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
     }
     .cql-meta-label {
         margin: 0 0 6px;
-        color: #94a3b8;
+        color: #7F92A3;
         font-size: 11px;
         font-weight: 700;
         letter-spacing: .45px;
@@ -237,7 +237,7 @@
     }
     .cql-meta-value {
         margin: 0;
-        color: #102a43;
+        color: #123A5A;
         font-size: 15px;
         font-weight: 700;
         line-height: 1.4;
@@ -258,7 +258,7 @@
         flex-wrap: wrap;
     }
     .cql-card-note {
-        color: #64748b;
+        color: #5E7288;
         font-size: 13px;
     }
     .cql-detail-btn {
@@ -267,10 +267,10 @@
         justify-content: center;
         min-height: 42px;
         padding: 0 16px;
-        border: 1px solid #cbd5e1;
+        border: 1px solid #DDE7EE;
         border-radius: 12px;
         background: #fff;
-        color: #102a43;
+        color: #123A5A;
         font-size: 13px;
         font-weight: 700;
         text-decoration: none;
@@ -278,18 +278,18 @@
         transition: all .15s ease;
     }
     .cql-detail-btn:hover {
-        border-color: #102a43;
-        background: #102a43;
+        border-color: #123A5A;
+        background: #123A5A;
         color: #fff;
     }
     .cql-detail-btn-download {
-        background: #102a43;
-        border-color: #102a43;
+        background: #123A5A;
+        border-color: #123A5A;
         color: #fff;
     }
     .cql-detail-btn-download:hover {
-        background: #1a3f67;
-        border-color: #1a3f67;
+        background: #123A5A;
+        border-color: #123A5A;
         color: #fff;
     }
     .cql-detail {
@@ -320,10 +320,10 @@
         padding: 14px 15px;
         border-radius: 16px;
         background: linear-gradient(135deg, #f8fafc 0%, #fffdf6 100%);
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
     }
     .cql-initial-card-feature {
-        background: linear-gradient(135deg, #102a43 0%, #163a5f 100%);
+        background: linear-gradient(135deg, #123A5A 0%, #123A5A 100%);
         border-color: rgba(16, 42, 67, 0.18);
         box-shadow: 0 10px 26px rgba(16, 42, 67, 0.14);
     }
@@ -336,7 +336,7 @@
     }
     .cql-initial-card-label {
         margin: 0 0 6px;
-        color: #94a3b8;
+        color: #7F92A3;
         font-size: 11px;
         font-weight: 700;
         letter-spacing: .45px;
@@ -344,7 +344,7 @@
     }
     .cql-initial-card-value {
         margin: 0;
-        color: #102a43;
+        color: #123A5A;
         font-size: 16px;
         font-weight: 800;
         line-height: 1.35;
@@ -375,11 +375,11 @@
         padding: 14px;
         border-radius: 14px;
         background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
     }
     .cql-detail-label {
         margin: 0 0 6px;
-        color: #94a3b8;
+        color: #7F92A3;
         font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
@@ -387,7 +387,7 @@
     }
     .cql-detail-value {
         margin: 0;
-        color: #1e293b;
+        color: #0F2F4A;
         font-size: 14px;
         font-weight: 600;
         line-height: 1.5;

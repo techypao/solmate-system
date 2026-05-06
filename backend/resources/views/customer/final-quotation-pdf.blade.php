@@ -10,7 +10,7 @@
 
         body {
             font-family: DejaVu Sans, sans-serif;
-            color: #1e293b;
+            color: #0F2F4A;
             font-size: 12px;
             line-height: 1.45;
         }
@@ -19,7 +19,7 @@
             padding: 18px 20px;
             border: 1px solid #d7e2ee;
             border-radius: 14px;
-            background: #102a43;
+            background: #123A5A;
             color: #ffffff;
             margin-bottom: 18px;
         }
@@ -32,19 +32,19 @@
         }
 
         .brand-name .accent {
-            color: #d4a017;
+            color: #F4D000;
         }
 
         .brand-subtitle {
             margin: 6px 0 0;
             font-size: 12px;
-            color: #dbe7f2;
+            color: #DDE7EE;
         }
 
         .section {
             margin-bottom: 18px;
             padding: 16px 18px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #DDE7EE;
             border-radius: 14px;
             background: #ffffff;
         }
@@ -53,7 +53,7 @@
             margin: 0 0 12px;
             font-size: 14px;
             font-weight: 700;
-            color: #102a43;
+            color: #123A5A;
         }
 
         .meta-table,
@@ -87,13 +87,13 @@
             font-weight: 700;
             letter-spacing: 0.3px;
             text-transform: uppercase;
-            color: #64748b;
+            color: #5E7288;
         }
 
         .value {
             font-size: 12px;
             font-weight: 600;
-            color: #102a43;
+            color: #123A5A;
         }
 
         .grid {
@@ -110,7 +110,7 @@
             margin-top: 12px;
             padding: 14px 16px;
             border-radius: 12px;
-            background: #102a43;
+            background: #123A5A;
             color: #ffffff;
         }
 
@@ -120,14 +120,14 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.3px;
-            color: #dbe7f2;
+            color: #DDE7EE;
         }
 
         .highlight-value {
             margin: 0;
             font-size: 24px;
             font-weight: 800;
-            color: #f4c542;
+            color: #E6C200;
         }
 
         .savings-grid {
@@ -138,7 +138,7 @@
 
         .savings-card {
             padding: 12px 14px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #DDE7EE;
             border-radius: 12px;
             background: #f8fafc;
         }
@@ -148,14 +148,14 @@
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
-            color: #64748b;
+            color: #5E7288;
         }
 
         .savings-value {
             margin: 0;
             font-size: 18px;
             font-weight: 800;
-            color: #102a43;
+            color: #123A5A;
         }
 
         .line-item-table th {
@@ -163,7 +163,7 @@
             font-weight: 700;
             text-transform: uppercase;
             text-align: left;
-            color: #64748b;
+            color: #5E7288;
         }
 
         .line-item-table td:last-child,
@@ -173,7 +173,7 @@
         }
 
         .muted {
-            color: #64748b;
+            color: #5E7288;
         }
 
         .remarks-box {
@@ -188,7 +188,7 @@
             margin-top: 20px;
             font-size: 10px;
             text-align: center;
-            color: #64748b;
+            color: #5E7288;
         }
     </style>
 </head>

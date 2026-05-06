@@ -16,8 +16,8 @@
     }
 
     .mnt-hero {
-        background: linear-gradient(135deg, #f8fbff 0%, #eef6ff 54%, #e6f0ff 100%);
-        border: 1px solid #dbeafe;
+        background: linear-gradient(135deg, #F8FAFC 0%, #EAF9FD 54%, #EAF9FD 100%);
+        border: 1px solid #EAF9FD;
         border-radius: 20px;
         padding: 36px 40px;
         position: relative;
@@ -48,22 +48,22 @@
         font-weight: 800;
         letter-spacing: 1.1px;
         text-transform: uppercase;
-        color: #d4a017;
+        color: #F4D000;
     }
     .mnt-hero-title {
         margin: 0 0 10px;
         font-size: 32px;
         line-height: 1.15;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
     }
-    .mnt-hero-title span { color: #d4a017; }
+    .mnt-hero-title span { color: #F4D000; }
     .mnt-hero-sub {
         margin: 0;
         max-width: 630px;
         font-size: 15px;
         line-height: 1.7;
-        color: #475569;
+        color: #5E7288;
     }
     .mnt-hero-steps {
         display: flex;
@@ -78,7 +78,7 @@
         padding: 8px 12px;
         border-radius: 999px;
         background: #ffffff;
-        border: 1px solid #dbeafe;
+        border: 1px solid #EAF9FD;
         font-size: 12px;
         font-weight: 700;
         color: #334155;
@@ -87,7 +87,7 @@
         width: 22px;
         height: 22px;
         border-radius: 50%;
-        background: #102a43;
+        background: #123A5A;
         color: #ffffff;
         display: inline-flex;
         align-items: center;
@@ -111,7 +111,7 @@
     .mnt-panel,
     .mnt-history-card {
         background: #ffffff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 18px;
         box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
     }
@@ -128,7 +128,7 @@
         width: 42px;
         height: 42px;
         border-radius: 12px;
-        background: linear-gradient(135deg, #102a43, #1e4068);
+        background: linear-gradient(135deg, #123A5A, #20A7C9);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -138,12 +138,12 @@
         margin: 0;
         font-size: 16px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
     }
     .mnt-card-subtitle {
         margin: 3px 0 0;
         font-size: 12px;
-        color: #94a3b8;
+        color: #7F92A3;
     }
     .mnt-card-body { padding: 24px; }
 
@@ -163,17 +163,17 @@
         font-weight: 800;
         letter-spacing: 0.6px;
         text-transform: uppercase;
-        color: #64748b;
+        color: #5E7288;
     }
     .mnt-input,
     .mnt-select,
     .mnt-textarea {
         width: 100%;
         box-sizing: border-box;
-        border: 1.5px solid #cbd5e1;
+        border: 1.5px solid #DDE7EE;
         border-radius: 12px;
         background: #ffffff;
-        color: #1e293b;
+        color: #0F2F4A;
         font: inherit;
         padding: 12px 15px;
         transition: border-color 0.2s, box-shadow 0.2s;
@@ -194,7 +194,7 @@
     .mnt-select:focus,
     .mnt-textarea:focus {
         outline: none;
-        border-color: #d4a017;
+        border-color: #F4D000;
         box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.12);
     }
     .mnt-input.has-error,
@@ -206,7 +206,7 @@
         margin: 7px 0 0;
         font-size: 12px;
         line-height: 1.5;
-        color: #94a3b8;
+        color: #7F92A3;
     }
     .mnt-field-error {
         display: none;
@@ -225,9 +225,9 @@
     }
     .mnt-field-note.show { display: block; }
     .mnt-field-note-info {
-        background: #eff6ff;
+        background: #EAF9FD;
         border: 1px solid #bfdbfe;
-        color: #124e78;
+        color: #123A5A;
     }
     .mnt-address-row {
         display: flex;
@@ -258,11 +258,11 @@
     .mnt-address-pin-btn:hover {
         transform: translateY(-1px);
         box-shadow: 0 8px 20px rgba(212, 160, 23, 0.16);
-        border-color: #d4a017;
+        border-color: #F4D000;
     }
     .mnt-address-pin-btn:focus {
         outline: none;
-        border-color: #d4a017;
+        border-color: #F4D000;
         box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.12);
     }
     .mnt-address-pin-btn:active {
@@ -277,10 +277,10 @@
     }
     .mnt-choice {
         position: relative;
-        border: 1.5px solid #dbeafe;
+        border: 1.5px solid #EAF9FD;
         border-radius: 16px;
         padding: 16px;
-        background: #f8fbff;
+        background: #F8FAFC;
         cursor: pointer;
         transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
     }
@@ -290,7 +290,7 @@
         transform: translateY(-1px);
     }
     .mnt-choice.is-selected {
-        border-color: #d4a017;
+        border-color: #F4D000;
         background: #fffbeb;
         box-shadow: 0 12px 26px rgba(212, 160, 23, 0.10);
     }
@@ -303,13 +303,13 @@
         margin: 0 0 5px;
         font-size: 14px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
     }
     .mnt-choice-desc {
         margin: 0;
         font-size: 12px;
         line-height: 1.55;
-        color: #64748b;
+        color: #5E7288;
     }
     .mnt-choice-tag {
         display: inline-flex;
@@ -318,14 +318,14 @@
         min-width: 28px;
         height: 28px;
         border-radius: 999px;
-        background: #dbeafe;
+        background: #EAF9FD;
         color: #1d4ed8;
         font-size: 11px;
         font-weight: 800;
         margin-bottom: 10px;
     }
     .mnt-choice.is-selected .mnt-choice-tag {
-        background: #d4a017;
+        background: #F4D000;
         color: #ffffff;
     }
 
@@ -354,7 +354,7 @@
         border: none;
         border-radius: 12px;
         padding: 15px 20px;
-        background: linear-gradient(135deg, #f4c542, #d4a017);
+        background: linear-gradient(135deg, #E6C200, #F4D000);
         color: #ffffff;
         font-size: 15px;
         font-weight: 800;
@@ -391,8 +391,8 @@
     .mnt-map-dialog {
         width: min(100%, 760px);
         max-height: min(90vh, 760px);
-        background: linear-gradient(180deg, #f8fbff 0%, #ffffff 28%);
-        border: 1px solid #dbe7f3;
+        background: linear-gradient(180deg, #F8FAFC 0%, #ffffff 28%);
+        border: 1px solid #DDE7EE;
         border-radius: 22px;
         box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
         overflow: hidden;
@@ -405,27 +405,27 @@
         justify-content: space-between;
         gap: 16px;
         padding: 20px 24px 16px;
-        border-bottom: 1px solid #e2e8f0;
+        border-bottom: 1px solid #DDE7EE;
     }
     .mnt-map-title {
         margin: 0;
         font-size: 20px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
     }
     .mnt-map-subtitle {
         margin: 6px 0 0;
         font-size: 13px;
-        color: #64748b;
+        color: #5E7288;
         line-height: 1.6;
     }
     .mnt-map-close {
         width: 40px;
         height: 40px;
-        border: 1px solid #dbe7f3;
+        border: 1px solid #DDE7EE;
         border-radius: 999px;
         background: #ffffff;
-        color: #64748b;
+        color: #5E7288;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -433,13 +433,13 @@
         transition: border-color 0.2s, color 0.2s, transform 0.15s;
     }
     .mnt-map-close:hover {
-        border-color: #d4a017;
+        border-color: #F4D000;
         color: #8a6510;
         transform: translateY(-1px);
     }
     .mnt-map-close:focus {
         outline: none;
-        border-color: #d4a017;
+        border-color: #F4D000;
         box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.12);
     }
     .mnt-map-body {
@@ -461,9 +461,9 @@
         color: #9f1239;
     }
     .mnt-map-feedback-info {
-        background: #eff6ff;
+        background: #EAF9FD;
         border: 1px solid #bfdbfe;
-        color: #124e78;
+        color: #123A5A;
     }
     .mnt-map-search {
         display: flex;
@@ -475,7 +475,7 @@
     }
     .mnt-map-canvas {
         height: 420px;
-        border: 1px solid #dbe7f3;
+        border: 1px solid #DDE7EE;
         border-radius: 18px;
         overflow: hidden;
         background: #eaf2fb;
@@ -503,9 +503,9 @@
         min-height: 44px;
         padding: 10px 16px;
         border-radius: 12px;
-        border: 1px solid #dbe7f3;
+        border: 1px solid #DDE7EE;
         background: #ffffff;
-        color: #29527a;
+        color: #20A7C9;
         font-size: 14px;
         font-weight: 700;
         cursor: pointer;
@@ -520,8 +520,8 @@
         box-shadow: 0 0 0 3px rgba(41, 82, 122, 0.12);
     }
     .mnt-map-btn-gold {
-        border-color: #d4a017;
-        background: linear-gradient(135deg, #d4a017, #b8880f);
+        border-color: #F4D000;
+        background: linear-gradient(135deg, #F4D000, #E6C200);
         color: #ffffff;
     }
     .mnt-map-btn-gold:focus {
@@ -542,7 +542,7 @@
         top: 24px;
     }
     .mnt-panel-header {
-        background: #102a43;
+        background: #123A5A;
         padding: 18px 20px;
         color: #ffffff;
     }
@@ -571,7 +571,7 @@
         width: 28px;
         height: 28px;
         border-radius: 50%;
-        background: #eff6ff;
+        background: #EAF9FD;
         color: #1d4ed8;
         display: flex;
         align-items: center;
@@ -583,13 +583,13 @@
         margin: 0 0 3px;
         font-size: 13px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
     }
     .mnt-check-desc {
         margin: 0;
         font-size: 12px;
         line-height: 1.55;
-        color: #64748b;
+        color: #5E7288;
     }
     .mnt-expect {
         margin-top: 20px;
@@ -615,13 +615,13 @@
         margin: 0 0 14px;
         font-size: 18px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
     }
     .mnt-loading {
         display: none;
         text-align: center;
         padding: 28px;
-        color: #94a3b8;
+        color: #7F92A3;
         font-size: 14px;
     }
     .mnt-loading.show { display: block; }
@@ -629,7 +629,7 @@
         display: none;
         text-align: center;
         padding: 40px 22px;
-        color: #94a3b8;
+        color: #7F92A3;
         font-size: 14px;
     }
     .mnt-empty.show { display: block; }
@@ -651,12 +651,12 @@
         margin: 0;
         font-size: 15px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
     }
     .mnt-history-date {
         margin: 4px 0 0;
         font-size: 12px;
-        color: #94a3b8;
+        color: #7F92A3;
     }
     .mnt-badge {
         display: inline-flex;
@@ -669,15 +669,15 @@
         text-transform: uppercase;
         white-space: nowrap;
     }
-    .mnt-badge-pending { background: #fef3c7; color: #a16207; }
+    .mnt-badge-pending { background: #FFF7CC; color: #a16207; }
     .mnt-badge-approved,
     .mnt-badge-scheduled,
-    .mnt-badge-assigned { background: #dbeafe; color: #1d4ed8; }
+    .mnt-badge-assigned { background: #EAF9FD; color: #1d4ed8; }
     .mnt-badge-in_progress { background: #ede9fe; color: #6d28d9; }
     .mnt-badge-completed { background: #dcfce7; color: #15803d; }
     .mnt-badge-cancelled,
     .mnt-badge-declined { background: #fee2e2; color: #dc2626; }
-    .mnt-badge-default { background: #f1f5f9; color: #475569; }
+    .mnt-badge-default { background: #f1f5f9; color: #5E7288; }
 
     .mnt-history-meta {
         display: grid;
@@ -696,19 +696,19 @@
         font-weight: 800;
         letter-spacing: 0.5px;
         text-transform: uppercase;
-        color: #94a3b8;
+        color: #7F92A3;
     }
     .mnt-history-chip-value {
         font-size: 13px;
         font-weight: 700;
-        color: #1e293b;
+        color: #0F2F4A;
     }
     .mnt-history-details {
         margin: 0;
         padding: 12px 14px;
         border-radius: 12px;
         background: #f8fafc;
-        color: #475569;
+        color: #5E7288;
         font-size: 13px;
         line-height: 1.65;
         white-space: pre-wrap;
@@ -797,14 +797,14 @@
             <div class="mnt-hero-art" aria-hidden="true">
                 <svg width="210" height="170" viewBox="0 0 210 170" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="28" y="54" width="116" height="74" rx="12" fill="#ffffff" stroke="#bfdbfe" stroke-width="2"/>
-                    <rect x="40" y="66" width="24" height="20" rx="4" fill="#dbeafe"/>
-                    <rect x="68" y="66" width="24" height="20" rx="4" fill="#e0efff"/>
-                    <rect x="96" y="66" width="24" height="20" rx="4" fill="#dbeafe"/>
-                    <rect x="40" y="90" width="24" height="20" rx="4" fill="#e0efff"/>
+                    <rect x="40" y="66" width="24" height="20" rx="4" fill="#EAF9FD"/>
+                    <rect x="68" y="66" width="24" height="20" rx="4" fill="#EAF9FD"/>
+                    <rect x="96" y="66" width="24" height="20" rx="4" fill="#EAF9FD"/>
+                    <rect x="40" y="90" width="24" height="20" rx="4" fill="#EAF9FD"/>
                     <rect x="68" y="90" width="24" height="20" rx="4" fill="#ffefb0"/>
-                    <rect x="96" y="90" width="24" height="20" rx="4" fill="#e0efff"/>
-                    <path d="M152 48L177 23C181 19 188 19 192 23C196 27 196 34 192 38L167 63" stroke="#d4a017" stroke-width="8" stroke-linecap="round"/>
-                    <circle cx="156" cy="99" r="20" fill="#eff6ff" stroke="#bfdbfe" stroke-width="2"/>
+                    <rect x="96" y="90" width="24" height="20" rx="4" fill="#EAF9FD"/>
+                    <path d="M152 48L177 23C181 19 188 19 192 23C196 27 196 34 192 38L167 63" stroke="#F4D000" stroke-width="8" stroke-linecap="round"/>
+                    <circle cx="156" cy="99" r="20" fill="#EAF9FD" stroke="#bfdbfe" stroke-width="2"/>
                     <path d="M156 88V99L163 106" stroke="#1d4ed8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </div>
@@ -816,7 +816,7 @@
             <div class="mnt-card">
                 <div class="mnt-card-header">
                     <div class="mnt-card-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f4c542" stroke-width="2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E6C200" stroke-width="2">
                             <circle cx="12" cy="12" r="3"/>
                             <path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/>
                         </svg>
@@ -875,7 +875,7 @@
             <div class="mnt-card">
                 <div class="mnt-card-header">
                     <div class="mnt-card-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f4c542" stroke-width="2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E6C200" stroke-width="2">
                             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                             <polyline points="14 2 14 8 20 8"/>
                             <line x1="16" y1="13" x2="8" y2="13"/>
@@ -905,7 +905,7 @@
             <div class="mnt-card">
                 <div class="mnt-card-header">
                     <div class="mnt-card-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f4c542" stroke-width="2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E6C200" stroke-width="2">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                             <line x1="16" y1="2" x2="16" y2="6"/>
                             <line x1="8" y1="2" x2="8" y2="6"/>

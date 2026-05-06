@@ -20,12 +20,14 @@ import {
 } from '../src/services/technicianApi';
 
 // ─── colour tokens (match dashboard) ─────────────────────────────────────────
-const NAVY   = '#152a4a';
-const GOLD   = '#d4a017';
-const BG     = '#dde5f4';
+const NAVY   = '#123A5A';
+const GOLD   = '#F4D000';
+const BG     = '#F8FAFC';
 const CARD   = '#ffffff';
-const MUTED  = '#64748b';
+const MUTED  = '#5E7288';
 const SHADOW = '#8a9bbd';
+const BORDER = '#DDE7EE';
+const SOFT_YELLOW = '#FFF7CC';
 
 // ─── filter chips ─────────────────────────────────────────────────────────────
 type FilterValue = 'all' | 'pending' | 'assigned' | 'completed';
@@ -119,7 +121,7 @@ function BottomNav({onPress}: {onPress: (t: Tab) => void}) {
   return (
     <View style={nav.bar}>
       {tabs.map(({key, label, Icon}) => (
-        <Pressable key={key} style={nav.tab} onPress={() => onPress(key)}>
+        <Pressable key={key} style={[nav.tab, key === 'Inspections' && nav.tabActive]} onPress={() => onPress(key)}>
           <Icon active={key === 'Inspections'} />
           <Text style={[nav.label, key === 'Inspections' && nav.labelActive]}>
             {label}
@@ -309,13 +311,15 @@ export default function AssignedTasksScreen({navigation}: any) {
 const nav = StyleSheet.create({
   bar: {
     flexDirection: 'row',
-    backgroundColor: '#f2f4f8',
+    backgroundColor: CARD,
     borderTopWidth: 1,
-    borderTopColor: '#dde2ec',
+    borderTopColor: BORDER,
     paddingBottom: 8,
     paddingTop: 8,
+    paddingHorizontal: 6,
   },
-  tab:        {flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3},
+  tab:        {flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, paddingVertical: 8, borderRadius: 16},
+  tabActive:  {backgroundColor: SOFT_YELLOW, borderWidth: 1, borderColor: 'rgba(244, 208, 0, 0.34)'},
   label:      {fontSize: 10, color: MUTED, fontWeight: '500'},
   labelActive:{color: NAVY, fontWeight: '700'},
   iconWrap:   {width: 24, height: 22, alignItems: 'center', justifyContent: 'flex-end'},
@@ -331,7 +335,7 @@ const nav = StyleSheet.create({
     alignItems: 'flex-start', justifyContent: 'center',
     paddingHorizontal: 3, gap: 3,
   },
-  listLine:    {height: 2, width: 10, backgroundColor: '#f2f4f8', borderRadius: 1},
+  listLine:    {height: 2, width: 10, backgroundColor: CARD, borderRadius: 1},
   gear: {
     width: 20, height: 20, borderRadius: 10,
     borderWidth: 3, alignItems: 'center', justifyContent: 'center',
@@ -349,8 +353,20 @@ const s = StyleSheet.create({
   // header
   header: {
     paddingHorizontal: 18,
-    paddingTop: 10,
-    paddingBottom: 6,
+    paddingTop: 12,
+    paddingBottom: 10,
+    marginHorizontal: 18,
+    marginTop: 8,
+    marginBottom: 6,
+    borderRadius: 20,
+    backgroundColor: CARD,
+    borderWidth: 1,
+    borderColor: BORDER,
+    shadowColor: SHADOW,
+    shadowOffset: {width: 0, height: 8},
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    elevation: 3,
   },
   brandRow: {flexDirection: 'row', alignItems: 'center'},
   brandSol:  {fontSize: 22, fontWeight: '800', color: NAVY},
@@ -480,7 +496,7 @@ const s = StyleSheet.create({
 
   divider: {
     height: 1,
-    backgroundColor: '#e2e8f0',
+    backgroundColor: '#DDE7EE',
     marginVertical: 10,
   },
 

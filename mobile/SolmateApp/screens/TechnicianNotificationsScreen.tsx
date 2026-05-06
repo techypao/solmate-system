@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 12,
-    color: '#475569',
+    color: '#5E7288',
     fontSize: 14,
   },
   title: {
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   subtitle: {
-    color: '#64748b',
+    color: '#5E7288',
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 18,
@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   summaryLabel: {
-    color: '#64748b',
+    color: '#5E7288',
     fontSize: 13,
     fontWeight: '600',
     marginBottom: 4,
@@ -540,7 +540,7 @@ const styles = StyleSheet.create({
     color: '#b91c1c',
   },
   deleteAllButtonTextDisabled: {
-    color: '#64748b',
+    color: '#5E7288',
   },
   errorCard: {
     backgroundColor: '#ffffff',
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   emptyText: {
-    color: '#64748b',
+    color: '#5E7288',
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',
@@ -630,7 +630,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   notificationDate: {
-    color: '#64748b',
+    color: '#5E7288',
     fontSize: 12,
     fontWeight: '500',
   },
@@ -668,10 +668,10 @@ const styles = StyleSheet.create({
     color: '#0f766e',
   },
   readState: {
-    color: '#64748b',
+    color: '#5E7288',
   },
   notificationType: {
-    color: '#64748b',
+    color: '#5E7288',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -686,7 +686,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   deleteButtonDisabled: {
-    borderColor: '#e2e8f0',
+    borderColor: '#DDE7EE',
     backgroundColor: '#f8fafc',
   },
   deleteButtonPressed: {
@@ -698,6 +698,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   deleteButtonTextDisabled: {
-    color: '#64748b',
+    color: '#5E7288',
   },
 });

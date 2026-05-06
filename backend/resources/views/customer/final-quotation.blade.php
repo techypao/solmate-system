@@ -6,7 +6,7 @@
 
     /* Hero */
     .fq-hero {
-        background: linear-gradient(135deg, #fefce8 0%, #fef9c3 55%, #fef08a 100%);
+        background: linear-gradient(135deg, #fefce8 0%, #FFF7CC 55%, #fef08a 100%);
         border-radius: 16px;
         padding: 36px 40px;
         margin-bottom: 32px;
@@ -29,20 +29,20 @@
         font-weight: 700;
         letter-spacing: 1.2px;
         text-transform: uppercase;
-        color: #d4a017;
+        color: #F4D000;
         margin: 0 0 8px;
     }
     .fq-hero-title {
         font-size: 30px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
         margin: 0 0 10px;
         line-height: 1.2;
     }
-    .fq-hero-title span { color: #d4a017; }
+    .fq-hero-title span { color: #F4D000; }
     .fq-hero-sub {
         font-size: 15px;
-        color: #475569;
+        color: #5E7288;
         max-width: 520px;
         margin: 0 0 16px;
         line-height: 1.6;
@@ -59,11 +59,11 @@
         gap: 6px;
         padding: 5px 12px;
         background: rgba(255,255,255,.7);
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 20px;
         font-size: 12px;
         font-weight: 600;
-        color: #475569;
+        color: #5E7288;
     }
     @media (max-width: 768px) {
         .fq-hero { padding: 24px 20px; }
@@ -91,16 +91,16 @@
         background: currentColor;
         opacity: .7;
     }
-    .fq-s-pending   { background: #fef9c3; color: #a16207; }
+    .fq-s-pending   { background: #FFF7CC; color: #a16207; }
     .fq-s-approved  { background: #dcfce7; color: #15803d; }
     .fq-s-completed { background: #d1fae5; color: #065f46; }
     .fq-s-rejected  { background: #fee2e2; color: #dc2626; }
-    .fq-s-default   { background: #f1f5f9; color: #475569; }
+    .fq-s-default   { background: #f1f5f9; color: #5E7288; }
 
     /* Card base */
     .fq-card {
         background: #fff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 16px;
         overflow: hidden;
         box-shadow: 0 2px 12px rgba(0,0,0,.04);
@@ -118,7 +118,7 @@
         width: 40px;
         height: 40px;
         border-radius: 10px;
-        background: linear-gradient(135deg, #102a43, #1e4068);
+        background: linear-gradient(135deg, #123A5A, #20A7C9);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -127,12 +127,12 @@
     .fq-card-title {
         font-size: 16px;
         font-weight: 700;
-        color: #102a43;
+        color: #123A5A;
         margin: 0;
     }
     .fq-card-subtitle {
         font-size: 12px;
-        color: #94a3b8;
+        color: #7F92A3;
         margin: 2px 0 0;
     }
     .fq-card-body { padding: 24px; }
@@ -145,7 +145,7 @@
     }
     .fq-spec-item {
         background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 12px;
         padding: 14px 16px;
     }
@@ -154,20 +154,20 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: .5px;
-        color: #94a3b8;
+        color: #7F92A3;
         margin-bottom: 5px;
     }
     .fq-spec-value {
         font-size: 17px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
         line-height: 1.2;
     }
-    .fq-spec-value.accent { color: #d4a017; }
+    .fq-spec-value.accent { color: #F4D000; }
     .fq-spec-unit {
         font-size: 12px;
         font-weight: 500;
-        color: #64748b;
+        color: #5E7288;
         margin-top: 2px;
     }
 
@@ -188,7 +188,7 @@
         border-radius: 8px;
         font-size: 12px;
         font-weight: 600;
-        color: #0369a1;
+        color: #20A7C9;
     }
     .fq-tag svg { flex-shrink: 0; }
 
@@ -201,15 +201,15 @@
         vertical-align: middle;
     }
     .fq-cost-row:last-child td { border-bottom: none; }
-    .fq-cost-label { color: #475569; }
-    .fq-cost-value { text-align: right; font-weight: 600; color: #1e293b; white-space: nowrap; }
+    .fq-cost-label { color: #5E7288; }
+    .fq-cost-value { text-align: right; font-weight: 600; color: #0F2F4A; white-space: nowrap; }
     .fq-cost-subtotal td {
         padding: 11px 0;
-        border-top: 1.5px solid #e2e8f0;
-        border-bottom: 1.5px solid #e2e8f0;
+        border-top: 1.5px solid #DDE7EE;
+        border-bottom: 1.5px solid #DDE7EE;
         font-size: 14px;
         font-weight: 700;
-        color: #102a43;
+        color: #123A5A;
     }
 
     /* Final price highlight band */
@@ -221,7 +221,7 @@
         gap: 12px;
         margin-top: 18px;
         padding: 18px 20px;
-        background: linear-gradient(135deg, #102a43 0%, #1e3a5f 100%);
+        background: linear-gradient(135deg, #123A5A 0%, #123A5A 100%);
         border-radius: 12px;
         color: #fff;
     }
@@ -236,7 +236,7 @@
     .fq-final-price-amount {
         font-size: 28px;
         font-weight: 900;
-        color: #f4c542;
+        color: #E6C200;
         line-height: 1;
         letter-spacing: -1px;
     }
@@ -255,7 +255,7 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: .6px;
-        color: #94a3b8;
+        color: #7F92A3;
         margin: 0 0 10px;
     }
     .fq-li-table { width: 100%; border-collapse: collapse; }
@@ -264,22 +264,22 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: .5px;
-        color: #94a3b8;
+        color: #7F92A3;
         padding: 6px 8px;
         text-align: left;
-        border-bottom: 1.5px solid #e2e8f0;
+        border-bottom: 1.5px solid #DDE7EE;
     }
     .fq-li-table thead th:last-child { text-align: right; }
     .fq-li-table tbody td {
         padding: 9px 8px;
         border-bottom: 1px solid #f1f5f9;
         font-size: 13px;
-        color: #1e293b;
+        color: #0F2F4A;
         vertical-align: middle;
     }
     .fq-li-table tbody tr:last-child td { border-bottom: none; }
     .fq-li-table tbody td:last-child { text-align: right; font-weight: 600; white-space: nowrap; }
-    .fq-li-qty { color: #64748b; font-size: 12px; }
+    .fq-li-qty { color: #5E7288; font-size: 12px; }
     .fq-li-cat-badge {
         display: inline-block;
         padding: 2px 8px;
@@ -289,7 +289,7 @@
         text-transform: uppercase;
         letter-spacing: .3px;
         background: #f1f5f9;
-        color: #475569;
+        color: #5E7288;
     }
 
     /* ROI card (Card 3) */
@@ -302,13 +302,13 @@
     @media (max-width: 600px) { .fq-roi-grid { grid-template-columns: 1fr; } }
     .fq-roi-item {
         background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 12px;
         padding: 16px;
         text-align: center;
     }
     .fq-roi-item.featured {
-        background: linear-gradient(135deg, #fefce8, #fef9c3);
+        background: linear-gradient(135deg, #fefce8, #FFF7CC);
         border-color: #fde68a;
     }
     .fq-roi-label {
@@ -316,26 +316,26 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: .5px;
-        color: #94a3b8;
+        color: #7F92A3;
         margin-bottom: 8px;
     }
     .fq-roi-item.featured .fq-roi-label { color: #92400e; }
     .fq-roi-value {
         font-size: 22px;
         font-weight: 900;
-        color: #102a43;
+        color: #123A5A;
         line-height: 1;
         margin-bottom: 4px;
     }
-    .fq-roi-item.featured .fq-roi-value { color: #d4a017; }
+    .fq-roi-item.featured .fq-roi-value { color: #F4D000; }
     .fq-roi-unit {
         font-size: 12px;
-        color: #94a3b8;
+        color: #7F92A3;
     }
 
     .fq-roi-bar-wrap {
         margin-top: 4px;
-        background: #e2e8f0;
+        background: #DDE7EE;
         border-radius: 6px;
         height: 8px;
         overflow: hidden;
@@ -343,12 +343,12 @@
     .fq-roi-bar {
         height: 100%;
         border-radius: 6px;
-        background: linear-gradient(90deg, #d4a017, #f4c542);
+        background: linear-gradient(90deg, #F4D000, #E6C200);
         max-width: 100%;
     }
     .fq-roi-note {
         font-size: 13px;
-        color: #64748b;
+        color: #5E7288;
         line-height: 1.6;
         padding: 14px 16px;
         background: #fffbeb;
@@ -381,7 +381,7 @@
         flex: 1;
         min-width: 160px;
         padding: 14px 24px;
-        background: linear-gradient(135deg, #d4a017, #b8880f);
+        background: linear-gradient(135deg, #F4D000, #E6C200);
         color: #fff;
         font-size: 15px;
         font-weight: 700;
@@ -402,8 +402,8 @@
     .fq-btn-secondary {
         padding: 13px 20px;
         background: transparent;
-        border: 1.5px solid #cbd5e1;
-        color: #475569;
+        border: 1.5px solid #DDE7EE;
+        color: #5E7288;
         font-size: 14px;
         font-weight: 600;
         border-radius: 10px;
@@ -414,15 +414,15 @@
         transition: all .15s;
         text-decoration: none;
     }
-    .fq-btn-secondary:hover { background: #f1f5f9; color: #102a43; }
+    .fq-btn-secondary:hover { background: #f1f5f9; color: #123A5A; }
     .fq-btn-download {
-        background: #102a43;
-        border-color: #102a43;
+        background: #123A5A;
+        border-color: #123A5A;
         color: #fff;
     }
     .fq-btn-download:hover {
-        background: #1a3f67;
-        border-color: #1a3f67;
+        background: #123A5A;
+        border-color: #123A5A;
         color: #fff;
     }
 
@@ -443,7 +443,7 @@
     .fq-loading {
         text-align: center;
         padding: 64px 24px;
-        color: #94a3b8;
+        color: #7F92A3;
         font-size: 15px;
         display: none;
     }
@@ -459,7 +459,7 @@
     .fq-empty.show { display: flex; }
     .fq-empty svg { opacity: .35; }
     .fq-empty-title { font-size: 16px; font-weight: 700; color: #334155; margin: 0; }
-    .fq-empty-sub { font-size: 14px; color: #94a3b8; margin: 0; max-width: 360px; line-height: 1.6; }
+    .fq-empty-sub { font-size: 14px; color: #7F92A3; margin: 0; max-width: 360px; line-height: 1.6; }
 
     /* Divider */
     .fq-divider {
@@ -467,7 +467,7 @@
         align-items: center;
         gap: 12px;
         margin: 22px 0;
-        color: #94a3b8;
+        color: #7F92A3;
         font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
@@ -477,7 +477,7 @@
         content: '';
         flex: 1;
         height: 1px;
-        background: #e2e8f0;
+        background: #DDE7EE;
     }
 
     /* Content max-width */
@@ -506,7 +506,7 @@
 
     {{-- Empty / not-found state --}}
     <div id="fq-empty" class="fq-empty">
-        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.3">
+        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#7F92A3" stroke-width="1.3">
             <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
             <rect x="9" y="3" width="6" height="4" rx="1"/>
             <path d="M9 12h6M9 16h4"/>
@@ -525,7 +525,7 @@
         <div class="fq-card">
             <div class="fq-card-header">
                 <div class="fq-card-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2">
                         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                     </svg>
                 </div>
@@ -544,7 +544,7 @@
         <div class="fq-card">
             <div class="fq-card-header">
                 <div class="fq-card-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2">
                         <line x1="12" y1="1" x2="12" y2="23"/>
                         <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
                     </svg>
@@ -562,7 +562,7 @@
                         <div class="fq-final-price-amount" id="fq-total-cost">—</div>
                         <div class="fq-final-price-note">Inclusive of materials and labour</div>
                     </div>
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#f4c542" stroke-width="1.5" opacity=".5">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#E6C200" stroke-width="1.5" opacity=".5">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
                 </div>
@@ -590,7 +590,7 @@
         <div class="fq-card">
             <div class="fq-card-header">
                 <div class="fq-card-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2">
                         <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
                         <polyline points="17 6 23 6 23 12"/>
                     </svg>
@@ -612,7 +612,7 @@
         <div class="fq-card" id="fq-remarks-card" style="display:none;">
             <div class="fq-card-header">
                 <div class="fq-card-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2">
                         <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
                     </svg>
                 </div>
@@ -774,7 +774,7 @@
         if (q.daily_kwh)    items += buildSpecItem('Daily Usage',    Number(q.daily_kwh).toFixed(2), 'kWh/day');
         if (q.monthly_kwh)  items += buildSpecItem('Monthly Usage',  Number(q.monthly_kwh).toFixed(2), 'kWh/month');
         if (q.monthly_electric_bill) items += buildSpecItem('Monthly Bill', fmtPeso(q.monthly_electric_bill), 'based on your input');
-        specGrid.innerHTML = items || '<p style="color:#94a3b8;font-size:13px;">System details not available.</p>';
+        specGrid.innerHTML = items || '<p style="color:#7F92A3;font-size:13px;">System details not available.</p>';
 
         /* Tags row */
         var tags = '';
@@ -798,7 +798,7 @@
         if (q.bos_cost)          html += costRow('Balance of System (BOS)', fmtPeso(q.bos_cost));
         if (q.materials_subtotal) html += costRow('Materials Subtotal', fmtPeso(q.materials_subtotal), true);
         if (q.labor_cost)        html += costRow('Labour & Installation', fmtPeso(q.labor_cost));
-        costTable.innerHTML = html || '<tr class="fq-cost-row"><td colspan="2" style="color:#94a3b8;font-size:13px;">Cost breakdown not available.</td></tr>';
+        costTable.innerHTML = html || '<tr class="fq-cost-row"><td colspan="2" style="color:#7F92A3;font-size:13px;">Cost breakdown not available.</td></tr>';
         totalCostEl.innerHTML = fmtPeso(q.project_cost);
     }
 

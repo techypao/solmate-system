@@ -43,7 +43,7 @@
 
         .reports-filter-copy {
             margin: 0;
-            color: #52606d;
+            color: #5E7288;
             font-size: 14px;
         }
 
@@ -61,7 +61,7 @@
             padding: 0 16px;
             border-radius: 999px;
             border: 1px solid #d6e2ef;
-            background: #f8fbff;
+            background: #F8FAFC;
             color: #425466;
             font-size: 13px;
             font-weight: 800;
@@ -72,13 +72,13 @@
         .reports-filter-chip:hover {
             border-color: #b8cadf;
             background: #ffffff;
-            color: #173b63;
+            color: #20A7C9;
             text-decoration: none;
         }
 
         .reports-filter-chip.active {
-            border-color: #173b63;
-            background: #173b63;
+            border-color: #20A7C9;
+            background: #20A7C9;
             color: #ffffff;
             box-shadow: 0 12px 24px rgba(23, 59, 99, 0.18);
         }
@@ -93,14 +93,14 @@
             display: grid;
             gap: 8px;
             padding: 18px;
-            border: 1px solid #dbe7f3;
+            border: 1px solid #DDE7EE;
             border-radius: 18px;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%);
             box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
         }
 
         .reports-summary-label {
-            color: #64748b;
+            color: #5E7288;
             font-size: 11px;
             font-weight: 800;
             letter-spacing: 0.08em;
@@ -108,7 +108,7 @@
         }
 
         .reports-summary-value {
-            color: #102a43;
+            color: #123A5A;
             font-size: 32px;
             line-height: 1;
             font-weight: 800;
@@ -148,7 +148,7 @@
 
         .reports-card-title {
             margin: 0;
-            color: #102a43;
+            color: #123A5A;
             font-size: 22px;
             font-weight: 800;
             letter-spacing: -0.02em;
@@ -156,7 +156,7 @@
 
         .reports-card-copy {
             margin: 6px 0 0;
-            color: #52606d;
+            color: #5E7288;
             font-size: 14px;
             line-height: 1.65;
         }
@@ -170,8 +170,8 @@
             min-height: 34px;
             padding: 0 12px;
             border-radius: 999px;
-            background: #eef6ff;
-            color: #173b63;
+            background: #EAF9FD;
+            color: #20A7C9;
             font-size: 12px;
             font-weight: 800;
             white-space: nowrap;
@@ -182,9 +182,9 @@
             height: 100%;
             min-height: 300px;
             padding: 12px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #DDE7EE;
             border-radius: 18px;
-            background: #fbfdff;
+            background: #F8FAFC;
         }
 
         .reports-chart-shell canvas {
@@ -197,7 +197,7 @@
             place-items: center;
             min-height: 280px;
             text-align: center;
-            color: #64748b;
+            color: #5E7288;
             font-size: 14px;
             line-height: 1.7;
             border: 1px dashed #d7e1ec;
@@ -218,8 +218,8 @@
             min-height: 32px;
             padding: 0 10px;
             border-radius: 999px;
-            background: #eef6ff;
-            color: #173b63;
+            background: #EAF9FD;
+            color: #20A7C9;
             font-size: 12px;
             font-weight: 800;
         }
@@ -233,7 +233,7 @@
 
         .reports-empty-row {
             text-align: center;
-            color: #64748b;
+            color: #5E7288;
         }
 
         @media (max-width: 1200px) {
@@ -536,7 +536,7 @@
                                     usePointStyle: true,
                                     pointStyle: 'circle',
                                     padding: 18,
-                                    color: '#17324f',
+                                    color: '#123A5A',
                                     font: {
                                         family: 'Plus Jakarta Sans, Segoe UI, sans-serif',
                                         size: 12,

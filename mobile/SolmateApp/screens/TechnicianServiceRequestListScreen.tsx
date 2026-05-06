@@ -20,12 +20,12 @@ import {
 
 /* ── design tokens ─────────────────────────────────────────── */
 
-const NAVY    = '#152a4a';
-const GOLD    = '#e8a800';
-const MUTED   = '#7b8699';
-const BG      = '#e0e8f5';
+const NAVY    = '#123A5A';
+const GOLD    = '#F4D000';
+const MUTED   = '#5E7288';
+const BG      = '#F8FAFC';
 const CARD    = '#ffffff';
-const DIVIDER = '#edf1f7';
+const DIVIDER = '#DDE7EE';
 
 /* ── filter config ─────────────────────────────────────────── */
 
@@ -61,8 +61,8 @@ function formatStatusLabel(status?: string | null): string {
 
 function getStatusColors(status?: string | null) {
   switch ((status ?? '').toLowerCase()) {
-    case 'assigned':    return {bg: '#fef3c7', text: '#b45309'};
-    case 'in_progress': return {bg: '#dbeafe', text: '#1d4ed8'};
+    case 'assigned':    return {bg: '#FFF7CC', text: '#b45309'};
+    case 'in_progress': return {bg: '#EAF9FD', text: '#1d4ed8'};
     case 'completed':   return {bg: '#dcfce7', text: '#166534'};
     default:            return {bg: '#f1f5f9', text: MUTED};
   }
@@ -237,7 +237,7 @@ function BottomNav({onPress}: {onPress: (t: Tab) => void}) {
   return (
     <View style={nav.bar}>
       {tabs.map(({key, label, Icon}) => (
-        <Pressable key={key} style={nav.tab} onPress={() => onPress(key)}>
+        <Pressable key={key} style={[nav.tab, key === 'Services' && nav.tabActive]} onPress={() => onPress(key)}>
           <Icon active={key === 'Services'} />
           <Text style={[nav.label, key === 'Services' && nav.labelActive]}>
             {label}
@@ -389,7 +389,8 @@ const nav = StyleSheet.create({
     alignItems: 'flex-start', justifyContent: 'center',
     paddingHorizontal: 3, gap: 3,
   },
-  listLine:    {height: 2, width: 10, backgroundColor: '#f2f4f8', borderRadius: 1},
+  listLine:    {height: 2, width: 10, backgroundColor: CARD, borderRadius: 1},
+  tabActive:   {backgroundColor: '#FFF7CC', borderWidth: 1, borderColor: 'rgba(244, 208, 0, 0.34)'},
   gear: {
     width: 20, height: 20, borderRadius: 10,
     borderWidth: 3, alignItems: 'center', justifyContent: 'center',

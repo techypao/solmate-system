@@ -6,7 +6,7 @@
 
     /* ─── Hero ─── */
     .ch-hero {
-        background: linear-gradient(140deg, #102a43 0%, #1e3a5f 58%, #0f3460 100%);
+        background: linear-gradient(140deg, #123A5A 0%, #123A5A 58%, #0f3460 100%);
         border-radius: 20px;
         padding: 56px 52px;
         display: grid;
@@ -45,7 +45,7 @@
         font-weight: 700;
         letter-spacing: 1.6px;
         text-transform: uppercase;
-        color: #f4c542;
+        color: #E6C200;
         margin: 0 0 12px;
         opacity: .9;
     }
@@ -57,7 +57,7 @@
         line-height: 1.15;
         letter-spacing: -0.5px;
     }
-    .ch-hero-title span { color: #f4c542; }
+    .ch-hero-title span { color: #E6C200; }
     .ch-hero-sub {
         font-size: 15px;
         color: rgba(255,255,255,.68);
@@ -68,7 +68,7 @@
     .ch-hero-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
     .ch-btn-hero-primary {
         padding: 13px 28px;
-        background: linear-gradient(135deg, #d4a017, #b8880f);
+        background: linear-gradient(135deg, #F4D000, #E6C200);
         color: #fff;
         font-size: 14px;
         font-weight: 700;
@@ -121,19 +121,19 @@
         font-weight: 700;
         letter-spacing: 1.3px;
         text-transform: uppercase;
-        color: #d4a017;
+        color: #F4D000;
         margin: 0 0 6px;
     }
     .ch-section-title {
         font-size: 22px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
         margin: 0;
         line-height: 1.2;
     }
     .ch-section-sub {
         font-size: 14px;
-        color: #64748b;
+        color: #5E7288;
         margin: 6px 0 0;
         line-height: 1.6;
     }
@@ -147,7 +147,7 @@
     @media (max-width: 560px) { .ch-actions-grid { grid-template-columns: repeat(2, 1fr); } }
     .ch-action-card {
         background: #fff;
-        border: 1.5px solid #e2e8f0;
+        border: 1.5px solid #DDE7EE;
         border-radius: 16px;
         padding: 22px 18px 20px;
         text-decoration: none;
@@ -165,7 +165,7 @@
         left: 0;
         right: 0;
         height: 3px;
-        background: linear-gradient(90deg, #d4a017, #f4c542);
+        background: linear-gradient(90deg, #F4D000, #E6C200);
         transform: scaleX(0);
         transform-origin: left;
         transition: transform .25s ease;
@@ -181,7 +181,7 @@
         width: 46px;
         height: 46px;
         border-radius: 12px;
-        background: linear-gradient(135deg, #102a43, #1e4068);
+        background: linear-gradient(135deg, #123A5A, #20A7C9);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -190,13 +190,13 @@
     .ch-action-title {
         font-size: 14px;
         font-weight: 700;
-        color: #102a43;
+        color: #123A5A;
         margin: 0;
         line-height: 1.3;
     }
     .ch-action-desc {
         font-size: 12px;
-        color: #64748b;
+        color: #5E7288;
         margin: 0;
         line-height: 1.5;
         flex: 1;
@@ -207,7 +207,7 @@
         gap: 4px;
         font-size: 12px;
         font-weight: 700;
-        color: #d4a017;
+        color: #F4D000;
         margin-top: 4px;
     }
 
@@ -220,7 +220,7 @@
     @media (max-width: 680px) { .ch-activity-grid { grid-template-columns: 1fr; } }
     .ch-act-card {
         background: #fff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 16px;
         overflow: hidden;
         box-shadow: 0 2px 12px rgba(0,0,0,.04);
@@ -236,7 +236,7 @@
         width: 34px;
         height: 34px;
         border-radius: 9px;
-        background: linear-gradient(135deg, #102a43, #1e4068);
+        background: linear-gradient(135deg, #123A5A, #20A7C9);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -245,12 +245,12 @@
     .ch-act-card-title {
         font-size: 14px;
         font-weight: 700;
-        color: #102a43;
+        color: #123A5A;
         margin: 0;
     }
     .ch-act-card-sub {
         font-size: 11px;
-        color: #94a3b8;
+        color: #7F92A3;
         margin: 1px 0 0;
     }
     .ch-act-card-body { padding: 16px 20px 20px; }
@@ -266,10 +266,10 @@
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        background: #e2e8f0;
+        background: #DDE7EE;
         flex-shrink: 0;
     }
-    .ch-act-dot-gold  { background: #d4a017; }
+    .ch-act-dot-gold  { background: #F4D000; }
     .ch-act-dot-green { background: #22c55e; }
     .ch-act-dot-blue  { background: #3b82f6; }
     .ch-act-dot-amber { background: #f59e0b; }
@@ -278,13 +278,13 @@
     .ch-act-label {
         font-size: 13px;
         font-weight: 600;
-        color: #1e293b;
+        color: #0F2F4A;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         margin: 0;
     }
-    .ch-act-meta { font-size: 11px; color: #94a3b8; margin: 1px 0 0; line-height: 1.45; }
+    .ch-act-meta { font-size: 11px; color: #7F92A3; margin: 1px 0 0; line-height: 1.45; }
     .ch-act-meta + .ch-act-meta { margin-top: 4px; }
     .ch-act-badge {
         display: inline-flex;
@@ -297,16 +297,16 @@
         white-space: nowrap;
         flex-shrink: 0;
     }
-    .ch-act-badge-pending     { background: #fef9c3; color: #a16207; }
+    .ch-act-badge-pending     { background: #FFF7CC; color: #a16207; }
     .ch-act-badge-approved,
     .ch-act-badge-completed   { background: #dcfce7; color: #15803d; }
-    .ch-act-badge-in_progress { background: #dbeafe; color: #1d4ed8; }
+    .ch-act-badge-in_progress { background: #EAF9FD; color: #1d4ed8; }
     .ch-act-badge-cancelled   { background: #fee2e2; color: #dc2626; }
-    .ch-act-badge-default     { background: #f1f5f9; color: #475569; }
+    .ch-act-badge-default     { background: #f1f5f9; color: #5E7288; }
     .ch-act-empty {
         text-align: center;
         padding: 28px 16px;
-        color: #94a3b8;
+        color: #7F92A3;
         font-size: 13px;
         display: none;
     }
@@ -314,7 +314,7 @@
     .ch-act-loading {
         padding: 24px 16px;
         text-align: center;
-        color: #94a3b8;
+        color: #7F92A3;
         font-size: 13px;
     }
     .ch-act-view-link {
@@ -324,14 +324,14 @@
         margin-top: 14px;
         font-size: 12px;
         font-weight: 700;
-        color: #d4a017;
+        color: #F4D000;
         text-decoration: none;
     }
-    .ch-act-view-link:hover { color: #b8880f; text-decoration: none; }
+    .ch-act-view-link:hover { color: #E6C200; text-decoration: none; }
 
     /* ─── Help strip ─── */
     .ch-help {
-        background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+        background: linear-gradient(135deg, #fefce8 0%, #FFF7CC 100%);
         border: 1px solid #fde68a;
         border-radius: 16px;
         padding: 32px 36px;
@@ -368,12 +368,12 @@
         transition: all .15s;
         white-space: nowrap;
     }
-    .ch-help-btn-gold { background: #d4a017; color: #fff; border: none; }
-    .ch-help-btn-gold:hover { background: #b8880f; color: #fff; text-decoration: none; }
+    .ch-help-btn-gold { background: #F4D000; color: #fff; border: none; }
+    .ch-help-btn-gold:hover { background: #E6C200; color: #fff; text-decoration: none; }
     .ch-help-btn-outline {
         background: transparent;
         color: #92400e;
-        border: 1.5px solid #d4a017;
+        border: 1.5px solid #F4D000;
     }
     .ch-help-btn-outline:hover { background: rgba(212,160,23,.1); color: #78350f; text-decoration: none; }
 </style>
@@ -406,17 +406,17 @@
             <circle cx="90" cy="90" r="80" stroke="rgba(212,160,23,.12)" stroke-width="1.5"/>
             <circle cx="90" cy="90" r="64" stroke="rgba(212,160,23,.18)" stroke-width="1.5"/>
             <!-- Sun core -->
-            <circle cx="90" cy="90" r="28" fill="rgba(212,160,23,.18)" stroke="#d4a017" stroke-width="1.5"/>
-            <circle cx="90" cy="90" r="16" fill="#d4a017" opacity=".85"/>
+            <circle cx="90" cy="90" r="28" fill="rgba(212,160,23,.18)" stroke="#F4D000" stroke-width="1.5"/>
+            <circle cx="90" cy="90" r="16" fill="#F4D000" opacity=".85"/>
             <!-- Ray lines -->
-            <line x1="90" y1="52" x2="90" y2="44" stroke="#f4c542" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="90" y1="136" x2="90" y2="128" stroke="#f4c542" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="52" y1="90" x2="44" y2="90" stroke="#f4c542" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="136" y1="90" x2="128" y2="90" stroke="#f4c542" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="62.5" y1="62.5" x2="57" y2="57" stroke="#f4c542" stroke-width="2" stroke-linecap="round"/>
-            <line x1="123" y1="123" x2="117.5" y2="117.5" stroke="#f4c542" stroke-width="2" stroke-linecap="round"/>
-            <line x1="117.5" y1="62.5" x2="123" y2="57" stroke="#f4c542" stroke-width="2" stroke-linecap="round"/>
-            <line x1="57" y1="123" x2="62.5" y2="117.5" stroke="#f4c542" stroke-width="2" stroke-linecap="round"/>
+            <line x1="90" y1="52" x2="90" y2="44" stroke="#E6C200" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="90" y1="136" x2="90" y2="128" stroke="#E6C200" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="52" y1="90" x2="44" y2="90" stroke="#E6C200" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="136" y1="90" x2="128" y2="90" stroke="#E6C200" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="62.5" y1="62.5" x2="57" y2="57" stroke="#E6C200" stroke-width="2" stroke-linecap="round"/>
+            <line x1="123" y1="123" x2="117.5" y2="117.5" stroke="#E6C200" stroke-width="2" stroke-linecap="round"/>
+            <line x1="117.5" y1="62.5" x2="123" y2="57" stroke="#E6C200" stroke-width="2" stroke-linecap="round"/>
+            <line x1="57" y1="123" x2="62.5" y2="117.5" stroke="#E6C200" stroke-width="2" stroke-linecap="round"/>
             <!-- Small solar panel grid (decorative) -->
             <rect x="134" y="124" width="32" height="22" rx="3" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.2"/>
             <line x1="144" y1="124" x2="144" y2="146" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
@@ -424,9 +424,9 @@
             <line x1="134" y1="132" x2="166" y2="132" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
             <line x1="134" y1="139" x2="166" y2="139" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
             <!-- Orbit dots -->
-            <circle cx="90" cy="26" r="3" fill="#d4a017" opacity=".7"/>
-            <circle cx="154" cy="90" r="3" fill="#d4a017" opacity=".5"/>
-            <circle cx="26" cy="90" r="3" fill="#d4a017" opacity=".4"/>
+            <circle cx="90" cy="26" r="3" fill="#F4D000" opacity=".7"/>
+            <circle cx="154" cy="90" r="3" fill="#F4D000" opacity=".5"/>
+            <circle cx="26" cy="90" r="3" fill="#F4D000" opacity=".4"/>
         </svg>
     </div>
 </section>
@@ -444,7 +444,7 @@
         {{-- 1. Solar Quotation --}}
         <a href="{{ route('customer.quotation') }}" class="ch-action-card">
             <div class="ch-action-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2" aria-hidden="true">
                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                 </svg>
             </div>
@@ -459,7 +459,7 @@
         {{-- 2. Site Inspection --}}
         <a href="{{ route('customer.inspection') }}" class="ch-action-card">
             <div class="ch-action-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2" aria-hidden="true">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                     <circle cx="12" cy="10" r="3"/>
                 </svg>
@@ -475,7 +475,7 @@
         {{-- 3. Inspection-Based Quotation --}}
         <a href="{{ route('customer.quotation.index') }}" class="ch-action-card">
             <div class="ch-action-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2" aria-hidden="true">
                     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                     <polyline points="14 2 14 8 20 8"/>
                     <line x1="16" y1="13" x2="8" y2="13"/>
@@ -494,7 +494,7 @@
         {{-- 4. Job Tracking --}}
         <a href="{{ route('customer.tracking') }}" class="ch-action-card">
             <div class="ch-action-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2" aria-hidden="true">
                     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                 </svg>
             </div>
@@ -509,7 +509,7 @@
         {{-- 5. My Dashboard --}}
         <a href="{{ route('dashboard') }}" class="ch-action-card">
             <div class="ch-action-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2" aria-hidden="true">
                     <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
                     <circle cx="12" cy="7" r="4"/>
                 </svg>
@@ -525,7 +525,7 @@
         {{-- 6. My Feedback --}}
         <a href="{{ route('customer.testimonies') }}" class="ch-action-card">
             <div class="ch-action-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2" aria-hidden="true">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                 </svg>
             </div>
@@ -554,7 +554,7 @@
         <div class="ch-act-card">
             <div class="ch-act-card-header">
                 <div class="ch-act-card-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2" aria-hidden="true">
                         <line x1="12" y1="1" x2="12" y2="23"/>
                         <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
                     </svg>
@@ -567,7 +567,7 @@
             <div class="ch-act-card-body">
                 <div id="ch-qt-loading" class="ch-act-loading">Loading quotations&hellip;</div>
                 <div id="ch-qt-list"></div>
-                <div id="ch-qt-empty" class="ch-act-empty">No quotations yet. <a href="{{ route('customer.quotation.create') }}" style="color:#d4a017;font-weight:700;">Generate one now.</a></div>
+                <div id="ch-qt-empty" class="ch-act-empty">No quotations yet. <a href="{{ route('customer.quotation.create') }}" style="color:#F4D000;font-weight:700;">Generate one now.</a></div>
                 <a href="{{ route('customer.quotation.index') }}" class="ch-act-view-link">
                     View all quotations
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -579,7 +579,7 @@
         <div class="ch-act-card">
             <div class="ch-act-card-header">
                 <div class="ch-act-card-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2" aria-hidden="true">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                         <line x1="16" y1="2" x2="16" y2="6"/>
                         <line x1="8" y1="2" x2="8" y2="6"/>
@@ -755,7 +755,7 @@
             });
         } catch (e) {
             var el = document.getElementById('ch-qt-loading');
-            if (el) { el.textContent = 'Could not load quotations.'; el.style.color = '#94a3b8'; }
+            if (el) { el.textContent = 'Could not load quotations.'; el.style.color = '#7F92A3'; }
         }
     })();
 
@@ -791,7 +791,7 @@
             });
         } catch (e) {
             var el = document.getElementById('ch-insp-loading');
-            if (el) { el.textContent = 'Could not load service requests.'; el.style.color = '#94a3b8'; }
+            if (el) { el.textContent = 'Could not load service requests.'; el.style.color = '#7F92A3'; }
         }
     })();
 

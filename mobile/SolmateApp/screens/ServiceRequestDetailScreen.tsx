@@ -25,6 +25,7 @@ import {
   formatServiceRequestStatus,
   getServiceRequestStatusColors,
 } from '../src/utils/technicianRequests';
+import {getSolmateStatusColors, solmateColors} from '../src/theme/colors';
 
 function formatDate(value?: string | null, fallback = 'Flexible') {
   if (!value) {
@@ -474,10 +475,7 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
     ? 'Pending Admin Review'
     : formatServiceRequestStatus(serviceRequest.status);
   const displayStatusColors = pendingAdminReview
-    ? {
-        backgroundColor: '#fef3c7',
-        textColor: '#92400e',
-      }
+    ? getSolmateStatusColors('pending')
     : statusColors;
   const displayType =
     mode === 'customer' && customerRequestCategory === 'maintenance'
@@ -654,12 +652,12 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
 }
 
 /* ── design tokens ── */
-const NAVY = '#1a2f5e';
-const GOLD = '#e8a800';
-const BG   = '#edf2fb';
-const CARD = '#ffffff';
-const MUTED = '#8a9ab5';
-const DIVIDER = '#e4eaf5';
+const NAVY = solmateColors.navy;
+const GOLD = solmateColors.primary;
+const BG = solmateColors.background;
+const CARD = solmateColors.white;
+const MUTED = solmateColors.mutedSoft;
+const DIVIDER = solmateColors.border;
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -725,7 +723,7 @@ const styles = StyleSheet.create({
     borderColor: DIVIDER,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#8a9bbd',
+    shadowColor: solmateColors.shadow,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.08,
     shadowRadius: 8,

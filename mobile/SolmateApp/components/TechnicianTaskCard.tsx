@@ -72,7 +72,7 @@ export default function TechnicianTaskCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
+    borderColor: '#DDE7EE',
     borderRadius: 22,
     borderWidth: 1,
     marginBottom: 14,
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     paddingRight: 14,
   },
   eyebrow: {
-    color: '#64748b',
+    color: '#5E7288',
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.4,
@@ -123,14 +123,14 @@ const styles = StyleSheet.create({
   },
   detailsCard: {
     backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+    borderColor: '#DDE7EE',
     borderRadius: 16,
     borderWidth: 1,
     marginBottom: 14,
     padding: 14,
   },
   detailsLabel: {
-    color: '#475569',
+    color: '#5E7288',
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 6,
@@ -146,13 +146,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   metaCard: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#EAF9FD',
     borderRadius: 16,
     flex: 1,
     padding: 14,
   },
   metaLabel: {
-    color: '#64748b',
+    color: '#5E7288',
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 6,
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   footer: {
-    borderTopColor: '#e2e8f0',
+    borderTopColor: '#DDE7EE',
     borderTopWidth: 1,
     marginTop: 14,
     paddingTop: 12,

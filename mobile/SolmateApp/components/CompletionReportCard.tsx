@@ -4,15 +4,12 @@ import {StyleSheet, Text, View} from 'react-native';
 import AppButton from './AppButton';
 import AppInput from './AppInput';
 import {CompletionReport, CompletionReportPayload} from '../src/services/completionReportApi';
+import {getSolmateStatusColors, solmateColors} from '../src/theme/colors';
 
-const NAVY = '#1a2f5e';
-const GOLD = '#e8a800';
-const MUTED = '#64748b';
-const SOFT = '#eef4ff';
-const SUCCESS_BG = '#dcfce7';
-const SUCCESS_TEXT = '#166534';
-const WARNING_BG = '#fef3c7';
-const WARNING_TEXT = '#92400e';
+const NAVY = solmateColors.navy;
+const GOLD = solmateColors.primary;
+const MUTED = solmateColors.muted;
+const SOFT = solmateColors.backgroundSoft;
 
 function formatDateTime(value?: string | null) {
   if (!value) {
@@ -36,17 +33,19 @@ function formatDateTime(value?: string | null) {
 
 function statusMeta(status?: string | null) {
   if ((status || '').toLowerCase() === 'approved') {
+    const approvedColors = getSolmateStatusColors('approved');
     return {
       label: 'Approved',
-      backgroundColor: SUCCESS_BG,
-      textColor: SUCCESS_TEXT,
+      backgroundColor: approvedColors.backgroundColor,
+      textColor: approvedColors.textColor,
     };
   }
 
+  const pendingColors = getSolmateStatusColors('pending');
   return {
     label: 'Awaiting admin approval',
-    backgroundColor: WARNING_BG,
-    textColor: WARNING_TEXT,
+    backgroundColor: pendingColors.backgroundColor,
+    textColor: pendingColors.textColor,
   };
 }
 
@@ -214,11 +213,13 @@ export default function CompletionReportCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#ffffff',
+    backgroundColor: solmateColors.white,
+    borderColor: solmateColors.border,
+    borderWidth: 1,
     borderRadius: 20,
     marginBottom: 16,
     padding: 18,
-    shadowColor: '#8a9bbd',
+    shadowColor: solmateColors.shadow,
     shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -269,13 +270,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   errorText: {
-    color: '#b91c1c',
+    color: solmateColors.danger,
     fontSize: 13,
     marginTop: 4,
   },
   metaRow: {
     alignItems: 'center',
-    borderTopColor: '#e2e8f0',
+    borderTopColor: solmateColors.border,
     borderTopWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -307,7 +308,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   readOnlyText: {
-    color: '#334155',
+    color: solmateColors.text,
     fontSize: 14,
     lineHeight: 22,
   },

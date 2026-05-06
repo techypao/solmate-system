@@ -11,14 +11,14 @@
             gap: 16px;
             flex-wrap: wrap;
             padding: 18px;
-            border: 1px solid #dbe7f3;
+            border: 1px solid #DDE7EE;
             border-radius: 16px;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%);
             box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
         }
 
         .notification-summary-label {
-            color: #52606d;
+            color: #5E7288;
             font-size: 12px;
             font-weight: 700;
             letter-spacing: 0.04em;
@@ -27,7 +27,7 @@
         }
 
         .notification-summary-value {
-            color: #102a43;
+            color: #123A5A;
             font-size: 32px;
             font-weight: 700;
             line-height: 1;
@@ -43,9 +43,9 @@
             flex: 1;
             text-align: left;
             padding: 20px;
-            border: 1px solid #dbe7f3;
+            border: 1px solid #DDE7EE;
             border-radius: 18px;
-            background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+            background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%);
             color: inherit;
             cursor: pointer;
             appearance: none;
@@ -58,13 +58,13 @@
         }
 
         .notification-item:hover {
-            border-color: #9dc8f3;
+            border-color: #7DDFF2;
             box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
         }
 
         .notification-item.unread {
-            border-color: #9dc8f3;
-            background: #f8fbff;
+            border-color: #7DDFF2;
+            background: #F8FAFC;
         }
 
         .notification-item-header {
@@ -77,7 +77,7 @@
 
         .notification-item-title {
             margin: 0 0 4px;
-            color: #102a43;
+            color: #123A5A;
             font-size: 18px;
             font-weight: 700;
         }
@@ -112,7 +112,7 @@
         }
 
         .notification-state.unread {
-            color: #0f5f9c;
+            color: #20A7C9;
         }
 
         .notification-type {
@@ -125,7 +125,7 @@
             width: 10px;
             height: 10px;
             border-radius: 999px;
-            background: #0f5f9c;
+            background: #20A7C9;
             flex-shrink: 0;
             margin-top: 6px;
         }
@@ -167,14 +167,14 @@
         .notification-empty-state {
             text-align: center;
             padding: 28px;
-            border: 1px solid #dbe7f3;
+            border: 1px solid #DDE7EE;
             border-radius: 18px;
             background: #fbfcfe;
         }
 
         .notification-empty-state strong {
             display: block;
-            color: #102a43;
+            color: #123A5A;
             font-size: 18px;
             margin-bottom: 8px;
         }

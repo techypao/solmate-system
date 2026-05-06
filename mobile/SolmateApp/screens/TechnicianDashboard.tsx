@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   heroSubtitle: {
-    color: '#475569',
+    color: '#5E7288',
     fontSize: 15,
     lineHeight: 22,
   },
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   statusBadgeLabel: {
-    color: '#64748b',
+    color: '#5E7288',
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 2,
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   identityLabel: {
-    color: '#64748b',
+    color: '#5E7288',
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 4,
@@ -290,20 +290,20 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   sectionSubtitle: {
-    color: '#64748b',
+    color: '#5E7288',
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 16,
   },
   summaryHighlight: {
     backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+    borderColor: '#DDE7EE',
     borderRadius: 22,
     borderWidth: 1,
     padding: 18,
   },
   summaryHighlightLabel: {
-    color: '#64748b',
+    color: '#5E7288',
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 8,
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   summaryHighlightText: {
-    color: '#475569',
+    color: '#5E7288',
     fontSize: 14,
     lineHeight: 20,
   },
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0fdf4',
   },
   statLabel: {
-    color: '#64748b',
+    color: '#5E7288',
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 8,
@@ -348,14 +348,14 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   statNote: {
-    color: '#475569',
+    color: '#5E7288',
     fontSize: 14,
     lineHeight: 20,
   },
   scheduleRow: {
     alignItems: 'center',
     backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+    borderColor: '#DDE7EE',
     borderRadius: 20,
     borderWidth: 1,
     flexDirection: 'row',
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   scheduleTimePill: {
-    backgroundColor: '#dbeafe',
+    backgroundColor: '#EAF9FD',
     borderRadius: 16,
     marginRight: 14,
     paddingHorizontal: 12,
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   scheduleDetail: {
-    color: '#64748b',
+    color: '#5E7288',
     fontSize: 14,
     lineHeight: 20,
   },
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+    borderColor: '#DDE7EE',
     borderRadius: 20,
     borderWidth: 1,
     marginBottom: 12,
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   actionCardText: {
-    color: '#64748b',
+    color: '#5E7288',
     fontSize: 14,
     lineHeight: 20,
   },

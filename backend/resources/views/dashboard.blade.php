@@ -11,7 +11,7 @@
 
     /* Profile Banner */
     .dash-banner {
-        background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 50%, #c7d2fe 100%);
+        background: linear-gradient(135deg, #e0f2fe 0%, #EAF9FD 50%, #c7d2fe 100%);
         border-radius: 16px;
         padding: 36px 40px;
         display: flex;
@@ -47,8 +47,8 @@
         width: 88px;
         height: 88px;
         border-radius: 50%;
-        background: #102a43;
-        border: 4px solid #d4a017;
+        background: #123A5A;
+        border: 4px solid #F4D000;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -81,12 +81,12 @@
     .dash-banner-name {
         font-size: 26px;
         font-weight: 700;
-        color: #102a43;
+        color: #123A5A;
         margin: 0 0 4px;
     }
     .dash-banner-role {
         display: inline-block;
-        background: #d4a017;
+        background: #F4D000;
         color: #fff;
         font-size: 11px;
         font-weight: 700;
@@ -109,13 +109,13 @@
         font-size: 13px;
         color: #334155;
     }
-    .dash-banner-meta-item svg { color: #64748b; }
+    .dash-banner-meta-item svg { color: #5E7288; }
 
     /* Tab Nav */
     .dash-tabs {
         display: flex;
         gap: 0;
-        border-bottom: 2px solid #e2e8f0;
+        border-bottom: 2px solid #DDE7EE;
         margin-bottom: 28px;
     }
     .dash-tab-btn {
@@ -126,13 +126,13 @@
         padding: 14px 22px;
         font-size: 14px;
         font-weight: 600;
-        color: #64748b;
+        color: #5E7288;
         cursor: pointer;
         transition: color .2s, border-color .2s;
         white-space: nowrap;
     }
-    .dash-tab-btn:hover { color: #102a43; }
-    .dash-tab-btn.active { color: #d4a017; border-bottom-color: #d4a017; }
+    .dash-tab-btn:hover { color: #123A5A; }
+    .dash-tab-btn.active { color: #F4D000; border-bottom-color: #F4D000; }
 
     /* Tab Panels */
     .dash-tab-panel { display: none; }
@@ -142,10 +142,10 @@
     .dash-section-title {
         font-size: 16px;
         font-weight: 700;
-        color: #102a43;
+        color: #123A5A;
         margin: 0 0 16px;
         padding-bottom: 10px;
-        border-bottom: 1px solid #e2e8f0;
+        border-bottom: 1px solid #DDE7EE;
     }
 
     /* Profile Info rows */
@@ -164,9 +164,9 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: .6px;
-        color: #94a3b8;
+        color: #7F92A3;
     }
-    .dash-info-value { font-size: 15px; color: #1e293b; font-weight: 500; }
+    .dash-info-value { font-size: 15px; color: #0F2F4A; font-weight: 500; }
 
     /* Action row */
     .dash-action-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
@@ -174,19 +174,19 @@
     /* Forms */
     .dash-form-card {
         background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 12px;
         padding: 24px;
         margin-top: 28px;
     }
-    .dash-form-title { font-size: 15px; font-weight: 700; color: #102a43; margin: 0 0 16px; }
+    .dash-form-title { font-size: 15px; font-weight: 700; color: #123A5A; margin: 0 0 16px; }
     .dash-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
     .dash-form-row.single { grid-template-columns: 1fr; }
     .dash-form-group label {
         display: block;
         font-size: 12px;
         font-weight: 600;
-        color: #64748b;
+        color: #5E7288;
         margin-bottom: 6px;
         text-transform: uppercase;
         letter-spacing: .5px;
@@ -194,17 +194,17 @@
     .dash-form-group input {
         width: 100%;
         padding: 12px 16px;
-        border: 1.5px solid #cbd5e1;
+        border: 1.5px solid #DDE7EE;
         border-radius: 10px;
         font-size: 14px;
-        color: #1e293b;
+        color: #0F2F4A;
         background: #fff;
         box-sizing: border-box;
         transition: border-color .2s;
     }
     .dash-form-group input:focus {
         outline: none;
-        border-color: #d4a017;
+        border-color: #F4D000;
         box-shadow: 0 0 0 3px rgba(212,160,23,.1);
     }
     .dash-form-group .field-error { color: #dc2626; font-size: 12px; margin-top: 4px; }
@@ -212,10 +212,10 @@
         width: 100%;
         min-height: 47px;
         padding: 12px 16px;
-        border: 1.5px solid #e2e8f0;
+        border: 1.5px solid #DDE7EE;
         border-radius: 10px;
         font-size: 14px;
-        color: #1e293b;
+        color: #0F2F4A;
         background: #f8fafc;
         display: flex;
         align-items: center;
@@ -225,7 +225,7 @@
         margin: 8px 0 0;
         font-size: 12px;
         line-height: 1.5;
-        color: #64748b;
+        color: #5E7288;
     }
     .dash-profile-picture-panel {
         display: grid;
@@ -234,7 +234,7 @@
         align-items: center;
         padding: 18px;
         margin-bottom: 18px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 12px;
         background: #ffffff;
     }
@@ -242,8 +242,8 @@
         width: 88px;
         height: 88px;
         border-radius: 50%;
-        border: 3px solid #d4a017;
-        background: #102a43;
+        border: 3px solid #F4D000;
+        background: #123A5A;
         color: #ffffff;
         font-size: 30px;
         font-weight: 700;
@@ -267,13 +267,13 @@
         margin: 0;
         font-size: 14px;
         font-weight: 700;
-        color: #102a43;
+        color: #123A5A;
     }
     .dash-profile-picture-copy {
         margin: 0;
         font-size: 13px;
         line-height: 1.6;
-        color: #52606d;
+        color: #5E7288;
     }
 
     /* Buttons */
@@ -287,11 +287,11 @@
         transition: all .2s;
         line-height: 1;
     }
-    .dash-btn-gold { background: #d4a017; color: #fff; }
-    .dash-btn-gold:hover { background: #b8880f; }
-    .dash-btn-outline { background: transparent; border: 1.5px solid #d4a017; color: #d4a017; }
+    .dash-btn-gold { background: #F4D000; color: #fff; }
+    .dash-btn-gold:hover { background: #E6C200; }
+    .dash-btn-outline { background: transparent; border: 1.5px solid #F4D000; color: #F4D000; }
     .dash-btn-outline:hover { background: rgba(212,160,23,.08); }
-    .dash-btn-ghost { background: transparent; border: 1.5px solid #cbd5e1; color: #475569; }
+    .dash-btn-ghost { background: transparent; border: 1.5px solid #DDE7EE; color: #5E7288; }
     .dash-btn-ghost:hover { background: #f1f5f9; }
     .dash-btn:disabled { opacity: .6; cursor: not-allowed; }
 
@@ -303,18 +303,18 @@
         font-size: 13px;
         font-weight: 600;
         background: #f1f5f9;
-        color: #475569;
+        color: #5E7288;
         border: 1.5px solid transparent;
         cursor: pointer;
         transition: all .15s;
     }
-    .dash-chip:hover, .dash-chip.active { background: #102a43; color: #fff; border-color: #102a43; }
-    .dash-chip.chip-gold.active { background: #d4a017; border-color: #d4a017; color: #fff; }
+    .dash-chip:hover, .dash-chip.active { background: #123A5A; color: #fff; border-color: #123A5A; }
+    .dash-chip.chip-gold.active { background: #F4D000; border-color: #F4D000; color: #fff; }
 
     /* Quotation Cards */
     .dash-quotation-card {
         background: #fff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 16px;
         padding: 20px 24px;
         margin-bottom: 14px;
@@ -328,8 +328,8 @@
         gap: 12px;
         margin-bottom: 14px;
     }
-    .dash-q-id { font-size: 15px; font-weight: 700; color: #102a43; }
-    .dash-q-meta { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+    .dash-q-id { font-size: 15px; font-weight: 700; color: #123A5A; }
+    .dash-q-meta { font-size: 12px; color: #7F92A3; margin-top: 2px; }
     .dash-q-badges { display: flex; gap: 6px; flex-wrap: wrap; }
     .dash-q-grid {
         display: grid;
@@ -340,20 +340,20 @@
     .dash-q-stat { background: #f8fafc; border-radius: 8px; padding: 10px 12px; }
     .dash-q-stat-label {
         font-size: 11px;
-        color: #94a3b8;
+        color: #7F92A3;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: .5px;
         margin-bottom: 3px;
     }
-    .dash-q-stat-value { font-size: 16px; font-weight: 700; color: #102a43; }
+    .dash-q-stat-value { font-size: 16px; font-weight: 700; color: #123A5A; }
     .dash-q-actions { display: flex; gap: 8px; }
 
     /* Service / Inspection Request Cards */
     .dash-sr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
     .dash-sr-card {
         background: #fff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 16px;
         padding: 18px 20px;
         display: flex;
@@ -364,11 +364,11 @@
     .dash-sr-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.07); }
     .dash-sr-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
     .dash-sr-badges { display: flex; gap: 6px; flex-wrap: wrap; }
-    .dash-sr-id { font-size: 14px; font-weight: 700; color: #102a43; }
-    .dash-sr-date { font-size: 12px; color: #94a3b8; }
+    .dash-sr-id { font-size: 14px; font-weight: 700; color: #123A5A; }
+    .dash-sr-date { font-size: 12px; color: #7F92A3; }
     .dash-sr-notes {
         font-size: 13px;
-        color: #475569;
+        color: #5E7288;
         background: #f8fafc;
         border-radius: 8px;
         padding: 8px 10px;
@@ -386,20 +386,20 @@
         letter-spacing: .5px;
     }
     .dash-badge-type-inspection { background: #f3e8ff; color: #7c3aed; }
-    .dash-badge-type-installation { background: #dbeafe; color: #1d4ed8; }
-    .dash-badge-type-maintenance { background: #fef3c7; color: #b45309; }
-    .dash-badge-type-initial { background: #e0f2fe; color: #0284c7; }
+    .dash-badge-type-installation { background: #EAF9FD; color: #1d4ed8; }
+    .dash-badge-type-maintenance { background: #FFF7CC; color: #b45309; }
+    .dash-badge-type-initial { background: #e0f2fe; color: #20A7C9; }
     .dash-badge-type-final { background: #dcfce7; color: #15803d; }
-    .dash-badge-status-pending { background: #fef9c3; color: #a16207; }
+    .dash-badge-status-pending { background: #FFF7CC; color: #a16207; }
     .dash-badge-status-confirmed,
     .dash-badge-status-approved { background: #dcfce7; color: #15803d; }
     .dash-badge-status-completed { background: #d1fae5; color: #065f46; }
     .dash-badge-status-in_progress,
-    .dash-badge-status-in-progress { background: #dbeafe; color: #1d4ed8; }
+    .dash-badge-status-in-progress { background: #EAF9FD; color: #1d4ed8; }
     .dash-badge-status-cancelled,
     .dash-badge-status-rejected { background: #fee2e2; color: #dc2626; }
     .dash-badge-status-for_review { background: #fce7f3; color: #be185d; }
-    .dash-badge-status-default { background: #f1f5f9; color: #475569; }
+    .dash-badge-status-default { background: #f1f5f9; color: #5E7288; }
 
     /* Message boxes */
     .dash-msg {
@@ -414,12 +414,12 @@
     .dash-msg-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
 
     /* Empty state */
-    .dash-empty { text-align: center; padding: 48px 24px; color: #94a3b8; }
+    .dash-empty { text-align: center; padding: 48px 24px; color: #7F92A3; }
     .dash-empty-icon { width: 48px; height: 48px; margin: 0 auto 12px; opacity: .5; }
     .dash-empty p { font-size: 14px; margin: 0; }
 
     /* Loading */
-    .dash-loading { text-align: center; padding: 32px; color: #94a3b8; font-size: 14px; display: none; }
+    .dash-loading { text-align: center; padding: 32px; color: #7F92A3; font-size: 14px; display: none; }
     .dash-loading.show { display: block; }
 
     /* New Quotation Form */
@@ -439,8 +439,8 @@
         gap: 24px;
     }
     .adm-hero {
-        background: linear-gradient(135deg, #f8fbff 0%, #eef6ff 58%, #e3efff 100%);
-        border: 1px solid #dbe7f3;
+        background: linear-gradient(135deg, #F8FAFC 0%, #EAF9FD 58%, #EAF9FD 100%);
+        border: 1px solid #DDE7EE;
         border-radius: 22px;
         padding: 34px 36px;
         position: relative;
@@ -459,7 +459,7 @@
     .adm-hero > * { position: relative; z-index: 1; }
     .adm-eyebrow {
         margin: 0 0 8px;
-        color: #d4a017;
+        color: #F4D000;
         font-size: 12px;
         font-weight: 800;
         letter-spacing: .12em;
@@ -467,7 +467,7 @@
     }
     .adm-title {
         margin: 0 0 10px;
-        color: #102a43;
+        color: #123A5A;
         font-size: 31px;
         line-height: 1.15;
         font-weight: 800;
@@ -478,7 +478,7 @@
         max-width: 740px;
         font-size: 15px;
         line-height: 1.7;
-        color: #52606d;
+        color: #5E7288;
     }
     .adm-quick-grid {
         display: grid;
@@ -489,8 +489,8 @@
         display: block;
         padding: 20px;
         border-radius: 18px;
-        border: 1px solid #dbe7f3;
-        background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+        border: 1px solid #DDE7EE;
+        background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%);
         box-shadow: 0 10px 24px rgba(15,23,42,.05);
         transition: transform .16s, box-shadow .16s, border-color .16s;
         text-decoration: none;
@@ -505,7 +505,7 @@
         width: 44px;
         height: 44px;
         border-radius: 12px;
-        background: linear-gradient(135deg, #102a43, #1e4068);
+        background: linear-gradient(135deg, #123A5A, #20A7C9);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -513,13 +513,13 @@
     }
     .adm-link-title {
         margin: 0 0 6px;
-        color: #102a43;
+        color: #123A5A;
         font-size: 16px;
         font-weight: 800;
     }
     .adm-link-copy {
         margin: 0;
-        color: #52606d;
+        color: #5E7288;
         font-size: 13px;
         line-height: 1.6;
     }
@@ -771,7 +771,7 @@
         <div id="q-msg" class="dash-msg"></div>
         <div id="q-list"></div>
         <div id="q-empty" class="dash-empty" style="display:none;">
-            <svg class="dash-empty-icon" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><path d="M9 12h6M9 16h6M9 8h3M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"/></svg>
+            <svg class="dash-empty-icon" viewBox="0 0 24 24" fill="none" stroke="#7F92A3" stroke-width="1.5"><path d="M9 12h6M9 16h6M9 8h3M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"/></svg>
             <p>No quotations found. Generate your first one above.</p>
         </div>
     </div>{{-- end tab-quotations --}}
@@ -784,14 +784,14 @@
         <h2 class="dash-section-title">Service Requests</h2>
         <div id="sr-list" class="dash-sr-grid"></div>
         <div id="sr-empty" class="dash-empty" style="display:none;">
-            <svg class="dash-empty-icon" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            <svg class="dash-empty-icon" viewBox="0 0 24 24" fill="none" stroke="#7F92A3" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
             <p>No service requests yet.</p>
         </div>
 
         <h2 class="dash-section-title" style="margin-top:32px;">Inspection Requests</h2>
         <div id="ir-list" class="dash-sr-grid"></div>
         <div id="ir-empty" class="dash-empty" style="display:none;">
-            <svg class="dash-empty-icon" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            <svg class="dash-empty-icon" viewBox="0 0 24 24" fill="none" stroke="#7F92A3" stroke-width="1.5"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
             <p>No inspection requests yet.</p>
         </div>
     </div>{{-- end tab-services --}}
@@ -823,7 +823,7 @@
     .adm2-hero-title {
         font-size: 30px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
         margin: 0 0 8px;
         letter-spacing: -0.03em;
     }
@@ -856,7 +856,7 @@
     .adm2-stat-label {
         font-size: 11px;
         font-weight: 700;
-        color: #64748b;
+        color: #5E7288;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         margin-bottom: 10px;
@@ -865,7 +865,7 @@
     .adm2-stat-value {
         font-size: 28px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
         line-height: 1;
         margin-bottom: 10px;
     }
@@ -877,7 +877,7 @@
     }
     .adm2-stat-pair-label {
         font-size: 10px;
-        color: #94a3b8;
+        color: #7F92A3;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.04em;
@@ -886,7 +886,7 @@
     .adm2-stat-pair-value {
         font-size: 24px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
         line-height: 1;
     }
     .adm2-stat-link {
@@ -914,12 +914,12 @@
     .adm2-panel-title {
         font-size: 15px;
         font-weight: 700;
-        color: #102a43;
+        color: #123A5A;
         margin: 0 0 16px;
     }
     .adm2-panel-copy {
         margin: -8px 0 0;
-        color: #52606d;
+        color: #5E7288;
         font-size: 13px;
         line-height: 1.6;
     }
@@ -933,9 +933,9 @@
         width: 100%;
         padding: 11px 12px;
         border-radius: 9px;
-        border: 1.5px solid #dbe7f3;
+        border: 1.5px solid #DDE7EE;
         background: #f4f9ff;
-        color: #102a43;
+        color: #123A5A;
         font-size: 13px;
         font-weight: 600;
         text-decoration: none;
@@ -947,7 +947,7 @@
         background: #e8f3fb;
         border-color: #b0ccdf;
         text-decoration: none;
-        color: #102a43;
+        color: #123A5A;
     }
     .adm2-cta-btn {
         display: block;
@@ -956,7 +956,7 @@
         margin-top: 14px;
         border-radius: 9px;
         border: none;
-        background: #d4a017;
+        background: #F4D000;
         color: #ffffff;
         font-size: 14px;
         font-weight: 700;
@@ -966,7 +966,7 @@
         transition: background 0.15s;
         box-shadow: 0 5px 16px rgba(212,160,23,0.28);
     }
-    .adm2-cta-btn:hover { background: #b8880f; text-decoration: none; color: #fff; }
+    .adm2-cta-btn:hover { background: #E6C200; text-decoration: none; color: #fff; }
 
     /* Monthly report */
     .adm2-monthly-card {
@@ -987,8 +987,8 @@
         min-height: 34px;
         padding: 0 12px;
         border-radius: 999px;
-        background: #eef6ff;
-        color: #173b63;
+        background: #EAF9FD;
+        color: #20A7C9;
         font-size: 12px;
         font-weight: 800;
         white-space: nowrap;
@@ -1000,20 +1000,20 @@
     }
     .adm2-monthly-metric {
         padding: 15px 16px;
-        border: 1px solid #dbe7f3;
+        border: 1px solid #DDE7EE;
         border-radius: 14px;
-        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%);
     }
     .adm2-monthly-label {
         margin-bottom: 8px;
-        color: #64748b;
+        color: #5E7288;
         font-size: 11px;
         font-weight: 800;
         letter-spacing: 0.05em;
         text-transform: uppercase;
     }
     .adm2-monthly-value {
-        color: #102a43;
+        color: #123A5A;
         font-size: 28px;
         line-height: 1;
         font-weight: 800;
@@ -1021,10 +1021,10 @@
     }
     .adm2-monthly-empty {
         padding: 20px;
-        border: 1px dashed #d5e2ef;
+        border: 1px dashed #DDE7EE;
         border-radius: 14px;
-        background: #fbfdff;
-        color: #64748b;
+        background: #F8FAFC;
+        color: #5E7288;
         font-size: 13px;
         line-height: 1.7;
         text-align: center;
@@ -1046,7 +1046,7 @@
         font-weight: 700;
         letter-spacing: 0.05em;
         text-transform: uppercase;
-        color: #64748b;
+        color: #5E7288;
         padding: 7px 9px;
         border-bottom: 1px solid #e8eff7;
         white-space: nowrap;
@@ -1060,7 +1060,7 @@
     }
     .adm2-table tbody tr:last-child td { border-bottom: none; }
     .adm2-table tbody tr:hover td { background: #f9fcff; }
-    .adm2-table-id { font-weight: 700; color: #102a43; }
+    .adm2-table-id { font-weight: 700; color: #123A5A; }
 
     /* Row action buttons */
     .adm2-row-btn {
@@ -1074,8 +1074,8 @@
         border: 1px solid transparent;
         transition: background 0.12s;
     }
-    .adm2-row-btn-view    { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
-    .adm2-row-btn-view:hover    { background: #dbeafe; text-decoration: none; }
+    .adm2-row-btn-view    { background: #EAF9FD; color: #1d4ed8; border-color: #bfdbfe; }
+    .adm2-row-btn-view:hover    { background: #EAF9FD; text-decoration: none; }
     .adm2-row-btn-approve { background: #dcfce7; color: #15803d; border-color: #bbf7d0; }
     .adm2-row-btn-approve:hover { background: #bbf7d0; text-decoration: none; }
 
@@ -1088,12 +1088,12 @@
         font-weight: 700;
         white-space: nowrap;
     }
-    .adm2-badge-pending      { background: #fef9c3; color: #a16207; }
+    .adm2-badge-pending      { background: #FFF7CC; color: #a16207; }
     .adm2-badge-approved     { background: #dcfce7; color: #15803d; }
-    .adm2-badge-in-progress  { background: #dbeafe; color: #1d4ed8; }
+    .adm2-badge-in-progress  { background: #EAF9FD; color: #1d4ed8; }
     .adm2-badge-completed    { background: #d1fae5; color: #065f46; }
     .adm2-badge-cancelled    { background: #fee2e2; color: #dc2626; }
-    .adm2-badge-default      { background: #f1f5f9; color: #475569; }
+    .adm2-badge-default      { background: #f1f5f9; color: #5E7288; }
 
     /* Panel footer (view all link) */
     .adm2-panel-footer {
@@ -1109,9 +1109,9 @@
         gap: 5px;
         padding: 6px 14px;
         border-radius: 7px;
-        border: 1.5px solid #d4e4f3;
+        border: 1.5px solid #DDE7EE;
         background: #f4f9ff;
-        color: #1e4068;
+        color: #20A7C9;
         font-size: 12px;
         font-weight: 600;
         text-decoration: none;
@@ -1122,7 +1122,7 @@
     /* Empty row */
     .adm2-empty-row td {
         text-align: center;
-        color: #94a3b8;
+        color: #7F92A3;
         font-style: italic;
         padding: 20px;
     }
@@ -1374,7 +1374,7 @@
     <div class="adm-quick-grid">
         <a class="adm-link-card" href="{{ route('quotations.item-builder') }}">
             <div class="adm-link-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f4c542" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E6C200" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             </div>
             <p class="adm-link-title">Quotation Item Builder</p>
             <p class="adm-link-copy">Open the existing quotation item builder to review and edit inspection-based quotation line items.</p>

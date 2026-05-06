@@ -6,6 +6,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import {solmateColors} from '../src/theme/colors';
 
 type AppCardProps = {
   title?: string;
@@ -24,12 +25,12 @@ export default function AppCard({title, children, style}: AppCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e5e7eb',
+    backgroundColor: solmateColors.white,
+    borderColor: solmateColors.border,
     borderRadius: 18,
     borderWidth: 1,
     padding: 20,
-    shadowColor: '#111827',
+    shadowColor: solmateColors.shadow,
     shadowOffset: {
       width: 0,
       height: 10,
@@ -39,7 +40,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   title: {
-    color: '#111827',
+    color: solmateColors.text,
     fontSize: 24,
     fontWeight: '700',
     marginBottom: 20,

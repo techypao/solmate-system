@@ -25,13 +25,14 @@ import {
 } from '../src/utils/passwordValidation';
 
 /* ── design tokens ── */
-const NAVY    = '#152a4a';
-const GOLD    = '#e8a800';
-const BG      = '#dde5f4';
+const NAVY    = '#123A5A';
+const GOLD    = '#F4D000';
+const BG      = '#F8FAFC';
 const CARD    = '#ffffff';
-const MUTED   = '#7b8699';
-const DIVIDER = '#e4eaf5';
+const MUTED   = '#5E7288';
+const DIVIDER = '#DDE7EE';
 const RED     = '#dc2626';
+const SOFT_YELLOW = '#FFF7CC';
 
 /* ── icons ── */
 function AvatarIcon() {
@@ -135,7 +136,7 @@ function BottomNav({active, onPress}: {active: Tab; onPress: (t: Tab) => void}) 
       {tabs.map(({key, label, Icon}) => {
         const isActive = active === key;
         return (
-          <Pressable key={key} style={nav.tab} onPress={() => onPress(key)}>
+          <Pressable key={key} style={[nav.tab, isActive && nav.tabActive]} onPress={() => onPress(key)}>
             <Icon active={isActive} />
             <Text style={[nav.label, isActive && nav.labelActive]}>{label}</Text>
           </Pressable>
@@ -477,12 +478,19 @@ const nav = StyleSheet.create({
     borderTopColor: DIVIDER,
     paddingBottom: 6,
     paddingTop: 8,
+    paddingHorizontal: 6,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 4,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  tabActive: {
+    backgroundColor: SOFT_YELLOW,
+    borderWidth: 1,
+    borderColor: 'rgba(244, 208, 0, 0.34)',
   },
   label: {
     fontSize: 11,
@@ -513,7 +521,7 @@ const nav = StyleSheet.create({
   listLine: {
     height: 2,
     width: 10,
-    backgroundColor: '#f2f4f8',
+    backgroundColor: CARD,
     borderRadius: 1,
   },
   gear: {
@@ -551,7 +559,7 @@ const nav = StyleSheet.create({
     borderBottomColor: NAVY,
   },
   activeLine: {
-    backgroundColor: '#f2f4f8',
+    backgroundColor: CARD,
   },
 });
 
@@ -575,6 +583,17 @@ const styles = StyleSheet.create({
   brandRow: {
     flexDirection: 'row',
     marginBottom: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 20,
+    backgroundColor: CARD,
+    borderWidth: 1,
+    borderColor: DIVIDER,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 8},
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    elevation: 3,
   },
   brandSol: {
     color: NAVY,
@@ -624,7 +643,9 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#dde5f4',
+    backgroundColor: '#EAF9FD',
+    borderWidth: 1,
+    borderColor: '#DDE7EE',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,

@@ -29,20 +29,20 @@
         font-weight: 700;
         letter-spacing: 1.2px;
         text-transform: uppercase;
-        color: #d4a017;
+        color: #F4D000;
         margin: 0 0 8px;
     }
     .trk-hero-title {
         font-size: 30px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
         margin: 0 0 10px;
         line-height: 1.2;
     }
-    .trk-hero-title span { color: #d4a017; }
+    .trk-hero-title span { color: #F4D000; }
     .trk-hero-sub {
         font-size: 15px;
-        color: #475569;
+        color: #5E7288;
         max-width: 540px;
         margin: 0;
         line-height: 1.6;
@@ -55,7 +55,7 @@
     /* ── Shared card base ── */
     .trk-panel {
         background: #fff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 18px;
         padding: 22px;
         box-shadow: 0 2px 12px rgba(0,0,0,.04);
@@ -74,7 +74,7 @@
         gap: 8px;
         padding: 6px;
         background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 999px;
         overflow-x: auto;
         max-width: 100%;
@@ -84,7 +84,7 @@
         appearance: none;
         border: 0;
         background: transparent;
-        color: #475569;
+        color: #5E7288;
         font-size: 14px;
         font-weight: 700;
         padding: 10px 18px;
@@ -94,11 +94,11 @@
         transition: background .2s ease, color .2s ease, box-shadow .2s ease;
     }
     .trk-tab-btn:hover {
-        color: #102a43;
+        color: #123A5A;
         background: rgba(255,255,255,.75);
     }
     .trk-tab-btn.active {
-        background: linear-gradient(135deg, #102a43, #1e4068);
+        background: linear-gradient(135deg, #123A5A, #20A7C9);
         color: #fff;
         box-shadow: 0 10px 24px rgba(16,42,67,.18);
     }
@@ -116,12 +116,12 @@
         font-weight: 800;
     }
     .trk-tab-btn:not(.active) .trk-tab-count {
-        background: #e2e8f0;
-        color: #475569;
+        background: #DDE7EE;
+        color: #5E7288;
     }
     .trk-panel-note {
         font-size: 13px;
-        color: #64748b;
+        color: #5E7288;
         margin: 0;
         line-height: 1.5;
     }
@@ -138,18 +138,18 @@
         font-weight: 800;
         letter-spacing: .9px;
         text-transform: uppercase;
-        color: #d4a017;
+        color: #F4D000;
         margin: 0 0 6px;
     }
     .trk-section-title {
         font-size: 22px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
         margin: 0 0 4px;
     }
     .trk-section-sub {
         font-size: 14px;
-        color: #64748b;
+        color: #5E7288;
         margin: 0;
         line-height: 1.6;
     }
@@ -160,7 +160,7 @@
         padding: 10px 14px;
         border-radius: 999px;
         background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         color: #334155;
         font-size: 13px;
         font-weight: 700;
@@ -168,7 +168,7 @@
     }
     .trk-card {
         background: #fff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 16px;
         overflow: hidden;
         box-shadow: 0 2px 12px rgba(0,0,0,.04);
@@ -186,7 +186,7 @@
         width: 40px;
         height: 40px;
         border-radius: 10px;
-        background: linear-gradient(135deg, #102a43, #1e4068);
+        background: linear-gradient(135deg, #123A5A, #20A7C9);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -195,12 +195,12 @@
     .trk-card-title {
         font-size: 16px;
         font-weight: 700;
-        color: #102a43;
+        color: #123A5A;
         margin: 0;
     }
     .trk-card-subtitle {
         font-size: 12px;
-        color: #94a3b8;
+        color: #7F92A3;
         margin: 2px 0 0;
     }
     .trk-card-body { padding: 24px; }
@@ -223,17 +223,17 @@
     .trk-req-id {
         font-size: 17px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
     }
     .trk-req-type {
         font-size: 13px;
         font-weight: 500;
-        color: #64748b;
+        color: #5E7288;
         margin-top: 2px;
     }
     .trk-req-date {
         font-size: 12px;
-        color: #94a3b8;
+        color: #7F92A3;
         margin-top: 2px;
     }
 
@@ -259,15 +259,15 @@
         opacity: .7;
         flex-shrink: 0;
     }
-    .trk-s-pending      { background: #fef9c3; color: #a16207; }
-    .trk-s-approved     { background: #dbeafe; color: #1d4ed8; }
-    .trk-s-scheduled    { background: #e0f2fe; color: #0284c7; }
+    .trk-s-pending      { background: #FFF7CC; color: #a16207; }
+    .trk-s-approved     { background: #EAF9FD; color: #1d4ed8; }
+    .trk-s-scheduled    { background: #e0f2fe; color: #20A7C9; }
     .trk-s-assigned     { background: #ede9fe; color: #6d28d9; }
-    .trk-s-in_progress  { background: #fef3c7; color: #d97706; }
+    .trk-s-in_progress  { background: #FFF7CC; color: #d97706; }
     .trk-s-completed    { background: #dcfce7; color: #15803d; }
     .trk-s-cancelled    { background: #fee2e2; color: #dc2626; }
     .trk-s-declined     { background: #ffe4e6; color: #be123c; }
-    .trk-s-default      { background: #f1f5f9; color: #475569; }
+    .trk-s-default      { background: #f1f5f9; color: #5E7288; }
 
     /* ── Progress stepper ── */
     .trk-stepper {
@@ -295,18 +295,18 @@
         left: calc(50% + 14px);
         right: calc(-50% + 14px);
         height: 2px;
-        background: #e2e8f0;
+        background: #DDE7EE;
         z-index: 0;
     }
     .trk-step.done:not(:last-child)::after  { background: #16a34a; }
-    .trk-step.active:not(:last-child)::after { background: #e2e8f0; }
+    .trk-step.active:not(:last-child)::after { background: #DDE7EE; }
     .trk-step.cancelled-step:not(:last-child)::after { background: #fca5a5; }
 
     .trk-step-circle {
         width: 28px;
         height: 28px;
         border-radius: 50%;
-        background: #e2e8f0;
+        background: #DDE7EE;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -316,13 +316,13 @@
         transition: background .2s;
     }
     .trk-step.done   .trk-step-circle { background: #16a34a; }
-    .trk-step.active .trk-step-circle { background: #d4a017; box-shadow: 0 0 0 4px rgba(212,160,23,.2); }
+    .trk-step.active .trk-step-circle { background: #F4D000; box-shadow: 0 0 0 4px rgba(212,160,23,.2); }
     .trk-step.cancelled-step .trk-step-circle { background: #ef4444; }
 
     .trk-step-label {
         font-size: 11px;
         font-weight: 600;
-        color: #94a3b8;
+        color: #7F92A3;
         text-align: center;
         margin-top: 6px;
         line-height: 1.3;
@@ -331,7 +331,7 @@
     .trk-step-meta {
         margin-top: 4px;
         font-size: 11px;
-        color: #94a3b8;
+        color: #7F92A3;
         text-align: center;
         line-height: 1.45;
         max-width: 120px;
@@ -350,13 +350,13 @@
         width: 52px;
         height: 52px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #102a43, #1e4068);
+        background: linear-gradient(135deg, #123A5A, #20A7C9);
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 20px;
         font-weight: 800;
-        color: #d4a017;
+        color: #F4D000;
         flex-shrink: 0;
         text-transform: uppercase;
         letter-spacing: -1px;
@@ -364,13 +364,13 @@
     .trk-tech-name {
         font-size: 16px;
         font-weight: 700;
-        color: #102a43;
+        color: #123A5A;
         margin: 0 0 2px;
     }
     .trk-tech-role {
         font-size: 12px;
         font-weight: 600;
-        color: #d4a017;
+        color: #F4D000;
         text-transform: uppercase;
         letter-spacing: .5px;
         margin: 0 0 6px;
@@ -385,9 +385,9 @@
         align-items: center;
         gap: 5px;
         font-size: 13px;
-        color: #475569;
+        color: #5E7288;
     }
-    .trk-tech-meta-item svg { flex-shrink: 0; color: #94a3b8; }
+    .trk-tech-meta-item svg { flex-shrink: 0; color: #7F92A3; }
 
     .trk-unassigned {
         display: flex;
@@ -397,13 +397,13 @@
         background: #f8fafc;
         border-radius: 10px;
         font-size: 13px;
-        color: #94a3b8;
+        color: #7F92A3;
     }
     .trk-unassigned-icon {
         width: 38px;
         height: 38px;
         border-radius: 50%;
-        background: #e2e8f0;
+        background: #DDE7EE;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -430,7 +430,7 @@
     }
     .trk-notes-meta-item {
         background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 8px;
         padding: 8px 14px;
     }
@@ -439,13 +439,13 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: .5px;
-        color: #94a3b8;
+        color: #7F92A3;
         margin-bottom: 2px;
     }
     .trk-notes-meta-value {
         font-size: 13px;
         font-weight: 600;
-        color: #1e293b;
+        color: #0F2F4A;
     }
 
     /* ── Cancelled/declined banner ── */
@@ -471,7 +471,7 @@
         align-items: center;
         gap: 12px;
         margin: 32px 0;
-        color: #94a3b8;
+        color: #7F92A3;
         font-size: 12px;
         font-weight: 600;
         text-transform: uppercase;
@@ -481,7 +481,7 @@
         content: '';
         flex: 1;
         height: 1px;
-        background: #e2e8f0;
+        background: #DDE7EE;
     }
 
     .trk-list[aria-busy="true"] {
@@ -504,7 +504,7 @@
     .trk-loading {
         text-align: center;
         padding: 56px 24px;
-        color: #94a3b8;
+        color: #7F92A3;
         font-size: 14px;
         display: none;
     }
@@ -521,14 +521,14 @@
     .trk-empty.show { display: flex; }
     .trk-empty svg { opacity: .35; }
     .trk-empty-title { font-size: 16px; font-weight: 700; color: #334155; margin: 0; }
-    .trk-empty-sub { font-size: 14px; color: #94a3b8; margin: 0; max-width: 340px; line-height: 1.6; }
+    .trk-empty-sub { font-size: 14px; color: #7F92A3; margin: 0; max-width: 340px; line-height: 1.6; }
     .trk-empty-link {
         display: inline-flex;
         align-items: center;
         gap: 6px;
         margin-top: 4px;
         padding: 10px 20px;
-        background: linear-gradient(135deg, #d4a017, #b8880f);
+        background: linear-gradient(135deg, #F4D000, #E6C200);
         color: #fff;
         font-size: 14px;
         font-weight: 700;
@@ -605,7 +605,7 @@
         <div id="trk-list" class="trk-list" aria-live="polite"></div>
 
         <div id="trk-empty" class="trk-empty">
-            <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.3">
+            <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#7F92A3" stroke-width="1.3">
                 <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
                 <rect x="9" y="3" width="6" height="4" rx="1"/>
                 <path d="M9 12h6M9 16h4"/>
@@ -941,7 +941,7 @@
             } else if (isActive) {
                 icon = '<svg width="10" height="10" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="5"/></svg>';
             } else {
-                icon = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg>';
+                icon = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#DDE7EE" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg>';
             }
 
             html += '<div class="' + stepClass + '" role="listitem">'
@@ -993,7 +993,7 @@
         /* ── Card 1: Request Status ── */
         html += '<div class="trk-card">'
             + '<div class="trk-card-header">'
-            + '<div class="trk-card-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg></div>'
+            + '<div class="trk-card-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg></div>'
             + '<div><p class="trk-card-title">Request Status</p><p class="trk-card-subtitle">Live progress of your service request</p></div>'
             + '</div>'
             + '<div class="trk-card-body">' + buildStepper(sr);
@@ -1001,8 +1001,8 @@
         /* Preferred date if set */
         if (sr.date_needed) {
             html += '<div style="margin-top:18px;padding:12px 16px;background:#f8fafc;border-radius:10px;display:flex;align-items:center;gap:10px;">'
-                  + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
-                  + '<span style="font-size:13px;color:#475569;"><strong>Preferred date:</strong> ' + escHtml(fmtDate(sr.date_needed)) + '</span>'
+                  + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
+                  + '<span style="font-size:13px;color:#5E7288;"><strong>Preferred date:</strong> ' + escHtml(fmtDate(sr.date_needed)) + '</span>'
                   + '</div>';
         }
 
@@ -1018,7 +1018,7 @@
         /* ── Card 2: Technician Assigned ── */
         html += '<div class="trk-card">'
             + '<div class="trk-card-header">'
-            + '<div class="trk-card-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'
+            + '<div class="trk-card-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'
             + '<div><p class="trk-card-title">Technician Assigned</p><p class="trk-card-subtitle">Your assigned field technician</p></div>'
             + '</div>'
             + '<div class="trk-card-body">';
@@ -1051,12 +1051,12 @@
                 + '</div></div>';
         } else if (hasAssignedTechnician(sr, tech)) {
             html += '<div class="trk-unassigned">'
-                + '<div class="trk-unassigned-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'
+                + '<div class="trk-unassigned-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7F92A3" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'
                 + '<span>A technician has been assigned to this request. Full technician details will appear here once they are available.</span>'
                 + '</div>';
         } else {
             html += '<div class="trk-unassigned">'
-                + '<div class="trk-unassigned-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'
+                + '<div class="trk-unassigned-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7F92A3" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'
                 + '<span>No technician assigned yet. You will be notified once a technician is assigned to your request.</span>'
                 + '</div>';
         }
@@ -1066,7 +1066,7 @@
         /* ── Card 3: Resolution Notes ── */
         html += '<div class="trk-card">'
             + '<div class="trk-card-header">'
-            + '<div class="trk-card-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>'
+            + '<div class="trk-card-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>'
             + '<div><p class="trk-card-title">Request Details &amp; Notes</p><p class="trk-card-subtitle">Your submitted request notes</p></div>'
             + '</div>'
             + '<div class="trk-card-body">'

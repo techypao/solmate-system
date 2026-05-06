@@ -5,9 +5,9 @@
         .ib-available-card {
             margin-top: 18px;
             padding: 18px;
-            border: 1px solid #dbe7f3;
+            border: 1px solid #DDE7EE;
             border-radius: 18px;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%);
             box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
         }
 
@@ -22,7 +22,7 @@
 
         .ib-available-title {
             margin: 0;
-            color: #102a43;
+            color: #123A5A;
             font-size: 18px;
             font-weight: 800;
             letter-spacing: -0.02em;
@@ -30,7 +30,7 @@
 
         .ib-available-copy {
             margin: 6px 0 0;
-            color: #52606d;
+            color: #5E7288;
             font-size: 13px;
             line-height: 1.6;
         }
@@ -42,8 +42,8 @@
             min-height: 34px;
             padding: 0 12px;
             border-radius: 999px;
-            background: #eef6ff;
-            color: #173b63;
+            background: #EAF9FD;
+            color: #20A7C9;
             font-size: 12px;
             font-weight: 800;
             white-space: nowrap;
@@ -51,7 +51,7 @@
 
         .ib-helper-text {
             margin: 8px 0 0;
-            color: #64748b;
+            color: #5E7288;
             font-size: 12px;
             line-height: 1.5;
         }
@@ -108,7 +108,7 @@
         .ib-select-wrap label {
             display: block;
             margin-bottom: 6px;
-            color: #102a43;
+            color: #123A5A;
             font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
@@ -138,7 +138,7 @@
 
         .ib-table th {
             background: #f7fafd;
-            color: #64748b;
+            color: #5E7288;
             font-size: 11px;
             font-weight: 800;
             letter-spacing: 0.05em;
@@ -156,7 +156,7 @@
         }
 
         .ib-table-id {
-            color: #102a43;
+            color: #123A5A;
             font-weight: 800;
         }
 
@@ -166,7 +166,7 @@
         }
 
         .ib-inline-note {
-            color: #64748b;
+            color: #5E7288;
             font-size: 12px;
         }
 
@@ -177,9 +177,9 @@
             min-height: 34px;
             padding: 0 12px;
             border-radius: 10px;
-            border: 1px solid #d4e4f3;
+            border: 1px solid #DDE7EE;
             background: #f4f9ff;
-            color: #1e4068;
+            color: #20A7C9;
             font-size: 12px;
             font-weight: 700;
             cursor: pointer;
@@ -188,19 +188,19 @@
 
         .ib-use-btn:hover,
         .ib-use-btn:focus-visible {
-            border-color: #d4a017;
+            border-color: #F4D000;
             background: #fff7e0;
-            color: #102a43;
+            color: #123A5A;
             outline: none;
         }
 
         .ib-empty-state {
             margin-top: 14px;
             padding: 18px;
-            border: 1px dashed #d5e2ef;
+            border: 1px dashed #DDE7EE;
             border-radius: 14px;
-            background: #fbfdff;
-            color: #64748b;
+            background: #F8FAFC;
+            color: #5E7288;
             font-size: 13px;
             line-height: 1.7;
             text-align: center;

@@ -21,14 +21,15 @@ import {
   ServiceRequest,
 } from '../src/services/serviceRequestApi';
 import {getProfilePictureUrl, getUserInitial} from '../src/utils/profilePicture';
+import {getSolmateStatusColors, solmateColors} from '../src/theme/colors';
 
 // ─── colour tokens that mirror the design ────────────────────────────────────
-const NAVY   = '#152a4a';
-const GOLD   = '#d4a017';
-const BG     = '#dde5f4';   // soft lavender-blue page background
-const CARD   = '#ffffff';
-const MUTED  = '#64748b';
-const SHADOW = '#8a9bbd';
+const NAVY = solmateColors.navy;
+const GOLD = solmateColors.primary;
+const BG = solmateColors.background;
+const CARD = solmateColors.white;
+const MUTED = solmateColors.muted;
+const SHADOW = solmateColors.shadow;
 
 // ─── small icon stand-ins (unicode shapes) ───────────────────────────────────
 // The design shows a tiny box-chart icon for Pending Reports and a calendar
@@ -161,28 +162,7 @@ function formatTaskStatus(status?: string | null) {
 }
 
 function getTaskStatusColors(status?: string | null) {
-  switch ((status || '').toLowerCase()) {
-    case 'assigned':
-      return {
-        backgroundColor: '#fef3c7',
-        textColor: '#b45309',
-      };
-    case 'in_progress':
-      return {
-        backgroundColor: '#dbeafe',
-        textColor: '#1d4ed8',
-      };
-    case 'completed':
-      return {
-        backgroundColor: '#dcfce7',
-        textColor: '#166534',
-      };
-    default:
-      return {
-        backgroundColor: '#eef2ff',
-        textColor: '#4338ca',
-      };
-  }
+  return getSolmateStatusColors(status);
 }
 
 function getTaskShortDetails(value?: string | null, fallback = 'No details provided.') {
@@ -313,7 +293,7 @@ function BottomNav({active, onPress}: {active: Tab; onPress: (t: Tab) => void}) 
         return (
           <Pressable
             key={key}
-            style={nav.tab}
+            style={[nav.tab, isActive && nav.tabActive]}
             onPress={() => onPress(key)}>
             <Icon active={isActive} />
             <Text style={[nav.label, isActive && nav.labelActive]}>{label}</Text>
@@ -651,17 +631,25 @@ const icon = StyleSheet.create({
 const nav = StyleSheet.create({
   bar: {
     flexDirection: 'row',
-    backgroundColor: '#f2f4f8',
+    backgroundColor: solmateColors.white,
     borderTopWidth: 1,
-    borderTopColor: '#dde2ec',
+    borderTopColor: solmateColors.border,
     paddingBottom: 8,
     paddingTop: 8,
+    paddingHorizontal: 6,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 3,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  tabActive: {
+    backgroundColor: '#FFF7CC',
+    borderWidth: 1,
+    borderColor: 'rgba(244, 208, 0, 0.34)',
   },
   label: {
     fontSize: 10,
@@ -710,7 +698,7 @@ const nav = StyleSheet.create({
   listLine: {
     height: 2,
     width: 10,
-    backgroundColor: '#f2f4f8',
+    backgroundColor: solmateColors.white,
     borderRadius: 1,
   },
   // gear
@@ -750,7 +738,7 @@ const nav = StyleSheet.create({
     borderBottomColor: NAVY,
   },
   activeLine: {
-    backgroundColor: '#f2f4f8',
+    backgroundColor: solmateColors.white,
   },
 });
 
@@ -775,7 +763,18 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 22,
+    backgroundColor: solmateColors.white,
+    borderWidth: 1,
+    borderColor: solmateColors.border,
+    shadowColor: solmateColors.shadow,
+    shadowOffset: {width: 0, height: 8},
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    elevation: 3,
   },
   brandRow: {
     flexDirection: 'row',
@@ -800,7 +799,9 @@ const s = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#e8edf7',
+    backgroundColor: solmateColors.backgroundSoft,
+    borderWidth: 1,
+    borderColor: 'rgba(32, 167, 201, 0.14)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1073,7 +1074,7 @@ const s = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#edf1f7',
+    borderTopColor: '#DDE7EE',
   },
   taskFooterText: {
     color: NAVY,

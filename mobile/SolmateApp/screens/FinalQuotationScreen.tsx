@@ -114,11 +114,11 @@ type SizingPreview = {
 };
 
 /* ── design tokens (matches newer technician theme) ── */
-const NAVY = '#152a4a';
-const GOLD = '#e8a800';
-const MUTED = '#7b8699';
-const BG = '#e0e8f5';
-const DIVIDER = '#edf1f7';
+const NAVY = '#123A5A';
+const GOLD = '#F4D000';
+const MUTED = '#5E7288';
+const BG = '#F8FAFC';
+const DIVIDER = '#DDE7EE';
 
 const CATEGORY_ORDER = [
   'panel',
@@ -1540,8 +1540,8 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         </View>
         <Switch
           disabled={form.pv_system_type === 'on-grid'}
-          trackColor={{false: '#cbd5e1', true: '#fde68a'}}
-          thumbColor={form.with_battery ? '#e8a800' : '#f8fafc'}
+          trackColor={{false: '#DDE7EE', true: '#fde68a'}}
+          thumbColor={form.with_battery ? '#F4D000' : '#f8fafc'}
           value={form.with_battery}
           onValueChange={handleBatteryToggle}
         />
@@ -2473,7 +2473,7 @@ const styles = StyleSheet.create({
   },
   stepPill: {
     backgroundColor: '#f8fafc',
-    borderColor: '#cbd5e1',
+    borderColor: '#DDE7EE',
     borderRadius: 18,
     borderWidth: 1,
     minWidth: '47%',
@@ -2498,7 +2498,7 @@ const styles = StyleSheet.create({
     color: '#7a5700',
   },
   stepPillLabel: {
-    color: '#475569',
+    color: '#5E7288',
     fontSize: 14,
     fontWeight: '700',
   },
@@ -2570,7 +2570,7 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
   infoCard: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#EAF9FD',
     borderColor: '#bfdbfe',
     marginBottom: 18,
   },
@@ -2657,7 +2657,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   selectChevronDisabled: {
-    color: '#94a3b8',
+    color: '#7F92A3',
   },
   selectMenu: {
     marginTop: 10,
@@ -2983,7 +2983,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     backgroundColor: '#ffffff',
-    borderColor: '#cbd5e1',
+    borderColor: '#DDE7EE',
     borderRadius: 28,
     shadowColor: '#8a9bbd',
     shadowOffset: {width: 0, height: 2},
@@ -2992,7 +2992,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   backButtonText: {
-    color: '#475569',
+    color: '#5E7288',
     fontWeight: '700',
   },
   /* cost breakdown grid (Step 3) */

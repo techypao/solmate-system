@@ -27,12 +27,14 @@ import {
 } from '../src/utils/technicianRequests';
 
 // ─── colour tokens ────────────────────────────────────────────────────────────
-const NAVY   = '#152a4a';
-const GOLD   = '#d4a017';
-const BG     = '#dde5f4';
+const NAVY   = '#123A5A';
+const GOLD   = '#F4D000';
+const BG     = '#F8FAFC';
 const CARD   = '#ffffff';
-const MUTED  = '#64748b';
+const MUTED  = '#5E7288';
 const SHADOW = '#8a9bbd';
+const BORDER = '#DDE7EE';
+const SOFT_YELLOW = '#FFF7CC';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 function getFriendlyErrorMessage(error: unknown) {
@@ -115,7 +117,7 @@ function BottomNav({onPress}: {onPress: (t: Tab) => void}) {
   return (
     <View style={nav.bar}>
       {tabs.map(({key, label, Icon}) => (
-        <Pressable key={key} style={nav.tab} onPress={() => onPress(key)}>
+        <Pressable key={key} style={[nav.tab, key === 'Inspections' && nav.tabActive]} onPress={() => onPress(key)}>
           <Icon active={key === 'Inspections'} />
           <Text style={[nav.label, key === 'Inspections' && nav.labelActive]}>
             {label}
@@ -329,7 +331,7 @@ export default function RequestDetailsScreen({navigation, route}: any) {
         (inspectionRequest.status || '').slice(1).replace(/_/g, ' '));
   const displayStatusColors = pendingAdminReview
     ? {
-        backgroundColor: '#fef3c7',
+        backgroundColor: '#FFF7CC',
         textColor: '#92400e',
       }
     : null;
@@ -478,13 +480,15 @@ export default function RequestDetailsScreen({navigation, route}: any) {
 const nav = StyleSheet.create({
   bar: {
     flexDirection: 'row',
-    backgroundColor: '#f2f4f8',
+    backgroundColor: CARD,
     borderTopWidth: 1,
-    borderTopColor: '#dde2ec',
+    borderTopColor: BORDER,
     paddingBottom: 8,
     paddingTop: 8,
+    paddingHorizontal: 6,
   },
-  tab:        {flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3},
+  tab:        {flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, paddingVertical: 8, borderRadius: 16},
+  tabActive:  {backgroundColor: SOFT_YELLOW, borderWidth: 1, borderColor: 'rgba(244, 208, 0, 0.34)'},
   label:      {fontSize: 10, color: MUTED, fontWeight: '500'},
   labelActive:{color: NAVY, fontWeight: '700'},
   iconWrap:   {width: 24, height: 22, alignItems: 'center', justifyContent: 'flex-end'},
@@ -500,7 +504,7 @@ const nav = StyleSheet.create({
     alignItems: 'flex-start', justifyContent: 'center',
     paddingHorizontal: 3, gap: 3,
   },
-  listLine:    {height: 2, width: 10, backgroundColor: '#f2f4f8', borderRadius: 1},
+  listLine:    {height: 2, width: 10, backgroundColor: CARD, borderRadius: 1},
   gear: {
     width: 20, height: 20, borderRadius: 10,
     borderWidth: 3, alignItems: 'center', justifyContent: 'center',
@@ -583,7 +587,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: '#edf1f7',
+    borderTopColor: '#DDE7EE',
   },
   infoLabel: {
     fontSize: 13,
@@ -605,7 +609,7 @@ const s = StyleSheet.create({
     lineHeight: 22,
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: '#edf1f7',
+    borderTopColor: '#DDE7EE',
   },
 
   // status pills
@@ -615,7 +619,7 @@ const s = StyleSheet.create({
     gap: 8,
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: '#edf1f7',
+    borderTopColor: '#DDE7EE',
   },
   statusPill: {
     borderRadius: 999,

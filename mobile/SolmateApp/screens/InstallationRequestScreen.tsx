@@ -21,12 +21,12 @@ import { getDefaultContactNumber } from '../src/utils/contactNumber';
 import { createServiceRequest } from '../src/services/serviceRequestApi';
 import { getQuotations, Quotation } from '../src/services/quotationApi';
 
-const NAVY = '#152a4a';
-const GOLD = '#e8a800';
-const MUTED = '#7b8699';
-const BG = '#e0e8f5';
+const NAVY = '#123A5A';
+const GOLD = '#F4D000';
+const MUTED = '#5E7288';
+const BG = '#F8FAFC';
 const CARD = '#ffffff';
-const DIVIDER = '#edf1f7';
+const DIVIDER = '#DDE7EE';
 
 const INSTALLATION_TYPE_OPTIONS = [
   'Residential rooftop installation',
@@ -994,7 +994,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   addressNoteInfo: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#EAF9FD',
   },
   addressNoteError: {
     backgroundColor: '#fef2f2',

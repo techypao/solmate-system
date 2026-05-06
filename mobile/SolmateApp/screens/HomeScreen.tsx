@@ -15,11 +15,14 @@ import {ApiError} from '../src/services/api';
 import {getUnreadNotificationCount} from '../src/services/notificationApi';
 import {getProfilePictureUrl, getUserInitial} from '../src/utils/profilePicture';
 
-const NAVY = '#152a4a';
-const GOLD = '#e8a800';
-const MUTED = '#7b8699';
-const BG = '#e0e8f5';
+const NAVY = '#123A5A';
+const GOLD = '#F4D000';
+const MUTED = '#5E7288';
+const BG = '#F8FAFC';
 const CARD = '#ffffff';
+const BORDER = '#DDE7EE';
+const CYAN = '#20A7C9';
+const SOFT_YELLOW = '#FFF7CC';
 const R = 18;
 
 /* ── tiny presentational helpers ────────────────────────────── */
@@ -257,7 +260,7 @@ export default function HomeScreen({navigation}: any) {
 
         {/* ── bottom nav row ─────────────────────────── */}
         <View style={s.bottomNav}>
-          <Pressable style={s.navItem} onPress={() => {}}>
+          <Pressable style={[s.navItem, s.navItemActive]} onPress={() => {}}>
             <Text style={s.navIconActive}>{'\ud83c\udfe0'}</Text>
             <Text style={s.navLabelActive}>Home</Text>
           </Pressable>
@@ -303,7 +306,18 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 20,
+    backgroundColor: CARD,
+    borderWidth: 1,
+    borderColor: BORDER,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 8},
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    elevation: 3,
   },
   brandRow: {flexDirection: 'row'},
   brandSol: {fontSize: 22, fontWeight: '800', color: NAVY},
@@ -312,7 +326,9 @@ const s = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: NAVY,
+    backgroundColor: CARD,
+    borderWidth: 1.5,
+    borderColor: CYAN,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -322,7 +338,7 @@ const s = StyleSheet.create({
     height: '100%',
     borderRadius: 20,
   },
-  avatarText: {color: '#fff', fontSize: 17, fontWeight: '700'},
+  avatarText: {color: NAVY, fontSize: 17, fontWeight: '700'},
 
   /* welcome */
   welcomeTitle: {
@@ -475,17 +491,21 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     backgroundColor: CARD,
-    borderRadius: R,
-    paddingVertical: 10,
+    borderRadius: 22,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+    borderWidth: 1,
+    borderColor: BORDER,
     shadowColor: '#8a9bbd',
     shadowOffset: {width: 0, height: -2},
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 4,
   },
-  navItem: {alignItems: 'center', paddingHorizontal: 6},
+  navItem: {alignItems: 'center', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 16},
+  navItemActive: {backgroundColor: SOFT_YELLOW, borderWidth: 1, borderColor: 'rgba(244, 208, 0, 0.38)'},
   navIcon: {fontSize: 20, marginBottom: 2},
-  navIconActive: {fontSize: 20, marginBottom: 2},
+  navIconActive: {fontSize: 20, marginBottom: 2, color: CYAN},
   navLabel: {fontSize: 11, color: MUTED, fontWeight: '600'},
   navLabelActive: {fontSize: 11, color: NAVY, fontWeight: '700'},
 });

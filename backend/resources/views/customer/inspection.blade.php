@@ -35,20 +35,20 @@
         font-weight: 700;
         letter-spacing: 1.2px;
         text-transform: uppercase;
-        color: #d4a017;
+        color: #F4D000;
         margin: 0 0 8px;
     }
     .insp-hero-title {
         font-size: 30px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
         margin: 0 0 10px;
         line-height: 1.2;
     }
-    .insp-hero-title span { color: #d4a017; }
+    .insp-hero-title span { color: #F4D000; }
     .insp-hero-sub {
         font-size: 15px;
-        color: #475569;
+        color: #5E7288;
         max-width: 560px;
         margin: 0;
         line-height: 1.6;
@@ -65,13 +65,13 @@
         align-items: center;
         gap: 8px;
         font-size: 13px;
-        color: #475569;
+        color: #5E7288;
     }
     .insp-hero-step-num {
         width: 26px;
         height: 26px;
         border-radius: 50%;
-        background: #cbd5e1;
+        background: #DDE7EE;
         color: #fff;
         font-size: 11px;
         font-weight: 700;
@@ -82,12 +82,12 @@
     }
     .insp-step-done .insp-hero-step-num { background: #16a34a; }
     .insp-step-done { color: #166534; font-weight: 600; }
-    .insp-step-active .insp-hero-step-num { background: #d4a017; }
-    .insp-step-active { color: #102a43; font-weight: 700; }
+    .insp-step-active .insp-hero-step-num { background: #F4D000; }
+    .insp-step-active { color: #123A5A; font-weight: 700; }
     .insp-step-connector {
         width: 20px;
         height: 2px;
-        background: #cbd5e1;
+        background: #DDE7EE;
         flex-shrink: 0;
     }
 
@@ -107,7 +107,7 @@
     /* Cards */
     .insp-card {
         background: #fff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 16px;
         overflow: hidden;
         box-shadow: 0 2px 12px rgba(0,0,0,.04);
@@ -128,7 +128,7 @@
         width: 40px;
         height: 40px;
         border-radius: 10px;
-        background: linear-gradient(135deg, #102a43, #1e4068);
+        background: linear-gradient(135deg, #123A5A, #20A7C9);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -137,12 +137,12 @@
     .insp-card-title {
         font-size: 16px;
         font-weight: 700;
-        color: #102a43;
+        color: #123A5A;
         margin: 0;
     }
     .insp-card-subtitle {
         font-size: 12px;
-        color: #94a3b8;
+        color: #7F92A3;
         margin: 2px 0 0;
     }
     .insp-card-body { padding: 24px; }
@@ -156,7 +156,7 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: .6px;
-        color: #64748b;
+        color: #5E7288;
         margin-bottom: 8px;
     }
     .insp-select,
@@ -164,10 +164,10 @@
     .insp-textarea {
         width: 100%;
         padding: 12px 16px;
-        border: 1.5px solid #cbd5e1;
+        border: 1.5px solid #DDE7EE;
         border-radius: 10px;
         font-size: 14px;
-        color: #1e293b;
+        color: #0F2F4A;
         background: #fff;
         box-sizing: border-box;
         font-family: inherit;
@@ -186,7 +186,7 @@
     .insp-input:focus,
     .insp-textarea:focus {
         outline: none;
-        border-color: #d4a017;
+        border-color: #F4D000;
         box-shadow: 0 0 0 3px rgba(212,160,23,.12);
     }
     .insp-select.has-error,
@@ -198,7 +198,7 @@
     }
     .insp-field-hint {
         font-size: 12px;
-        color: #94a3b8;
+        color: #7F92A3;
         margin-top: 6px;
     }
     .insp-address-row {
@@ -230,11 +230,11 @@
     .insp-address-pin-btn:hover {
         transform: translateY(-1px);
         box-shadow: 0 6px 16px rgba(212,160,23,.16);
-        border-color: #d4a017;
+        border-color: #F4D000;
     }
     .insp-address-pin-btn:focus {
         outline: none;
-        border-color: #d4a017;
+        border-color: #F4D000;
         box-shadow: 0 0 0 3px rgba(212,160,23,.12);
     }
     .insp-address-pin-btn:active {
@@ -260,9 +260,9 @@
         display: block;
     }
     .insp-field-note-info {
-        background: #eff6ff;
+        background: #EAF9FD;
         border: 1px solid #bfdbfe;
-        color: #124e78;
+        color: #123A5A;
     }
 
     /* Two-column field row */
@@ -301,8 +301,8 @@
     .insp-map-dialog {
         width: min(100%, 760px);
         max-height: min(90vh, 760px);
-        background: linear-gradient(180deg, #f8fbff 0%, #ffffff 28%);
-        border: 1px solid #dbe7f3;
+        background: linear-gradient(180deg, #F8FAFC 0%, #ffffff 28%);
+        border: 1px solid #DDE7EE;
         border-radius: 22px;
         box-shadow: 0 24px 60px rgba(15, 23, 42, .24);
         overflow: hidden;
@@ -315,27 +315,27 @@
         justify-content: space-between;
         gap: 16px;
         padding: 20px 24px 16px;
-        border-bottom: 1px solid #e2e8f0;
+        border-bottom: 1px solid #DDE7EE;
     }
     .insp-map-title {
         margin: 0;
         font-size: 20px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
     }
     .insp-map-subtitle {
         margin: 6px 0 0;
         font-size: 13px;
-        color: #64748b;
+        color: #5E7288;
         line-height: 1.6;
     }
     .insp-map-close {
         width: 40px;
         height: 40px;
-        border: 1px solid #dbe7f3;
+        border: 1px solid #DDE7EE;
         border-radius: 999px;
         background: #ffffff;
-        color: #64748b;
+        color: #5E7288;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -343,13 +343,13 @@
         transition: border-color .2s, color .2s, transform .15s;
     }
     .insp-map-close:hover {
-        border-color: #d4a017;
+        border-color: #F4D000;
         color: #8a6510;
         transform: translateY(-1px);
     }
     .insp-map-close:focus {
         outline: none;
-        border-color: #d4a017;
+        border-color: #F4D000;
         box-shadow: 0 0 0 3px rgba(212,160,23,.12);
     }
     .insp-map-body {
@@ -373,9 +373,9 @@
         color: #9f1239;
     }
     .insp-map-feedback-info {
-        background: #eff6ff;
+        background: #EAF9FD;
         border: 1px solid #bfdbfe;
-        color: #124e78;
+        color: #123A5A;
     }
     .insp-map-search {
         display: flex;
@@ -387,7 +387,7 @@
     }
     .insp-map-canvas {
         height: 420px;
-        border: 1px solid #dbe7f3;
+        border: 1px solid #DDE7EE;
         border-radius: 18px;
         overflow: hidden;
         background: #eaf2fb;
@@ -415,9 +415,9 @@
         min-height: 44px;
         padding: 10px 16px;
         border-radius: 12px;
-        border: 1px solid #dbe7f3;
+        border: 1px solid #DDE7EE;
         background: #ffffff;
-        color: #29527a;
+        color: #20A7C9;
         font-size: 14px;
         font-weight: 700;
         cursor: pointer;
@@ -432,8 +432,8 @@
         box-shadow: 0 0 0 3px rgba(41,82,122,.12);
     }
     .insp-map-btn-gold {
-        border-color: #d4a017;
-        background: linear-gradient(135deg, #d4a017, #b8880f);
+        border-color: #F4D000;
+        background: linear-gradient(135deg, #F4D000, #E6C200);
         color: #ffffff;
     }
     .insp-map-btn-gold:focus {
@@ -487,7 +487,7 @@
     /* Quote summary box */
     .insp-quote-summary {
         background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 12px;
         padding: 16px 18px;
         margin-top: 14px;
@@ -503,21 +503,21 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: .5px;
-        color: #94a3b8;
+        color: #7F92A3;
         margin-bottom: 3px;
     }
     .insp-qs-value {
         font-size: 15px;
         font-weight: 700;
-        color: #102a43;
+        color: #123A5A;
     }
-    .insp-qs-value.highlight { color: #d4a017; }
+    .insp-qs-value.highlight { color: #F4D000; }
     .insp-qs-note {
         margin-top: 12px;
         padding-top: 12px;
-        border-top: 1px solid #e2e8f0;
+        border-top: 1px solid #DDE7EE;
         font-size: 12px;
-        color: #64748b;
+        color: #5E7288;
         line-height: 1.5;
     }
 
@@ -538,7 +538,7 @@
     .insp-submit-btn {
         width: 100%;
         padding: 14px 24px;
-        background: linear-gradient(135deg, #d4a017, #b8880f);
+        background: linear-gradient(135deg, #F4D000, #E6C200);
         color: #fff;
         font-size: 15px;
         font-weight: 700;
@@ -560,14 +560,14 @@
     /* Right panel */
     .insp-panel {
         background: #fff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 16px;
         overflow: hidden;
         box-shadow: 0 2px 12px rgba(0,0,0,.04);
     }
     .insp-panel-header {
         padding: 16px 20px;
-        background: #102a43;
+        background: #123A5A;
         color: #fff;
     }
     .insp-panel-title {
@@ -604,12 +604,12 @@
     .insp-check-title {
         font-size: 13px;
         font-weight: 700;
-        color: #102a43;
+        color: #123A5A;
         margin: 0 0 2px;
     }
     .insp-check-desc {
         font-size: 12px;
-        color: #64748b;
+        color: #5E7288;
         margin: 0;
         line-height: 1.5;
     }
@@ -639,14 +639,14 @@
     .insp-history-title {
         font-size: 18px;
         font-weight: 700;
-        color: #102a43;
+        color: #123A5A;
         margin-bottom: 16px;
     }
 
     .insp-ir-grid { display: grid; gap: 14px; }
     .insp-ir-card {
         background: #fff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 16px;
         padding: 18px 22px;
         transition: box-shadow .2s;
@@ -659,8 +659,8 @@
         gap: 12px;
         margin-bottom: 12px;
     }
-    .insp-ir-id { font-size: 15px; font-weight: 700; color: #102a43; }
-    .insp-ir-date { font-size: 12px; color: #94a3b8; margin-top: 3px; }
+    .insp-ir-id { font-size: 15px; font-weight: 700; color: #123A5A; }
+    .insp-ir-date { font-size: 12px; color: #7F92A3; margin-top: 3px; }
     .insp-ir-meta {
         display: flex;
         gap: 10px;
@@ -677,13 +677,13 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: .4px;
-        color: #94a3b8;
+        color: #7F92A3;
         margin-bottom: 2px;
     }
-    .insp-ir-meta-value { font-size: 13px; font-weight: 600; color: #1e293b; }
+    .insp-ir-meta-value { font-size: 13px; font-weight: 600; color: #0F2F4A; }
     .insp-ir-details-row {
         font-size: 13px;
-        color: #475569;
+        color: #5E7288;
         background: #f8fafc;
         border-radius: 8px;
         padding: 10px 14px;
@@ -694,7 +694,7 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: .4px;
-        color: #94a3b8;
+        color: #7F92A3;
         margin-bottom: 4px;
     }
 
@@ -709,18 +709,18 @@
         letter-spacing: .4px;
         white-space: nowrap;
     }
-    .insp-badge-pending      { background: #fef9c3; color: #a16207; }
-    .insp-badge-assigned     { background: #dbeafe; color: #1d4ed8; }
+    .insp-badge-pending      { background: #FFF7CC; color: #a16207; }
+    .insp-badge-assigned     { background: #EAF9FD; color: #1d4ed8; }
     .insp-badge-in_progress  { background: #ede9fe; color: #6d28d9; }
     .insp-badge-completed    { background: #dcfce7; color: #15803d; }
     .insp-badge-cancelled    { background: #fee2e2; color: #dc2626; }
-    .insp-badge-rescheduled  { background: #fef3c7; color: #d97706; }
-    .insp-badge-default      { background: #f1f5f9; color: #475569; }
+    .insp-badge-rescheduled  { background: #FFF7CC; color: #d97706; }
+    .insp-badge-default      { background: #f1f5f9; color: #5E7288; }
 
     /* Loading / empty */
-    .insp-loading { text-align: center; padding: 32px; color: #94a3b8; font-size: 14px; display: none; }
+    .insp-loading { text-align: center; padding: 32px; color: #7F92A3; font-size: 14px; display: none; }
     .insp-loading.show { display: block; }
-    .insp-empty { text-align: center; padding: 48px 24px; color: #94a3b8; display: none; flex-direction: column; align-items: center; gap: 10px; }
+    .insp-empty { text-align: center; padding: 48px 24px; color: #7F92A3; display: none; flex-direction: column; align-items: center; gap: 10px; }
     .insp-empty.show { display: flex; }
     .insp-empty svg { opacity: .4; }
     .insp-empty p { font-size: 14px; margin: 0; }
@@ -762,7 +762,7 @@
         <div class="insp-card">
             <div class="insp-card-header">
                 <div class="insp-card-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2">
                         <path d="M9 12h6M9 16h6M9 8h3M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"/>
                     </svg>
                 </div>
@@ -809,7 +809,7 @@
         <div class="insp-card insp-card-schedule">
             <div class="insp-card-header">
                 <div class="insp-card-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                         <line x1="16" y1="2" x2="16" y2="6"/>
                         <line x1="8" y1="2" x2="8" y2="6"/>
@@ -847,7 +847,7 @@
 
                         <div class="insp-field">
                             <label class="insp-label" for="insp-date">
-                                Preferred Date <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#94a3b8;">(optional)</span>
+                                Preferred Date <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#7F92A3;">(optional)</span>
                             </label>
                             <input
                                 id="insp-date"
@@ -892,7 +892,7 @@
 
                     <div class="insp-field">
                         <label class="insp-label" for="insp-address-details">
-                            Address Additional Details <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#94a3b8;">(optional)</span>
+                            Address Additional Details <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#7F92A3;">(optional)</span>
                         </label>
                         <input
                             id="insp-address-details"

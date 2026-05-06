@@ -26,10 +26,10 @@ type ChatMessage = {
   suggestionsEnabled?: boolean;
 };
 
-const NAVY = '#152a4a';
-const GOLD = '#e8a800';
-const MUTED = '#7b8699';
-const BG = '#e0e8f5';
+const NAVY = '#123A5A';
+const GOLD = '#F4D000';
+const MUTED = '#5E7288';
+const BG = '#F8FAFC';
 const CARD = '#ffffff';
 
 const QUICK_HELP = [
@@ -417,7 +417,7 @@ const cs = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#edf1f7',
+    borderBottomColor: '#DDE7EE',
   },
   headerLeft: {flexDirection: 'row', alignItems: 'center'},
   headerIcon: {
@@ -531,7 +531,7 @@ const cs = StyleSheet.create({
   userText: {color: '#ffffff'},
   errorText: {color: '#9a3412'},
   msgTime: {fontSize: 10, fontWeight: '600', marginTop: 6, alignSelf: 'flex-start'},
-  botTime: {color: '#94a3b8'},
+  botTime: {color: '#7F92A3'},
   userTime: {color: '#8fa8d0'},
   suggestionWrap: {
     flexDirection: 'row',
@@ -565,7 +565,7 @@ const cs = StyleSheet.create({
     paddingBottom: 16,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#edf1f7',
+    borderTopColor: '#DDE7EE',
     backgroundColor: CARD,
   },
   composer: {

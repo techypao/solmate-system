@@ -7,71 +7,72 @@
     <style>
         html { scroll-behavior: smooth; scroll-padding-top: 68px; }
         *, *::before, *::after { box-sizing: border-box; }
-        :root { font-family: Arial, sans-serif; line-height: 1.5; color: #1e2937; }
+        :root { font-family: Arial, sans-serif; line-height: 1.5; color: #0F2F4A; }
         body { margin: 0; background: #ffffff; }
         a { text-decoration: none; color: inherit; }
 
         /* HEADER */
-        .gst-header { position: sticky; top: 0; z-index: 100; background: #f8f4ec; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .gst-header { position: sticky; top: 0; z-index: 100; background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%); border-bottom: 1px solid rgba(32,167,201,0.12); box-shadow: 0 10px 24px rgba(18,58,90,0.06); }
         .gst-header-inner { max-width: 1200px; margin: 0 auto; padding: 0 28px; height: 68px; display: flex; align-items: center; justify-content: space-between; }
-        .gst-brand { display: inline-flex; align-items: baseline; text-decoration: none; }
-        .gst-brand-sol { font-size: 22px; font-weight: 700; color: #102a43; letter-spacing: -0.3px; }
-        .gst-brand-mate { font-size: 22px; font-weight: 700; color: #d4a017; letter-spacing: -0.3px; }
+        .gst-brand { display: inline-flex; align-items: center; text-decoration: none; line-height: 0; }
+        .gst-logo { display: block; width: auto; max-width: 100%; height: auto; }
+        .gst-logo--header { height: 42px; }
+        .gst-logo--footer { height: 52px; }
         .gst-nav-links { display: flex; align-items: center; gap: 32px; }
-        .gst-nav-link { font-size: 14px; font-weight: 500; color: #4b5563; text-decoration: none; padding: 4px 0; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s; }
-        .gst-nav-link:hover { color: #102a43; border-bottom-color: #d4a017; text-decoration: none; }
+        .gst-nav-link { font-size: 14px; font-weight: 500; color: #5E7288; text-decoration: none; padding: 4px 0; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s; }
+        .gst-nav-link:hover { color: #123A5A; border-bottom-color: #20A7C9; text-decoration: none; }
         .gst-header-actions { display: flex; align-items: center; gap: 12px; }
-        .gst-btn-login { padding: 8px 20px; font-size: 14px; font-weight: 500; color: #102a43; background: transparent; border: 1.5px solid #d9e2ec; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; transition: border-color .15s, background .15s; }
-        .gst-btn-login:hover { border-color: #102a43; background: rgba(16,42,67,0.04); text-decoration: none; }
-        .gst-btn-register { padding: 8px 20px; font-size: 14px; font-weight: 600; color: #ffffff; background: #102a43; border: 1.5px solid #102a43; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; transition: background .15s; }
-        .gst-btn-register:hover { background: #0d2237; text-decoration: none; }
+        .gst-btn-login { padding: 8px 20px; font-size: 14px; font-weight: 500; color: #123A5A; background: transparent; border: 1.5px solid #DDE7EE; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; transition: border-color .15s, background .15s; }
+        .gst-btn-login:hover { border-color: #20A7C9; background: rgba(125,223,242,0.12); text-decoration: none; }
+        .gst-btn-register { padding: 8px 20px; font-size: 14px; font-weight: 600; color: #ffffff; background: #123A5A; border: 1.5px solid #123A5A; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; transition: background .15s; }
+        .gst-btn-register:hover { background: #0F2F4A; text-decoration: none; }
 
         /* HERO */
-        .gst-hero { background: linear-gradient(135deg, #f0f7ff 0%, #f8fbff 48%, #fff8e7 100%); padding: 104px 32px 108px; }
+        .gst-hero { background: linear-gradient(135deg, #F8FAFC 0%, #EAF9FD 52%, #fff8e7 100%); padding: 104px 32px 108px; }
         .gst-hero-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr); gap: 72px; align-items: center; }
         .gst-hero-copy { max-width: 560px; }
-        .gst-hero-tag { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: #e0f2fe; border: 1px solid #b3e0f8; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: #0369a1; margin-bottom: 24px; }
-        .gst-hero-tag-dot { width: 6px; height: 6px; border-radius: 50%; background: #0ea5e9; display: inline-block; }
-        .gst-hero-h1 { font-size: 52px; font-weight: 700; color: #0f172a; line-height: 1.08; margin: 0 0 22px; letter-spacing: -0.8px; }
-        .gst-hero-h1 span { color: #d4a017; }
-        .gst-hero-p { font-size: 17px; color: #475569; line-height: 1.85; margin: 0 0 34px; max-width: 500px; }
+        .gst-hero-tag { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: #EAF9FD; border: 1px solid rgba(125,223,242,0.6); border-radius: 999px; font-size: 12.5px; font-weight: 700; color: #20A7C9; margin-bottom: 24px; }
+        .gst-hero-tag-dot { width: 6px; height: 6px; border-radius: 50%; background: #20A7C9; display: inline-block; }
+        .gst-hero-h1 { font-size: 52px; font-weight: 700; color: #0F2F4A; line-height: 1.08; margin: 0 0 22px; letter-spacing: -0.8px; }
+        .gst-hero-h1 span { color: #F4D000; }
+        .gst-hero-p { font-size: 17px; color: #5E7288; line-height: 1.85; margin: 0 0 34px; max-width: 500px; }
         .gst-hero-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
-        .gst-cta-primary { padding: 14px 30px; font-size: 15px; font-weight: 700; color: #ffffff; background: #102a43; border: none; border-radius: 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: background .15s, transform .1s; }
-        .gst-cta-primary:hover { background: #0d2237; transform: translateY(-1px); text-decoration: none; color: #ffffff; }
-        .gst-cta-secondary { padding: 14px 30px; font-size: 15px; font-weight: 600; color: #102a43; background: transparent; border: 2px solid #102a43; border-radius: 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: background .15s, color .15s; }
-        .gst-cta-secondary:hover { background: #102a43; color: #ffffff; text-decoration: none; }
-        .gst-hero-note { font-size: 13px; color: #64748b; margin: 0; }
+        .gst-cta-primary { padding: 14px 30px; font-size: 15px; font-weight: 700; color: #ffffff; background: #123A5A; border: none; border-radius: 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: background .15s, transform .1s; }
+        .gst-cta-primary:hover { background: #0F2F4A; transform: translateY(-1px); text-decoration: none; color: #ffffff; }
+        .gst-cta-secondary { padding: 14px 30px; font-size: 15px; font-weight: 600; color: #123A5A; background: transparent; border: 2px solid #123A5A; border-radius: 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: background .15s, color .15s; }
+        .gst-cta-secondary:hover { background: #123A5A; color: #ffffff; text-decoration: none; }
+        .gst-hero-note { font-size: 13px; color: #5E7288; margin: 0; }
         .gst-hero-visual { position: relative; }
-        .gst-hero-card-main { position: relative; overflow: hidden; background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); border-radius: 24px; padding: 34px; box-shadow: 0 24px 60px rgba(15,23,42,0.12), 0 4px 12px rgba(15,23,42,0.06); border: 1px solid rgba(148,163,184,0.22); }
+        .gst-hero-card-main { position: relative; overflow: hidden; background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%); border-radius: 24px; padding: 34px; box-shadow: 0 24px 60px rgba(15,23,42,0.12), 0 4px 12px rgba(15,23,42,0.06); border: 1px solid rgba(148,163,184,0.22); }
         .gst-hero-card-main::before { content: ""; position: absolute; top: -54px; right: -48px; width: 164px; height: 164px; border-radius: 50%; background: radial-gradient(circle, rgba(212,160,23,0.24) 0%, rgba(212,160,23,0) 72%); }
-        .gst-hero-card-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fef3c7; border: 1px solid rgba(212,160,23,0.24); border-radius: 999px; font-size: 12px; font-weight: 600; color: #92400e; margin-bottom: 18px; }
-        .gst-hero-card-title { font-size: 24px; font-weight: 700; color: #0f172a; margin: 0 0 10px; line-height: 1.25; }
-        .gst-hero-card-sub { font-size: 14px; color: #64748b; margin: 0 0 28px; line-height: 1.7; max-width: 420px; }
+        .gst-hero-card-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #FFF7CC; border: 1px solid rgba(212,160,23,0.24); border-radius: 999px; font-size: 12px; font-weight: 600; color: #92400e; margin-bottom: 18px; }
+        .gst-hero-card-title { font-size: 24px; font-weight: 700; color: #0F2F4A; margin: 0 0 10px; line-height: 1.25; }
+        .gst-hero-card-sub { font-size: 14px; color: #5E7288; margin: 0 0 28px; line-height: 1.7; max-width: 420px; }
         .gst-hero-feature-list { display: grid; gap: 14px; margin-bottom: 24px; }
-        .gst-hero-feature-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; background: rgba(248,250,252,0.9); border: 1px solid #dbe7f3; border-radius: 16px; }
-        .gst-hero-feature-icon { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #102a43, #1d4f7a); color: #ffffff; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.14); }
-        .gst-hero-feature-title { font-size: 15px; font-weight: 700; color: #102a43; margin: 0 0 4px; }
-        .gst-hero-feature-desc { font-size: 13px; color: #64748b; margin: 0; line-height: 1.6; }
-        .gst-hero-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 18px; background: #102a43; border-radius: 16px; color: #ffffff; }
+        .gst-hero-feature-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; background: rgba(248,250,252,0.9); border: 1px solid #DDE7EE; border-radius: 16px; }
+        .gst-hero-feature-icon { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #123A5A, #20A7C9); color: #ffffff; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.14); }
+        .gst-hero-feature-title { font-size: 15px; font-weight: 700; color: #123A5A; margin: 0 0 4px; }
+        .gst-hero-feature-desc { font-size: 13px; color: #5E7288; margin: 0; line-height: 1.6; }
+        .gst-hero-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 18px; background: #123A5A; border-radius: 16px; color: #ffffff; }
         .gst-hero-card-footer-title { font-size: 14px; font-weight: 700; margin: 0 0 4px; }
-        .gst-hero-card-footer-copy { font-size: 12.5px; color: #cbd5e1; margin: 0; line-height: 1.6; }
+        .gst-hero-card-footer-copy { font-size: 12.5px; color: #DDE7EE; margin: 0; line-height: 1.6; }
         .gst-hero-card-footer-icon { width: 46px; height: 46px; border-radius: 14px; background: rgba(255,255,255,0.12); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; color: #f8d774; }
 
         /* TRUST */
         .gst-trust { background: #f8fafc; padding: 68px 32px; }
         .gst-trust-inner { max-width: 1200px; margin: 0 auto; }
         .gst-trust-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
-        .gst-trust-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 28px 24px; box-shadow: 0 2px 8px rgba(15,23,42,0.04); transition: box-shadow .2s, transform .2s; }
+        .gst-trust-card { background: #ffffff; border: 1px solid #DDE7EE; border-radius: 14px; padding: 28px 24px; box-shadow: 0 2px 8px rgba(15,23,42,0.04); transition: box-shadow .2s, transform .2s; }
         .gst-trust-card:hover { box-shadow: 0 8px 24px rgba(15,23,42,0.09); transform: translateY(-2px); }
-        .gst-trust-icon { width: 44px; height: 44px; background: #eff6ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: #102a43; }
-        .gst-trust-title { font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 8px; }
-        .gst-trust-desc { font-size: 13.5px; color: #64748b; line-height: 1.65; margin: 0; }
+        .gst-trust-icon { width: 44px; height: 44px; background: #EAF9FD; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: #123A5A; }
+        .gst-trust-title { font-size: 15px; font-weight: 700; color: #0F2F4A; margin: 0 0 8px; }
+        .gst-trust-desc { font-size: 13.5px; color: #5E7288; line-height: 1.65; margin: 0; }
         .gst-services-cta { text-align: center; margin-top: 36px; }
-        .gst-services-cta a { display: inline-flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 600; color: #102a43; border: 2px solid #102a43; padding: 12px 26px; border-radius: 10px; text-decoration: none; transition: background .15s, color .15s; }
-        .gst-services-cta a:hover { background: #102a43; color: #ffffff; }
+        .gst-services-cta a { display: inline-flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 600; color: #123A5A; border: 2px solid #123A5A; padding: 12px 26px; border-radius: 10px; text-decoration: none; transition: background .15s, color .15s; }
+        .gst-services-cta a:hover { background: #123A5A; color: #ffffff; }
 
         /* NEWS */
-        .gst-news { background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); padding: 80px 32px; }
+        .gst-news { background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%); padding: 80px 32px; }
         .gst-news-inner { max-width: 1200px; margin: 0 auto; }
         .gst-news-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
         .gst-news-card {
@@ -80,7 +81,7 @@
             gap: 0;
             min-height: 100%;
             background: linear-gradient(180deg, #ffffff 0%, #fdfefe 100%);
-            border: 1px solid #dbe7f3;
+            border: 1px solid #DDE7EE;
             border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 14px 36px rgba(15,23,42,0.07);
@@ -95,7 +96,7 @@
             position: relative;
             aspect-ratio: 16 / 9;
             overflow: hidden;
-            background: linear-gradient(135deg, #dff1ff 0%, #f6fbff 52%, #fff5d8 100%);
+            background: linear-gradient(135deg, #EAF9FD 0%, #f6fbff 52%, #fff5d8 100%);
         }
         .gst-news-card-media img {
             width: 100%;
@@ -110,7 +111,7 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            color: #52606d;
+            color: #5E7288;
             font-size: 13px;
             font-weight: 600;
             line-height: 1.7;
@@ -131,7 +132,7 @@
             width: fit-content;
             padding: 7px 12px;
             border-radius: 999px;
-            background: #fef3c7;
+            background: #FFF7CC;
             color: #92400e;
             font-size: 12px;
             font-weight: 700;
@@ -143,20 +144,20 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #d4a017;
+            background: #F4D000;
             display: inline-block;
         }
         .gst-news-card-title {
             font-size: 22px;
             font-weight: 700;
-            color: #0f172a;
+            color: #0F2F4A;
             line-height: 1.28;
             margin: 0;
             letter-spacing: -0.02em;
         }
         .gst-news-card-desc {
             margin: 0;
-            color: #64748b;
+            color: #5E7288;
             font-size: 14px;
             line-height: 1.75;
             flex: 1;
@@ -166,7 +167,7 @@
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 14px;
             padding: 16px 0 0;
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid #DDE7EE;
         }
         .gst-news-card-meta-label {
             display: block;
@@ -175,13 +176,13 @@
             font-weight: 700;
             letter-spacing: 0.08em;
             text-transform: uppercase;
-            color: #94a3b8;
+            color: #7F92A3;
         }
         .gst-news-card-meta-value {
             display: block;
             font-size: 14px;
             font-weight: 600;
-            color: #102a43;
+            color: #123A5A;
             line-height: 1.5;
             word-break: break-word;
         }
@@ -191,28 +192,28 @@
             align-items: center;
             gap: 8px;
             padding: 12px 18px;
-            border: 1.5px solid #102a43;
+            border: 1.5px solid #123A5A;
             border-radius: 10px;
             background: transparent;
-            color: #102a43;
+            color: #123A5A;
             font-size: 14px;
             font-weight: 700;
             cursor: pointer;
             transition: background .15s ease, color .15s ease, border-color .15s ease;
         }
         .gst-news-card-link:hover {
-            background: #102a43;
+            background: #123A5A;
             color: #ffffff;
-            border-color: #102a43;
+            border-color: #123A5A;
             text-decoration: none;
         }
         .gst-news-empty {
             max-width: 720px;
             margin: 0 auto;
             padding: 30px 28px;
-            border: 1px dashed #bfd4e7;
+            border: 1px dashed #DDE7EE;
             border-radius: 20px;
-            background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+            background: linear-gradient(180deg, #F8FAFC 0%, #ffffff 100%);
             text-align: center;
             box-shadow: 0 10px 28px rgba(15,23,42,0.05);
         }
@@ -220,27 +221,27 @@
             margin: 0;
             font-size: 20px;
             font-weight: 700;
-            color: #102a43;
+            color: #123A5A;
         }
         .gst-news-empty-copy {
             margin: 10px 0 0;
             font-size: 14px;
             line-height: 1.7;
-            color: #64748b;
+            color: #5E7288;
         }
 
         /* SECTION HEADING */
         .gst-section-heading { text-align: center; margin-bottom: 52px; }
-        .gst-section-eyebrow { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #d4a017; margin-bottom: 10px; }
-        .gst-section-title { font-size: 34px; font-weight: 700; color: #0f172a; margin: 0 0 12px; line-height: 1.2; }
-        .gst-section-sub { font-size: 16px; color: #64748b; max-width: 520px; margin: 0 auto; line-height: 1.7; }
+        .gst-section-eyebrow { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #F4D000; margin-bottom: 10px; }
+        .gst-section-title { font-size: 34px; font-weight: 700; color: #0F2F4A; margin: 0 0 12px; line-height: 1.2; }
+        .gst-section-sub { font-size: 16px; color: #5E7288; max-width: 520px; margin: 0 auto; line-height: 1.7; }
 
         /* TESTIMONIES */
         .gst-testimonies { background: #ffffff; padding: 80px 32px; }
         .gst-testimonies-inner { max-width: 1200px; margin: 0 auto; }
         .gst-testimonies-carousel-shell { max-width: 1080px; margin: 0 auto; }
-        .gst-testimonies-carousel { position: relative; background: linear-gradient(180deg, #ffffff 0%, #f6faff 100%); border: 1px solid #dbe7f3; border-radius: 28px; box-shadow: 0 22px 50px rgba(15,23,42,0.08); overflow: hidden; }
-        .gst-testimonies-viewport { position: relative; min-height: 520px; aspect-ratio: 16 / 9; background: linear-gradient(135deg, #dff1ff 0%, #f7fbff 45%, #fff5d8 100%); }
+        .gst-testimonies-carousel { position: relative; background: linear-gradient(180deg, #ffffff 0%, #f6faff 100%); border: 1px solid #DDE7EE; border-radius: 28px; box-shadow: 0 22px 50px rgba(15,23,42,0.08); overflow: hidden; }
+        .gst-testimonies-viewport { position: relative; min-height: 520px; aspect-ratio: 16 / 9; background: linear-gradient(135deg, #EAF9FD 0%, #f7fbff 45%, #fff5d8 100%); }
         .gst-testimonies-track { display: flex; width: 100%; height: 100%; transition: transform .75s ease; will-change: transform; }
         .gst-testimony-slide { position: relative; min-width: 100%; height: 100%; overflow: hidden; }
         .gst-testimony-slide img { width: 100%; height: 100%; display: block; object-fit: cover; }
@@ -252,86 +253,84 @@
         .gst-testimony-slide-title { font-size: 28px; font-weight: 700; color: #ffffff; line-height: 1.18; margin: 0 0 8px; letter-spacing: -0.03em; }
         .gst-testimony-slide-sub { font-size: 14px; color: rgba(226,232,240,0.96); margin: 0; line-height: 1.75; }
         .gst-testimony-slide-index { display: inline-flex; align-items: center; justify-content: center; min-width: 56px; height: 56px; padding: 0 16px; border-radius: 16px; background: rgba(16,42,67,0.68); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.18); color: #ffffff; font-size: 14px; font-weight: 700; }
-        .gst-testimonies-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border: none; border-radius: 999px; background: rgba(255,255,255,0.88); color: #102a43; box-shadow: 0 10px 24px rgba(15,23,42,0.16); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .15s ease, background .15s ease, color .15s ease; z-index: 3; }
-        .gst-testimonies-arrow:hover { background: #102a43; color: #ffffff; transform: translateY(-50%) scale(1.02); }
+        .gst-testimonies-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border: none; border-radius: 999px; background: rgba(255,255,255,0.88); color: #123A5A; box-shadow: 0 10px 24px rgba(15,23,42,0.16); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .15s ease, background .15s ease, color .15s ease; z-index: 3; }
+        .gst-testimonies-arrow:hover { background: #123A5A; color: #ffffff; transform: translateY(-50%) scale(1.02); }
         .gst-testimonies-arrow:focus-visible { outline: 3px solid rgba(14,165,233,0.35); outline-offset: 2px; }
         .gst-testimonies-arrow-prev { left: 20px; }
         .gst-testimonies-arrow-next { right: 20px; }
-        .gst-testimonies-controls { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 20px 24px 22px; background: #ffffff; border-top: 1px solid #e2e8f0; }
-        .gst-testimonies-source { font-size: 13px; color: #64748b; }
-        .gst-testimonies-source strong { color: #102a43; font-weight: 700; }
+        .gst-testimonies-controls { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 20px 24px 22px; background: #ffffff; border-top: 1px solid #DDE7EE; }
+        .gst-testimonies-source { font-size: 13px; color: #5E7288; }
+        .gst-testimonies-source strong { color: #123A5A; font-weight: 700; }
         .gst-testimonies-dots { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
-        .gst-testimonies-dot { width: 10px; height: 10px; padding: 0; border: none; border-radius: 999px; background: #cbd5e1; cursor: pointer; transition: width .2s ease, background .2s ease, transform .2s ease; }
-        .gst-testimonies-dot.is-active { width: 28px; background: #d4a017; }
+        .gst-testimonies-dot { width: 10px; height: 10px; padding: 0; border: none; border-radius: 999px; background: #DDE7EE; cursor: pointer; transition: width .2s ease, background .2s ease, transform .2s ease; }
+        .gst-testimonies-dot.is-active { width: 28px; background: #F4D000; }
         .gst-testimonies-dot:focus-visible { outline: 3px solid rgba(14,165,233,0.35); outline-offset: 2px; }
-        .gst-testimonies-state-msg { text-align: center; padding: 64px 24px; color: #64748b; font-size: 15px; line-height: 1.7; }
-        .gst-testimonies-state-msg strong { display: block; font-size: 18px; color: #102a43; margin-bottom: 8px; }
+        .gst-testimonies-state-msg { text-align: center; padding: 64px 24px; color: #5E7288; font-size: 15px; line-height: 1.7; }
+        .gst-testimonies-state-msg strong { display: block; font-size: 18px; color: #123A5A; margin-bottom: 8px; }
         .gst-testimony-placeholder { position: relative; height: 100%; display: flex; align-items: flex-end; padding: 34px; background: linear-gradient(140deg, #dff0ff 0%, #ecf8ff 34%, #fff7dc 100%); }
         .gst-testimony-placeholder::before { content: ""; position: absolute; top: 38px; right: 52px; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, rgba(212,160,23,0.9) 0%, rgba(212,160,23,0.35) 42%, rgba(212,160,23,0) 72%); }
         .gst-testimony-placeholder::after { content: ""; position: absolute; inset: auto -60px -88px auto; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(14,165,233,0.22) 0%, rgba(14,165,233,0) 72%); }
         .gst-testimony-placeholder-scene { position: absolute; inset: 0; overflow: hidden; }
         .gst-testimony-placeholder-ground { position: absolute; left: -8%; right: -8%; bottom: -18%; height: 44%; background: linear-gradient(180deg, rgba(16,42,67,0.06) 0%, rgba(16,42,67,0.14) 100%); border-radius: 50% 50% 0 0; }
-        .gst-testimony-placeholder-panel { position: absolute; bottom: 104px; width: 148px; height: 92px; border-radius: 18px; background: linear-gradient(180deg, #143a5c 0%, #102a43 100%); border: 2px solid rgba(255,255,255,0.18); box-shadow: 0 24px 34px rgba(16,42,67,0.16); transform: skew(-14deg); overflow: hidden; }
+        .gst-testimony-placeholder-panel { position: absolute; bottom: 104px; width: 148px; height: 92px; border-radius: 18px; background: linear-gradient(180deg, #143a5c 0%, #123A5A 100%); border: 2px solid rgba(255,255,255,0.18); box-shadow: 0 24px 34px rgba(16,42,67,0.16); transform: skew(-14deg); overflow: hidden; }
         .gst-testimony-placeholder-panel::before { content: ""; position: absolute; inset: 10px; background-image: linear-gradient(to right, rgba(255,255,255,0.18) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.18) 1px, transparent 1px); background-size: 22px 100%, 100% 18px; border-radius: 10px; }
         .gst-testimony-placeholder-panel.is-left { left: 10%; }
         .gst-testimony-placeholder-panel.is-center { left: 34%; bottom: 92px; }
         .gst-testimony-placeholder-panel.is-right { right: 12%; }
         .gst-testimony-placeholder-card { position: relative; z-index: 1; width: min(100%, 430px); padding: 26px; background: rgba(255,255,255,0.82); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.55); border-radius: 22px; box-shadow: 0 20px 44px rgba(15,23,42,0.12); }
-        .gst-testimony-placeholder-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: #102a43; color: #ffffff; border-radius: 999px; font-size: 12px; font-weight: 700; margin-bottom: 14px; }
+        .gst-testimony-placeholder-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: #123A5A; color: #ffffff; border-radius: 999px; font-size: 12px; font-weight: 700; margin-bottom: 14px; }
         .gst-testimony-placeholder-chip::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #f8d774; display: inline-block; }
-        .gst-testimony-placeholder-title { font-size: 28px; font-weight: 700; color: #102a43; line-height: 1.16; margin: 0 0 10px; letter-spacing: -0.03em; }
-        .gst-testimony-placeholder-sub { font-size: 14px; line-height: 1.75; color: #475569; margin: 0; }
+        .gst-testimony-placeholder-title { font-size: 28px; font-weight: 700; color: #123A5A; line-height: 1.16; margin: 0 0 10px; letter-spacing: -0.03em; }
+        .gst-testimony-placeholder-sub { font-size: 14px; line-height: 1.75; color: #5E7288; margin: 0; }
         .gst-testimonies-view-all { text-align: center; margin-top: 36px; }
-        .gst-testimonies-view-all a { display: inline-flex; align-items: center; gap: 6px; font-size: 14.5px; font-weight: 600; color: #102a43; border: 2px solid #102a43; padding: 10px 24px; border-radius: 8px; text-decoration: none; transition: background .15s, color .15s; }
-        .gst-testimonies-view-all a:hover { background: #102a43; color: #ffffff; }
+        .gst-testimonies-view-all a { display: inline-flex; align-items: center; gap: 6px; font-size: 14.5px; font-weight: 600; color: #123A5A; border: 2px solid #123A5A; padding: 10px 24px; border-radius: 8px; text-decoration: none; transition: background .15s, color .15s; }
+        .gst-testimonies-view-all a:hover { background: #123A5A; color: #ffffff; }
 
         /* ABOUT */
-        .gst-about { background: #f0f7ff; padding: 80px 32px; }
+        .gst-about { background: #F8FAFC; padding: 80px 32px; }
         .gst-about-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
-        .gst-about-eyebrow { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #d4a017; margin-bottom: 12px; }
-        .gst-about-title { font-size: 36px; font-weight: 700; color: #0f172a; line-height: 1.2; margin: 0 0 18px; }
-        .gst-about-p { font-size: 15.5px; color: #475569; line-height: 1.8; margin: 0 0 24px; }
+        .gst-about-eyebrow { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #F4D000; margin-bottom: 12px; }
+        .gst-about-title { font-size: 36px; font-weight: 700; color: #0F2F4A; line-height: 1.2; margin: 0 0 18px; }
+        .gst-about-p { font-size: 15.5px; color: #5E7288; line-height: 1.8; margin: 0 0 24px; }
         .gst-about-highlights { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .gst-about-highlight { background: #ffffff; border: 1px solid #d9e2ec; border-radius: 14px; padding: 22px; box-shadow: 0 2px 8px rgba(15,23,42,0.04); }
-        .gst-about-highlight-icon { width: 38px; height: 38px; background: #eff6ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #102a43; margin-bottom: 12px; }
-        .gst-about-highlight-title { font-size: 14px; font-weight: 700; color: #0f172a; margin: 0 0 6px; }
-        .gst-about-highlight-desc { font-size: 13px; color: #64748b; line-height: 1.6; margin: 0; }
+        .gst-about-highlight { background: #ffffff; border: 1px solid #DDE7EE; border-radius: 14px; padding: 22px; box-shadow: 0 2px 8px rgba(15,23,42,0.04); }
+        .gst-about-highlight-icon { width: 38px; height: 38px; background: #EAF9FD; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #123A5A; margin-bottom: 12px; }
+        .gst-about-highlight-title { font-size: 14px; font-weight: 700; color: #0F2F4A; margin: 0 0 6px; }
+        .gst-about-highlight-desc { font-size: 13px; color: #5E7288; line-height: 1.6; margin: 0; }
 
         /* CTA */
-        .gst-cta-section { background: #102a43; padding: 88px 32px; }
+        .gst-cta-section { background: #123A5A; padding: 88px 32px; }
         .gst-cta-inner { max-width: 680px; margin: 0 auto; text-align: center; }
-        .gst-cta-eyebrow { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #d4a017; margin-bottom: 14px; }
+        .gst-cta-eyebrow { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #F4D000; margin-bottom: 14px; }
         .gst-cta-title { font-size: 38px; font-weight: 700; color: #ffffff; line-height: 1.2; margin: 0 0 16px; }
-        .gst-cta-title span { color: #d4a017; }
-        .gst-cta-p { font-size: 16px; color: #94a3b8; line-height: 1.7; margin: 0 0 42px; }
+        .gst-cta-title span { color: #F4D000; }
+        .gst-cta-p { font-size: 16px; color: #7F92A3; line-height: 1.7; margin: 0 0 42px; }
         .gst-cta-buttons { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
-        .gst-cta-btn-primary { padding: 15px 36px; font-size: 15px; font-weight: 700; color: #102a43; background: #d4a017; border: none; border-radius: 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: background .15s, transform .1s; }
-        .gst-cta-btn-primary:hover { background: #c49215; transform: translateY(-1px); color: #102a43; text-decoration: none; }
+        .gst-cta-btn-primary { padding: 15px 36px; font-size: 15px; font-weight: 700; color: #123A5A; background: #F4D000; border: none; border-radius: 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: background .15s, transform .1s; }
+        .gst-cta-btn-primary:hover { background: #E6C200; transform: translateY(-1px); color: #123A5A; text-decoration: none; }
         .gst-cta-btn-secondary { padding: 15px 36px; font-size: 15px; font-weight: 600; color: #ffffff; background: transparent; border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: border-color .15s, background .15s; }
         .gst-cta-btn-secondary:hover { border-color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.07); text-decoration: none; color: #ffffff; }
 
         /* FOOTER */
-        .solmate-footer { background: #0f1729; color: #cbd5e1; font-family: Arial, sans-serif; }
+        .solmate-footer { background: linear-gradient(180deg, #3A7EA6 0%, #2A6B92 42%, #1C5476 100%); color: #DDE7EE; font-family: Arial, sans-serif; border-top: 1px solid rgba(125,223,242,0.28); }
         .solmate-footer-inner { max-width: 1200px; margin: 0 auto; padding: 56px 32px 0; }
         .solmate-footer-upper { display: grid; grid-template-columns: 2fr 1fr 1fr 0.6fr; gap: 48px; padding-bottom: 48px; }
-        .solmate-footer-brand-sol { font-size: 28px; font-weight: 700; color: #7dd3fc; letter-spacing: -0.3px; }
-        .solmate-footer-brand-mate { font-size: 28px; font-weight: 700; color: #d4a017; letter-spacing: -0.3px; }
-        .solmate-footer-brand-link { text-decoration: none; display: inline-flex; align-items: baseline; margin-bottom: 16px; }
+        .solmate-footer-brand-link { text-decoration: none; display: inline-flex; align-items: center; margin-bottom: 16px; line-height: 0; }
         .solmate-footer-brand-link:hover { text-decoration: none; }
-        .solmate-footer-desc { font-size: 13.5px; line-height: 1.75; color: #94a3b8; max-width: 300px; margin: 0; }
-        .solmate-footer-col-heading { font-size: 13px; font-weight: 700; color: #e2e8f0; letter-spacing: 0.04em; text-transform: uppercase; margin: 0 0 18px; }
+        .solmate-footer-desc { font-size: 13.5px; line-height: 1.75; color: rgba(255,255,255,0.84); max-width: 300px; margin: 0; }
+        .solmate-footer-col-heading { font-size: 13px; font-weight: 700; color: #DDE7EE; letter-spacing: 0.04em; text-transform: uppercase; margin: 0 0 18px; }
         .solmate-footer-links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 11px; }
-        .solmate-footer-links a { font-size: 13.5px; color: #94a3b8; text-decoration: none; transition: color .15s; }
-        .solmate-footer-links a:hover { color: #e2e8f0; text-decoration: none; }
+        .solmate-footer-links a { font-size: 13.5px; color: rgba(255,255,255,0.88); text-decoration: none; transition: color .15s; }
+        .solmate-footer-links a:hover { color: #7DDFF2; text-decoration: none; }
         .solmate-footer-socials { display: flex; flex-direction: column; gap: 12px; }
-        .solmate-footer-social-btn { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.10); color: #cbd5e1; text-decoration: none; transition: background .15s, color .15s; line-height: 0; }
-        .solmate-footer-social-btn:hover { background: rgba(255,255,255,0.14); color: #ffffff; text-decoration: none; }
-        .solmate-footer-divider { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 0; }
+        .solmate-footer-social-btn { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22); color: #DDE7EE; text-decoration: none; transition: background .15s, color .15s; line-height: 0; }
+        .solmate-footer-social-btn:hover { background: #F4D000; color: #0F2F4A; text-decoration: none; }
+        .solmate-footer-divider { border: none; border-top: 1px solid rgba(255,255,255,0.16); margin: 0; }
         .solmate-footer-bottom { max-width: 1200px; margin: 0 auto; padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
-        .solmate-footer-copyright { font-size: 12.5px; color: #64748b; margin: 0; line-height: 1.5; }
+        .solmate-footer-copyright { font-size: 12.5px; color: rgba(234,249,253,0.8); margin: 0; line-height: 1.5; }
         .solmate-footer-contact-items { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
-        .solmate-footer-contact-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #94a3b8; }
-        .solmate-footer-contact-item svg { flex-shrink: 0; color: #7dd3fc; }
+        .solmate-footer-contact-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: rgba(234,249,253,0.86); }
+        .solmate-footer-contact-item svg { flex-shrink: 0; color: #7DDFF2; }
 
         /* RESPONSIVE */
         @media (max-width: 1000px) {
@@ -395,8 +394,8 @@
 {{-- HEADER --}}
 <header class="gst-header" aria-label="Site header">
     <div class="gst-header-inner">
-        <a href="#home" class="gst-brand" aria-label="SolMate home">
-            <span class="gst-brand-sol">Sol</span><span class="gst-brand-mate">Mate</span>
+        <a href="#home" class="gst-brand" aria-label="RDY home">
+            <img src="{{ asset('images/rdy-logo-transparent.png') }}" alt="RDY logo" class="gst-logo gst-logo--header">
         </a>
         <nav class="gst-nav-links" aria-label="Public navigation">
             <a href="#rdy" class="gst-nav-link">RDY</a>
@@ -679,8 +678,8 @@
     <div class="solmate-footer-inner">
         <div class="solmate-footer-upper">
             <div>
-                <a href="{{ route('home') }}" class="solmate-footer-brand-link" aria-label="SolMate home">
-                    <span class="solmate-footer-brand-sol">Sol</span><span class="solmate-footer-brand-mate">Mate</span>
+                <a href="{{ route('home') }}" class="solmate-footer-brand-link" aria-label="RDY home">
+                    <img src="{{ asset('images/rdy-logo-transparent.png') }}" alt="RDY logo" class="gst-logo gst-logo--footer">
                 </a>
                 <p class="solmate-footer-desc">SolMate is a smart solar panel installation management system designed to streamline planning, monitoring, and deployment. We help installers, homeowners, and businesses transition to clean energy with efficiency and confidence.</p>
             </div>

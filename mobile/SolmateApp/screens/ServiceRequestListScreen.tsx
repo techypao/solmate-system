@@ -20,12 +20,12 @@ import {
 
 /* ── design tokens ── */
 
-const NAVY = '#152a4a';
-const GOLD = '#e8a800';
-const MUTED = '#7b8699';
-const BG = '#e0e8f5';
+const NAVY = '#123A5A';
+const GOLD = '#F4D000';
+const MUTED = '#5E7288';
+const BG = '#F8FAFC';
 const CARD = '#ffffff';
-const DIVIDER = '#edf1f7';
+const DIVIDER = '#DDE7EE';
 
 /* ── helpers (preserved) ── */
 
@@ -72,9 +72,9 @@ function getFriendlyErrorMessage(error: unknown, requestCategory = 'maintenance'
 function getStatusBadgeStyle(status?: string | null) {
   switch ((status || 'pending').toLowerCase()) {
     case 'assigned':
-      return {backgroundColor: '#fef3c7', textColor: '#b45309'};
+      return {backgroundColor: '#FFF7CC', textColor: '#b45309'};
     case 'in_progress':
-      return {backgroundColor: '#dbeafe', textColor: '#1d4ed8'};
+      return {backgroundColor: '#EAF9FD', textColor: '#1d4ed8'};
     case 'completed':
       return {backgroundColor: '#dcfce7', textColor: '#166534'};
     case 'pending':

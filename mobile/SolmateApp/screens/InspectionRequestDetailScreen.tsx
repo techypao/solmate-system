@@ -16,15 +16,16 @@ import {
   getInspectionRequestById,
   InspectionRequest,
 } from '../src/services/inspectionRequestApi';
+import {solmateColors} from '../src/theme/colors';
 
 /* \u2500\u2500 design tokens \u2500\u2500 */
 
-const NAVY = '#152a4a';
-const GOLD = '#e8a800';
-const MUTED = '#7b8699';
-const BG = '#e0e8f5';
-const CARD = '#ffffff';
-const DIVIDER = '#edf1f7';
+const NAVY = solmateColors.navy;
+const GOLD = solmateColors.primary;
+const MUTED = solmateColors.muted;
+const BG = solmateColors.background;
+const CARD = solmateColors.white;
+const DIVIDER = solmateColors.border;
 
 /* \u2500\u2500 helpers (preserved) \u2500\u2500 */
 
@@ -313,7 +314,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 18,
-    shadowColor: '#8a9bbd',
+    shadowColor: solmateColors.shadow,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 6,
@@ -343,7 +344,7 @@ const s = StyleSheet.create({
     textAlign: 'center',
   },
   errorText: {
-    color: '#b91c1c',
+    color: solmateColors.danger,
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',

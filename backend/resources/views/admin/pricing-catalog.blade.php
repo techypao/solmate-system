@@ -11,8 +11,8 @@
     <style>
         .pricing-panel {
             padding: 20px;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-            border: 1px solid #dbe7f3;
+            background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%);
+            border: 1px solid #DDE7EE;
             border-radius: 18px;
             box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
         }
@@ -371,7 +371,7 @@
                 summaryCard.style.marginTop = '0';
                 summaryCard.style.background = '#f8fbfd';
                 summaryCard.innerHTML = `
-                    <div style="font-weight: 700; color: #102a43;">${escapeHtml(group.label)}</div>
+                    <div style="font-weight: 700; color: #123A5A;">${escapeHtml(group.label)}</div>
                     <div class="muted" style="margin-top: 4px;">${escapeHtml(group.description)}</div>
                     <div class="muted" style="margin-top: 10px;">
                         ${escapeHtml(formatCountLabel(group.items.length, 'item'))} | ${escapeHtml(formatCountLabel(activeItems, 'active item'))}
@@ -413,7 +413,7 @@
                 sectionHeader.style.alignItems = 'flex-start';
                 sectionHeader.innerHTML = `
                     <div>
-                        <h3 style="margin: 0 0 6px; color: #102a43;">${escapeHtml(group.label)}</h3>
+                        <h3 style="margin: 0 0 6px; color: #123A5A;">${escapeHtml(group.label)}</h3>
                         <div class="muted">${escapeHtml(group.description)}</div>
                     </div>
                     <div class="muted">${escapeHtml(formatCountLabel(group.items.length, 'item'))}</div>

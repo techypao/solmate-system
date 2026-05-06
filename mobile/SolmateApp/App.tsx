@@ -7,6 +7,7 @@ import {AuthProvider, AuthContext} from './src/context/AuthContext';
 import AuthStack from './src/navigation/AuthStack';
 import CustomerStack from './src/navigation/CustomerStack';
 import TechnicianStack from './src/navigation/TechnicianStack';
+import {solmateColors, solmateNavigationTheme} from './src/theme/colors';
 
 function AppNavigator() {
   const {user, loading, logout} = useContext(AuthContext);
@@ -20,14 +21,20 @@ function AppNavigator() {
 
   if (loading) {
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <ActivityIndicator size="large" />
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: solmateColors.background,
+        }}>
+        <ActivityIndicator size="large" color={solmateColors.accentStrong} />
       </View>
     );
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={solmateNavigationTheme}>
       {!user ? (
         <AuthStack />
       ) : user.role === 'customer' ? (

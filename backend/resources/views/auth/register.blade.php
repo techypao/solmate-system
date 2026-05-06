@@ -29,7 +29,7 @@
             bottom: 20px;
             width: 280px;
             height: 280px;
-            background: radial-gradient(circle, rgba(59, 130, 246, .14), rgba(59, 130, 246, 0));
+            background: radial-gradient(circle, rgba(32, 167, 201, .16), rgba(32, 167, 201, 0));
         }
 
         .auth-card {
@@ -40,7 +40,7 @@
             width: min(100%, 1120px);
             margin: 0 auto;
             overflow: hidden;
-            border: 1px solid #dbe6f2;
+            border: 1px solid #DDE7EE;
             border-radius: 32px;
             background:
                 linear-gradient(180deg, rgba(255, 255, 255, .95), rgba(248, 251, 255, .98)),
@@ -55,7 +55,7 @@
             color: #ffffff;
             background:
                 radial-gradient(circle at top left, rgba(255, 255, 255, .18), transparent 34%),
-                linear-gradient(145deg, #102a43 0%, #1e4068 58%, #335f94 100%);
+                linear-gradient(145deg, #123A5A 0%, #20A7C9 58%, #20A7C9 100%);
         }
 
         .auth-panel-brand::before,
@@ -97,28 +97,20 @@
         .auth-brand {
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 0;
             margin-bottom: 26px;
-            color: #ffffff;
-            font-size: 22px;
-            font-weight: 800;
             text-decoration: none;
-            letter-spacing: -.02em;
+            width: fit-content;
+            padding: 12px 16px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 18px 38px rgba(15, 47, 74, 0.22);
         }
 
-        .auth-brand-mark {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 42px;
-            height: 42px;
-            border: 1px solid rgba(255, 255, 255, .28);
-            border-radius: 14px;
-            background: rgba(255, 255, 255, .12);
-            font-size: 13px;
-            font-weight: 900;
-            letter-spacing: .08em;
-            text-transform: uppercase;
+        .auth-brand-logo {
+            display: block;
+            width: auto;
+            height: 44px;
         }
 
         .auth-brand-copy {
@@ -131,7 +123,7 @@
         .auth-kicker {
             display: inline-block;
             margin-bottom: 16px;
-            color: #dbeafe;
+            color: #EAF9FD;
             font-size: 11px;
             font-weight: 800;
             letter-spacing: .18em;
@@ -147,7 +139,7 @@
         }
 
         .auth-brand-title span {
-            color: #f4c542;
+            color: #E6C200;
         }
 
         .auth-brand-text {
@@ -179,7 +171,7 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #f4c542;
+            background: #E6C200;
             box-shadow: 0 0 0 5px rgba(244, 197, 66, .15);
             flex-shrink: 0;
         }
@@ -218,7 +210,7 @@
         }
 
         .auth-switch-btn:hover {
-            color: #102a43;
+            color: #123A5A;
             background: #ffffff;
             border-color: #ffffff;
         }
@@ -236,7 +228,7 @@
         .auth-form-surface {
             width: min(100%, 680px);
             padding: 32px clamp(22px, 3vw, 34px);
-            border: 1px solid #e2e8f0;
+            border: 1px solid #DDE7EE;
             border-radius: 28px;
             background: linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(248, 251, 255, 1));
             box-shadow: 0 24px 54px rgba(15, 23, 42, .08);
@@ -249,7 +241,7 @@
         .auth-form-kicker {
             display: inline-block;
             margin-bottom: 10px;
-            color: #d4a017;
+            color: #F4D000;
             font-size: 11px;
             font-weight: 800;
             letter-spacing: .16em;
@@ -258,7 +250,7 @@
 
         .auth-form-title {
             margin: 0 0 10px;
-            color: #102a43;
+            color: #123A5A;
             font-size: clamp(1.9rem, 4vw, 2.5rem);
             line-height: 1.08;
             letter-spacing: -.03em;
@@ -267,7 +259,7 @@
         .auth-form-copy {
             margin: 0;
             max-width: 560px;
-            color: #64748b;
+            color: #5E7288;
             font-size: 15px;
             line-height: 1.7;
         }
@@ -308,7 +300,7 @@
             inset: 0 auto 0 0;
             width: 5px;
             border-radius: 22px 0 0 22px;
-            background: linear-gradient(180deg, #f4c542 0%, #d4a017 100%);
+            background: linear-gradient(180deg, #E6C200 0%, #F4D000 100%);
         }
 
         .auth-success-toast-badge {
@@ -359,7 +351,7 @@
         }
 
         .auth-field label {
-            color: #17324d;
+            color: #123A5A;
             font-size: 13px;
             font-weight: 700;
         }
@@ -367,23 +359,23 @@
         .auth-field input {
             width: 100%;
             min-height: 54px;
-            border: 1px solid #d7e3ef;
+            border: 1px solid #DDE7EE;
             border-radius: 16px;
             background: #ffffff;
             padding: 0 16px;
-            color: #0f172a;
+            color: #0F2F4A;
             font-size: 15px;
             transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
         }
 
         .auth-field input::placeholder {
-            color: #94a3b8;
+            color: #7F92A3;
         }
 
         .auth-field input:focus {
-            border-color: #8db4de;
+            border-color: #7DDFF2;
             background: #ffffff;
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, .12);
+            box-shadow: 0 0 0 4px rgba(32, 167, 201, .14);
             outline: none;
         }
 
@@ -396,7 +388,7 @@
 
         .auth-field-helper {
             margin: 0;
-            color: #52606d;
+            color: #5E7288;
             font-size: 12px;
             line-height: 1.5;
         }
@@ -427,8 +419,8 @@
             padding: 0 28px;
             border: 0;
             border-radius: 999px;
-            background: linear-gradient(135deg, #d4a017 0%, #b8880f 100%);
-            color: #ffffff;
+            background: linear-gradient(135deg, #F4D000 0%, #E6C200 100%);
+            color: #0F2F4A;
             font-size: 15px;
             font-weight: 800;
             letter-spacing: .02em;
@@ -451,14 +443,14 @@
         .auth-inline-link {
             display: inline-flex;
             justify-content: center;
-            color: #1e4068;
+            color: #20A7C9;
             font-size: 14px;
             font-weight: 700;
             text-decoration: none;
         }
 
         .auth-inline-link:hover {
-            color: #102a43;
+            color: #123A5A;
             text-decoration: underline;
         }
 
@@ -525,9 +517,8 @@
         <div class="auth-card">
             <aside class="auth-panel-brand">
                 <div class="auth-brand-inner">
-                    <a href="{{ route('home') }}" class="auth-brand" aria-label="SolMate home">
-                        <span class="auth-brand-mark">SM</span>
-                        <span>SolMate</span>
+                    <a href="{{ route('home') }}" class="auth-brand" aria-label="RDY home">
+                        <img src="{{ asset('images/rdy-logo-transparent.png') }}" alt="RDY logo" class="auth-brand-logo">
                     </a>
 
                     <div class="auth-brand-copy">

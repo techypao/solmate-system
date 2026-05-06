@@ -13,9 +13,9 @@ import {
 } from 'react-native';
 import WebView, {WebViewMessageEvent} from 'react-native-webview';
 
-const NAVY = '#152a4a';
-const GOLD = '#e8a800';
-const MUTED = '#7b8699';
+const NAVY = '#123A5A';
+const GOLD = '#F4D000';
+const MUTED = '#5E7288';
 const CARD = '#ffffff';
 
 const DEFAULT_COORDS = {
@@ -164,7 +164,7 @@ function buildMapHtml(initialCoords: Coordinates) {
       }
 
       .leaflet-container {
-        background: #dbeafe;
+        background: #EAF9FD;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
 
@@ -805,7 +805,7 @@ const styles = StyleSheet.create({
     borderColor: '#fecaca',
   },
   feedbackBannerInfo: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#EAF9FD',
     borderColor: '#bfdbfe',
   },
   feedbackText: {
@@ -826,7 +826,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     backgroundColor: '#f7f9fc',
-    borderColor: '#edf1f7',
+    borderColor: '#DDE7EE',
     borderRadius: 16,
     borderWidth: 1,
     color: NAVY,
@@ -851,7 +851,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   mapFrame: {
-    backgroundColor: '#dbeafe',
+    backgroundColor: '#EAF9FD',
     borderColor: '#dbe4f0',
     borderRadius: 22,
     borderWidth: 1,
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   webView: {
-    backgroundColor: '#dbeafe',
+    backgroundColor: '#EAF9FD',
     flex: 1,
   },
   actions: {

@@ -22,13 +22,13 @@ import {formatQuotationCurrency} from '../src/utils/currency';
 
 /* ── design tokens (matches app-wide system) ── */
 
-const NAVY = '#152a4a';
-const GOLD = '#e8a800';
-const MUTED = '#7b8699';
-const BG = '#e0e8f5';
+const NAVY = '#123A5A';
+const GOLD = '#F4D000';
+const MUTED = '#5E7288';
+const BG = '#F8FAFC';
 const CARD = '#ffffff';
 const R = 18;
-const DIVIDER = '#edf1f7';
+const DIVIDER = '#DDE7EE';
 
 /* ── format helpers (preserved from original) ── */
 
@@ -692,7 +692,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: '#edf1f7',
+    backgroundColor: '#DDE7EE',
   },
   badgeGreen: {backgroundColor: '#dcfce7'},
   badgeText: {fontSize: 12, fontWeight: '700', color: MUTED, textTransform: 'capitalize'},

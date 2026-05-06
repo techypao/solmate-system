@@ -14,7 +14,7 @@
 
         .testimony-card {
             padding: 18px;
-            border: 1px solid #d9e2ec;
+            border: 1px solid #DDE7EE;
             border-radius: 12px;
             background: #fbfcfe;
         }
@@ -38,7 +38,7 @@
 
         .image-tile {
             display: block;
-            border: 1px solid #d9e2ec;
+            border: 1px solid #DDE7EE;
             border-radius: 12px;
             overflow: hidden;
             background: #ffffff;
@@ -49,7 +49,7 @@
             width: 100%;
             height: 130px;
             object-fit: cover;
-            background: #e8f1fb;
+            background: #EAF9FD;
         }
 
         .image-tile span {
@@ -66,7 +66,7 @@
         }
 
         .existing-image-card {
-            border: 1px solid #d9e2ec;
+            border: 1px solid #DDE7EE;
             border-radius: 12px;
             background: #ffffff;
             overflow: hidden;
@@ -77,7 +77,7 @@
             width: 100%;
             height: 150px;
             object-fit: cover;
-            background: #e8f1fb;
+            background: #EAF9FD;
         }
 
         .existing-image-card label {
@@ -104,7 +104,7 @@
             width: 68px;
             height: 68px;
             border-radius: 999px;
-            background: #dbeafe;
+            background: #EAF9FD;
             margin: 0 auto 16px;
         }
     </style>
@@ -116,7 +116,7 @@
                 <p class="page-copy">Create, update, and track your own testimonies from the customer website dashboard.</p>
             </div>
             <div class="actions" style="margin-top: 0;">
-                <a href="{{ route('home') }}" class="secondary" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;font-weight:600;color:#475569;text-decoration:none;">
+                <a href="{{ route('home') }}" class="secondary" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:1.5px solid #DDE7EE;border-radius:8px;font-size:14px;font-weight:600;color:#5E7288;text-decoration:none;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
                     Back
                 </a>
@@ -505,7 +505,7 @@
                     <div class="existing-image-card">
                         ${imageUrl
                             ? `<img src="${escapeHtml(imageUrl)}" alt="Existing testimony image ${index + 1}">`
-                            : '<div style="height: 150px; background: #e8f1fb;"></div>'
+                            : '<div style="height: 150px; background: #EAF9FD;"></div>'
                         }
                         <label>
                             <input type="checkbox" data-remove-image-id="${image.id}"${checked}>
@@ -588,7 +588,7 @@
                                 if (!imageUrl) {
                                     return `
                                         <div class="image-tile">
-                                            <div style="height: 130px; background: #e8f1fb;"></div>
+                                            <div style="height: 130px; background: #EAF9FD;"></div>
                                             <span>Image ${index + 1} unavailable</span>
                                         </div>
                                     `;

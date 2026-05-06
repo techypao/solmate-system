@@ -10,7 +10,7 @@
         border-radius: 22px;
         background:
             radial-gradient(circle at top right, rgba(212, 160, 23, 0.18), transparent 32%),
-            linear-gradient(135deg, #102a43 0%, #163a5f 58%, #1f4d76 100%);
+            linear-gradient(135deg, #123A5A 0%, #123A5A 58%, #1f4d76 100%);
         color: #fff;
     }
     .qh-hero::after {
@@ -69,8 +69,8 @@
         width: 22px;
         height: 22px;
         border-radius: 50%;
-        background: #d4a017;
-        color: #102a43;
+        background: #F4D000;
+        color: #123A5A;
         font-size: 11px;
         font-weight: 800;
     }
@@ -87,7 +87,7 @@
         padding: 26px;
         border-radius: 22px;
         background: #fff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
     }
     .qh-card-accent {
@@ -99,17 +99,17 @@
         border-radius: 16px;
         margin-bottom: 18px;
         background: linear-gradient(135deg, rgba(212, 160, 23, 0.18), rgba(16, 42, 67, 0.14));
-        color: #102a43;
+        color: #123A5A;
     }
     .qh-card-title {
         margin: 0 0 10px;
         font-size: 22px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
     }
     .qh-card-desc {
         margin: 0 0 18px;
-        color: #475569;
+        color: #5E7288;
         font-size: 14px;
         line-height: 1.7;
     }
@@ -130,7 +130,7 @@
     }
     .qh-card-points svg {
         flex-shrink: 0;
-        color: #d4a017;
+        color: #F4D000;
     }
     .qh-card-footer {
         margin-top: auto;
@@ -142,7 +142,7 @@
     }
     .qh-card-note {
         font-size: 12px;
-        color: #64748b;
+        color: #5E7288;
     }
     .qh-btn {
         display: inline-flex;
@@ -163,11 +163,11 @@
         box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
     }
     .qh-btn-primary {
-        background: linear-gradient(135deg, #d4a017, #b8880f);
+        background: linear-gradient(135deg, #F4D000, #E6C200);
         color: #fff;
     }
     .qh-btn-secondary {
-        background: #102a43;
+        background: #123A5A;
         color: #fff;
     }
     .qh-tip {
@@ -175,13 +175,13 @@
         padding: 18px 20px;
         border-radius: 18px;
         background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        color: #475569;
+        border: 1px solid #DDE7EE;
+        color: #5E7288;
         font-size: 14px;
         line-height: 1.7;
     }
     .qh-tip strong {
-        color: #102a43;
+        color: #123A5A;
     }
 
     @media (max-width: 900px) {

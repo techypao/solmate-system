@@ -13,7 +13,7 @@
             top: 0;
             z-index: 100;
             padding: 0;
-            background: #f8f4ec;
+            background: #F8FAFC;
             border: none;
             border-radius: 0;
             box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
@@ -33,23 +33,16 @@
 
         .public-home-brand {
             display: inline-flex;
-            align-items: baseline;
+            align-items: center;
             text-decoration: none;
             flex-shrink: 0;
+            line-height: 0;
         }
 
-        .public-home-brand-sol {
-            color: #102a43;
-            font-size: 22px;
-            font-weight: 700;
-            letter-spacing: -0.3px;
-        }
-
-        .public-home-brand-mate {
-            color: #d4a017;
-            font-size: 22px;
-            font-weight: 700;
-            letter-spacing: -0.3px;
+        .public-home-logo {
+            display: block;
+            width: auto;
+            height: 40px;
         }
 
         .public-home-nav {
@@ -62,7 +55,7 @@
         }
 
         .public-home-nav-link {
-            color: #4b5563;
+            color: #5E7288;
             font-size: 14px;
             font-weight: 500;
             text-decoration: none;
@@ -73,8 +66,8 @@
 
         .public-home-nav-link:hover,
         .public-home-nav-link.is-active {
-            color: #102a43;
-            border-bottom-color: #d4a017;
+            color: #123A5A;
+            border-bottom-color: #F4D000;
             text-decoration: none;
         }
 
@@ -105,24 +98,24 @@
 
         .public-home-btn-secondary {
             background: transparent;
-            color: #102a43;
-            border: 1.5px solid #d9e2ec;
+            color: #123A5A;
+            border: 1.5px solid #DDE7EE;
         }
 
         .public-home-btn-secondary:hover {
             background: rgba(16, 42, 67, 0.04);
-            border-color: #102a43;
+            border-color: #123A5A;
         }
 
         .public-home-btn-primary {
-            background: #102a43;
+            background: #123A5A;
             color: #ffffff;
-            border: 1.5px solid #102a43;
+            border: 1.5px solid #123A5A;
             font-weight: 600;
         }
 
         .public-home-btn-primary:hover {
-            background: #0d2237;
+            background: #0F2F4A;
             color: #ffffff;
         }
 
@@ -131,8 +124,8 @@
             overflow: hidden;
             background:
                 radial-gradient(circle at top right, rgba(212, 160, 23, 0.18), transparent 28%),
-                linear-gradient(135deg, #f0f7ff 0%, #f8fbff 48%, #fff8e7 100%);
-            border-color: #dbe7f3;
+                linear-gradient(135deg, #F8FAFC 0%, #F8FAFC 48%, #fff8e7 100%);
+            border-color: #DDE7EE;
             box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
         }
 
@@ -168,7 +161,7 @@
             border-radius: 999px;
             background: rgba(255, 255, 255, 0.82);
             border: 1px solid rgba(212, 160, 23, 0.24);
-            color: #9a6b00;
+            color: #123A5A;
             font-size: 12px;
             font-weight: 800;
             letter-spacing: 0.05em;
@@ -181,14 +174,14 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #d4a017;
+            background: #F4D000;
             display: inline-block;
         }
 
         .public-reviews-subtitle {
             max-width: 700px;
             margin: 0;
-            color: #52606d;
+            color: #5E7288;
             font-size: 15px;
             line-height: 1.8;
         }
@@ -210,9 +203,9 @@
 
         .public-reviews-filter-btn {
             appearance: none;
-            border: 1px solid #c9d9e8;
+            border: 1px solid #DDE7EE;
             background: #ffffff;
-            color: #1e4068;
+            color: #20A7C9;
             border-radius: 999px;
             padding: 10px 16px;
             font-size: 13px;
@@ -223,14 +216,14 @@
         }
 
         .public-reviews-filter-btn:hover {
-            border-color: #9fb9d4;
+            border-color: #7DDFF2;
             transform: translateY(-1px);
         }
 
         .public-reviews-filter-btn.is-active {
-            background: #102a43;
+            background: #123A5A;
             color: #ffffff;
-            border-color: #102a43;
+            border-color: #123A5A;
         }
 
         .public-reviews-filter-btn:focus-visible,
@@ -243,7 +236,7 @@
         .public-reviews-refresh {
             appearance: none;
             border: none;
-            background: linear-gradient(135deg, #102a43 0%, #1e4068 100%);
+            background: linear-gradient(135deg, #123A5A 0%, #20A7C9 100%);
             color: #ffffff;
             border-radius: 12px;
             padding: 12px 18px;
@@ -290,7 +283,7 @@
 
         .public-review-customer-name {
             margin: 0 0 4px;
-            color: #102a43;
+            color: #123A5A;
             font-size: 18px;
             line-height: 1.25;
             font-weight: 800;
@@ -299,7 +292,7 @@
 
         .public-review-customer-meta {
             margin: 0;
-            color: #64748b;
+            color: #5E7288;
             font-size: 13px;
         }
 
@@ -309,15 +302,15 @@
             gap: 8px;
             padding: 8px 12px;
             border-radius: 999px;
-            background: #fff8e7;
-            color: #8b6300;
+            background: #FFF7CC;
+            color: #123A5A;
             flex-shrink: 0;
         }
 
         .public-review-stars {
             display: inline-flex;
             gap: 2px;
-            color: #d4a017;
+            color: #F4D000;
             font-size: 14px;
             line-height: 1;
         }
@@ -331,7 +324,7 @@
 
         .public-review-message {
             margin: 0;
-            color: #334e68;
+            color: #0F2F4A;
             font-size: 14px;
             line-height: 1.85;
         }
@@ -346,8 +339,8 @@
         .public-review-image-empty {
             border-radius: 16px;
             overflow: hidden;
-            border: 1px solid #dbe7f3;
-            background: #f8fbff;
+            border: 1px solid #DDE7EE;
+            background: #F8FAFC;
         }
 
         .public-review-image-link {
@@ -386,7 +379,7 @@
             border: 1px dashed #cfdbe8;
             border-radius: 20px;
             background: linear-gradient(180deg, #fcfeff 0%, #f7fbff 100%);
-            color: #52606d;
+            color: #5E7288;
         }
 
         .public-review-empty-illustration {
@@ -396,14 +389,14 @@
             border-radius: 24px;
             background:
                 radial-gradient(circle at top, rgba(212, 160, 23, 0.92) 0%, rgba(212, 160, 23, 0.38) 34%, rgba(212, 160, 23, 0) 62%),
-                linear-gradient(180deg, #dff1ff 0%, #ffffff 100%);
+                linear-gradient(180deg, #EAF9FD 0%, #ffffff 100%);
             box-shadow: inset 0 0 0 1px rgba(212, 160, 23, 0.14);
         }
 
         .public-review-empty strong {
             display: block;
             margin-bottom: 8px;
-            color: #102a43;
+            color: #123A5A;
             font-size: 18px;
         }
 
@@ -461,8 +454,8 @@
         @guest
             <header class="card public-home-header" aria-label="Public site header">
                 <div class="public-home-header-inner">
-                    <a href="{{ route('home') }}" class="public-home-brand" aria-label="SolMate home">
-                        <span class="public-home-brand-sol">Sol</span><span class="public-home-brand-mate">Mate</span>
+                    <a href="{{ route('home') }}" class="public-home-brand" aria-label="RDY home">
+                        <img src="{{ asset('images/rdy-logo-transparent.png') }}" alt="RDY logo" class="public-home-logo">
                     </a>
 
                     <nav class="public-home-nav" aria-label="Public navigation">

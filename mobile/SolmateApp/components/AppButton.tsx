@@ -7,6 +7,7 @@ import {
   TextStyle,
   ViewStyle,
 } from 'react-native';
+import {solmateColors} from '../src/theme/colors';
 
 type AppButtonVariant = 'primary' | 'secondary' | 'outline';
 
@@ -21,9 +22,9 @@ type AppButtonProps = {
 
 const buttonVariantStyles: Record<AppButtonVariant, ViewStyle> = {
   primary: {
-    backgroundColor: '#2563eb',
-    borderColor: '#2563eb',
-    shadowColor: '#1d4ed8',
+    backgroundColor: solmateColors.primary,
+    borderColor: solmateColors.primary,
+    shadowColor: solmateColors.primaryHover,
     shadowOffset: {
       width: 0,
       height: 10,
@@ -33,24 +34,24 @@ const buttonVariantStyles: Record<AppButtonVariant, ViewStyle> = {
     elevation: 4,
   },
   secondary: {
-    backgroundColor: '#e5e7eb',
-    borderColor: '#e5e7eb',
+    backgroundColor: solmateColors.infoSoft,
+    borderColor: solmateColors.accentSky,
   },
   outline: {
-    backgroundColor: '#ffffff',
-    borderColor: '#2563eb',
+    backgroundColor: solmateColors.white,
+    borderColor: solmateColors.accentStrong,
   },
 };
 
 const textVariantStyles: Record<AppButtonVariant, TextStyle> = {
   primary: {
-    color: '#ffffff',
+    color: solmateColors.text,
   },
   secondary: {
-    color: '#111827',
+    color: solmateColors.text,
   },
   outline: {
-    color: '#2563eb',
+    color: solmateColors.accentStrong,
   },
 };
 

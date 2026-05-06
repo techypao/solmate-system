@@ -75,6 +75,35 @@
     $formatAdminDateTime = fn ($value) => $value
         ? \Illuminate\Support\Carbon::parse($value)->format('M d, Y g:i A')
         : null;
+    $parseRequestDetailCards = function (?string $details) {
+        return collect(preg_split('/\r\n|\r|\n/', trim((string) $details)))
+            ->map(fn ($line) => trim((string) $line))
+            ->filter()
+            ->map(function (string $line) {
+                if (str_contains($line, ':')) {
+                    [$label, $value] = array_map('trim', explode(':', $line, 2));
+
+                    return [
+                        'label' => $label !== '' ? $label : 'Request Details / Description',
+                        'value' => $value !== '' ? $value : 'Not provided',
+                        'wide' => mb_strlen($value) > 96,
+                    ];
+                }
+
+                return [
+                    'label' => 'Request Details / Description',
+                    'value' => $line,
+                    'wide' => mb_strlen($line) > 96,
+                ];
+            })
+            ->values();
+    };
+
+    $latestRequestReview = function ($serviceRequest) {
+        return $serviceRequest->testimonies()
+            ->latest('created_at')
+            ->first();
+    };
     $awaitingCompletionReviewCount = $sortedServiceRequests
         ->filter(fn ($request) => $request->completionReport && $request->status !== 'completed')
         ->count()
@@ -91,12 +120,12 @@
         }
 
         .assignment-page .request-card .info-box {
-            background: #f8fbff;
+            background: #F8FAFC;
         }
 
         .assignment-page .request-card form + form {
             padding-top: 16px;
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid #DDE7EE;
         }
 
         .assignment-page .request-card .stack {
@@ -119,10 +148,10 @@
         .assignment-page .request-card {
             display: grid;
             gap: 18px;
-            border: 1px solid #dbe4f0;
+            border: 1px solid #DDE7EE;
             border-radius: 20px;
             padding: 18px 20px;
-            background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+            background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%);
             box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
             transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
         }
@@ -163,9 +192,9 @@
             padding: 6px;
             max-width: 100%;
             overflow-x: auto;
-            border: 1px solid #dbe4f0;
+            border: 1px solid #DDE7EE;
             border-radius: 999px;
-            background: #f8fbff;
+            background: #F8FAFC;
             -webkit-overflow-scrolling: touch;
         }
 
@@ -189,7 +218,7 @@
 
         .services-tab-link.active {
             color: #fff;
-            background: linear-gradient(135deg, #173b63, #2a5b92);
+            background: linear-gradient(135deg, #20A7C9, #2a5b92);
             box-shadow: 0 12px 26px rgba(23, 59, 99, .22);
         }
 
@@ -207,7 +236,7 @@
         }
 
         .services-tab-link:not(.active) .services-tab-count {
-            background: #dbe4f0;
+            background: #DDE7EE;
             color: #4b5b73;
         }
 
@@ -222,9 +251,9 @@
             justify-content: space-between;
             gap: 12px;
             padding: 14px 16px;
-            border: 1px solid #c7d8ec;
+            border: 1px solid #DDE7EE;
             border-radius: 16px;
-            background: linear-gradient(135deg, #eef6ff 0%, #f8fbff 100%);
+            background: linear-gradient(135deg, #EAF9FD 0%, #F8FAFC 100%);
         }
 
         .services-focus-banner.is-visible {
@@ -233,7 +262,7 @@
 
         .services-focus-copy {
             margin: 0;
-            color: #173b63;
+            color: #20A7C9;
             font-size: 14px;
             font-weight: 700;
         }
@@ -251,7 +280,7 @@
             min-height: 32px;
             padding: 0 12px;
             border-radius: 999px;
-            background: #173b63;
+            background: #20A7C9;
             color: #fff;
             font-size: 12px;
             font-weight: 800;
@@ -297,16 +326,16 @@
             flex-direction: column;
             justify-content: center;
             padding: 10px 12px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #DDE7EE;
             border-radius: 14px;
-            background: #f8fbff;
+            background: #F8FAFC;
             min-height: 100%;
         }
 
         .request-summary-label {
             display: block;
             margin-bottom: 4px;
-            color: #64748b;
+            color: #5E7288;
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
@@ -314,7 +343,7 @@
         }
 
         .request-summary-value {
-            color: #17324f;
+            color: #123A5A;
             font-size: 13px;
             font-weight: 700;
             line-height: 1.45;
@@ -339,8 +368,8 @@
             width: fit-content;
             padding: 4px 10px;
             border-radius: 999px;
-            background: #eef6ff;
-            color: #173b63;
+            background: #EAF9FD;
+            color: #20A7C9;
             font-size: 11px;
             font-weight: 800;
             text-transform: uppercase;
@@ -352,7 +381,7 @@
             margin-left: 8px;
             padding: 4px 10px;
             border-radius: 999px;
-            background: #173b63;
+            background: #20A7C9;
             color: #fff;
             font-size: 11px;
             font-weight: 800;
@@ -389,10 +418,10 @@
             gap: 8px;
             min-height: 40px;
             padding: 0 14px;
-            border: 1px solid #c7d8ec;
+            border: 1px solid #DDE7EE;
             border-radius: 12px;
             background: #fff;
-            color: #17324f;
+            color: #123A5A;
             font-size: 13px;
             font-weight: 800;
             cursor: pointer;
@@ -401,13 +430,13 @@
 
         .request-toggle-btn:hover {
             border-color: #2a5b92;
-            color: #173b63;
-            background: #f8fbff;
+            color: #20A7C9;
+            background: #F8FAFC;
         }
 
         .request-card.is-active .request-toggle-btn {
-            background: #173b63;
-            border-color: #173b63;
+            background: #20A7C9;
+            border-color: #20A7C9;
             color: #fff;
         }
 
@@ -415,22 +444,83 @@
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         }
 
+        .request-section {
+            display: grid;
+            gap: 12px;
+            padding: 18px;
+            border: 1px solid #DDE7EE;
+            border-radius: 18px;
+            background: #ffffff;
+        }
+
+        .request-section-header {
+            display: grid;
+            gap: 4px;
+        }
+
+        .request-section-title {
+            margin: 0;
+            color: #123A5A;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .request-section-copy {
+            margin: 0;
+            color: #5E7288;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .request-section .detail-grid {
+            margin-bottom: 0 !important;
+        }
+
+        .request-section .detail-item {
+            min-height: 100%;
+            background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%);
+        }
+
+        .request-section .detail-item strong {
+            display: block;
+            color: #123A5A;
+            line-height: 1.65;
+            word-break: break-word;
+            white-space: pre-line;
+        }
+
+        .request-section .detail-item--wide {
+            grid-column: 1 / -1;
+        }
+
+        .request-empty-card {
+            padding: 16px 18px;
+            border: 1px dashed #DDE7EE;
+            border-radius: 16px;
+            background: #F8FAFC;
+            color: #5E7288;
+            font-size: 13.5px;
+            font-weight: 700;
+            line-height: 1.6;
+        }
+
         .request-card-body .stack {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 16px;
-            align-items: start;
+            align-items: stretch;
         }
 
         .request-card-body .stack > form {
             display: grid;
+            grid-template-rows: auto 1fr auto;
             align-content: start;
             gap: 10px;
             min-height: 100%;
             padding: 16px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #DDE7EE;
             border-radius: 16px;
-            background: #ffffff;
+            background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%);
         }
 
         .request-card-body .stack > form label {
@@ -438,8 +528,8 @@
         }
 
         .request-card-body .assignment-row {
-            grid-template-columns: minmax(0, 1fr) auto;
-            align-items: stretch;
+            grid-template-columns: 1fr;
+            align-items: start;
             gap: 12px;
         }
 
@@ -457,12 +547,27 @@
         }
 
         .request-card-body .assignment-row button {
-            min-width: 168px;
+            width: 100%;
+            min-width: 0;
             min-height: 46px;
             height: 46px;
             padding: 0 16px;
             align-self: stretch;
+            border: none;
+            background: linear-gradient(135deg, #F4D000 0%, #E6C200 100%);
+            color: #0F2F4A;
+            font-weight: 800;
             box-shadow: 0 10px 20px rgba(212, 160, 23, 0.16);
+        }
+
+        .request-card-body .assignment-row button:hover:not(:disabled) {
+            background: linear-gradient(135deg, #E6C200 0%, #F4D000 100%);
+        }
+
+        .request-card-body .assignment-row button:disabled {
+            opacity: .65;
+            cursor: not-allowed;
+            box-shadow: none;
         }
 
         .request-card-body .field-error {
@@ -998,6 +1103,9 @@
                             } else {
                                 $completionMessage = 'No technician completion notes have been submitted yet.';
                             }
+
+                            $serviceDetailCards = $parseRequestDetailCards($serviceRequest->details);
+                            $latestServiceReview = $latestRequestReview($serviceRequest);
                         @endphp
 
                         <div
@@ -1044,10 +1152,6 @@
 
                                 <div class="request-summary-grid">
                                     <div class="request-summary-item">
-                                        <span class="request-summary-label">Contact</span>
-                                        <div class="request-summary-value">{{ $serviceRequest->contact_number ?: 'Not provided' }}</div>
-                                    </div>
-                                    <div class="request-summary-item">
                                         <span class="request-summary-label">Preferred Date</span>
                                         <div class="request-summary-value" data-service-preferred-date-for="{{ $requestKey }}">{{ $dateNeeded }}</div>
                                     </div>
@@ -1056,50 +1160,90 @@
                                         <div class="request-summary-value" data-technician-for="{{ $requestKey }}">{{ $technicianSummary }}</div>
                                     </div>
                                     <div class="request-summary-item">
+                                        <span class="request-summary-label">Official Status</span>
+                                        <div class="request-summary-value" data-service-status-summary-for="{{ $requestKey }}">
+                                            {{ \Illuminate\Support\Str::headline($serviceRequest->status) }}
+                                        </div>
+                                    </div>
+                                    <div class="request-summary-item">
                                         <span class="request-summary-label">Completion</span>
                                         <div class="request-summary-value" data-completion-summary-for="{{ $requestKey }}">{{ $completionStateLabel }}</div>
-                                    </div>
-                                    <div class="request-summary-item">
-                                        <span class="request-summary-label">Address</span>
-                                        <div class="request-summary-value">{{ $serviceRequest->address ?: 'Not provided' }}</div>
-                                    </div>
-                                    <div class="request-summary-item">
-                                        <span class="request-summary-label">Address Details</span>
-                                        <div class="request-summary-value">{{ $serviceRequest->address_details ?: 'Not provided' }}</div>
-                                    </div>
-                                    <div class="request-summary-item">
-                                        <span class="request-summary-label">Request Type</span>
-                                        <div class="request-summary-value">{{ $serviceRequest->request_type ?: 'Installation' }}</div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="request-card-body">
-                                <div class="detail-grid" style="margin-bottom: 14px;">
-                                    <div class="detail-item">
-                                        <span class="detail-label">Customer Email</span>
-                                        <strong>{{ $serviceRequest->customer?->email ?? 'Not available' }}</strong>
+                                <div class="request-section">
+                                    <div class="request-section-header">
+                                        <h4 class="request-section-title">Customer information</h4>
+                                        <p class="request-section-copy">Primary contact and location details for this service request.</p>
                                     </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Contact Number</span>
-                                        <strong>{{ $serviceRequest->contact_number ?: 'Not provided' }}</strong>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Address</span>
-                                        <strong>{{ $serviceRequest->address ?: 'Not provided' }}</strong>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Address Details</span>
-                                        <strong>{{ $serviceRequest->address_details ?: 'Not provided' }}</strong>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Request Type</span>
-                                        <strong>{{ $serviceRequest->request_type ?: 'Not specified' }}</strong>
+                                    <div class="detail-grid">
+                                        <div class="detail-item">
+                                            <span class="detail-label">Customer Email</span>
+                                            <strong>{{ $serviceRequest->customer?->email ?? 'Not available' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Contact Number</span>
+                                            <strong>{{ $serviceRequest->contact_number ?: 'Not provided' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Address</span>
+                                            <strong>{{ $serviceRequest->address ?: 'Not provided' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Address Details</span>
+                                            <strong>{{ $serviceRequest->address_details ?: 'Not provided' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Request Type</span>
+                                            <strong>{{ $serviceRequest->request_type ?: 'Not specified' }}</strong>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="info-box request-detail-box">
-                                    <strong>Request details:</strong> {{ $serviceRequest->details }}
+                                <div class="request-section">
+                                    <div class="request-section-header">
+                                        <h4 class="request-section-title">Request details</h4>
+                                        <p class="request-section-copy">Structured request information displayed in the same card style as the customer section.</p>
+                                    </div>
+                                    @if ($serviceDetailCards->isNotEmpty())
+                                        <div class="detail-grid">
+                                            @foreach ($serviceDetailCards as $detailCard)
+                                                <div class="detail-item {{ $detailCard['wide'] ? 'detail-item--wide' : '' }}">
+                                                    <span class="detail-label">{{ $detailCard['label'] }}</span>
+                                                    <strong>{{ $detailCard['value'] }}</strong>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <div class="request-empty-card">No request details were provided.</div>
+                                    @endif
+                                </div>
+
+                                <div class="request-section">
+                                    <div class="request-section-header">
+                                        <h4 class="request-section-title">Customer review</h4>
+                                        <p class="request-section-copy">Latest submitted customer feedback for this request.</p>
+                                    </div>
+                                    @if ($latestServiceReview)
+                                        <div class="detail-grid">
+                                            <div class="detail-item">
+                                                <span class="detail-label">Rating</span>
+                                                <strong>{{ $latestServiceReview->rating ? $latestServiceReview->rating . ' / 5' : 'Not provided' }}</strong>
+                                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label">Review Date</span>
+                                                <strong>{{ $formatAdminDateTime($latestServiceReview->created_at) ?? 'Not available' }}</strong>
+                                            </div>
+                                            <div class="detail-item detail-item--wide">
+                                                <span class="detail-label">Review / Feedback</span>
+                                                <strong>{{ $latestServiceReview->message ?: 'No written feedback provided.' }}</strong>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="request-empty-card">No customer review yet.</div>
+                                    @endif
                                 </div>
 
                                 <div class="info-box request-detail-box">
@@ -1291,6 +1435,9 @@
                             } else {
                                 $completionMessage = 'No technician completion notes have been submitted yet.';
                             }
+
+                            $serviceDetailCards = $parseRequestDetailCards($serviceRequest->details);
+                            $latestServiceReview = $latestRequestReview($serviceRequest);
                         @endphp
 
                         <div
@@ -1337,10 +1484,6 @@
 
                                 <div class="request-summary-grid">
                                     <div class="request-summary-item">
-                                        <span class="request-summary-label">Contact</span>
-                                        <div class="request-summary-value">{{ $serviceRequest->contact_number ?: 'Not provided' }}</div>
-                                    </div>
-                                    <div class="request-summary-item">
                                         <span class="request-summary-label">Preferred Date</span>
                                         <div class="request-summary-value" data-service-preferred-date-for="{{ $requestKey }}">{{ $dateNeeded }}</div>
                                     </div>
@@ -1349,50 +1492,90 @@
                                         <div class="request-summary-value" data-technician-for="{{ $requestKey }}">{{ $technicianSummary }}</div>
                                     </div>
                                     <div class="request-summary-item">
+                                        <span class="request-summary-label">Official Status</span>
+                                        <div class="request-summary-value" data-service-status-summary-for="{{ $requestKey }}">
+                                            {{ \Illuminate\Support\Str::headline($serviceRequest->status) }}
+                                        </div>
+                                    </div>
+                                    <div class="request-summary-item">
                                         <span class="request-summary-label">Completion</span>
                                         <div class="request-summary-value" data-completion-summary-for="{{ $requestKey }}">{{ $completionStateLabel }}</div>
-                                    </div>
-                                    <div class="request-summary-item">
-                                        <span class="request-summary-label">Address</span>
-                                        <div class="request-summary-value">{{ $serviceRequest->address ?: 'Not provided' }}</div>
-                                    </div>
-                                    <div class="request-summary-item">
-                                        <span class="request-summary-label">Address Details</span>
-                                        <div class="request-summary-value">{{ $serviceRequest->address_details ?: 'Not provided' }}</div>
-                                    </div>
-                                    <div class="request-summary-item">
-                                        <span class="request-summary-label">Request Type</span>
-                                        <div class="request-summary-value">{{ $serviceRequest->request_type ?: 'Maintenance' }}</div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="request-card-body">
-                                <div class="detail-grid" style="margin-bottom: 14px;">
-                                    <div class="detail-item">
-                                        <span class="detail-label">Customer Email</span>
-                                        <strong>{{ $serviceRequest->customer?->email ?? 'Not available' }}</strong>
+                                <div class="request-section">
+                                    <div class="request-section-header">
+                                        <h4 class="request-section-title">Customer information</h4>
+                                        <p class="request-section-copy">Primary contact and location details for this service request.</p>
                                     </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Contact Number</span>
-                                        <strong>{{ $serviceRequest->contact_number ?: 'Not provided' }}</strong>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Address</span>
-                                        <strong>{{ $serviceRequest->address ?: 'Not provided' }}</strong>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Address Details</span>
-                                        <strong>{{ $serviceRequest->address_details ?: 'Not provided' }}</strong>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Request Type</span>
-                                        <strong>{{ $serviceRequest->request_type ?: 'Not specified' }}</strong>
+                                    <div class="detail-grid">
+                                        <div class="detail-item">
+                                            <span class="detail-label">Customer Email</span>
+                                            <strong>{{ $serviceRequest->customer?->email ?? 'Not available' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Contact Number</span>
+                                            <strong>{{ $serviceRequest->contact_number ?: 'Not provided' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Address</span>
+                                            <strong>{{ $serviceRequest->address ?: 'Not provided' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Address Details</span>
+                                            <strong>{{ $serviceRequest->address_details ?: 'Not provided' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Request Type</span>
+                                            <strong>{{ $serviceRequest->request_type ?: 'Not specified' }}</strong>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="info-box request-detail-box">
-                                    <strong>Request details:</strong> {{ $serviceRequest->details }}
+                                <div class="request-section">
+                                    <div class="request-section-header">
+                                        <h4 class="request-section-title">Request details</h4>
+                                        <p class="request-section-copy">Structured request information displayed in the same card style as the customer section.</p>
+                                    </div>
+                                    @if ($serviceDetailCards->isNotEmpty())
+                                        <div class="detail-grid">
+                                            @foreach ($serviceDetailCards as $detailCard)
+                                                <div class="detail-item {{ $detailCard['wide'] ? 'detail-item--wide' : '' }}">
+                                                    <span class="detail-label">{{ $detailCard['label'] }}</span>
+                                                    <strong>{{ $detailCard['value'] }}</strong>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <div class="request-empty-card">No request details were provided.</div>
+                                    @endif
+                                </div>
+
+                                <div class="request-section">
+                                    <div class="request-section-header">
+                                        <h4 class="request-section-title">Customer review</h4>
+                                        <p class="request-section-copy">Latest submitted customer feedback for this request.</p>
+                                    </div>
+                                    @if ($latestServiceReview)
+                                        <div class="detail-grid">
+                                            <div class="detail-item">
+                                                <span class="detail-label">Rating</span>
+                                                <strong>{{ $latestServiceReview->rating ? $latestServiceReview->rating . ' / 5' : 'Not provided' }}</strong>
+                                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label">Review Date</span>
+                                                <strong>{{ $formatAdminDateTime($latestServiceReview->created_at) ?? 'Not available' }}</strong>
+                                            </div>
+                                            <div class="detail-item detail-item--wide">
+                                                <span class="detail-label">Review / Feedback</span>
+                                                <strong>{{ $latestServiceReview->message ?: 'No written feedback provided.' }}</strong>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="request-empty-card">No customer review yet.</div>
+                                    @endif
                                 </div>
 
                                 <div class="info-box request-detail-box">
@@ -1528,8 +1711,8 @@
     <script type="application/json" id="__data_serviceRequestRecords">@json($serviceRequestRecords)</script>
     <script type="application/json" id="__data_inspectionRequestRecords">@json($inspectionRequestRecords)</script>
     <script type="application/json" id="__data_serviceTabCounts">@json($serviceTabCounts)</script>
+    <script type="application/json" id="__data_adminServicePopup">@json($adminServicePopup)</script>
     <script>
-        const adminServicePopup = @json($adminServicePopup);
         const reservedDateMessage = 'Selected date is already reserved. Please choose another date.';
         const successBox = document.getElementById('assignment-success');
         const errorBox = document.getElementById('assignment-error');
@@ -1546,6 +1729,7 @@
         const requestCards = document.querySelectorAll('[data-request-card]');
         const focusBanners = document.querySelectorAll('[data-services-focus-banner]');
         const lockingStatuses = new Set(['pending', 'approved', 'scheduled', 'assigned', 'in_progress']);
+        const adminServicePopup = JSON.parse(document.getElementById('__data_adminServicePopup').textContent);
         const serviceRequestRecords = JSON.parse(document.getElementById('__data_serviceRequestRecords').textContent);
         const inspectionRequestRecords = JSON.parse(document.getElementById('__data_inspectionRequestRecords').textContent);
         const serviceTabCounts = JSON.parse(document.getElementById('__data_serviceTabCounts').textContent);
@@ -2139,6 +2323,7 @@
                 const completionMessage = document.querySelector(`[data-completion-detail-for="${requestKey}"]`);
                 const completionSummary = document.querySelector(`[data-completion-summary-for="${requestKey}"]`);
                 const statusBadge = document.querySelector(`[data-status-for="${requestKey}"]`);
+                const serviceStatusSummary = document.querySelector(`[data-service-status-summary-for="${requestKey}"]`);
                 const inspectionStatusSummary = document.querySelector(`[data-inspection-status-summary-for="${requestKey}"]`);
                 const selectedOption = select.options[select.selectedIndex];
 
@@ -2173,6 +2358,10 @@
                         if (statusBadge) {
                             statusBadge.textContent = formatStatus(updatedStatus);
                             statusBadge.className = statusBadgeClass(updatedStatus);
+                        }
+
+                        if (serviceStatusSummary) {
+                            serviceStatusSummary.textContent = formatStatus(updatedStatus);
                         }
 
                         if (inspectionStatusSummary) {
@@ -2230,6 +2419,7 @@
                 const inlineError = form.querySelector('[data-form-error]');
                 const requestKey = form.dataset.requestKey;
                 const statusBadge = document.querySelector(`[data-status-for="${requestKey}"]`);
+                const serviceStatusSummary = document.querySelector(`[data-service-status-summary-for="${requestKey}"]`);
                 const completionStateBadge = document.querySelector(`[data-completion-state-for="${requestKey}"]`);
                 const completionMessage = document.querySelector(`[data-completion-detail-for="${requestKey}"]`);
                 const completionSummary = document.querySelector(`[data-completion-summary-for="${requestKey}"]`);
@@ -2250,6 +2440,10 @@
                     if (statusBadge) {
                         statusBadge.textContent = formatStatus(updatedStatus);
                         statusBadge.className = statusBadgeClass(updatedStatus);
+                    }
+
+                    if (serviceStatusSummary) {
+                        serviceStatusSummary.textContent = formatStatus(updatedStatus);
                     }
 
                     updateRequestRecord(requestKey, {

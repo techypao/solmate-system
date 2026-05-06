@@ -1,4 +1,5 @@
 import {TechnicianInspectionRequest} from '../services/technicianApi';
+import {getSolmateStatusColors} from '../theme/colors';
 
 export function formatDate(value?: string | null, fallback = 'Not specified') {
   if (!value) {
@@ -47,33 +48,7 @@ export function formatServiceRequestStatus(status?: string | null) {
 }
 
 export function getServiceRequestStatusColors(status?: string | null) {
-  switch ((status || '').toLowerCase()) {
-    case 'pending':
-      return {
-        backgroundColor: '#fef3c7',
-        textColor: '#92400e',
-      };
-    case 'assigned':
-      return {
-        backgroundColor: '#ede9fe',
-        textColor: '#6d28d9',
-      };
-    case 'in_progress':
-      return {
-        backgroundColor: '#dbeafe',
-        textColor: '#1d4ed8',
-      };
-    case 'completed':
-      return {
-        backgroundColor: '#dcfce7',
-        textColor: '#166534',
-      };
-    default:
-      return {
-        backgroundColor: '#e2e8f0',
-        textColor: '#475569',
-      };
-  }
+  return getSolmateStatusColors(status);
 }
 
 export function getCustomerName(

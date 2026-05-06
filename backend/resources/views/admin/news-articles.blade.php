@@ -11,8 +11,8 @@
     <style>
         .news-admin-panel {
             padding: 20px;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-            border: 1px solid #dbe7f3;
+            background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%);
+            border: 1px solid #DDE7EE;
             border-radius: 18px;
             box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
         }
@@ -27,7 +27,7 @@
             display: flex;
             flex-direction: column;
             min-height: 100%;
-            border: 1px solid #dbe7f3;
+            border: 1px solid #DDE7EE;
             border-radius: 18px;
             overflow: hidden;
             background: #ffffff;
@@ -36,7 +36,7 @@
 
         .news-admin-thumb {
             aspect-ratio: 16 / 9;
-            background: linear-gradient(135deg, #dff1ff 0%, #f7fbff 52%, #fff2c8 100%);
+            background: linear-gradient(135deg, #EAF9FD 0%, #f7fbff 52%, #fff2c8 100%);
             overflow: hidden;
         }
 
@@ -54,7 +54,7 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            color: #64748b;
+            color: #5E7288;
             font-size: 13px;
             text-align: center;
             line-height: 1.6;
@@ -71,7 +71,7 @@
 
         .news-admin-card-title {
             margin: 0;
-            color: #102a43;
+            color: #123A5A;
             font-size: 17px;
             font-weight: 700;
             line-height: 1.35;
@@ -79,7 +79,7 @@
 
         .news-admin-card-desc {
             margin: 0;
-            color: #52606d;
+            color: #5E7288;
             font-size: 13px;
             line-height: 1.7;
         }
@@ -91,15 +91,15 @@
 
         .news-admin-meta-item {
             padding: 12px 14px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #DDE7EE;
             border-radius: 14px;
-            background: #fbfdff;
+            background: #F8FAFC;
         }
 
         .news-admin-meta-label {
             display: block;
             margin-bottom: 4px;
-            color: #94a3b8;
+            color: #7F92A3;
             font-size: 11px;
             font-weight: 700;
             letter-spacing: 0.08em;
@@ -108,7 +108,7 @@
 
         .news-admin-meta-value {
             display: block;
-            color: #102a43;
+            color: #123A5A;
             font-size: 13px;
             font-weight: 600;
             line-height: 1.6;
@@ -135,7 +135,7 @@
             border: 1px solid #c7d7e7;
             border-radius: 12px;
             background: #ffffff;
-            color: #102a43;
+            color: #123A5A;
             font-size: 13px;
             font-weight: 600;
             text-decoration: none;
@@ -143,7 +143,7 @@
 
         .news-admin-link-btn:hover {
             text-decoration: none;
-            background: #f8fbff;
+            background: #F8FAFC;
         }
     </style>
 

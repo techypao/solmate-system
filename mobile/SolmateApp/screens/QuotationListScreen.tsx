@@ -16,12 +16,12 @@ import {formatQuotationCurrency} from '../src/utils/currency';
 
 /* ── design tokens ── */
 
-const NAVY = '#152a4a';
-const GOLD = '#e8a800';
-const MUTED = '#7b8699';
-const BG = '#e0e8f5';
+const NAVY = '#123A5A';
+const GOLD = '#F4D000';
+const MUTED = '#5E7288';
+const BG = '#F8FAFC';
 const CARD = '#ffffff';
-const DIVIDER = '#edf1f7';
+const DIVIDER = '#DDE7EE';
 
 /* ── types ── */
 
@@ -99,7 +99,7 @@ function getQuoteIdLabel(item: Quotation) {
 
 function getTypeBadgeColors(type?: string | null) {
   if ((type || '').toLowerCase() === 'final') {
-    return {bg: '#dbeafe', text: '#1d4ed8'};
+    return {bg: '#EAF9FD', text: '#1d4ed8'};
   }
   return {bg: '#ede9fe', text: '#6d28d9'};
 }
@@ -109,11 +109,11 @@ function getStatusBadgeColors(status?: string | null) {
     case 'approved':
       return {bg: '#dcfce7', text: '#166534'};
     case 'completed':
-      return {bg: '#dbeafe', text: '#1d4ed8'};
+      return {bg: '#EAF9FD', text: '#1d4ed8'};
     case 'rejected':
       return {bg: '#fee2e2', text: '#b91c1c'};
     default:
-      return {bg: '#fef3c7', text: '#92400e'};
+      return {bg: '#FFF7CC', text: '#92400e'};
   }
 }
 

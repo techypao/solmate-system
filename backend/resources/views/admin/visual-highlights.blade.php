@@ -11,8 +11,8 @@
     <style>
         .visual-highlights-panel {
             padding: 20px;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-            border: 1px solid #dbe7f3;
+            background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%);
+            border: 1px solid #DDE7EE;
             border-radius: 18px;
             box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
         }
@@ -24,7 +24,7 @@
         }
 
         .visual-highlight-card {
-            border: 1px solid #dbe7f3;
+            border: 1px solid #DDE7EE;
             border-radius: 16px;
             overflow: hidden;
             background: #ffffff;
@@ -40,7 +40,7 @@
 
         .visual-highlight-card img {
             aspect-ratio: 16 / 10;
-            background: #e2e8f0;
+            background: #DDE7EE;
         }
 
         .visual-highlight-card-body {
@@ -67,19 +67,19 @@
 
         .visual-highlight-badge.is-inactive {
             color: #92400e;
-            background: #fef3c7;
+            background: #FFF7CC;
         }
 
         .visual-highlight-preview {
-            border: 1px dashed #bfd4e7;
+            border: 1px dashed #DDE7EE;
             border-radius: 16px;
             overflow: hidden;
-            background: #f8fbff;
+            background: #F8FAFC;
         }
 
         .visual-highlight-preview img {
             aspect-ratio: 16 / 9;
-            background: #e2e8f0;
+            background: #DDE7EE;
         }
 
         .visual-highlight-preview-empty {
@@ -89,7 +89,7 @@
             min-height: 220px;
             padding: 24px;
             text-align: center;
-            color: #64748b;
+            color: #5E7288;
             font-size: 14px;
             line-height: 1.6;
         }

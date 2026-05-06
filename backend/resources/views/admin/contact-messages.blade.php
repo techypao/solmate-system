@@ -9,9 +9,9 @@
 
         .cm-card {
             padding: 20px;
-            border: 1px solid #dbe7f3;
+            border: 1px solid #DDE7EE;
             border-radius: 18px;
-            background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+            background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%);
             box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
         }
 
@@ -33,14 +33,14 @@
 
         .cm-detail-box {
             padding: 16px;
-            border: 1px solid #dbe7f3;
+            border: 1px solid #DDE7EE;
             border-radius: 16px;
-            background: #fbfdff;
+            background: #F8FAFC;
         }
 
         .cm-detail-box h3 {
             margin: 0 0 8px;
-            color: #102a43;
+            color: #123A5A;
         }
 
         .cm-detail-copy {
@@ -54,7 +54,7 @@
             width: 68px;
             height: 68px;
             border-radius: 999px;
-            background: #dbeafe;
+            background: #EAF9FD;
             margin: 0 auto 16px;
         }
     </style>

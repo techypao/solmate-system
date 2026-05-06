@@ -8,6 +8,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import {solmateColors} from '../src/theme/colors';
 
 type AppInputProps = TextInputProps & {
   label?: string;
@@ -18,7 +19,7 @@ export default function AppInput({
   label,
   containerStyle,
   style,
-  placeholderTextColor = '#9ca3af',
+  placeholderTextColor = solmateColors.mutedSoft,
   ...props
 }: AppInputProps) {
   return (
@@ -38,18 +39,18 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   input: {
-    backgroundColor: '#f9fafb',
-    borderColor: '#d1d5db',
+    backgroundColor: solmateColors.background,
+    borderColor: solmateColors.border,
     borderRadius: 12,
     borderWidth: 1,
-    color: '#111827',
+    color: solmateColors.text,
     fontSize: 16,
     minHeight: 48,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
   label: {
-    color: '#374151',
+    color: solmateColors.navy,
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,

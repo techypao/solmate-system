@@ -16,8 +16,8 @@
     }
 
     .inst-hero {
-        background: linear-gradient(135deg, #f8fbff 0%, #eef6ff 56%, #e0efff 100%);
-        border: 1px solid #dbeafe;
+        background: linear-gradient(135deg, #F8FAFC 0%, #EAF9FD 56%, #EAF9FD 100%);
+        border: 1px solid #EAF9FD;
         border-radius: 20px;
         padding: 36px 40px;
         position: relative;
@@ -48,22 +48,22 @@
         font-weight: 800;
         letter-spacing: 1.1px;
         text-transform: uppercase;
-        color: #d4a017;
+        color: #F4D000;
     }
     .inst-hero-title {
         margin: 0 0 10px;
         font-size: 32px;
         line-height: 1.15;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
     }
-    .inst-hero-title span { color: #d4a017; }
+    .inst-hero-title span { color: #F4D000; }
     .inst-hero-sub {
         margin: 0;
         max-width: 620px;
         font-size: 15px;
         line-height: 1.7;
-        color: #475569;
+        color: #5E7288;
     }
     .inst-hero-steps {
         display: flex;
@@ -78,7 +78,7 @@
         padding: 8px 12px;
         border-radius: 999px;
         background: #ffffff;
-        border: 1px solid #dbeafe;
+        border: 1px solid #EAF9FD;
         font-size: 12px;
         font-weight: 700;
         color: #334155;
@@ -87,7 +87,7 @@
         width: 22px;
         height: 22px;
         border-radius: 50%;
-        background: #102a43;
+        background: #123A5A;
         color: #ffffff;
         display: inline-flex;
         align-items: center;
@@ -111,7 +111,7 @@
     .inst-panel,
     .inst-history-card {
         background: #ffffff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
         border-radius: 18px;
         box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
     }
@@ -128,7 +128,7 @@
         width: 42px;
         height: 42px;
         border-radius: 12px;
-        background: linear-gradient(135deg, #102a43, #1e4068);
+        background: linear-gradient(135deg, #123A5A, #20A7C9);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -138,12 +138,12 @@
         margin: 0;
         font-size: 16px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
     }
     .inst-card-subtitle {
         margin: 3px 0 0;
         font-size: 12px;
-        color: #94a3b8;
+        color: #7F92A3;
     }
     .inst-card-body { padding: 24px; }
 
@@ -163,17 +163,17 @@
         font-weight: 800;
         letter-spacing: 0.6px;
         text-transform: uppercase;
-        color: #64748b;
+        color: #5E7288;
     }
     .inst-input,
     .inst-select,
     .inst-textarea {
         width: 100%;
         box-sizing: border-box;
-        border: 1.5px solid #cbd5e1;
+        border: 1.5px solid #DDE7EE;
         border-radius: 12px;
         background: #ffffff;
-        color: #1e293b;
+        color: #0F2F4A;
         font: inherit;
         padding: 12px 15px;
         transition: border-color 0.2s, box-shadow 0.2s;
@@ -194,7 +194,7 @@
     .inst-select:focus,
     .inst-textarea:focus {
         outline: none;
-        border-color: #d4a017;
+        border-color: #F4D000;
         box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.12);
     }
     .inst-input.has-error,
@@ -206,7 +206,7 @@
         margin: 7px 0 0;
         font-size: 12px;
         line-height: 1.5;
-        color: #94a3b8;
+        color: #7F92A3;
     }
     .inst-field-error {
         display: none;
@@ -225,9 +225,9 @@
     }
     .inst-field-note.show { display: block; }
     .inst-field-note-info {
-        background: #eff6ff;
+        background: #EAF9FD;
         border: 1px solid #bfdbfe;
-        color: #124e78;
+        color: #123A5A;
     }
     .inst-address-row {
         display: flex;
@@ -258,11 +258,11 @@
     .inst-address-pin-btn:hover {
         transform: translateY(-1px);
         box-shadow: 0 8px 20px rgba(212, 160, 23, 0.16);
-        border-color: #d4a017;
+        border-color: #F4D000;
     }
     .inst-address-pin-btn:focus {
         outline: none;
-        border-color: #d4a017;
+        border-color: #F4D000;
         box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.12);
     }
     .inst-address-pin-btn:active {
@@ -277,10 +277,10 @@
     }
     .inst-choice {
         position: relative;
-        border: 1.5px solid #dbeafe;
+        border: 1.5px solid #EAF9FD;
         border-radius: 16px;
         padding: 16px;
-        background: #f8fbff;
+        background: #F8FAFC;
         cursor: pointer;
         transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
     }
@@ -290,7 +290,7 @@
         transform: translateY(-1px);
     }
     .inst-choice.is-selected {
-        border-color: #d4a017;
+        border-color: #F4D000;
         background: #fffbeb;
         box-shadow: 0 12px 26px rgba(212, 160, 23, 0.10);
     }
@@ -303,13 +303,13 @@
         margin: 0 0 5px;
         font-size: 14px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
     }
     .inst-choice-desc {
         margin: 0;
         font-size: 12px;
         line-height: 1.55;
-        color: #64748b;
+        color: #5E7288;
     }
     .inst-choice-tag {
         display: inline-flex;
@@ -318,14 +318,14 @@
         min-width: 28px;
         height: 28px;
         border-radius: 999px;
-        background: #dbeafe;
+        background: #EAF9FD;
         color: #1d4ed8;
         font-size: 11px;
         font-weight: 800;
         margin-bottom: 10px;
     }
     .inst-choice.is-selected .inst-choice-tag {
-        background: #d4a017;
+        background: #F4D000;
         color: #ffffff;
     }
 
@@ -335,7 +335,7 @@
         padding: 16px 18px;
         border-radius: 14px;
         background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #DDE7EE;
     }
     .inst-quote-grid {
         display: grid;
@@ -348,21 +348,21 @@
         font-weight: 800;
         letter-spacing: 0.5px;
         text-transform: uppercase;
-        color: #94a3b8;
+        color: #7F92A3;
     }
     .inst-quote-value {
         font-size: 14px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
     }
-    .inst-quote-value.highlight { color: #d4a017; }
+    .inst-quote-value.highlight { color: #F4D000; }
     .inst-quote-note {
         margin: 12px 0 0;
         padding-top: 12px;
-        border-top: 1px solid #e2e8f0;
+        border-top: 1px solid #DDE7EE;
         font-size: 12px;
         line-height: 1.5;
-        color: #64748b;
+        color: #5E7288;
     }
 
     .inst-msg {
@@ -390,7 +390,7 @@
         border: none;
         border-radius: 12px;
         padding: 15px 20px;
-        background: linear-gradient(135deg, #f4c542, #d4a017);
+        background: linear-gradient(135deg, #E6C200, #F4D000);
         color: #ffffff;
         font-size: 15px;
         font-weight: 800;
@@ -427,8 +427,8 @@
     .inst-map-dialog {
         width: min(100%, 760px);
         max-height: min(90vh, 760px);
-        background: linear-gradient(180deg, #f8fbff 0%, #ffffff 28%);
-        border: 1px solid #dbe7f3;
+        background: linear-gradient(180deg, #F8FAFC 0%, #ffffff 28%);
+        border: 1px solid #DDE7EE;
         border-radius: 22px;
         box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
         overflow: hidden;
@@ -441,27 +441,27 @@
         justify-content: space-between;
         gap: 16px;
         padding: 20px 24px 16px;
-        border-bottom: 1px solid #e2e8f0;
+        border-bottom: 1px solid #DDE7EE;
     }
     .inst-map-title {
         margin: 0;
         font-size: 20px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
     }
     .inst-map-subtitle {
         margin: 6px 0 0;
         font-size: 13px;
-        color: #64748b;
+        color: #5E7288;
         line-height: 1.6;
     }
     .inst-map-close {
         width: 40px;
         height: 40px;
-        border: 1px solid #dbe7f3;
+        border: 1px solid #DDE7EE;
         border-radius: 999px;
         background: #ffffff;
-        color: #64748b;
+        color: #5E7288;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -469,13 +469,13 @@
         transition: border-color 0.2s, color 0.2s, transform 0.15s;
     }
     .inst-map-close:hover {
-        border-color: #d4a017;
+        border-color: #F4D000;
         color: #8a6510;
         transform: translateY(-1px);
     }
     .inst-map-close:focus {
         outline: none;
-        border-color: #d4a017;
+        border-color: #F4D000;
         box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.12);
     }
     .inst-map-body {
@@ -497,9 +497,9 @@
         color: #9f1239;
     }
     .inst-map-feedback-info {
-        background: #eff6ff;
+        background: #EAF9FD;
         border: 1px solid #bfdbfe;
-        color: #124e78;
+        color: #123A5A;
     }
     .inst-map-search {
         display: flex;
@@ -511,7 +511,7 @@
     }
     .inst-map-canvas {
         height: 420px;
-        border: 1px solid #dbe7f3;
+        border: 1px solid #DDE7EE;
         border-radius: 18px;
         overflow: hidden;
         background: #eaf2fb;
@@ -539,9 +539,9 @@
         min-height: 44px;
         padding: 10px 16px;
         border-radius: 12px;
-        border: 1px solid #dbe7f3;
+        border: 1px solid #DDE7EE;
         background: #ffffff;
-        color: #29527a;
+        color: #20A7C9;
         font-size: 14px;
         font-weight: 700;
         cursor: pointer;
@@ -556,8 +556,8 @@
         box-shadow: 0 0 0 3px rgba(41, 82, 122, 0.12);
     }
     .inst-map-btn-gold {
-        border-color: #d4a017;
-        background: linear-gradient(135deg, #d4a017, #b8880f);
+        border-color: #F4D000;
+        background: linear-gradient(135deg, #F4D000, #E6C200);
         color: #ffffff;
     }
     .inst-map-btn-gold:focus {
@@ -578,7 +578,7 @@
         top: 24px;
     }
     .inst-panel-header {
-        background: #102a43;
+        background: #123A5A;
         padding: 18px 20px;
         color: #ffffff;
     }
@@ -607,7 +607,7 @@
         width: 28px;
         height: 28px;
         border-radius: 50%;
-        background: #eff6ff;
+        background: #EAF9FD;
         color: #1d4ed8;
         display: flex;
         align-items: center;
@@ -619,13 +619,13 @@
         margin: 0 0 3px;
         font-size: 13px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
     }
     .inst-check-desc {
         margin: 0;
         font-size: 12px;
         line-height: 1.55;
-        color: #64748b;
+        color: #5E7288;
     }
     .inst-expect {
         margin-top: 20px;
@@ -651,13 +651,13 @@
         margin: 0 0 14px;
         font-size: 18px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
     }
     .inst-loading {
         display: none;
         text-align: center;
         padding: 28px;
-        color: #94a3b8;
+        color: #7F92A3;
         font-size: 14px;
     }
     .inst-loading.show { display: block; }
@@ -665,7 +665,7 @@
         display: none;
         text-align: center;
         padding: 40px 22px;
-        color: #94a3b8;
+        color: #7F92A3;
         font-size: 14px;
     }
     .inst-empty.show { display: block; }
@@ -687,12 +687,12 @@
         margin: 0;
         font-size: 15px;
         font-weight: 800;
-        color: #102a43;
+        color: #123A5A;
     }
     .inst-history-date {
         margin: 4px 0 0;
         font-size: 12px;
-        color: #94a3b8;
+        color: #7F92A3;
     }
     .inst-badge {
         display: inline-flex;
@@ -705,15 +705,15 @@
         text-transform: uppercase;
         white-space: nowrap;
     }
-    .inst-badge-pending { background: #fef3c7; color: #a16207; }
+    .inst-badge-pending { background: #FFF7CC; color: #a16207; }
     .inst-badge-approved,
     .inst-badge-scheduled,
-    .inst-badge-assigned { background: #dbeafe; color: #1d4ed8; }
+    .inst-badge-assigned { background: #EAF9FD; color: #1d4ed8; }
     .inst-badge-in_progress { background: #ede9fe; color: #6d28d9; }
     .inst-badge-completed { background: #dcfce7; color: #15803d; }
     .inst-badge-cancelled,
     .inst-badge-declined { background: #fee2e2; color: #dc2626; }
-    .inst-badge-default { background: #f1f5f9; color: #475569; }
+    .inst-badge-default { background: #f1f5f9; color: #5E7288; }
 
     .inst-history-meta {
         display: grid;
@@ -732,19 +732,19 @@
         font-weight: 800;
         letter-spacing: 0.5px;
         text-transform: uppercase;
-        color: #94a3b8;
+        color: #7F92A3;
     }
     .inst-history-chip-value {
         font-size: 13px;
         font-weight: 700;
-        color: #1e293b;
+        color: #0F2F4A;
     }
     .inst-history-details {
         margin: 0;
         padding: 12px 14px;
         border-radius: 12px;
         background: #f8fafc;
-        color: #475569;
+        color: #5E7288;
         font-size: 13px;
         line-height: 1.65;
         white-space: pre-wrap;
@@ -834,15 +834,15 @@
             <div class="inst-hero-art" aria-hidden="true">
                 <svg width="210" height="170" viewBox="0 0 210 170" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="27" y="52" width="156" height="86" rx="12" fill="#ffffff" stroke="#bfdbfe" stroke-width="2"/>
-                    <rect x="39" y="64" width="39" height="24" rx="5" fill="#e0efff"/>
-                    <rect x="85" y="64" width="39" height="24" rx="5" fill="#dbeafe"/>
-                    <rect x="131" y="64" width="39" height="24" rx="5" fill="#e0efff"/>
-                    <rect x="39" y="94" width="39" height="24" rx="5" fill="#dbeafe"/>
+                    <rect x="39" y="64" width="39" height="24" rx="5" fill="#EAF9FD"/>
+                    <rect x="85" y="64" width="39" height="24" rx="5" fill="#EAF9FD"/>
+                    <rect x="131" y="64" width="39" height="24" rx="5" fill="#EAF9FD"/>
+                    <rect x="39" y="94" width="39" height="24" rx="5" fill="#EAF9FD"/>
                     <rect x="85" y="94" width="39" height="24" rx="5" fill="#ffefb0"/>
-                    <rect x="131" y="94" width="39" height="24" rx="5" fill="#dbeafe"/>
-                    <path d="M57 138L73 153H137L153 138" stroke="#94a3b8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <rect x="131" y="94" width="39" height="24" rx="5" fill="#EAF9FD"/>
+                    <path d="M57 138L73 153H137L153 138" stroke="#7F92A3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
                     <circle cx="163" cy="35" r="24" fill="#fffbeb" stroke="#fde68a" stroke-width="2"/>
-                    <path d="M163 22V35L171 43" stroke="#d4a017" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M163 22V35L171 43" stroke="#F4D000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </div>
         </div>
@@ -853,7 +853,7 @@
             <div class="inst-card">
                 <div class="inst-card-header">
                     <div class="inst-card-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f4c542" stroke-width="2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E6C200" stroke-width="2">
                             <path d="M9 12h6M9 16h6M9 8h3M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"/>
                         </svg>
                     </div>
@@ -898,7 +898,7 @@
             <div class="inst-card">
                 <div class="inst-card-header">
                     <div class="inst-card-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f4c542" stroke-width="2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E6C200" stroke-width="2">
                             <rect x="2" y="7" width="20" height="14" rx="2"/>
                             <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
                         </svg>
@@ -952,7 +952,7 @@
             <div class="inst-card">
                 <div class="inst-card-header">
                     <div class="inst-card-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f4c542" stroke-width="2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E6C200" stroke-width="2">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                             <line x1="16" y1="2" x2="16" y2="6"/>
                             <line x1="8" y1="2" x2="8" y2="6"/>

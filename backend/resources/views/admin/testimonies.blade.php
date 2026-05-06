@@ -9,22 +9,22 @@
 
         .testimony-card {
             padding: 20px;
-            border: 1px solid #dbe7f3;
+            border: 1px solid #DDE7EE;
             border-radius: 18px;
-            background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+            background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%);
             box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
         }
 
         .testimony-preview {
             margin: 0;
-            color: #52606d;
+            color: #5E7288;
             font-size: 14px;
             line-height: 1.6;
         }
 
         .testimony-title {
             margin: 0 0 6px;
-            color: #102a43;
+            color: #123A5A;
             font-size: 18px;
             font-weight: 700;
         }
@@ -47,14 +47,14 @@
 
         .detail-box {
             padding: 16px;
-            border: 1px solid #dbe7f3;
+            border: 1px solid #DDE7EE;
             border-radius: 16px;
-            background: #fbfdff;
+            background: #F8FAFC;
         }
 
         .detail-box h3 {
             margin: 0 0 8px;
-            color: #102a43;
+            color: #123A5A;
         }
 
         .detail-copy {
@@ -71,7 +71,7 @@
 
         .image-tile {
             display: block;
-            border: 1px solid #dbe7f3;
+            border: 1px solid #DDE7EE;
             border-radius: 14px;
             overflow: hidden;
             background: #ffffff;
@@ -82,7 +82,7 @@
             width: 100%;
             height: 140px;
             object-fit: cover;
-            background: #e8f1fb;
+            background: #EAF9FD;
         }
 
         .image-tile span {
@@ -96,7 +96,7 @@
             width: 68px;
             height: 68px;
             border-radius: 999px;
-            background: #dbeafe;
+            background: #EAF9FD;
             margin: 0 auto 16px;
         }
     </style>
@@ -574,7 +574,7 @@
                             if (!imageUrl) {
                                 return `
                                     <div class="image-tile">
-                                        <div style="height: 140px; background: #e8f1fb;"></div>
+                                        <div style="height: 140px; background: #EAF9FD;"></div>
                                         <span>Image ${index + 1} unavailable</span>
                                     </div>
                                 `;
