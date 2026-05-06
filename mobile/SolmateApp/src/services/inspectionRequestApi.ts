@@ -1,4 +1,5 @@
 import {apiGet, apiPost} from './api';
+import {CompletionReport} from './completionReportApi';
 
 export type UserSummary = {
   id: number;
@@ -26,6 +27,7 @@ export type InspectionRequest = {
   longitude?: number | null;
   date_needed?: string | null;
   status?: InspectionRequestStatus | null;
+  completion_report?: CompletionReport | null;
   created_at?: string;
   updated_at?: string;
   customer?: UserSummary | null;

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\CompletionReport;
 use App\Models\InspectionRequest;
 use App\Models\ServiceRequest;
 use App\Models\User;
@@ -68,11 +69,17 @@ class RequestWorkflowTest extends TestCase
             ->assertJsonPath('data.status', 'in_progress');
 
         $completionResponse = $this->actingAs($technician)
-            ->postJson("/api/technician/service-requests/{$serviceRequestId}/completion-request")
-            ->assertOk()
+            ->postJson("/api/technician/service-requests/{$serviceRequestId}/completion-report", [
+                'report_text' => 'Cleaned the system, inspected the mounting, and confirmed normal output.',
+                'findings' => 'No damaged panels found.',
+                'recommendations' => 'Schedule another preventive maintenance visit in six months.',
+                'completed_at' => '2026-04-20 15:30:00',
+            ])
+            ->assertCreated()
             ->assertJsonPath('data.status', 'in_progress');
 
         $this->assertNotNull($completionResponse->json('data.technician_marked_done_at'));
+        $this->assertSame('pending', $completionResponse->json('data.completion_report.status'));
 
         $this->actingAs($admin)
             ->putJson("/api/admin/service-requests/{$serviceRequestId}/status", [
@@ -94,6 +101,10 @@ class RequestWorkflowTest extends TestCase
             'technician_id' => $technician->id,
             'contact_number' => '+63 917 123 4567',
             'status' => 'completed',
+        ]);
+        $this->assertDatabaseHas('completion_reports', [
+            'service_request_id' => $serviceRequestId,
+            'status' => CompletionReport::STATUS_APPROVED,
         ]);
     }
 
@@ -142,23 +153,31 @@ class RequestWorkflowTest extends TestCase
             ->assertUnprocessable();
 
         $this->actingAs($assignedTechnician)
-            ->postJson("/api/technician/service-requests/{$serviceRequest->id}/completion-request")
+            ->postJson("/api/technician/service-requests/{$serviceRequest->id}/completion-report", [
+                'report_text' => 'Attempted to submit before work started.',
+                'completed_at' => '2026-04-20 11:00:00',
+            ])
             ->assertUnprocessable();
 
         $this->actingAs($customer)
-            ->postJson("/api/technician/service-requests/{$serviceRequest->id}/completion-request")
+            ->postJson("/api/technician/service-requests/{$serviceRequest->id}/completion-report", [
+                'report_text' => 'Customer should not be able to submit this.',
+                'completed_at' => '2026-04-20 11:00:00',
+            ])
             ->assertForbidden();
 
         $this->actingAs($otherTechnician)
-            ->postJson("/api/technician/service-requests/{$serviceRequest->id}/completion-request")
+            ->postJson("/api/technician/service-requests/{$serviceRequest->id}/completion-report", [
+                'report_text' => 'Other technician should not be able to submit this.',
+                'completed_at' => '2026-04-20 11:00:00',
+            ])
             ->assertForbidden();
 
         $this->actingAs($admin)
             ->putJson("/api/admin/service-requests/{$serviceRequest->id}/status", [
                 'status' => 'completed',
             ])
-            ->assertOk()
-            ->assertJsonPath('data.status', 'completed');
+            ->assertUnprocessable();
     }
 
     public function test_admin_can_reschedule_service_request_and_existing_customer_and_technician_views_receive_updated_date(): void
@@ -343,7 +362,7 @@ class RequestWorkflowTest extends TestCase
         ]);
     }
 
-    public function test_inspection_request_flow_still_allows_customer_creation_admin_assignment_and_technician_completion(): void
+    public function test_inspection_request_flow_still_allows_customer_creation_admin_assignment_report_submission_and_admin_completion(): void
     {
         $customer = User::query()->create([
             'name' => 'Customer User',
@@ -400,7 +419,18 @@ class RequestWorkflowTest extends TestCase
             ->assertJsonPath('inspection_request.status', 'in_progress');
 
         $this->actingAs($technician)
-            ->putJson("/api/technician/inspection-requests/{$inspectionRequestId}/status", [
+            ->postJson("/api/technician/inspection-requests/{$inspectionRequestId}/completion-report", [
+                'report_text' => 'Inspected the roof, captured measurements, and verified placement constraints.',
+                'findings' => 'North-facing roof section is shaded after 4 PM.',
+                'recommendations' => 'Prepare final quotation with revised panel placement.',
+                'completed_at' => '2026-04-21 16:30:00',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('inspection_request.status', 'in_progress')
+            ->assertJsonPath('inspection_request.completion_report.status', 'pending');
+
+        $this->actingAs($admin)
+            ->putJson("/api/admin/inspection-requests/{$inspectionRequestId}/status", [
                 'status' => 'completed',
             ])
             ->assertOk()
@@ -412,6 +442,10 @@ class RequestWorkflowTest extends TestCase
             'technician_id' => $technician->id,
             'contact_number' => '0917-555-0100',
             'status' => 'completed',
+        ]);
+        $this->assertDatabaseHas('completion_reports', [
+            'inspection_request_id' => $inspectionRequestId,
+            'status' => CompletionReport::STATUS_APPROVED,
         ]);
     }
 

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\CompletionReport;
 use App\Models\InspectionRequest;
 use App\Models\ServiceRequest;
 use App\Models\User;
@@ -470,6 +471,16 @@ class PreferredDateLockingTest extends TestCase
         ]);
     }
 
+    private function createTechnician(string $email): User
+    {
+        return User::query()->create([
+            'name' => 'Technician User',
+            'email' => $email,
+            'password' => 'password123',
+            'role' => User::ROLE_TECHNICIAN,
+        ]);
+    }
+
     private function assertInspectionDateReleasedByAdminStatusChange(
         string $releasedStatus,
         string $dateNeeded,
@@ -484,8 +495,19 @@ class PreferredDateLockingTest extends TestCase
             'details' => "Inspection request transitioning to {$releasedStatus}",
             'contact_number' => '0917-950-0016',
             'date_needed' => $dateNeeded,
-            'status' => 'assigned',
+            'status' => $releasedStatus === 'completed' ? 'in_progress' : 'assigned',
         ]);
+
+        if ($releasedStatus === 'completed') {
+            CompletionReport::query()->create([
+                'inspection_request_id' => $inspectionRequest->id,
+                'technician_id' => $this->createTechnician("{$emailPrefix}_inspection_technician@example.com")->id,
+                'report_text' => 'Inspection completion notes for date release testing.',
+                'status' => CompletionReport::STATUS_PENDING,
+                'completed_at' => '2026-05-01 12:00:00',
+                'submitted_at' => '2026-05-01 12:30:00',
+            ]);
+        }
 
         $this->actingAs($admin)
             ->putJson("/api/admin/inspection-requests/{$inspectionRequest->id}/status", [
@@ -519,8 +541,19 @@ class PreferredDateLockingTest extends TestCase
             'details' => "Service request transitioning to {$releasedStatus}",
             'contact_number' => '0917-970-0018',
             'date_needed' => $dateNeeded,
-            'status' => 'assigned',
+            'status' => $releasedStatus === 'completed' ? 'in_progress' : 'assigned',
         ]);
+
+        if ($releasedStatus === 'completed') {
+            CompletionReport::query()->create([
+                'service_request_id' => $serviceRequest->id,
+                'technician_id' => $this->createTechnician("{$emailPrefix}_service_technician@example.com")->id,
+                'report_text' => 'Service completion notes for date release testing.',
+                'status' => CompletionReport::STATUS_PENDING,
+                'completed_at' => '2026-05-01 14:00:00',
+                'submitted_at' => '2026-05-01 14:30:00',
+            ]);
+        }
 
         $this->actingAs($admin)
             ->putJson("/api/admin/service-requests/{$serviceRequest->id}/status", [

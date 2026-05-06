@@ -39,11 +39,11 @@ class QuotationRoiAlignmentTest extends TestCase
             ->assertJsonPath('data.estimated_monthly_savings', 6000)
             ->assertJsonPath('data.estimated_annual_savings', 72000)
             ->assertJsonPath('data.roi_years', 5)
-            ->assertJsonPath('inspection_request.status', 'completed');
+            ->assertJsonPath('inspection_request.status', 'in_progress');
 
         $this->assertDatabaseHas('inspection_requests', [
             'id' => $inspectionRequest->id,
-            'status' => 'completed',
+            'status' => 'in_progress',
         ]);
     }
 

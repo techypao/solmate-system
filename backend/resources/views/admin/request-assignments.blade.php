@@ -46,7 +46,6 @@
         'assigned' => 'Assigned',
         'in_progress' => 'In Progress',
         'cancelled' => 'Cancelled',
-        'declined' => 'Declined',
         'completed' => 'Completed',
     ];
 
@@ -73,6 +72,15 @@
         ->all();
 
     $adminServicePopup = session('admin_service_popup');
+    $formatAdminDateTime = fn ($value) => $value
+        ? \Illuminate\Support\Carbon::parse($value)->format('M d, Y g:i A')
+        : null;
+    $awaitingCompletionReviewCount = $sortedServiceRequests
+        ->filter(fn ($request) => $request->completionReport && $request->status !== 'completed')
+        ->count()
+        + $sortedInspectionRequests
+            ->filter(fn ($request) => $request->completionReport && $request->status !== 'completed')
+            ->count();
 @endphp
 
 @section('content')
@@ -557,8 +565,8 @@
                 <div class="summary-value">{{ $technicians->count() }}</div>
             </div>
             <div class="summary-card">
-                <div class="summary-label">Services awaiting review</div>
-                <div class="summary-value">{{ $sortedServiceRequests->filter(fn ($request) => filled($request->technician_marked_done_at) && $request->status !== 'completed')->count() }}</div>
+                <div class="summary-label">Tasks awaiting completion review</div>
+                <div class="summary-value">{{ $awaitingCompletionReviewCount }}</div>
             </div>
             <div class="summary-card">
                 <div class="summary-label">Unassigned services</div>
@@ -655,21 +663,44 @@
             @else
                 <div class="request-list">
                         @foreach ($sortedInspectionRequests as $inspectionRequest)
-                            @php
-                                $requestKey = "inspection-{$inspectionRequest->id}";
-                                $statusClass = $statusClasses[$inspectionRequest->status] ?? 'badge badge-neutral';
-                                $isAssigned = filled($inspectionRequest->technician_id);
-                                $buttonLabel = $isAssigned ? 'Update assignment' : 'Assign technician';
-                                $dateNeeded = $inspectionRequest->date_needed
-                                    ? \Illuminate\Support\Carbon::parse($inspectionRequest->date_needed)->format('M d, Y')
-                                    : 'Not specified';
-                                $technicianSummary = $inspectionRequest->technician
-                                    ? "{$inspectionRequest->technician->name} ({$inspectionRequest->technician->email})"
-                                    : 'Not assigned';
-                                $inspectionWorkflowMessage = $isAssigned
-                                    ? 'Technician assignment and official inspection scheduling can be managed below.'
-                                    : 'Assign a technician first, then keep the official inspection status updated here.';
-                            @endphp
+                        @php
+                            $requestKey = "inspection-{$inspectionRequest->id}";
+                            $statusClass = $statusClasses[$inspectionRequest->status] ?? 'badge badge-neutral';
+                            $isAssigned = filled($inspectionRequest->technician_id);
+                            $completionReport = $inspectionRequest->completionReport;
+                            $hasCompletionReport = filled($completionReport?->submitted_at);
+                            $buttonLabel = $isAssigned ? 'Update assignment' : 'Assign technician';
+                            $dateNeeded = $inspectionRequest->date_needed
+                                ? \Illuminate\Support\Carbon::parse($inspectionRequest->date_needed)->format('M d, Y')
+                                : 'Not specified';
+                            $technicianSummary = $inspectionRequest->technician
+                                ? "{$inspectionRequest->technician->name} ({$inspectionRequest->technician->email})"
+                                : 'Not assigned';
+                            $completionStateClass = 'badge badge-neutral';
+                            $completionStateLabel = 'No report yet';
+
+                            if ($hasCompletionReport && $inspectionRequest->status === 'completed') {
+                                $completionStateClass = 'badge badge-success';
+                                $completionStateLabel = 'Report approved';
+                            } elseif ($hasCompletionReport) {
+                                $completionStateClass = 'badge badge-warning';
+                                $completionStateLabel = 'Awaiting admin review';
+                            }
+
+                            if ($hasCompletionReport && $inspectionRequest->status === 'completed') {
+                                $inspectionWorkflowMessage = 'Technician submitted the completion notes on '
+                                    . $formatAdminDateTime($completionReport->submitted_at)
+                                    . ', and the official inspection status is now completed.';
+                            } elseif ($hasCompletionReport) {
+                                $inspectionWorkflowMessage = 'Technician submitted the completion notes on '
+                                    . $formatAdminDateTime($completionReport->submitted_at)
+                                    . '. Review the report below before marking the official inspection status as completed.';
+                            } elseif ($isAssigned) {
+                                $inspectionWorkflowMessage = 'Technician assignment and official inspection scheduling can be managed below.';
+                            } else {
+                                $inspectionWorkflowMessage = 'Assign a technician first, then keep the official inspection status updated here.';
+                            }
+                        @endphp
 
                         <div
                             id="inspection-request-{{ $inspectionRequest->id }}"
@@ -700,6 +731,12 @@
                                             >
                                                 {{ $isAssigned ? 'Assigned' : 'Needs technician' }}
                                             </span>
+                                            <span
+                                                class="{{ $completionStateClass }}"
+                                                data-completion-state-for="{{ $requestKey }}"
+                                            >
+                                                {{ $completionStateLabel }}
+                                            </span>
                                         </div>
                                         <button type="button" class="request-toggle-btn" data-request-toggle>
                                             Open request
@@ -724,6 +761,12 @@
                                         <span class="request-summary-label">Official Status</span>
                                         <div class="request-summary-value" data-inspection-status-summary-for="{{ $requestKey }}">
                                             {{ \Illuminate\Support\Str::headline($inspectionRequest->status) }}
+                                        </div>
+                                    </div>
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Completion</span>
+                                        <div class="request-summary-value" data-completion-summary-for="{{ $requestKey }}">
+                                            {{ $completionStateLabel }}
                                         </div>
                                     </div>
                                     <div class="request-summary-item">
@@ -771,8 +814,45 @@
 
                                 <div class="info-box request-detail-box">
                                     <strong>Inspection workflow:</strong>
-                                    <span data-inspection-workflow-detail-for="{{ $requestKey }}">{{ $inspectionWorkflowMessage }}</span>
+                                    <span data-completion-detail-for="{{ $requestKey }}">{{ $inspectionWorkflowMessage }}</span>
                                 </div>
+
+                                @if ($completionReport)
+                                    <div class="detail-grid" style="margin-bottom: 14px;">
+                                        <div class="detail-item">
+                                            <span class="detail-label">Report Submitted By</span>
+                                            <strong>{{ $completionReport->technician?->name ?? ($inspectionRequest->technician?->name ?? 'Assigned technician') }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Task Completed At</span>
+                                            <strong>{{ $formatAdminDateTime($completionReport->completed_at) ?? 'Not available' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Report Submitted At</span>
+                                            <strong>{{ $formatAdminDateTime($completionReport->submitted_at) ?? 'Not available' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Approved At</span>
+                                            <strong>{{ $formatAdminDateTime($completionReport->approved_at) ?? 'Pending admin review' }}</strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="info-box request-detail-box">
+                                        <strong>Completion notes:</strong> {{ $completionReport->report_text }}
+                                    </div>
+
+                                    @if (filled($completionReport->findings))
+                                        <div class="info-box request-detail-box">
+                                            <strong>Findings:</strong> {{ $completionReport->findings }}
+                                        </div>
+                                    @endif
+
+                                    @if (filled($completionReport->recommendations))
+                                        <div class="info-box request-detail-box">
+                                            <strong>Recommendations:</strong> {{ $completionReport->recommendations }}
+                                        </div>
+                                    @endif
+                                @endif
 
                                 <div class="stack">
                                     <form
@@ -886,7 +966,8 @@
                             $requestKey = "service-{$serviceRequest->id}";
                             $statusClass = $statusClasses[$serviceRequest->status] ?? 'badge badge-neutral';
                             $isAssigned = filled($serviceRequest->technician_id);
-                            $hasCompletionRequest = filled($serviceRequest->technician_marked_done_at);
+                            $completionReport = $serviceRequest->completionReport;
+                            $hasCompletionRequest = filled($completionReport?->submitted_at);
                             $buttonLabel = $isAssigned ? 'Update assignment' : 'Assign technician';
                             $dateNeeded = $serviceRequest->date_needed
                                 ? \Illuminate\Support\Carbon::parse($serviceRequest->date_needed)->format('M d, Y')
@@ -896,26 +977,26 @@
                                 : 'Not assigned';
                             $completionHeading = 'Completion review';
                             $completionStateClass = 'badge badge-neutral';
-                            $completionStateLabel = 'No completion request';
+                            $completionStateLabel = 'No report yet';
 
                             if ($hasCompletionRequest && $serviceRequest->status !== 'completed') {
                                 $completionStateClass = 'badge badge-warning';
                                 $completionStateLabel = 'Awaiting admin review';
                             } elseif ($hasCompletionRequest && $serviceRequest->status === 'completed') {
                                 $completionStateClass = 'badge badge-success';
-                                $completionStateLabel = 'Admin confirmed completion';
+                                $completionStateLabel = 'Report approved';
                             }
 
                             if ($hasCompletionRequest && $serviceRequest->status !== 'completed') {
-                                $completionMessage = 'Technician marked this service as done on '
-                                    . \Illuminate\Support\Carbon::parse($serviceRequest->technician_marked_done_at)->format('M d, Y g:i A')
-                                    . '. Review the work and set the official status below.';
+                                $completionMessage = 'Technician submitted the completion notes on '
+                                    . ($formatAdminDateTime($completionReport?->submitted_at) ?? $formatAdminDateTime($serviceRequest->technician_marked_done_at))
+                                    . '. Review the report below before marking the official status as completed.';
                             } elseif ($hasCompletionRequest && $serviceRequest->status === 'completed') {
-                                $completionMessage = 'Technician marked this service as done on '
-                                    . \Illuminate\Support\Carbon::parse($serviceRequest->technician_marked_done_at)->format('M d, Y g:i A')
+                                $completionMessage = 'Technician submitted the completion notes on '
+                                    . ($formatAdminDateTime($completionReport?->submitted_at) ?? $formatAdminDateTime($serviceRequest->technician_marked_done_at))
                                     . ', and the official service status is now completed.';
                             } else {
-                                $completionMessage = 'No technician completion request has been submitted yet.';
+                                $completionMessage = 'No technician completion notes have been submitted yet.';
                             }
                         @endphp
 
@@ -976,7 +1057,7 @@
                                     </div>
                                     <div class="request-summary-item">
                                         <span class="request-summary-label">Completion</span>
-                                        <div class="request-summary-value" data-completion-message-for="{{ $requestKey }}">{{ $completionStateLabel }}</div>
+                                        <div class="request-summary-value" data-completion-summary-for="{{ $requestKey }}">{{ $completionStateLabel }}</div>
                                     </div>
                                     <div class="request-summary-item">
                                         <span class="request-summary-label">Address</span>
@@ -1025,6 +1106,43 @@
                                     <strong data-completion-heading-for="{{ $requestKey }}">{{ $completionHeading }}:</strong>
                                     <span data-completion-detail-for="{{ $requestKey }}">{{ $completionMessage }}</span>
                                 </div>
+
+                                @if ($completionReport)
+                                    <div class="detail-grid" style="margin-bottom: 14px;">
+                                        <div class="detail-item">
+                                            <span class="detail-label">Report Submitted By</span>
+                                            <strong>{{ $completionReport->technician?->name ?? ($serviceRequest->technician?->name ?? 'Assigned technician') }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Task Completed At</span>
+                                            <strong>{{ $formatAdminDateTime($completionReport->completed_at) ?? 'Not available' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Report Submitted At</span>
+                                            <strong>{{ $formatAdminDateTime($completionReport->submitted_at) ?? 'Not available' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Approved At</span>
+                                            <strong>{{ $formatAdminDateTime($completionReport->approved_at) ?? 'Pending admin review' }}</strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="info-box request-detail-box">
+                                        <strong>Completion notes:</strong> {{ $completionReport->report_text }}
+                                    </div>
+
+                                    @if (filled($completionReport->findings))
+                                        <div class="info-box request-detail-box">
+                                            <strong>Findings:</strong> {{ $completionReport->findings }}
+                                        </div>
+                                    @endif
+
+                                    @if (filled($completionReport->recommendations))
+                                        <div class="info-box request-detail-box">
+                                            <strong>Recommendations:</strong> {{ $completionReport->recommendations }}
+                                        </div>
+                                    @endif
+                                @endif
 
                                 <div class="stack">
                                     <form
@@ -1090,6 +1208,9 @@
                                                     name="status"
                                                     required
                                                 >
+                                                    @if (($serviceRequest->status ?? null) === 'declined')
+                                                        <option value="declined" selected disabled>Declined (legacy)</option>
+                                                    @endif
                                                     @foreach ($serviceStatusOptions as $value => $label)
                                                         <option value="{{ $value }}" @selected($serviceRequest->status === $value)>{{ $label }}</option>
                                                     @endforeach
@@ -1138,7 +1259,8 @@
                             $requestKey = "service-{$serviceRequest->id}";
                             $statusClass = $statusClasses[$serviceRequest->status] ?? 'badge badge-neutral';
                             $isAssigned = filled($serviceRequest->technician_id);
-                            $hasCompletionRequest = filled($serviceRequest->technician_marked_done_at);
+                            $completionReport = $serviceRequest->completionReport;
+                            $hasCompletionRequest = filled($completionReport?->submitted_at);
                             $buttonLabel = $isAssigned ? 'Update assignment' : 'Assign technician';
                             $dateNeeded = $serviceRequest->date_needed
                                 ? \Illuminate\Support\Carbon::parse($serviceRequest->date_needed)->format('M d, Y')
@@ -1148,26 +1270,26 @@
                                 : 'Not assigned';
                             $completionHeading = 'Completion review';
                             $completionStateClass = 'badge badge-neutral';
-                            $completionStateLabel = 'No completion request';
+                            $completionStateLabel = 'No report yet';
 
                             if ($hasCompletionRequest && $serviceRequest->status !== 'completed') {
                                 $completionStateClass = 'badge badge-warning';
                                 $completionStateLabel = 'Awaiting admin review';
                             } elseif ($hasCompletionRequest && $serviceRequest->status === 'completed') {
                                 $completionStateClass = 'badge badge-success';
-                                $completionStateLabel = 'Admin confirmed completion';
+                                $completionStateLabel = 'Report approved';
                             }
 
                             if ($hasCompletionRequest && $serviceRequest->status !== 'completed') {
-                                $completionMessage = 'Technician marked this service as done on '
-                                    . \Illuminate\Support\Carbon::parse($serviceRequest->technician_marked_done_at)->format('M d, Y g:i A')
-                                    . '. Review the work and set the official status below.';
+                                $completionMessage = 'Technician submitted the completion notes on '
+                                    . ($formatAdminDateTime($completionReport?->submitted_at) ?? $formatAdminDateTime($serviceRequest->technician_marked_done_at))
+                                    . '. Review the report below before marking the official status as completed.';
                             } elseif ($hasCompletionRequest && $serviceRequest->status === 'completed') {
-                                $completionMessage = 'Technician marked this service as done on '
-                                    . \Illuminate\Support\Carbon::parse($serviceRequest->technician_marked_done_at)->format('M d, Y g:i A')
+                                $completionMessage = 'Technician submitted the completion notes on '
+                                    . ($formatAdminDateTime($completionReport?->submitted_at) ?? $formatAdminDateTime($serviceRequest->technician_marked_done_at))
                                     . ', and the official service status is now completed.';
                             } else {
-                                $completionMessage = 'No technician completion request has been submitted yet.';
+                                $completionMessage = 'No technician completion notes have been submitted yet.';
                             }
                         @endphp
 
@@ -1228,7 +1350,7 @@
                                     </div>
                                     <div class="request-summary-item">
                                         <span class="request-summary-label">Completion</span>
-                                        <div class="request-summary-value" data-completion-message-for="{{ $requestKey }}">{{ $completionStateLabel }}</div>
+                                        <div class="request-summary-value" data-completion-summary-for="{{ $requestKey }}">{{ $completionStateLabel }}</div>
                                     </div>
                                     <div class="request-summary-item">
                                         <span class="request-summary-label">Address</span>
@@ -1277,6 +1399,43 @@
                                     <strong data-completion-heading-for="{{ $requestKey }}">{{ $completionHeading }}:</strong>
                                     <span data-completion-detail-for="{{ $requestKey }}">{{ $completionMessage }}</span>
                                 </div>
+
+                                @if ($completionReport)
+                                    <div class="detail-grid" style="margin-bottom: 14px;">
+                                        <div class="detail-item">
+                                            <span class="detail-label">Report Submitted By</span>
+                                            <strong>{{ $completionReport->technician?->name ?? ($serviceRequest->technician?->name ?? 'Assigned technician') }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Task Completed At</span>
+                                            <strong>{{ $formatAdminDateTime($completionReport->completed_at) ?? 'Not available' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Report Submitted At</span>
+                                            <strong>{{ $formatAdminDateTime($completionReport->submitted_at) ?? 'Not available' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Approved At</span>
+                                            <strong>{{ $formatAdminDateTime($completionReport->approved_at) ?? 'Pending admin review' }}</strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="info-box request-detail-box">
+                                        <strong>Completion notes:</strong> {{ $completionReport->report_text }}
+                                    </div>
+
+                                    @if (filled($completionReport->findings))
+                                        <div class="info-box request-detail-box">
+                                            <strong>Findings:</strong> {{ $completionReport->findings }}
+                                        </div>
+                                    @endif
+
+                                    @if (filled($completionReport->recommendations))
+                                        <div class="info-box request-detail-box">
+                                            <strong>Recommendations:</strong> {{ $completionReport->recommendations }}
+                                        </div>
+                                    @endif
+                                @endif
 
                                 <div class="stack">
                                     <form
@@ -1342,6 +1501,9 @@
                                                     name="status"
                                                     required
                                                 >
+                                                    @if (($serviceRequest->status ?? null) === 'declined')
+                                                        <option value="declined" selected disabled>Declined (legacy)</option>
+                                                    @endif
                                                     @foreach ($serviceStatusOptions as $value => $label)
                                                         <option value="{{ $value }}" @selected($serviceRequest->status === $value)>{{ $label }}</option>
                                                     @endforeach
@@ -1560,6 +1722,33 @@
             }
 
             Object.assign(record, updates);
+        }
+
+        function completionUiState(updatedRequest) {
+            const completionReport = updatedRequest?.completion_report || null;
+            const updatedStatus = updatedRequest?.status || null;
+
+            if (completionReport && (completionReport.status === 'approved' || updatedStatus === 'completed')) {
+                return {
+                    label: 'Report approved',
+                    className: 'badge badge-success',
+                    message: 'Technician completion notes were reviewed by admin and the official status is now completed.',
+                };
+            }
+
+            if (completionReport) {
+                return {
+                    label: 'Awaiting admin review',
+                    className: 'badge badge-warning',
+                    message: 'Technician submitted completion notes and they are awaiting admin review.',
+                };
+            }
+
+            return {
+                label: 'No report yet',
+                className: 'badge badge-neutral',
+                message: 'No technician completion notes have been submitted yet.',
+            };
         }
 
         function firstAvailableServiceTab() {
@@ -1917,6 +2106,11 @@
                         date_needed: normalizeDate(updatedDate),
                     });
                     refreshAllAvailabilityHints();
+
+                    if (redirectWithServicePopup('inspection_preferred_date_changed', form)) {
+                        return;
+                    }
+
                     successBox.textContent = responseBody.message || 'Inspection preferred date updated successfully.';
                     setVisible(successBox, true);
                 } catch (error) {
@@ -1943,9 +2137,9 @@
                 const assignmentStateBadge = document.querySelector(`[data-assignment-state-for="${requestKey}"]`);
                 const completionStateBadge = document.querySelector(`[data-completion-state-for="${requestKey}"]`);
                 const completionMessage = document.querySelector(`[data-completion-detail-for="${requestKey}"]`);
+                const completionSummary = document.querySelector(`[data-completion-summary-for="${requestKey}"]`);
                 const statusBadge = document.querySelector(`[data-status-for="${requestKey}"]`);
                 const inspectionStatusSummary = document.querySelector(`[data-inspection-status-summary-for="${requestKey}"]`);
-                const inspectionWorkflowDetail = document.querySelector(`[data-inspection-workflow-detail-for="${requestKey}"]`);
                 const selectedOption = select.options[select.selectedIndex];
 
                 inlineError.textContent = '';
@@ -1987,22 +2181,30 @@
                     }
 
                     if (completionStateBadge) {
-                        completionStateBadge.textContent = 'No completion request';
+                        completionStateBadge.textContent = 'No report yet';
                         completionStateBadge.className = 'badge badge-neutral';
                     }
 
                     if (completionMessage) {
-                        completionMessage.textContent = 'No technician completion request has been submitted yet.';
+                        completionMessage.textContent = 'No technician completion notes have been submitted yet.';
                     }
 
-                    if (inspectionWorkflowDetail) {
-                        inspectionWorkflowDetail.textContent = 'Technician assignment and official inspection scheduling can be managed below.';
+                    if (completionSummary) {
+                        completionSummary.textContent = 'No report yet';
                     }
 
                     form.dataset.defaultLabel = 'Update assignment';
 
-                    if (requestKey.startsWith('service-') && redirectWithServicePopup('technician_assigned', form)) {
-                        return;
+                    if (requestKey.startsWith('service-')) {
+                        if (redirectWithServicePopup('technician_assigned', form)) {
+                            return;
+                        }
+                    }
+
+                    if (requestKey.startsWith('inspection-')) {
+                        if (redirectWithServicePopup('inspection_technician_assigned', form)) {
+                            return;
+                        }
                     }
 
                     successBox.textContent = responseBody.message || 'Technician assigned successfully.';
@@ -2030,6 +2232,7 @@
                 const statusBadge = document.querySelector(`[data-status-for="${requestKey}"]`);
                 const completionStateBadge = document.querySelector(`[data-completion-state-for="${requestKey}"]`);
                 const completionMessage = document.querySelector(`[data-completion-detail-for="${requestKey}"]`);
+                const completionSummary = document.querySelector(`[data-completion-summary-for="${requestKey}"]`);
 
                 inlineError.textContent = '';
                 button.disabled = true;
@@ -2042,7 +2245,7 @@
 
                     const updatedRequest = responseBody.data || null;
                     const updatedStatus = updatedRequest?.status || select.value;
-                    const completionRequestedAt = updatedRequest?.technician_marked_done_at || null;
+                    const completionState = completionUiState(updatedRequest);
 
                     if (statusBadge) {
                         statusBadge.textContent = formatStatus(updatedStatus);
@@ -2055,28 +2258,16 @@
                     refreshAllAvailabilityHints();
 
                     if (completionStateBadge) {
-                        if (completionRequestedAt && updatedStatus === 'completed') {
-                            completionStateBadge.textContent = 'Admin confirmed completion';
-                            completionStateBadge.className = 'badge badge-success';
-                        } else if (completionRequestedAt) {
-                            completionStateBadge.textContent = 'Awaiting admin review';
-                            completionStateBadge.className = 'badge badge-warning';
-                        } else {
-                            completionStateBadge.textContent = 'No completion request';
-                            completionStateBadge.className = 'badge badge-neutral';
-                        }
+                        completionStateBadge.textContent = completionState.label;
+                        completionStateBadge.className = completionState.className;
                     }
 
                     if (completionMessage) {
-                        if (completionRequestedAt && updatedStatus === 'completed') {
-                            completionMessage.textContent = 'Technician completion was reviewed by admin and the official status is now completed.';
-                        } else if (completionRequestedAt) {
-                            completionMessage.textContent = 'Technician marked this service as done and it is still awaiting final admin confirmation.';
-                        } else if (updatedStatus === 'completed') {
-                            completionMessage.textContent = 'Admin marked this service request as completed.';
-                        } else {
-                            completionMessage.textContent = 'No technician completion request has been submitted yet.';
-                        }
+                        completionMessage.textContent = completionState.message;
+                    }
+
+                    if (completionSummary) {
+                        completionSummary.textContent = completionState.label;
                     }
 
                     if (redirectWithServicePopup('status_changed', form)) {
@@ -2107,6 +2298,9 @@
                 const requestKey = form.dataset.requestKey;
                 const statusBadge = document.querySelector(`[data-status-for="${requestKey}"]`);
                 const inspectionStatusSummary = document.querySelector(`[data-inspection-status-summary-for="${requestKey}"]`);
+                const completionStateBadge = document.querySelector(`[data-completion-state-for="${requestKey}"]`);
+                const completionMessage = document.querySelector(`[data-completion-detail-for="${requestKey}"]`);
+                const completionSummary = document.querySelector(`[data-completion-summary-for="${requestKey}"]`);
 
                 inlineError.textContent = '';
                 button.disabled = true;
@@ -2119,6 +2313,7 @@
 
                     const updatedRequest = responseBody.inspection_request || null;
                     const updatedStatus = updatedRequest?.status || select.value;
+                    const completionState = completionUiState(updatedRequest);
 
                     if (statusBadge) {
                         statusBadge.textContent = formatStatus(updatedStatus);
@@ -2133,6 +2328,23 @@
                         status: updatedStatus,
                     });
                     refreshAllAvailabilityHints();
+
+                    if (completionStateBadge) {
+                        completionStateBadge.textContent = completionState.label;
+                        completionStateBadge.className = completionState.className;
+                    }
+
+                    if (completionMessage) {
+                        completionMessage.textContent = completionState.message;
+                    }
+
+                    if (completionSummary) {
+                        completionSummary.textContent = completionState.label;
+                    }
+
+                    if (redirectWithServicePopup('inspection_status_changed', form)) {
+                        return;
+                    }
 
                     successBox.textContent = responseBody.message || 'Official inspection request status updated successfully.';
                     setVisible(successBox, true);

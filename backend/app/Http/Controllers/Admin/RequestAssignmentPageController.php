@@ -15,6 +15,9 @@ class RequestAssignmentPageController extends Controller
         'technician_assigned' => 'Technician has been successfully assigned.',
         'preferred_date_changed' => 'Preferred date has been successfully updated.',
         'status_changed' => 'Service status has been successfully updated.',
+        'inspection_technician_assigned' => 'Technician has been successfully assigned.',
+        'inspection_preferred_date_changed' => 'Preferred date has been successfully updated.',
+        'inspection_status_changed' => 'Inspection status has been successfully updated.',
     ];
 
     public function show(Request $request)
@@ -27,12 +30,12 @@ class RequestAssignmentPageController extends Controller
                 ->orderBy('name')
                 ->get(),
             'serviceRequests' => ServiceRequest::query()
-                ->with(['customer', 'technician'])
+                ->with(['customer', 'technician', 'completionReport.technician', 'completionReport.approver'])
                 ->orderByRaw("CASE WHEN technician_marked_done_at IS NOT NULL AND status != 'completed' THEN 0 WHEN technician_id IS NULL THEN 1 ELSE 2 END")
                 ->latest()
                 ->get(),
             'inspectionRequests' => InspectionRequest::query()
-                ->with(['customer', 'technician'])
+                ->with(['customer', 'technician', 'completionReport.technician', 'completionReport.approver'])
                 ->orderByRaw('CASE WHEN technician_id IS NULL THEN 0 ELSE 1 END')
                 ->latest()
                 ->get(),

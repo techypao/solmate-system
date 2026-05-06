@@ -412,9 +412,6 @@ public function storeFinalQuotation(Request $request)
             'remarks' => $validated['remarks'] ?? null,
         ]);
 
-        $lockedInspectionRequest->status = 'completed';
-        $lockedInspectionRequest->save();
-
         return [
             'quotation' => $quotation,
             'inspection_request' => $lockedInspectionRequest->fresh(['customer', 'technician']),
@@ -426,17 +423,10 @@ public function storeFinalQuotation(Request $request)
 
     $quotation->load(['customer', 'inspectionRequest']);
 
-    if ($previousInspectionStatus !== $updatedInspectionRequest->status) {
-        $this->notificationService->notifyCustomerOfInspectionRequestStatusUpdate(
-            $updatedInspectionRequest,
-            $technician->id
-        );
-    }
-
     $this->notificationService->notifyCustomerOfFinalQuotationAvailable($quotation, $technician->id);
 
     return response()->json([
-        'message' => 'Inspection-based quotation submitted. Inspection marked as completed.',
+        'message' => 'Inspection-based quotation submitted successfully.',
         'data' => $quotation,
         'inspection_request' => $updatedInspectionRequest,
     ], 201);

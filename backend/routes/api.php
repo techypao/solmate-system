@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\VisualHighlightController as AdminVisualHighlight
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CustomerAccountController;
 use App\Http\Controllers\Api\TechnicianAccountController;
+use App\Http\Controllers\CompletionReportController;
 use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\InspectionRequestController;
 use App\Http\Controllers\NewsArticleController;
@@ -99,9 +100,11 @@ Route::middleware(['auth:sanctum', 'role:technician'])->group(function () {
     Route::get('/technician/service-requests', [ServiceRequestController::class, 'assignedRequests']);
     Route::put('/technician/service-requests/{id}/status', [ServiceRequestController::class, 'updateStatus']);
     Route::post('/technician/service-requests/{id}/completion-request', [ServiceRequestController::class, 'requestCompletion']);
+    Route::post('/technician/service-requests/{id}/completion-report', [CompletionReportController::class, 'submitForService']);
 
     Route::get('/technician/inspection-requests', [InspectionRequestController::class, 'assignedToTechnician']);
     Route::put('/technician/inspection-requests/{id}/status', [InspectionRequestController::class, 'updateStatus']);
+    Route::post('/technician/inspection-requests/{id}/completion-report', [CompletionReportController::class, 'submitForInspection']);
 
     Route::get('/technician/final-quotation-options', [QuotationController::class, 'getFinalQuotationOptions']);
     Route::post('/technician/final-quotations', [QuotationController::class, 'storeFinalQuotation']);

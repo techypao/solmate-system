@@ -1236,7 +1236,6 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         (inspectionRequest
           ? ({
               ...inspectionRequest,
-              status: 'completed',
             } as TechnicianInspectionRequest)
           : null);
 
@@ -1248,7 +1247,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         Alert.alert(
           'Submission saved',
           submissionResult.message ||
-            'Inspection-based quotation submitted. Inspection marked as completed.',
+            'Inspection-based quotation submitted successfully.',
           [
             {
               text: 'OK',
@@ -1284,7 +1283,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
       Alert.alert(
         'Success',
         submissionResult.message ||
-          'Inspection-based quotation submitted. Inspection marked as completed.',
+          'Inspection-based quotation submitted successfully.',
         [
           {
             text: 'OK',
@@ -1304,12 +1303,12 @@ export default function FinalQuotationScreen({navigation, route}: any) {
             : 'The line items could not be saved automatically.';
 
         setSubmitError(
-          `Inspection-based quotation #${createdQuotationId} was created and the inspection was marked as completed, but the itemized pricing sync did not complete. ${syncErrorMessage}`,
+          `Inspection-based quotation #${createdQuotationId} was created, but the itemized pricing sync did not complete. ${syncErrorMessage}`,
         );
 
         Alert.alert(
           'Quotation created with sync issue',
-          `Inspection-based quotation #${createdQuotationId} was created and the inspection was marked as completed, but the itemized pricing sync did not complete.\n\n${syncErrorMessage}`,
+          `Inspection-based quotation #${createdQuotationId} was created, but the itemized pricing sync did not complete.\n\n${syncErrorMessage}`,
           [
             {
               text: 'OK',
@@ -1331,7 +1330,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         setSubmitError(error.message);
         Alert.alert(
           'Inspection-based quotation already exists',
-          `${error.message} The inspection has already been completed for this request.`,
+          error.message,
           [
             {
               text: 'OK',

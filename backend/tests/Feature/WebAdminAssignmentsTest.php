@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\CompletionReport;
 use App\Models\InspectionRequest;
 use App\Models\ServiceRequest;
 use App\Models\User;
@@ -342,7 +343,7 @@ class WebAdminAssignmentsTest extends TestCase
             'role' => User::ROLE_CUSTOMER,
         ]);
 
-        ServiceRequest::query()->create([
+        $serviceRequest = ServiceRequest::query()->create([
             'user_id' => $customer->id,
             'technician_id' => $technician->id,
             'request_type' => 'Maintenance',
@@ -351,10 +352,20 @@ class WebAdminAssignmentsTest extends TestCase
             'technician_marked_done_at' => Carbon::parse('2026-04-19 10:30:00'),
         ]);
 
+        CompletionReport::query()->create([
+            'service_request_id' => $serviceRequest->id,
+            'technician_id' => $technician->id,
+            'report_text' => 'Maintenance visit completed and system output validated.',
+            'status' => CompletionReport::STATUS_PENDING,
+            'completed_at' => '2026-04-19 10:15:00',
+            'submitted_at' => '2026-04-19 10:30:00',
+        ]);
+
         $this->actingAs($admin)
             ->get('/admin/request-assignments')
             ->assertOk()
             ->assertSee('Awaiting admin review')
+            ->assertSee('Completion review')
             ->assertSee('Official service status')
             ->assertSee('Save official status');
     }
@@ -454,6 +465,69 @@ class WebAdminAssignmentsTest extends TestCase
             ->assertSessionHas('admin_service_popup', [
                 'action' => 'status_changed',
                 'message' => 'Service status has been successfully updated.',
+            ]);
+    }
+
+    public function test_admin_can_flash_inspection_assignment_popup_message(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_popup_inspection_assign@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $this->actingAs($admin)
+            ->post('/admin/request-assignments/service-popup', [
+                'action' => 'inspection_technician_assigned',
+                'redirect_to' => '#inspection-request-21',
+            ])
+            ->assertRedirect('/admin/request-assignments#inspection-request-21')
+            ->assertSessionHas('admin_service_popup', [
+                'action' => 'inspection_technician_assigned',
+                'message' => 'Technician has been successfully assigned.',
+            ]);
+    }
+
+    public function test_admin_can_flash_inspection_preferred_date_popup_message(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_popup_inspection_date@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $this->actingAs($admin)
+            ->post('/admin/request-assignments/service-popup', [
+                'action' => 'inspection_preferred_date_changed',
+                'redirect_to' => '#inspection-request-22',
+            ])
+            ->assertRedirect('/admin/request-assignments#inspection-request-22')
+            ->assertSessionHas('admin_service_popup', [
+                'action' => 'inspection_preferred_date_changed',
+                'message' => 'Preferred date has been successfully updated.',
+            ]);
+    }
+
+    public function test_admin_can_flash_inspection_status_popup_message(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_popup_inspection_status@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $this->actingAs($admin)
+            ->post('/admin/request-assignments/service-popup', [
+                'action' => 'inspection_status_changed',
+                'redirect_to' => '#inspection-request-23',
+            ])
+            ->assertRedirect('/admin/request-assignments#inspection-request-23')
+            ->assertSessionHas('admin_service_popup', [
+                'action' => 'inspection_status_changed',
+                'message' => 'Inspection status has been successfully updated.',
             ]);
     }
 

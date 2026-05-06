@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CompletionReport;
 use App\Models\InspectionRequest;
 use App\Models\User;
 use App\Services\InAppNotificationService;
@@ -19,7 +20,7 @@ class InspectionRequestController extends Controller
     public function index(Request $request)
     {
         $inspectionRequests = InspectionRequest::query()
-            ->with('technician')
+            ->with(['technician', 'completionReport.technician', 'completionReport.approver'])
             ->where('user_id', $request->user()->id)
             ->latest()
             ->get();
@@ -87,6 +88,10 @@ class InspectionRequestController extends Controller
             return response()->json([
                 'message' => 'Selected user is not a technician.',
             ], 422);
+        }
+
+        if ($inspectionRequest->technician_id !== $technician->id) {
+            $inspectionRequest->completionReport()->delete();
         }
 
         $inspectionRequest->technician_id = $request->technician_id;
@@ -185,7 +190,7 @@ class InspectionRequestController extends Controller
             ], 403);
         }
 
-        $inspectionRequests = InspectionRequest::with('customer')
+        $inspectionRequests = InspectionRequest::with(['customer', 'technician', 'completionReport.technician', 'completionReport.approver'])
             ->where('technician_id', $user->id)
             ->latest()
             ->get();
@@ -198,7 +203,7 @@ class InspectionRequestController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:assigned,in_progress,completed',
+            'status' => 'required|in:assigned,in_progress',
         ]);
 
         $user = $request->user();
@@ -210,7 +215,7 @@ class InspectionRequestController extends Controller
         }
 
         $inspectionRequest = InspectionRequest::query()
-            ->with(['customer', 'technician'])
+            ->with(['customer', 'technician', 'completionReport.technician', 'completionReport.approver'])
             ->findOrFail($id);
         $previousStatus = $inspectionRequest->status;
 
@@ -243,11 +248,29 @@ class InspectionRequestController extends Controller
         ]);
 
         $inspectionRequest = InspectionRequest::query()
-            ->with(['customer', 'technician'])
+            ->with(['customer', 'technician', 'completionReport.technician', 'completionReport.approver'])
             ->findOrFail($id);
         $previousStatus = $inspectionRequest->status;
+        $nextStatus = $request->status;
 
-        $inspectionRequest->status = $request->status;
+        if ($nextStatus === 'completed') {
+            $completionReport = $inspectionRequest->completionReport;
+
+            if (! $completionReport) {
+                return response()->json([
+                    'message' => 'Technician completion notes must be submitted before this inspection can be marked as completed.',
+                ], 422);
+            }
+
+            if ($completionReport->status !== CompletionReport::STATUS_APPROVED) {
+                $completionReport->status = CompletionReport::STATUS_APPROVED;
+                $completionReport->approved_at = now();
+                $completionReport->approved_by = $request->user()->id;
+                $completionReport->save();
+            }
+        }
+
+        $inspectionRequest->status = $nextStatus;
         $inspectionRequest->save();
 
         if ($previousStatus !== $inspectionRequest->status) {

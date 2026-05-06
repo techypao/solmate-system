@@ -1,4 +1,5 @@
 import { apiGet, apiPost, apiPut } from './api';
+import {CompletionReport, CompletionReportPayload} from './completionReportApi';
 
 export type UserSummary = {
   id: number;
@@ -22,6 +23,7 @@ export type ServiceRequest = {
   date_needed?: string | null;
   status: string;
   technician_marked_done_at?: string | null;
+  completion_report?: CompletionReport | null;
   created_at?: string;
   updated_at?: string;
   customer?: UserSummary | null;
@@ -97,9 +99,13 @@ export async function updateTechnicianServiceRequestStatus(
   return response?.data ?? ({} as ServiceRequest);
 }
 
-export async function requestTechnicianServiceCompletion(id: number) {
+export async function submitTechnicianServiceCompletionReport(
+  id: number,
+  payload: CompletionReportPayload,
+) {
   const response = await apiPost<{message?: string; data?: ServiceRequest}>(
-    `/technician/service-requests/${id}/completion-request`,
+    `/technician/service-requests/${id}/completion-report`,
+    payload,
   );
 
   return response?.data ?? ({} as ServiceRequest);

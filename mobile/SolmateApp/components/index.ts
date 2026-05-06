@@ -1,6 +1,7 @@
 export {default as AppButton} from './AppButton';
 export {default as AppCard} from './AppCard';
 export {default as AppInput} from './AppInput';
+export {default as CompletionReportCard} from './CompletionReportCard';
 export {default as MapLocationPickerModal} from './MapLocationPickerModal';
 export {default as PreferredDateCalendar} from './PreferredDateCalendar';
 export {default as StatusBadge} from './StatusBadge';

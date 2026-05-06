@@ -1,11 +1,11 @@
-import {apiGet, apiPut} from './api';
+import {apiGet, apiPost, apiPut} from './api';
+import {CompletionReportPayload} from './completionReportApi';
 import {InspectionRequest} from './inspectionRequestApi';
 
 export type TechnicianInspectionRequest = InspectionRequest;
 export type TechnicianUpdatableStatus =
   | 'assigned'
-  | 'in_progress'
-  | 'completed';
+  | 'in_progress';
 
 type AssignedInspectionRequestsResponse = {
   inspection_requests?: TechnicianInspectionRequest[];
@@ -45,6 +45,18 @@ export async function updateInspectionRequestStatus(
   const response = await apiPut<UpdatedInspectionRequestResponse>(
     `/technician/inspection-requests/${inspectionRequestId}/status`,
     {status},
+  );
+
+  return response?.inspection_request ?? ({} as TechnicianInspectionRequest);
+}
+
+export async function submitInspectionCompletionReport(
+  inspectionRequestId: number,
+  payload: CompletionReportPayload,
+) {
+  const response = await apiPost<UpdatedInspectionRequestResponse>(
+    `/technician/inspection-requests/${inspectionRequestId}/completion-report`,
+    payload,
   );
 
   return response?.inspection_request ?? ({} as TechnicianInspectionRequest);

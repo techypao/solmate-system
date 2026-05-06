@@ -37,4 +37,9 @@ class InspectionRequest extends Model
     {
         return $this->hasMany(Testimony::class);
     }
+
+    public function completionReport()
+    {
+        return $this->hasOne(CompletionReport::class);
+    }
 }

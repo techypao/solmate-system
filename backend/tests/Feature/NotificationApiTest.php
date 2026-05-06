@@ -141,6 +141,13 @@ class NotificationApiTest extends TestCase
             ])
             ->assertOk();
 
+        $this->actingAs($technician)
+            ->postJson("/api/technician/service-requests/{$serviceRequestId}/completion-report", [
+                'report_text' => 'Completed the maintenance visit and confirmed stable system output.',
+                'completed_at' => '2026-04-30 15:00:00',
+            ])
+            ->assertCreated();
+
         $this->actingAs($admin)
             ->putJson("/api/admin/service-requests/{$serviceRequestId}/status", [
                 'status' => 'completed',
@@ -189,9 +196,9 @@ class NotificationApiTest extends TestCase
         $technicianNotifications = $technician->fresh()->notifications()->latest()->get();
         $adminNotifications = $admin->fresh()->notifications()->latest()->get();
 
-        $this->assertCount(9, $customerNotifications);
+        $this->assertCount(8, $customerNotifications);
         $this->assertCount(4, $technicianNotifications);
-        $this->assertCount(2, $adminNotifications);
+        $this->assertCount(3, $adminNotifications);
 
         $customerTypes = $customerNotifications->map(fn ($notification) => $notification->data['type'])->all();
         $technicianTypes = $technicianNotifications->map(fn ($notification) => $notification->data['type'])->all();
@@ -201,7 +208,6 @@ class NotificationApiTest extends TestCase
             'service_request_status_updated',
             'schedule_rescheduled',
             'service_request_status_updated',
-            'inspection_request_status_updated',
             'inspection_request_status_updated',
             'inspection_request_status_updated',
             'schedule_rescheduled',
@@ -219,14 +225,14 @@ class NotificationApiTest extends TestCase
             ->assertOk()
             ->assertJson([
                 'success' => true,
-                'unread_count' => 9,
+                'unread_count' => 8,
             ]);
 
         $customerListResponse = $this->actingAs($customer)
             ->getJson('/api/notifications')
             ->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonCount(9, 'data');
+            ->assertJsonCount(8, 'data');
 
         $this->assertContains(
             'final_quotation_available',
@@ -234,7 +240,7 @@ class NotificationApiTest extends TestCase
         );
     }
 
-    public function test_admins_receive_installation_and_maintenance_completion_notifications_without_duplicates(): void
+    public function test_admins_receive_service_completion_report_notifications_without_duplicates(): void
     {
         $customer = $this->createUser(User::ROLE_CUSTOMER, 'customer_completion');
         $admin = $this->createUser(User::ROLE_ADMIN, 'admin_completion');
@@ -259,15 +265,24 @@ class NotificationApiTest extends TestCase
         ]);
 
         $this->actingAs($technician)
-            ->postJson("/api/technician/service-requests/{$installationRequest->id}/completion-request")
-            ->assertOk();
+            ->postJson("/api/technician/service-requests/{$installationRequest->id}/completion-report", [
+                'report_text' => 'Installed the new panel array and validated the output.',
+                'completed_at' => '2026-04-20 14:00:00',
+            ])
+            ->assertCreated();
 
         $this->actingAs($technician)
-            ->postJson("/api/technician/service-requests/{$maintenanceRequest->id}/completion-request")
-            ->assertOk();
+            ->postJson("/api/technician/service-requests/{$maintenanceRequest->id}/completion-report", [
+                'report_text' => 'Completed the inverter maintenance checklist.',
+                'completed_at' => '2026-04-20 16:00:00',
+            ])
+            ->assertCreated();
 
         $this->actingAs($technician)
-            ->postJson("/api/technician/service-requests/{$maintenanceRequest->id}/completion-request")
+            ->postJson("/api/technician/service-requests/{$maintenanceRequest->id}/completion-report", [
+                'report_text' => 'Duplicate maintenance report attempt.',
+                'completed_at' => '2026-04-20 16:05:00',
+            ])
             ->assertUnprocessable();
 
         $adminNotifications = $admin->fresh()->notifications()->latest()->get();
@@ -278,29 +293,29 @@ class NotificationApiTest extends TestCase
         $this->assertNotNull($installationRequest->technician_marked_done_at);
         $this->assertNotNull($maintenanceRequest->technician_marked_done_at);
         $this->assertEqualsCanonicalizing([
-            'installation_completed',
-            'maintenance_completed',
+            'installation_completion_report_submitted',
+            'maintenance_completion_report_submitted',
         ], $adminNotifications->map(fn ($notification) => $notification->data['type'])->all());
 
         $installationNotification = $adminNotifications->first(
-            fn ($notification) => data_get($notification->data, 'type') === 'installation_completed'
+            fn ($notification) => data_get($notification->data, 'type') === 'installation_completion_report_submitted'
         );
         $maintenanceNotification = $adminNotifications->first(
-            fn ($notification) => data_get($notification->data, 'type') === 'maintenance_completed'
+            fn ($notification) => data_get($notification->data, 'type') === 'maintenance_completion_report_submitted'
         );
 
-        $this->assertSame('Installation Marked as Completed', $installationNotification->data['title']);
+        $this->assertSame('Installation Completion Notes Submitted', $installationNotification->data['title']);
         $this->assertSame(
-            'Technician_completion User marked Installation for Customer_completion User as completed.',
+            'Technician_completion User submitted Installation completion notes for Customer_completion User.',
             $installationNotification->data['message']
         );
         $this->assertSame('AdminServiceRequestDetails', $installationNotification->data['target_screen']);
         $this->assertSame($installationRequest->id, $installationNotification->data['entity_id']);
         $this->assertSame('installation', $installationNotification->data['target_params']['requestType']);
 
-        $this->assertSame('Maintenance Marked as Completed', $maintenanceNotification->data['title']);
+        $this->assertSame('Maintenance Completion Notes Submitted', $maintenanceNotification->data['title']);
         $this->assertSame(
-            'Technician_completion User marked Maintenance for Customer_completion User as completed.',
+            'Technician_completion User submitted Maintenance completion notes for Customer_completion User.',
             $maintenanceNotification->data['message']
         );
         $this->assertSame('AdminServiceRequestDetails', $maintenanceNotification->data['target_screen']);

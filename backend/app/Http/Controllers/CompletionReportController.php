@@ -1,0 +1,150 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\CompletionReport;
+use App\Models\InspectionRequest;
+use App\Models\ServiceRequest;
+use App\Models\User;
+use App\Services\InAppNotificationService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class CompletionReportController extends Controller
+{
+    public function __construct(private InAppNotificationService $notificationService)
+    {
+    }
+
+    public function submitForService(Request $request, int $id)
+    {
+        $validated = $request->validate($this->rules());
+        $technician = $request->user();
+
+        if ($technician->role !== User::ROLE_TECHNICIAN) {
+            return response()->json([
+                'message' => 'Only technicians can submit service completion notes.',
+            ], 403);
+        }
+
+        $serviceRequest = ServiceRequest::query()
+            ->with(['customer', 'technician', 'completionReport'])
+            ->findOrFail($id);
+
+        if ((int) $serviceRequest->technician_id !== (int) $technician->id) {
+            return response()->json([
+                'message' => 'You are not allowed to submit completion notes for this service request.',
+            ], 403);
+        }
+
+        if ($serviceRequest->status !== 'in_progress') {
+            return response()->json([
+                'message' => 'Service completion notes can only be submitted while the task is in progress.',
+            ], 422);
+        }
+
+        if ($serviceRequest->completionReport) {
+            return response()->json([
+                'message' => $serviceRequest->completionReport->status === CompletionReport::STATUS_APPROVED
+                    ? 'Completion notes for this service request have already been approved.'
+                    : 'Completion notes for this service request are already awaiting admin approval.',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($serviceRequest, $technician, $validated) {
+            CompletionReport::query()->create([
+                'service_request_id' => $serviceRequest->id,
+                'technician_id' => $technician->id,
+                'report_text' => trim($validated['report_text']),
+                'findings' => $this->nullableTrimmed($validated['findings'] ?? null),
+                'recommendations' => $this->nullableTrimmed($validated['recommendations'] ?? null),
+                'status' => CompletionReport::STATUS_PENDING,
+                'completed_at' => $validated['completed_at'],
+                'submitted_at' => now(),
+            ]);
+
+            $serviceRequest->technician_marked_done_at = now();
+            $serviceRequest->save();
+        });
+
+        $serviceRequest->load(['customer', 'technician', 'completionReport.technician', 'completionReport.approver']);
+        $this->notificationService->notifyAdminsOfCompletionReportSubmission($serviceRequest, $technician->id);
+
+        return response()->json([
+            'message' => 'Service completion notes submitted for admin approval.',
+            'data' => $serviceRequest,
+        ], 201);
+    }
+
+    public function submitForInspection(Request $request, int $id)
+    {
+        $validated = $request->validate($this->rules());
+        $technician = $request->user();
+
+        if ($technician->role !== User::ROLE_TECHNICIAN) {
+            return response()->json([
+                'message' => 'Only technicians can submit inspection completion notes.',
+            ], 403);
+        }
+
+        $inspectionRequest = InspectionRequest::query()
+            ->with(['customer', 'technician', 'completionReport'])
+            ->findOrFail($id);
+
+        if ((int) $inspectionRequest->technician_id !== (int) $technician->id) {
+            return response()->json([
+                'message' => 'You are not allowed to submit completion notes for this inspection request.',
+            ], 403);
+        }
+
+        if ($inspectionRequest->status !== 'in_progress') {
+            return response()->json([
+                'message' => 'Inspection completion notes can only be submitted while the task is in progress.',
+            ], 422);
+        }
+
+        if ($inspectionRequest->completionReport) {
+            return response()->json([
+                'message' => $inspectionRequest->completionReport->status === CompletionReport::STATUS_APPROVED
+                    ? 'Completion notes for this inspection request have already been approved.'
+                    : 'Completion notes for this inspection request are already awaiting admin approval.',
+            ], 422);
+        }
+
+        CompletionReport::query()->create([
+            'inspection_request_id' => $inspectionRequest->id,
+            'technician_id' => $technician->id,
+            'report_text' => trim($validated['report_text']),
+            'findings' => $this->nullableTrimmed($validated['findings'] ?? null),
+            'recommendations' => $this->nullableTrimmed($validated['recommendations'] ?? null),
+            'status' => CompletionReport::STATUS_PENDING,
+            'completed_at' => $validated['completed_at'],
+            'submitted_at' => now(),
+        ]);
+
+        $inspectionRequest->load(['customer', 'technician', 'completionReport.technician', 'completionReport.approver']);
+        $this->notificationService->notifyAdminsOfCompletionReportSubmission($inspectionRequest, $technician->id);
+
+        return response()->json([
+            'message' => 'Inspection completion notes submitted for admin approval.',
+            'inspection_request' => $inspectionRequest,
+        ], 201);
+    }
+
+    private function rules(): array
+    {
+        return [
+            'report_text' => ['required', 'string'],
+            'findings' => ['nullable', 'string'],
+            'recommendations' => ['nullable', 'string'],
+            'completed_at' => ['required', 'date'],
+        ];
+    }
+
+    private function nullableTrimmed(?string $value): ?string
+    {
+        $trimmed = trim((string) $value);
+
+        return $trimmed !== '' ? $trimmed : null;
+    }
+}

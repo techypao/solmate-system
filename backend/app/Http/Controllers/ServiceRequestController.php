@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CompletionReport;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Services\InAppNotificationService;
@@ -20,7 +21,7 @@ class ServiceRequestController extends Controller
     public function index(Request $request)
     {
         $serviceRequests = ServiceRequest::query()
-            ->with('technician')
+            ->with(['technician', 'completionReport.technician', 'completionReport.approver'])
             ->where('user_id', $request->user()->id)
             ->latest()
             ->get();
@@ -105,6 +106,7 @@ class ServiceRequestController extends Controller
 
         if ($serviceRequest->technician_id !== $technician->id) {
             $serviceRequest->technician_marked_done_at = null;
+            $serviceRequest->completionReport()->delete();
         }
 
         $serviceRequest->technician_id = $technician->id;
@@ -195,7 +197,7 @@ class ServiceRequestController extends Controller
         $technician = $request->user();
 
         $serviceRequests = ServiceRequest::query()
-            ->with(['customer', 'technician'])
+            ->with(['customer', 'technician', 'completionReport.technician', 'completionReport.approver'])
             ->where('technician_id', $technician->id)
             ->latest()
             ->get();
@@ -264,51 +266,9 @@ class ServiceRequestController extends Controller
 
     public function requestCompletion(Request $request, $id)
     {
-        $technician = $request->user();
-
-        if ($technician->role !== User::ROLE_TECHNICIAN) {
-            return response()->json([
-                'message' => 'Only technicians can request service completion review.',
-            ], 403);
-        }
-
-        $serviceRequest = ServiceRequest::query()
-            ->with(['customer', 'technician'])
-            ->findOrFail($id);
-
-        if ($serviceRequest->technician_id !== $technician->id) {
-            return response()->json([
-                'message' => 'You are not allowed to update this service request.',
-            ], 403);
-        }
-
-        if ($serviceRequest->status !== 'in_progress') {
-            return response()->json([
-                'message' => 'Service completion can only be requested after the service is in progress.',
-            ], 422);
-        }
-
-        if ($serviceRequest->technician_marked_done_at) {
-            return response()->json([
-                'message' => 'You already marked this service as done for admin review.',
-            ], 422);
-        }
-
-        $previousCompletionRequestAt = $serviceRequest->technician_marked_done_at;
-        $serviceRequest->technician_marked_done_at = now();
-        $serviceRequest->save();
-
-        if ($previousCompletionRequestAt === null && $serviceRequest->technician_marked_done_at !== null) {
-            $this->notificationService->notifyAdminsOfServiceCompletionRequest(
-                $serviceRequest,
-                $technician->id
-            );
-        }
-
         return response()->json([
-            'message' => 'Service marked as done and sent for admin review.',
-            'data' => $serviceRequest,
-        ], 200);
+            'message' => 'Use the completion notes endpoint to request service completion approval.',
+        ], 410);
     }
 
     public function updateAdminStatus(Request $request, $id)
@@ -318,11 +278,29 @@ class ServiceRequestController extends Controller
         ]);
 
         $serviceRequest = ServiceRequest::query()
-            ->with(['customer', 'technician'])
+            ->with(['customer', 'technician', 'completionReport.technician', 'completionReport.approver'])
             ->findOrFail($id);
         $previousStatus = $serviceRequest->status;
+        $nextStatus = $request->status;
 
-        $serviceRequest->status = $request->status;
+        if ($nextStatus === 'completed') {
+            $completionReport = $serviceRequest->completionReport;
+
+            if (! $completionReport) {
+                return response()->json([
+                    'message' => 'Technician completion notes must be submitted before this service can be marked as completed.',
+                ], 422);
+            }
+
+            if ($completionReport->status !== CompletionReport::STATUS_APPROVED) {
+                $completionReport->status = CompletionReport::STATUS_APPROVED;
+                $completionReport->approved_at = now();
+                $completionReport->approved_by = $request->user()->id;
+                $completionReport->save();
+            }
+        }
+
+        $serviceRequest->status = $nextStatus;
         $serviceRequest->save();
 
         if ($previousStatus !== $serviceRequest->status) {

@@ -11,13 +11,13 @@ import {
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 
-import {AppButton} from '../components';
+import {AppButton, CompletionReportCard} from '../components';
 import {ApiError} from '../src/services/api';
 import {
   getServiceRequestById,
   getTechnicianServiceRequestById,
-  requestTechnicianServiceCompletion,
   ServiceRequest,
+  submitTechnicianServiceCompletionReport,
   TechnicianServiceRequestStatus,
   updateTechnicianServiceRequestStatus,
 } from '../src/services/serviceRequestApi';
@@ -137,7 +137,7 @@ function TimelineItem({
 
 const TECHNICIAN_STATUS_ACTIONS: Array<{
   label: string;
-  value: TechnicianServiceRequestStatus | 'notify_admin_done';
+  value: TechnicianServiceRequestStatus;
   currentStatuses: string[];
   successMessage: string;
 }> = [
@@ -146,12 +146,6 @@ const TECHNICIAN_STATUS_ACTIONS: Array<{
     value: 'in_progress',
     currentStatuses: ['assigned'],
     successMessage: 'The service request is now in progress.',
-  },
-  {
-    label: 'Notify Admin Service Done',
-    value: 'notify_admin_done',
-    currentStatuses: ['in_progress'],
-    successMessage: 'The admin has been notified that the service is done.',
   },
 ];
 
@@ -168,6 +162,10 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
   const [loading, setLoading] = useState(!initialServiceRequest);
   const [errorMessage, setErrorMessage] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [showCompletionReportForm, setShowCompletionReportForm] = useState(
+    !initialServiceRequest?.completion_report &&
+      !!initialServiceRequest?.technician_marked_done_at,
+  );
   const customerRequestCategory =
     (serviceRequest?.request_type || route?.params?.requestCategory || '').toLowerCase() ===
     'installation'
@@ -217,6 +215,9 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
         }
 
         setServiceRequest(request);
+        if (request.completion_report) {
+          setShowCompletionReportForm(true);
+        }
       } catch (error) {
         setServiceRequest(null);
         setErrorMessage(getFriendlyErrorMessage(error));
@@ -235,27 +236,18 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
 
   const availableActions = useMemo(() => {
     const currentStatus = (serviceRequest?.status || '').toLowerCase();
-    const alreadyRequestedCompletion = !!serviceRequest?.technician_marked_done_at;
 
     if (mode !== 'technician') {
       return [];
     }
 
     return TECHNICIAN_STATUS_ACTIONS.filter(action => {
-      if (!action.currentStatuses.includes(currentStatus)) {
-        return false;
-      }
-
-      if (action.value === 'notify_admin_done' && alreadyRequestedCompletion) {
-        return false;
-      }
-
-      return true;
+      return action.currentStatuses.includes(currentStatus);
     });
-  }, [mode, serviceRequest?.status, serviceRequest?.technician_marked_done_at]);
+  }, [mode, serviceRequest?.status]);
 
   const handleStatusUpdate = async (
-    nextStatus: TechnicianServiceRequestStatus | 'notify_admin_done',
+    nextStatus: TechnicianServiceRequestStatus,
     successMessage: string,
   ) => {
     if (!serviceRequest || actionLoading) {
@@ -265,25 +257,23 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
     try {
       setActionLoading(true);
 
-      const updatedServiceRequest =
-        nextStatus === 'notify_admin_done'
-          ? await requestTechnicianServiceCompletion(serviceRequest.id)
-          : await updateTechnicianServiceRequestStatus(
-              serviceRequest.id,
-              nextStatus,
-            );
+      const updatedServiceRequest = await updateTechnicianServiceRequestStatus(
+        serviceRequest.id,
+        nextStatus,
+      );
 
       const nextRequest =
         updatedServiceRequest?.id !== undefined
           ? updatedServiceRequest
           : {
               ...serviceRequest,
-              ...(nextStatus === 'notify_admin_done'
-                ? {technician_marked_done_at: new Date().toISOString()}
-                : {status: nextStatus}),
+              status: nextStatus,
             };
 
       setServiceRequest(nextRequest);
+      if (nextStatus !== 'in_progress') {
+        setShowCompletionReportForm(false);
+      }
       navigation.replace(route.name, {
         serviceRequestId: nextRequest.id,
         initialServiceRequest: nextRequest,
@@ -297,6 +287,57 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
         Alert.alert(
           'Update failed',
           'Could not update the service request.',
+        );
+      }
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCompletionReportSubmit = async (payload: {
+    report_text: string;
+    findings?: string;
+    recommendations?: string;
+    completed_at: string;
+  }) => {
+    if (!serviceRequest || actionLoading) {
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+
+      const updatedServiceRequest = await submitTechnicianServiceCompletionReport(
+        serviceRequest.id,
+        payload,
+      );
+
+      const nextRequest =
+        updatedServiceRequest?.id !== undefined
+          ? updatedServiceRequest
+          : {
+              ...serviceRequest,
+              technician_marked_done_at: new Date().toISOString(),
+            };
+
+      setServiceRequest(nextRequest);
+      setShowCompletionReportForm(true);
+      navigation.replace(route.name, {
+        serviceRequestId: nextRequest.id,
+        initialServiceRequest: nextRequest,
+        mode,
+      });
+      Alert.alert(
+        'Report submitted',
+        'Completion report submitted. Waiting for admin review.',
+      );
+    } catch (error) {
+      if (error instanceof ApiError) {
+        Alert.alert('Submission failed', error.message);
+      } else {
+        Alert.alert(
+          'Submission failed',
+          'Could not submit the completion notes.',
         );
       }
     } finally {
@@ -336,7 +377,7 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
       events.push({
         datetime: formatDateTime(serviceRequest.technician_marked_done_at),
         status: 'in_progress',
-        description: 'Technician marked done',
+        description: 'Completion report submitted',
       });
     }
     if (s === 'completed') {
@@ -423,6 +464,21 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
   }
 
   const statusColors = getServiceRequestStatusColors(serviceRequest.status);
+  const pendingAdminReview =
+    mode === 'technician' &&
+    !!serviceRequest.completion_report &&
+    (serviceRequest.completion_report.status || '').toLowerCase() !==
+      'approved' &&
+    (serviceRequest.status || '').toLowerCase() !== 'completed';
+  const displayStatusLabel = pendingAdminReview
+    ? 'Pending Admin Review'
+    : formatServiceRequestStatus(serviceRequest.status);
+  const displayStatusColors = pendingAdminReview
+    ? {
+        backgroundColor: '#fef3c7',
+        textColor: '#92400e',
+      }
+    : statusColors;
   const displayType =
     mode === 'customer' && customerRequestCategory === 'maintenance'
       ? getMaintenanceConcern(serviceRequest)
@@ -449,11 +505,11 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
         <View
           style={[
             styles.statusPill,
-            {backgroundColor: statusColors.backgroundColor},
+            {backgroundColor: displayStatusColors.backgroundColor},
           ]}>
           <Text
-            style={[styles.statusPillText, {color: statusColors.textColor}]}>
-            {formatServiceRequestStatus(serviceRequest.status)}
+            style={[styles.statusPillText, {color: displayStatusColors.textColor}]}>
+            {displayStatusLabel}
           </Text>
         </View>
       </View>
@@ -477,7 +533,7 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
           />
           <InlineRow
             label="Status"
-            value={formatServiceRequestStatus(serviceRequest.status)}
+            value={displayStatusLabel}
           />
           <InlineRow
             label="Created At"
@@ -518,6 +574,41 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
             ))
           )}
         </View>
+
+        {mode === 'technician' ? (
+          <>
+            {(serviceRequest.status || '').toLowerCase() === 'in_progress' &&
+            !serviceRequest.completion_report &&
+            !showCompletionReportForm ? (
+              <View style={styles.actionsBlock}>
+                <AppButton
+                  title="Notify Admin Service Done"
+                  onPress={() => setShowCompletionReportForm(true)}
+                  disabled={actionLoading}
+                  style={[
+                    styles.actionBtn,
+                    {backgroundColor: GOLD, borderColor: GOLD},
+                  ]}
+                  textStyle={{color: NAVY}}
+                />
+              </View>
+            ) : null}
+
+            {showCompletionReportForm || serviceRequest.completion_report ? (
+              <CompletionReportCard
+                title="Service Completion Notes"
+                subtitle="Submit the completion notes after finishing the on-site work. Admin approval is required before this request becomes completed."
+                report={serviceRequest.completion_report}
+                canSubmit={
+                  (serviceRequest.status || '').toLowerCase() === 'in_progress' &&
+                  !serviceRequest.completion_report
+                }
+                submitting={actionLoading}
+                onSubmit={handleCompletionReportSubmit}
+              />
+            ) : null}
+          </>
+        ) : null}
 
         {/* ── Action Buttons ── */}
         <View style={styles.actionsBlock}>

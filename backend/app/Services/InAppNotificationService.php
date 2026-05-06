@@ -7,7 +7,7 @@ use App\Models\Quotation;
 use App\Models\ServiceRequest;
 use App\Models\Testimony;
 use App\Models\User;
-use App\Notifications\AdminServiceCompletionRequestedNotification;
+use App\Notifications\AdminCompletionReportSubmittedNotification;
 use App\Notifications\AdminNewInspectionRequestNotification;
 use App\Notifications\AdminNewServiceRequestNotification;
 use App\Notifications\AdminNewTestimonyNotification;
@@ -44,13 +44,18 @@ class InAppNotificationService
         );
     }
 
-    public function notifyAdminsOfServiceCompletionRequest(ServiceRequest $serviceRequest, ?int $actorId = null): void
+    public function notifyAdminsOfCompletionReportSubmission(ServiceRequest|InspectionRequest $requestModel, ?int $actorId = null): void
     {
-        $serviceRequest->loadMissing(['customer', 'technician']);
+        $requestModel->loadMissing(['customer', 'technician']);
 
         $this->adminRecipients()->each(
-            fn (User $admin) => $admin->notify(new AdminServiceCompletionRequestedNotification($serviceRequest, $actorId))
+            fn (User $admin) => $admin->notify(new AdminCompletionReportSubmittedNotification($requestModel, $actorId))
         );
+    }
+
+    public function notifyAdminsOfServiceCompletionRequest(ServiceRequest $serviceRequest, ?int $actorId = null): void
+    {
+        $this->notifyAdminsOfCompletionReportSubmission($serviceRequest, $actorId);
     }
 
     public function notifyTechnicianOfServiceRequestAssignment(ServiceRequest $serviceRequest, ?int $actorId = null): void

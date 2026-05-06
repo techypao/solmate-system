@@ -8,15 +8,21 @@ import {
 
 type StatusBadgeProps = {
   status?: string | null;
+  label?: string | null;
+  colors?: {
+    backgroundColor: string;
+    textColor: string;
+  } | null;
 };
 
-export default function StatusBadge({status}: StatusBadgeProps) {
-  const colors = getServiceRequestStatusColors(status);
+export default function StatusBadge({status, label, colors}: StatusBadgeProps) {
+  const resolvedColors = colors ?? getServiceRequestStatusColors(status);
+  const resolvedLabel = label ?? formatServiceRequestStatus(status);
 
   return (
-    <View style={[styles.badge, {backgroundColor: colors.backgroundColor}]}>
-      <Text style={[styles.badgeText, {color: colors.textColor}]}>
-        {formatServiceRequestStatus(status)}
+    <View style={[styles.badge, {backgroundColor: resolvedColors.backgroundColor}]}>
+      <Text style={[styles.badgeText, {color: resolvedColors.textColor}]}>
+        {resolvedLabel}
       </Text>
     </View>
   );

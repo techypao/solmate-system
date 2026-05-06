@@ -41,9 +41,9 @@ class FinalQuotationDefaultsTest extends TestCase
         ]);
 
         $response->assertCreated()
-            ->assertJsonPath('message', 'Inspection-based quotation submitted. Inspection marked as completed.')
+            ->assertJsonPath('message', 'Inspection-based quotation submitted successfully.')
             ->assertJsonPath('data.quotation_type', 'final')
-            ->assertJsonPath('inspection_request.status', 'completed')
+            ->assertJsonPath('inspection_request.status', 'in_progress')
             ->assertJsonPath('data.rate_per_kwh', 15)
             ->assertJsonPath('data.days_in_month', 30)
             ->assertJsonPath('data.sun_hours', 5)
@@ -75,7 +75,7 @@ class FinalQuotationDefaultsTest extends TestCase
 
         $this->assertDatabaseHas('inspection_requests', [
             'id' => $inspectionRequest->id,
-            'status' => 'completed',
+            'status' => 'in_progress',
         ]);
     }
 

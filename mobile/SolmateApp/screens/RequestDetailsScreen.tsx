@@ -11,10 +11,11 @@ import {
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 
-import StatusBadge from '../components/StatusBadge';
+import {CompletionReportCard, StatusBadge} from '../components';
 import {ApiError} from '../src/services/api';
 import {
   getAssignedInspectionRequestById,
+  submitInspectionCompletionReport,
   TechnicianInspectionRequest,
   TechnicianUpdatableStatus,
   updateInspectionRequestStatus,
@@ -129,7 +130,6 @@ function BottomNav({onPress}: {onPress: (t: Tab) => void}) {
 const STATUS_OPTIONS: {label: string; value: TechnicianUpdatableStatus}[] = [
   {label: 'Assigned',    value: 'assigned'},
   {label: 'In Progress', value: 'in_progress'},
-  {label: 'Completed',   value: 'completed'},
 ];
 
 // ─── shared header skeleton ───────────────────────────────────────────────────
@@ -158,6 +158,9 @@ export default function RequestDetailsScreen({navigation, route}: any) {
   const [loading, setLoading] = useState(!initialInspectionRequest);
   const [errorMessage, setErrorMessage] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [showCompletionReportForm, setShowCompletionReportForm] = useState(
+    !!initialInspectionRequest?.completion_report,
+  );
   const [selectedStatus, setSelectedStatus] =
     useState<TechnicianUpdatableStatus | null>(null);
 
@@ -179,6 +182,9 @@ export default function RequestDetailsScreen({navigation, route}: any) {
           return;
         }
         setInspectionRequest(request);
+        if (request.completion_report) {
+          setShowCompletionReportForm(true);
+        }
       } catch (error) {
         setInspectionRequest(null);
         setErrorMessage(getFriendlyErrorMessage(error));
@@ -210,6 +216,9 @@ export default function RequestDetailsScreen({navigation, route}: any) {
         statusToSave,
       );
       setInspectionRequest(updated);
+      if (statusToSave !== 'in_progress') {
+        setShowCompletionReportForm(false);
+      }
       setSelectedStatus(null);
       Alert.alert('Saved', 'Status updated successfully.');
     } catch (error) {
@@ -217,6 +226,40 @@ export default function RequestDetailsScreen({navigation, route}: any) {
         'Save failed',
         error instanceof ApiError ? error.message : 'Could not update status.',
       );
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCompletionReportSubmit = async (payload: {
+    report_text: string;
+    findings?: string;
+    recommendations?: string;
+    completed_at: string;
+  }) => {
+    if (!inspectionRequest || actionLoading) {
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      const updated = await submitInspectionCompletionReport(
+        inspectionRequest.id,
+        payload,
+      );
+      setInspectionRequest(updated);
+      setShowCompletionReportForm(true);
+      Alert.alert(
+        'Report submitted',
+        'Completion report submitted. Waiting for admin review.',
+      );
+    } catch (error) {
+        Alert.alert(
+          'Submission failed',
+          error instanceof ApiError
+            ? error.message
+          : 'Could not submit the completion notes.',
+        );
     } finally {
       setActionLoading(false);
     }
@@ -275,6 +318,21 @@ export default function RequestDetailsScreen({navigation, route}: any) {
 
   const activeStatus = selectedStatus ?? (inspectionRequest.status as TechnicianUpdatableStatus);
   const canCreateQuote = canCreateFinalQuotation(inspectionRequest.status);
+  const pendingAdminReview =
+    !!inspectionRequest.completion_report &&
+    (inspectionRequest.completion_report.status || '').toLowerCase() !==
+      'approved' &&
+    (inspectionRequest.status || '').toLowerCase() !== 'completed';
+  const displayStatusLabel = pendingAdminReview
+    ? 'Pending Admin Review'
+    : ((inspectionRequest.status || '').charAt(0).toUpperCase() +
+        (inspectionRequest.status || '').slice(1).replace(/_/g, ' '));
+  const displayStatusColors = pendingAdminReview
+    ? {
+        backgroundColor: '#fef3c7',
+        textColor: '#92400e',
+      }
+    : null;
 
   return (
     <View style={s.root}>
@@ -288,7 +346,11 @@ export default function RequestDetailsScreen({navigation, route}: any) {
 
           {/* ── status badge (top-right) ── */}
           <View style={s.badgeRow}>
-            <StatusBadge status={inspectionRequest.status} />
+            <StatusBadge
+              status={inspectionRequest.status}
+              label={displayStatusLabel}
+              colors={displayStatusColors}
+            />
           </View>
 
           {/* ── Customer Information ── */}
@@ -305,6 +367,10 @@ export default function RequestDetailsScreen({navigation, route}: any) {
             <InfoRow
               label="Inspection Request ID"
               value={formatIRQId(inspectionRequest.id)}
+            />
+            <InfoRow
+              label="Status"
+              value={displayStatusLabel}
             />
             <InfoRow
               label="Schedule Date/Time"
@@ -346,6 +412,31 @@ export default function RequestDetailsScreen({navigation, route}: any) {
               })}
             </View>
           </View>
+
+          {(inspectionRequest.status || '').toLowerCase() === 'in_progress' &&
+          !inspectionRequest.completion_report &&
+          !showCompletionReportForm ? (
+            <Pressable
+              style={({pressed}) => [s.btnSecondary, pressed && s.pressed]}
+              onPress={() => setShowCompletionReportForm(true)}
+              disabled={actionLoading}>
+              <Text style={s.btnSecondaryText}>Notify Admin Inspection Done</Text>
+            </Pressable>
+          ) : null}
+
+          {showCompletionReportForm || inspectionRequest.completion_report ? (
+            <CompletionReportCard
+              title="Inspection Completion Notes"
+              subtitle="Submit the technician completion notes after the site inspection is finished. Admin approval is required before this inspection becomes completed."
+              report={inspectionRequest.completion_report}
+              canSubmit={
+                (inspectionRequest.status || '').toLowerCase() === 'in_progress' &&
+                !inspectionRequest.completion_report
+              }
+              submitting={actionLoading}
+              onSubmit={handleCompletionReportSubmit}
+            />
+          ) : null}
 
           {/* ── Action Buttons ── */}
           {canCreateQuote ? (
