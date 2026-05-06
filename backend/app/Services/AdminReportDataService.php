@@ -82,8 +82,8 @@ class AdminReportDataService
                 'Cancelled / Rejected' => $requestStatusCounts['cancelled_rejected'],
             ], $chartPalette),
             'quotationTypeChart' => $this->buildChartDataset([
-                'Initial' => $quotations->filter(fn (Quotation $quotation) => $this->normalizeQuotationType($quotation->quotation_type) === 'initial')->count(),
-                'Final' => $quotations->filter(fn (Quotation $quotation) => $this->normalizeQuotationType($quotation->quotation_type) === 'final')->count(),
+                'Pre-Inspection' => $quotations->filter(fn (Quotation $quotation) => $this->normalizeQuotationType($quotation->quotation_type) === 'initial')->count(),
+                'Inspection-Based' => $quotations->filter(fn (Quotation $quotation) => $this->normalizeQuotationType($quotation->quotation_type) === 'final')->count(),
             ], array_slice($chartPalette, 0, 2)),
             'quotationStatusChart' => $this->buildChartDataset([
                 'Pending' => $quotationStatusCounts['pending'],
@@ -303,7 +303,7 @@ class AdminReportDataService
             ->map(function (Quotation $quotation) {
                 return [
                     'label' => "Quotation #{$quotation->id}",
-                    'type' => Str::headline($this->normalizeQuotationType($quotation->quotation_type)),
+                    'type' => $this->formatQuotationTypeLabel($quotation->quotation_type),
                     'customer_name' => $quotation->customer?->name ?? 'Unknown customer',
                     'status' => Str::headline($this->normalizeStatus($quotation->status)),
                     'created_at' => $quotation->created_at,
@@ -345,6 +345,14 @@ class AdminReportDataService
             ->lower()
             ->trim()
             ->value() ?: 'initial';
+    }
+
+    private function formatQuotationTypeLabel(?string $type): string
+    {
+        return match ($this->normalizeQuotationType($type)) {
+            'final' => 'Inspection-Based',
+            default => 'Pre-Inspection',
+        };
     }
 
     private function isRequestInProgress(?string $status): bool

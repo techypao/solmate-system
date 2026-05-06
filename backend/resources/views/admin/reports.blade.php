@@ -328,7 +328,7 @@
                         ],
                         'quotationsByType' => [
                             'title' => 'Quotations by Type',
-                            'copy' => 'Compare how many quotations are still pre-inspection estimates versus completed inspection-based quotations.',
+                            'copy' => 'Compare how many quotations are pre-inspection estimates versus inspection-based quotations.',
                             'dataset' => $quotationTypeChart,
                         ],
                         'quotationsByStatus' => [

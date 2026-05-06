@@ -546,7 +546,6 @@ export default function InspectionRequestScreen({ navigation }: any) {
             <View style={s.fieldGroup}>
               <View style={s.fieldHeader}>
                 <Text style={s.fieldLabel}>Address Additional Details</Text>
-                <Text style={s.optionalTag}>Optional</Text>
               </View>
               <TextInput
                 onChangeText={handleAddressDetailsChange}
@@ -758,12 +757,6 @@ const s = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: '#dc2626',
-    textTransform: 'uppercase',
-  },
-  optionalTag: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: MUTED,
     textTransform: 'uppercase',
   },
 

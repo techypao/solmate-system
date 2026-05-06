@@ -201,7 +201,7 @@ export default function InstallationRequestScreen({ navigation }: any) {
       if (error instanceof ApiError) {
         setQuotationMessage(error.message);
       } else {
-        setQuotationMessage('Select a quotation (optional)');
+        setQuotationMessage('Select a quotation');
       }
     } finally {
       setQuotationsLoading(false);
@@ -334,6 +334,19 @@ export default function InstallationRequestScreen({ navigation }: any) {
         longitude,
         date_needed: trimmedPreferredDate,
       });
+
+      const createdServiceRequest = response?.data;
+      if (createdServiceRequest?.id) {
+        resetForm();
+        setIsQuotationDropdownOpen(false);
+        navigation.replace('ServiceRequestDetail', {
+          serviceRequestId: createdServiceRequest.id,
+          initialServiceRequest: createdServiceRequest,
+          mode: 'customer',
+          requestCategory: 'installation',
+        });
+        return;
+      }
 
       resetForm();
       setIsQuotationDropdownOpen(false);
@@ -468,8 +481,7 @@ export default function InstallationRequestScreen({ navigation }: any) {
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Quotation Reference</Text>
             <Text style={styles.cardSubtitle}>
-              Optionally link this installation request to one of your
-              quotations.
+              Link this installation request to one of your quotations.
             </Text>
 
             <Text style={styles.fieldLabel}>Selected Quotation</Text>
@@ -493,7 +505,7 @@ export default function InstallationRequestScreen({ navigation }: any) {
               >
                 {selectedQuotation
                   ? formatQuotationReference(selectedQuotation)
-                  : 'Select a quotation (optional)'}
+                  : 'Select a quotation'}
               </Text>
               <Text style={styles.dropdownChevron}>
                 {isQuotationDropdownOpen ? '▲' : '▼'}
@@ -523,7 +535,7 @@ export default function InstallationRequestScreen({ navigation }: any) {
                       styles.referencePlaceholder,
                     ]}
                   >
-                    Select a quotation (optional)
+                    Select a quotation
                   </Text>
                 </Pressable>
 
@@ -558,7 +570,7 @@ export default function InstallationRequestScreen({ navigation }: any) {
               </View>
             ) : (
               <Text style={styles.helperText}>
-                {quotationMessage || 'Select a quotation (optional)'}
+                {quotationMessage || 'Select a quotation'}
               </Text>
             )}
 
@@ -707,7 +719,6 @@ export default function InstallationRequestScreen({ navigation }: any) {
 
             <View style={styles.fieldHeader}>
               <Text style={styles.fieldLabel}>Address Additional Details</Text>
-              <Text style={styles.optionalTag}>Optional</Text>
             </View>
             <TextInput
               onChangeText={value => {
@@ -772,7 +783,7 @@ export default function InstallationRequestScreen({ navigation }: any) {
                 setExtraNotes(value);
                 clearStatusMessages();
               }}
-              placeholder="Optional scheduling or access note"
+              placeholder="Scheduling or access note"
               placeholderTextColor="#a8b4c8"
               style={styles.input}
               value={extraNotes}
@@ -946,12 +957,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     color: '#b45309',
-    textTransform: 'uppercase',
-  },
-  optionalTag: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: MUTED,
     textTransform: 'uppercase',
   },
   input: {

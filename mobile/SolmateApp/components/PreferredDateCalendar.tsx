@@ -104,7 +104,6 @@ export default function PreferredDateCalendar({
     <View style={styles.fieldGroup}>
       <View style={styles.fieldHeader}>
         <Text style={styles.fieldLabel}>{label}</Text>
-        <Text style={styles.optionalText}>Optional</Text>
       </View>
 
       <View
@@ -207,12 +206,6 @@ const styles = StyleSheet.create({
     color: '#123A5A',
     fontSize: 15,
     fontWeight: '800',
-  },
-  optionalText: {
-    color: '#5E7288',
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
   },
   calendarCard: {
     backgroundColor: '#ffffff',

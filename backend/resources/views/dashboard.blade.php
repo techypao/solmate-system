@@ -1165,12 +1165,12 @@
         <div class="adm2-stat-card">
             <div class="adm2-stat-label">Pending Quotation Requests</div>
             <div class="adm2-stat-value">{{ $adm_pendingInspCount }}</div>
-            <a href="{{ route('admin.request-assignments') }}#inspection-requests-section" class="adm2-stat-link">View Requests</a>
+            <a href="{{ route('admin.request-assignments') }}" class="adm2-stat-link">View Requests</a>
         </div>
         <div class="adm2-stat-card">
             <div class="adm2-stat-label">Pending Service Requests</div>
             <div class="adm2-stat-value">{{ $adm_pendingServiceCount }}</div>
-            <a href="{{ route('admin.request-assignments') }}#service-requests-section" class="adm2-stat-link">View Requests</a>
+            <a href="{{ route('admin.request-assignments') }}" class="adm2-stat-link">View Requests</a>
         </div>
         <div class="adm2-stat-card">
             <div class="adm2-stat-label">Quotations Generated</div>

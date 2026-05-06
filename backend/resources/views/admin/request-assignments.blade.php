@@ -98,12 +98,6 @@
             })
             ->values();
     };
-
-    $latestRequestReview = function ($serviceRequest) {
-        return $serviceRequest->testimonies()
-            ->latest('created_at')
-            ->first();
-    };
     $awaitingCompletionReviewCount = $sortedServiceRequests
         ->filter(fn ($request) => $request->completionReport && $request->status !== 'completed')
         ->count()
@@ -805,6 +799,8 @@
                             } else {
                                 $inspectionWorkflowMessage = 'Assign a technician first, then keep the official inspection status updated here.';
                             }
+
+                            $inspectionDetailCards = $parseRequestDetailCards($inspectionRequest->details);
                         @endphp
 
                         <div
@@ -851,10 +847,6 @@
 
                                 <div class="request-summary-grid">
                                     <div class="request-summary-item">
-                                        <span class="request-summary-label">Contact</span>
-                                        <div class="request-summary-value">{{ $inspectionRequest->contact_number ?: 'Not provided' }}</div>
-                                    </div>
-                                    <div class="request-summary-item">
                                         <span class="request-summary-label">Preferred Date</span>
                                         <div class="request-summary-value" data-preferred-date-for="{{ $requestKey }}">{{ $dateNeeded }}</div>
                                     </div>
@@ -874,47 +866,56 @@
                                             {{ $completionStateLabel }}
                                         </div>
                                     </div>
-                                    <div class="request-summary-item">
-                                        <span class="request-summary-label">Address</span>
-                                        <div class="request-summary-value">{{ $inspectionRequest->address ?: 'Not provided' }}</div>
-                                    </div>
-                                    <div class="request-summary-item">
-                                        <span class="request-summary-label">Address Details</span>
-                                        <div class="request-summary-value">{{ $inspectionRequest->address_details ?: 'Not provided' }}</div>
-                                    </div>
-                                    <div class="request-summary-item">
-                                        <span class="request-summary-label">Request Type</span>
-                                        <div class="request-summary-value">Inspection</div>
-                                    </div>
                                 </div>
                             </div>
 
                             <div class="request-card-body">
-                                <div class="detail-grid" style="margin-bottom: 14px;">
-                                    <div class="detail-item">
-                                        <span class="detail-label">Customer Email</span>
-                                        <strong>{{ $inspectionRequest->customer?->email ?? 'Not available' }}</strong>
+                                <div class="request-section">
+                                    <div class="request-section-header">
+                                        <h4 class="request-section-title">Customer information</h4>
+                                        <p class="request-section-copy">Primary contact and location details for this inspection request.</p>
                                     </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Contact Number</span>
-                                        <strong>{{ $inspectionRequest->contact_number ?: 'Not provided' }}</strong>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Address</span>
-                                        <strong>{{ $inspectionRequest->address ?: 'Not provided' }}</strong>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Address Details</span>
-                                        <strong>{{ $inspectionRequest->address_details ?: 'Not provided' }}</strong>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Request Type</span>
-                                        <strong>Inspection</strong>
+                                    <div class="detail-grid">
+                                        <div class="detail-item">
+                                            <span class="detail-label">Customer Email</span>
+                                            <strong>{{ $inspectionRequest->customer?->email ?? 'Not available' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Contact Number</span>
+                                            <strong>{{ $inspectionRequest->contact_number ?: 'Not provided' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Address</span>
+                                            <strong>{{ $inspectionRequest->address ?: 'Not provided' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Address Details</span>
+                                            <strong>{{ $inspectionRequest->address_details ?: 'Not provided' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Request Type</span>
+                                            <strong>Inspection</strong>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="info-box request-detail-box">
-                                    <strong>Request details:</strong> {{ $inspectionRequest->details }}
+                                <div class="request-section">
+                                    <div class="request-section-header">
+                                        <h4 class="request-section-title">Request details</h4>
+                                        <p class="request-section-copy">Structured request information displayed in the same card style as the customer section.</p>
+                                    </div>
+                                    @if ($inspectionDetailCards->isNotEmpty())
+                                        <div class="detail-grid">
+                                            @foreach ($inspectionDetailCards as $detailCard)
+                                                <div class="detail-item {{ $detailCard['wide'] ? 'detail-item--wide' : '' }}">
+                                                    <span class="detail-label">{{ $detailCard['label'] }}</span>
+                                                    <strong>{{ $detailCard['value'] }}</strong>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <div class="request-empty-card">No request details were provided.</div>
+                                    @endif
                                 </div>
 
                                 <div class="info-box request-detail-box">
@@ -1105,7 +1106,6 @@
                             }
 
                             $serviceDetailCards = $parseRequestDetailCards($serviceRequest->details);
-                            $latestServiceReview = $latestRequestReview($serviceRequest);
                         @endphp
 
                         <div
@@ -1218,31 +1218,6 @@
                                         </div>
                                     @else
                                         <div class="request-empty-card">No request details were provided.</div>
-                                    @endif
-                                </div>
-
-                                <div class="request-section">
-                                    <div class="request-section-header">
-                                        <h4 class="request-section-title">Customer review</h4>
-                                        <p class="request-section-copy">Latest submitted customer feedback for this request.</p>
-                                    </div>
-                                    @if ($latestServiceReview)
-                                        <div class="detail-grid">
-                                            <div class="detail-item">
-                                                <span class="detail-label">Rating</span>
-                                                <strong>{{ $latestServiceReview->rating ? $latestServiceReview->rating . ' / 5' : 'Not provided' }}</strong>
-                                            </div>
-                                            <div class="detail-item">
-                                                <span class="detail-label">Review Date</span>
-                                                <strong>{{ $formatAdminDateTime($latestServiceReview->created_at) ?? 'Not available' }}</strong>
-                                            </div>
-                                            <div class="detail-item detail-item--wide">
-                                                <span class="detail-label">Review / Feedback</span>
-                                                <strong>{{ $latestServiceReview->message ?: 'No written feedback provided.' }}</strong>
-                                            </div>
-                                        </div>
-                                    @else
-                                        <div class="request-empty-card">No customer review yet.</div>
                                     @endif
                                 </div>
 
@@ -1437,7 +1412,6 @@
                             }
 
                             $serviceDetailCards = $parseRequestDetailCards($serviceRequest->details);
-                            $latestServiceReview = $latestRequestReview($serviceRequest);
                         @endphp
 
                         <div
@@ -1550,31 +1524,6 @@
                                         </div>
                                     @else
                                         <div class="request-empty-card">No request details were provided.</div>
-                                    @endif
-                                </div>
-
-                                <div class="request-section">
-                                    <div class="request-section-header">
-                                        <h4 class="request-section-title">Customer review</h4>
-                                        <p class="request-section-copy">Latest submitted customer feedback for this request.</p>
-                                    </div>
-                                    @if ($latestServiceReview)
-                                        <div class="detail-grid">
-                                            <div class="detail-item">
-                                                <span class="detail-label">Rating</span>
-                                                <strong>{{ $latestServiceReview->rating ? $latestServiceReview->rating . ' / 5' : 'Not provided' }}</strong>
-                                            </div>
-                                            <div class="detail-item">
-                                                <span class="detail-label">Review Date</span>
-                                                <strong>{{ $formatAdminDateTime($latestServiceReview->created_at) ?? 'Not available' }}</strong>
-                                            </div>
-                                            <div class="detail-item detail-item--wide">
-                                                <span class="detail-label">Review / Feedback</span>
-                                                <strong>{{ $latestServiceReview->message ?: 'No written feedback provided.' }}</strong>
-                                            </div>
-                                        </div>
-                                    @else
-                                        <div class="request-empty-card">No customer review yet.</div>
                                     @endif
                                 </div>
 
@@ -1947,6 +1896,20 @@
             return 'inspection';
         }
 
+        function clearActiveServiceState() {
+            serviceTabLinks.forEach((link) => {
+                link.classList.remove('active');
+                link.setAttribute('aria-selected', 'false');
+            });
+
+            serviceTabPanels.forEach((panel) => {
+                panel.classList.remove('active');
+                panel.hidden = true;
+            });
+
+            setFocusedRequest(null);
+        }
+
         function requestCardFromHash(hash) {
             if (typeof hash !== 'string' || !hash.startsWith('#')) {
                 return null;
@@ -1975,7 +1938,7 @@
                 case '#services-section':
                     return firstAvailableServiceTab();
                 default:
-                    return 'inspection';
+                    return null;
             }
         }
 
@@ -2053,9 +2016,8 @@
 
             if (preferredCard) {
                 setFocusedRequest(preferredCard);
-            } else if (!document.querySelector(`[data-request-card].is-active[data-request-tab="${tabKey}"]`)) {
-                const firstCard = document.querySelector(`[data-request-card][data-request-tab="${tabKey}"]`);
-                setFocusedRequest(firstCard || null);
+            } else {
+                setFocusedRequest(null);
             }
 
             if (syncHash) {
@@ -2148,10 +2110,23 @@
             });
 
             window.addEventListener('hashchange', () => {
-                setActiveServiceTab(resolveTabFromHash(window.location.hash), false);
+                const tabKey = resolveTabFromHash(window.location.hash);
+
+                if (!tabKey) {
+                    clearActiveServiceState();
+                    return;
+                }
+
+                setActiveServiceTab(tabKey, false);
             });
 
-            setActiveServiceTab(resolveTabFromHash(window.location.hash), false);
+            const initialTab = resolveTabFromHash(window.location.hash);
+
+            if (initialTab) {
+                setActiveServiceTab(initialTab, false);
+            } else {
+                clearActiveServiceState();
+            }
         }
 
         requestCards.forEach((card) => {

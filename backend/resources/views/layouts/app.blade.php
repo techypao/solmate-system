@@ -1802,7 +1802,7 @@
                 </a>
 
                 {{-- Services --}}
-                <a href="{{ route('admin.request-assignments') }}#service-requests-section"
+                     <a href="{{ route('admin.request-assignments') }}"
                    class="admin-sidebar-link {{ request()->routeIs('admin.request-assignments') ? 'active' : '' }}">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <circle cx="12" cy="12" r="3"/>

@@ -1,3 +1,5 @@
+import {DefaultTheme} from '@react-navigation/native';
+
 export const solmateColors = {
   primary: '#F4D000',
   primaryHover: '#E6C200',
@@ -60,8 +62,10 @@ export function getSolmateStatusColors(status?: string | null) {
 }
 
 export const solmateNavigationTheme = {
+  ...DefaultTheme,
   dark: false,
   colors: {
+    ...DefaultTheme.colors,
     primary: solmateColors.accentStrong,
     background: solmateColors.background,
     card: solmateColors.white,
