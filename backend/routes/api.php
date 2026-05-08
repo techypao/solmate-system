@@ -120,9 +120,11 @@ Route::middleware(['auth:sanctum', 'role:customer'])->group(function () {
 
     Route::get('/inspection-requests', [InspectionRequestController::class, 'index']);
     Route::post('/inspection-requests', [InspectionRequestController::class, 'store']);
+    Route::put('/inspection-requests/{id}/cancel', [InspectionRequestController::class, 'cancelByCustomer']);
 
     Route::post('/service-requests', [ServiceRequestController::class, 'store']);
     Route::get('/service-requests', [ServiceRequestController::class, 'index']);
+    Route::put('/service-requests/{id}/cancel', [ServiceRequestController::class, 'cancelByCustomer']);
     Route::post('/quotations/{quotation}/complete', [QuotationController::class, 'complete']);
     Route::get('/my-testimonies', [TestimonyController::class, 'myIndex']);
     Route::post('/testimonies', [TestimonyController::class, 'store']);

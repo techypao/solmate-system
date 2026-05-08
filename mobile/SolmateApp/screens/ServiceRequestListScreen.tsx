@@ -51,6 +51,10 @@ function formatStatusLabel(status?: string | null) {
       return 'In Progress';
     case 'completed':
       return 'Completed';
+    case 'cancelled':
+      return 'Cancelled';
+    case 'declined':
+      return 'Declined';
     case 'pending':
     default:
       return 'Pending';
@@ -77,6 +81,9 @@ function getStatusBadgeStyle(status?: string | null) {
       return {backgroundColor: '#EAF9FD', textColor: '#1d4ed8'};
     case 'completed':
       return {backgroundColor: '#dcfce7', textColor: '#166534'};
+    case 'cancelled':
+    case 'declined':
+      return {backgroundColor: '#fee2e2', textColor: '#b91c1c'};
     case 'pending':
     default:
       return {backgroundColor: '#e8ecf4', textColor: MUTED};

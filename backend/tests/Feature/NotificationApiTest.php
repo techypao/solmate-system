@@ -323,6 +323,48 @@ class NotificationApiTest extends TestCase
         $this->assertSame('maintenance', $maintenanceNotification->data['target_params']['requestType']);
     }
 
+    public function test_customer_service_cancellation_notifies_admin_with_note(): void
+    {
+        $customer = $this->createUser(User::ROLE_CUSTOMER, 'customer_cancel');
+        $admin = $this->createUser(User::ROLE_ADMIN, 'admin_cancel');
+
+        $serviceRequestId = $this->actingAs($customer)
+            ->postJson('/api/service-requests', [
+                'request_type' => 'Maintenance',
+                'details' => 'Please inspect rooftop inverter output.',
+                'contact_number' => '0917-222-7654',
+                'address' => '88 Solar Park, Antipolo City',
+            ])
+            ->assertCreated()
+            ->json('data.id');
+
+        $cancellationNote = 'Unexpected travel schedule. Please cancel this service request.';
+
+        $this->actingAs($customer)
+            ->putJson("/api/service-requests/{$serviceRequestId}/cancel", [
+                'cancellation_note' => $cancellationNote,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'cancelled')
+            ->assertJsonPath('data.cancellation_note', $cancellationNote);
+
+        $this->assertDatabaseHas('service_requests', [
+            'id' => $serviceRequestId,
+            'status' => 'cancelled',
+            'cancellation_note' => $cancellationNote,
+        ]);
+
+        $notifications = $admin->fresh()->notifications()->latest()->get();
+        $notification = $notifications->first(
+            fn ($item) => data_get($item->data, 'type') === 'admin_service_request_cancellation_requested'
+        );
+
+        $this->assertNotNull($notification);
+        $this->assertSame('Service Cancellation Requested', $notification->data['title']);
+        $this->assertSame($serviceRequestId, $notification->data['entity_id']);
+        $this->assertSame($cancellationNote, $notification->data['cancellation_note']);
+    }
+
     public function test_user_cannot_mark_someone_elses_notification_as_read(): void
     {
         $admin = $this->createUser(User::ROLE_ADMIN, 'admin_owner');

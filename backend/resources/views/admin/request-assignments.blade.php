@@ -107,6 +107,8 @@
 @endphp
 
 @section('content')
+    @include('customer.partials.preferred-date-picker-styles')
+
     <style>
         .assignment-page {
             display: grid;
@@ -531,6 +533,33 @@
             min-width: 0;
         }
 
+        .request-card-body .assignment-row [data-preferred-date-picker] {
+            width: 100%;
+        }
+
+        .request-card-body .preferred-date-bypass {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #4b5b73;
+            font-weight: 600;
+        }
+
+        .request-card-body .preferred-date-bypass input {
+            width: 16px;
+            height: 16px;
+            accent-color: #2a5b92;
+        }
+
+        .request-card-body .preferred-date-bypass-note {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #b45309;
+            font-weight: 600;
+        }
+
         .request-card-body .assignment-row input,
         .request-card-body .assignment-row select {
             min-height: 46px;
@@ -775,6 +804,7 @@
                             $technicianSummary = $inspectionRequest->technician
                                 ? "{$inspectionRequest->technician->name} ({$inspectionRequest->technician->email})"
                                 : 'Not assigned';
+                            $completionHeading = 'Completion review';
                             $completionStateClass = 'badge badge-neutral';
                             $completionStateLabel = 'No report yet';
 
@@ -787,17 +817,17 @@
                             }
 
                             if ($hasCompletionReport && $inspectionRequest->status === 'completed') {
-                                $inspectionWorkflowMessage = 'Technician submitted the completion notes on '
+                                $completionMessage = 'Technician submitted the completion notes on '
                                     . $formatAdminDateTime($completionReport->submitted_at)
                                     . ', and the official inspection status is now completed.';
                             } elseif ($hasCompletionReport) {
-                                $inspectionWorkflowMessage = 'Technician submitted the completion notes on '
+                                $completionMessage = 'Technician submitted the completion notes on '
                                     . $formatAdminDateTime($completionReport->submitted_at)
                                     . '. Review the report below before marking the official inspection status as completed.';
                             } elseif ($isAssigned) {
-                                $inspectionWorkflowMessage = 'Technician assignment and official inspection scheduling can be managed below.';
+                                $completionMessage = 'Technician assignment and official inspection scheduling can be managed below.';
                             } else {
-                                $inspectionWorkflowMessage = 'Assign a technician first, then keep the official inspection status updated here.';
+                                $completionMessage = 'Assign a technician first, then keep the official inspection status updated here.';
                             }
 
                             $inspectionDetailCards = $parseRequestDetailCards($inspectionRequest->details);
@@ -918,9 +948,21 @@
                                     @endif
                                 </div>
 
+                                @if ($inspectionRequest->cancellation_note)
+                                    <div class="request-section">
+                                        <div class="request-section-header">
+                                            <h4 class="request-section-title" style="color: #b91c1c;">Cancellation Reason</h4>
+                                            <p class="request-section-copy">The customer provided the following reason when requesting cancellation.</p>
+                                        </div>
+                                        <div class="info-box" style="background: #fff1f1; border-color: #fca5a5; color: #7f1d1d;">
+                                            {{ $inspectionRequest->cancellation_note }}
+                                        </div>
+                                    </div>
+                                @endif
+
                                 <div class="info-box request-detail-box">
-                                    <strong>Inspection workflow:</strong>
-                                    <span data-completion-detail-for="{{ $requestKey }}">{{ $inspectionWorkflowMessage }}</span>
+                                    <strong data-completion-heading-for="{{ $requestKey }}">{{ $completionHeading }}:</strong>
+                                    <span data-completion-detail-for="{{ $requestKey }}">{{ $completionMessage }}</span>
                                 </div>
 
                                 @if ($completionReport)
@@ -972,10 +1014,17 @@
                                                 <input
                                                     id="inspection_date_needed_{{ $inspectionRequest->id }}"
                                                     name="date_needed"
-                                                    type="date"
+                                                    type="hidden"
+                                                    autocomplete="off"
                                                     value="{{ $inspectionRequest->date_needed ? \Illuminate\Support\Carbon::parse($inspectionRequest->date_needed)->toDateString() : '' }}"
                                                     required
                                                 >
+                                                <div id="inspection_date_picker_{{ $inspectionRequest->id }}" data-preferred-date-picker></div>
+                                                <label class="preferred-date-bypass">
+                                                    <input type="checkbox" name="bypass_reserved_date_lock" value="1" data-bypass-reserved>
+                                                    <span>Bypass calendar lock for reserved dates</span>
+                                                </label>
+                                                <div class="preferred-date-bypass-note" data-bypass-note></div>
                                                 <div class="muted" style="margin-top: 8px;" data-availability-helper></div>
                                             </div>
                                             <button type="submit">Save preferred date</button>
@@ -1221,6 +1270,18 @@
                                     @endif
                                 </div>
 
+                                @if ($serviceRequest->cancellation_note)
+                                    <div class="request-section">
+                                        <div class="request-section-header">
+                                            <h4 class="request-section-title" style="color: #b91c1c;">Cancellation Reason</h4>
+                                            <p class="request-section-copy">The customer provided the following reason when requesting cancellation.</p>
+                                        </div>
+                                        <div class="info-box" style="background: #fff1f1; border-color: #fca5a5; color: #7f1d1d;">
+                                            {{ $serviceRequest->cancellation_note }}
+                                        </div>
+                                    </div>
+                                @endif
+
                                 <div class="info-box request-detail-box">
                                     <strong data-completion-heading-for="{{ $requestKey }}">{{ $completionHeading }}:</strong>
                                     <span data-completion-detail-for="{{ $requestKey }}">{{ $completionMessage }}</span>
@@ -1275,10 +1336,17 @@
                                             <input
                                                 id="service_date_needed_{{ $serviceRequest->id }}"
                                                 name="date_needed"
-                                                type="date"
+                                                type="hidden"
+                                                autocomplete="off"
                                                 value="{{ $serviceRequest->date_needed ? \Illuminate\Support\Carbon::parse($serviceRequest->date_needed)->toDateString() : '' }}"
                                                 required
                                             >
+                                                <div id="service_date_picker_{{ $serviceRequest->id }}" data-preferred-date-picker></div>
+                                                <label class="preferred-date-bypass">
+                                                    <input type="checkbox" name="bypass_reserved_date_lock" value="1" data-bypass-reserved>
+                                                    <span>Bypass calendar lock for reserved dates</span>
+                                                </label>
+                                                <div class="preferred-date-bypass-note" data-bypass-note></div>
                                                 <div class="muted" style="margin-top: 8px;" data-availability-helper></div>
                                             </div>
                                             <button type="submit">Save preferred date</button>
@@ -1527,6 +1595,18 @@
                                     @endif
                                 </div>
 
+                                @if ($serviceRequest->cancellation_note)
+                                    <div class="request-section">
+                                        <div class="request-section-header">
+                                            <h4 class="request-section-title" style="color: #b91c1c;">Cancellation Reason</h4>
+                                            <p class="request-section-copy">The customer provided the following reason when requesting cancellation.</p>
+                                        </div>
+                                        <div class="info-box" style="background: #fff1f1; border-color: #fca5a5; color: #7f1d1d;">
+                                            {{ $serviceRequest->cancellation_note }}
+                                        </div>
+                                    </div>
+                                @endif
+
                                 <div class="info-box request-detail-box">
                                     <strong data-completion-heading-for="{{ $requestKey }}">{{ $completionHeading }}:</strong>
                                     <span data-completion-detail-for="{{ $requestKey }}">{{ $completionMessage }}</span>
@@ -1581,10 +1661,17 @@
                                             <input
                                                 id="service_date_needed_{{ $serviceRequest->id }}"
                                                 name="date_needed"
-                                                type="date"
+                                                type="hidden"
+                                                autocomplete="off"
                                                 value="{{ $serviceRequest->date_needed ? \Illuminate\Support\Carbon::parse($serviceRequest->date_needed)->toDateString() : '' }}"
                                                 required
                                             >
+                                                <div id="service_date_picker_{{ $serviceRequest->id }}" data-preferred-date-picker></div>
+                                                <label class="preferred-date-bypass">
+                                                    <input type="checkbox" name="bypass_reserved_date_lock" value="1" data-bypass-reserved>
+                                                    <span>Bypass calendar lock for reserved dates</span>
+                                                </label>
+                                                <div class="preferred-date-bypass-note" data-bypass-note></div>
                                                 <div class="muted" style="margin-top: 8px;" data-availability-helper></div>
                                             </div>
                                             <button type="submit">Save preferred date</button>
@@ -1657,6 +1744,7 @@
 @endsection
 
 @push('scripts')
+    @include('customer.partials.preferred-date-picker-script')
     <script type="application/json" id="__data_serviceRequestRecords">@json($serviceRequestRecords)</script>
     <script type="application/json" id="__data_inspectionRequestRecords">@json($inspectionRequestRecords)</script>
     <script type="application/json" id="__data_serviceTabCounts">@json($serviceTabCounts)</script>
@@ -1683,6 +1771,7 @@
         const inspectionRequestRecords = JSON.parse(document.getElementById('__data_inspectionRequestRecords').textContent);
         const serviceTabCounts = JSON.parse(document.getElementById('__data_serviceTabCounts').textContent);
         const requestRecords = serviceRequestRecords.concat(inspectionRequestRecords);
+        const preferredDatePickers = new WeakMap();
 
         const adminServicePopupToast = document.getElementById('admin-service-popup-toast');
 
@@ -1823,19 +1912,34 @@
             return requestRecords.find((record) => record.requestKey === requestKey) || null;
         }
 
+        function isBypassEnabled(form) {
+            return Boolean(form.querySelector('[data-bypass-reserved]:checked'));
+        }
+
         function renderAvailabilityForForm(form) {
             const requestKey = form.dataset.requestKey;
             const input = form.elements.namedItem('date_needed');
+            const picker = preferredDatePickers.get(form);
             const inlineError = form.querySelector('[data-form-error]');
             const helper = form.querySelector('[data-availability-helper]');
+            const bypassNote = form.querySelector('[data-bypass-note]');
+            const bypassEnabled = isBypassEnabled(form);
             const reservedDates = getReservedDatesExcluding(requestKey);
-            const normalizedValue = normalizeDate(input?.value);
+            const normalizedValue = normalizeDate(picker?.getValue?.() || input?.value);
+
+            picker?.setUnavailableDates?.(bypassEnabled ? [] : reservedDates);
 
             if (helper) {
                 helper.textContent = formatReservedDatesSummary(reservedDates);
             }
 
-            if (normalizedValue && reservedDates.includes(normalizedValue)) {
+            if (bypassNote) {
+                bypassNote.textContent = bypassEnabled
+                    ? 'Bypass is ON. Reserved dates can be selected and saved by admin.'
+                    : '';
+            }
+
+            if (!bypassEnabled && normalizedValue && reservedDates.includes(normalizedValue)) {
                 inlineError.textContent = reservedDateMessage;
             } else if (inlineError?.textContent === reservedDateMessage) {
                 inlineError.textContent = '';
@@ -1845,6 +1949,52 @@
         function refreshAllAvailabilityHints() {
             servicePreferredDateForms.forEach(renderAvailabilityForForm);
             preferredDateForms.forEach(renderAvailabilityForForm);
+        }
+
+        function initPreferredDatePickerForForm(form) {
+            if (typeof window.createPreferredDatePicker !== 'function') {
+                return;
+            }
+
+            const input = form.elements.namedItem('date_needed');
+            const mount = form.querySelector('[data-preferred-date-picker]');
+
+            if (!(input instanceof HTMLInputElement) || !mount || preferredDatePickers.has(form)) {
+                return;
+            }
+
+            const picker = window.createPreferredDatePicker({
+                input,
+                mount,
+                helperText: 'Booked dates are unavailable and cannot be selected.',
+                placeholder: 'Select a preferred date',
+                skipAvailabilityFetch: true,
+            });
+
+            if (picker) {
+                preferredDatePickers.set(form, picker);
+            }
+        }
+
+        function initPreferredDatePickers() {
+            servicePreferredDateForms.forEach(initPreferredDatePickerForForm);
+            preferredDateForms.forEach(initPreferredDatePickerForForm);
+        }
+
+        function initBypassControls() {
+            const bypassCheckboxes = document.querySelectorAll('[data-bypass-reserved]');
+
+            bypassCheckboxes.forEach((checkbox) => {
+                checkbox.addEventListener('change', () => {
+                    const form = checkbox.closest('form');
+
+                    if (!form) {
+                        return;
+                    }
+
+                    renderAvailabilityForForm(form);
+                });
+            });
         }
 
         function updateRequestRecord(requestKey, updates) {
@@ -2149,6 +2299,8 @@
             });
         });
 
+        initPreferredDatePickers();
+        initBypassControls();
         refreshAllAvailabilityHints();
 
         servicePreferredDateForms.forEach((form) => {
@@ -2169,7 +2321,7 @@
 
                 inlineError.textContent = '';
 
-                if (getReservedDatesExcluding(requestKey).includes(normalizeDate(input.value))) {
+                if (!isBypassEnabled(form) && getReservedDatesExcluding(requestKey).includes(normalizeDate(input.value))) {
                     inlineError.textContent = reservedDateMessage;
                     errorBox.textContent = reservedDateMessage;
                     setVisible(errorBox, true);
@@ -2182,6 +2334,7 @@
                 try {
                     const responseBody = await submitJson(form.dataset.endpoint, {
                         date_needed: input.value,
+                        bypass_reserved_date_lock: isBypassEnabled(form),
                     });
 
                     const updatedRequest = responseBody.data || null;
@@ -2235,7 +2388,7 @@
 
                 inlineError.textContent = '';
 
-                if (getReservedDatesExcluding(requestKey).includes(normalizeDate(input.value))) {
+                if (!isBypassEnabled(form) && getReservedDatesExcluding(requestKey).includes(normalizeDate(input.value))) {
                     inlineError.textContent = reservedDateMessage;
                     errorBox.textContent = reservedDateMessage;
                     setVisible(errorBox, true);
@@ -2248,6 +2401,7 @@
                 try {
                     const responseBody = await submitJson(form.dataset.endpoint, {
                         date_needed: input.value,
+                        bypass_reserved_date_lock: isBypassEnabled(form),
                     });
 
                     const updatedRequest = responseBody.inspection_request || null;

@@ -8,8 +8,10 @@ use App\Models\ServiceRequest;
 use App\Models\Testimony;
 use App\Models\User;
 use App\Notifications\AdminCompletionReportSubmittedNotification;
+use App\Notifications\AdminInspectionRequestCancellationRequestedNotification;
 use App\Notifications\AdminNewInspectionRequestNotification;
 use App\Notifications\AdminNewServiceRequestNotification;
+use App\Notifications\AdminServiceRequestCancellationRequestedNotification;
 use App\Notifications\AdminNewTestimonyNotification;
 use App\Notifications\FinalQuotationAvailableNotification;
 use App\Notifications\InspectionRequestAssignedNotification;
@@ -28,10 +30,34 @@ class InAppNotificationService
         );
     }
 
+    public function notifyAdminsOfServiceRequestCancellation(
+        ServiceRequest $serviceRequest,
+        string $cancellationNote,
+        ?int $actorId = null
+    ): void {
+        $this->adminRecipients()->each(
+            fn (User $admin) => $admin->notify(
+                new AdminServiceRequestCancellationRequestedNotification($serviceRequest, $cancellationNote, $actorId)
+            )
+        );
+    }
+
     public function notifyAdminsOfNewInspectionRequest(InspectionRequest $inspectionRequest, User $actor): void
     {
         $this->adminRecipients()->each(
             fn (User $admin) => $admin->notify(new AdminNewInspectionRequestNotification($inspectionRequest, $actor->id))
+        );
+    }
+
+    public function notifyAdminsOfInspectionRequestCancellation(
+        InspectionRequest $inspectionRequest,
+        string $cancellationNote,
+        ?int $actorId = null
+    ): void {
+        $this->adminRecipients()->each(
+            fn (User $admin) => $admin->notify(
+                new AdminInspectionRequestCancellationRequestedNotification($inspectionRequest, $cancellationNote, $actorId)
+            )
         );
     }
 

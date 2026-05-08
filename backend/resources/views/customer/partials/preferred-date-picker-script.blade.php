@@ -77,9 +77,12 @@
         var reservedDateMessage = config.reservedDateMessage || 'Selected date is already reserved. Please choose another date.';
         var helperText = config.helperText || 'Booked dates are unavailable and cannot be selected.';
         var fetchErrorText = config.fetchErrorText || 'Live reserved-date updates could not be loaded right now. The backend will still verify your preferred date when you submit.';
+        var skipAvailabilityFetch = Boolean(config.skipAvailabilityFetch);
         var todayKey = formatDateForApi(new Date());
         var selectedDate = normalizeDate(input.value);
-        var unavailableDates = [];
+        var unavailableDates = Array.isArray(config.initialUnavailableDates)
+            ? config.initialUnavailableDates.map(normalizeDate).filter(Boolean)
+            : [];
         var availabilityMessage = '';
         var visibleMonth = formatMonthStart(selectedDate || todayKey);
         var open = false;
@@ -98,7 +101,13 @@
         }
 
         function syncInput() {
+            var previousValue = input.value;
             input.value = selectedDate;
+
+            if (previousValue !== input.value) {
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+            }
         }
 
         function setOpen(nextValue) {
@@ -328,13 +337,23 @@
 
         syncInput();
         render();
-        refreshAvailability();
+
+        if (!skipAvailabilityFetch) {
+            refreshAvailability();
+        }
 
         return {
             clear: clear,
             getValue: function () { return selectedDate; },
             isSelectedDateUnavailable: isSelectedDateUnavailable,
             refreshAvailability: refreshAvailability,
+            setUnavailableDates: function (dates) {
+                unavailableDates = Array.isArray(dates)
+                    ? dates.map(normalizeDate).filter(Boolean)
+                    : [];
+                availabilityMessage = '';
+                render();
+            },
             setErrorState: setErrorState,
             setValue: function (value) { setSelectedDate(value || ''); }
         };

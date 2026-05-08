@@ -15,6 +15,7 @@ export type ServiceRequest = {
   quotation_id?: number | null;
   request_type: string;
   details: string;
+  cancellation_note?: string | null;
   contact_number?: string | null;
   address?: string | null;
   address_details?: string | null;
@@ -106,6 +107,18 @@ export async function submitTechnicianServiceCompletionReport(
   const response = await apiPost<{message?: string; data?: ServiceRequest}>(
     `/technician/service-requests/${id}/completion-report`,
     payload,
+  );
+
+  return response?.data ?? ({} as ServiceRequest);
+}
+
+export async function cancelServiceRequestByCustomer(
+  id: number,
+  cancellationNote: string,
+) {
+  const response = await apiPut<{message?: string; data?: ServiceRequest}>(
+    `/service-requests/${id}/cancel`,
+    {cancellation_note: cancellationNote},
   );
 
   return response?.data ?? ({} as ServiceRequest);

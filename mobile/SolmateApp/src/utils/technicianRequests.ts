@@ -42,6 +42,10 @@ export function formatServiceRequestStatus(status?: string | null) {
       return 'In Progress';
     case 'completed':
       return 'Completed';
+    case 'cancelled':
+      return 'Cancelled';
+    case 'declined':
+      return 'Declined';
     default:
       return 'Pending';
   }

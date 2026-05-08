@@ -127,10 +127,13 @@ class InspectionRequestController extends Controller
     {
         $validated = $request->validate([
             'date_needed' => 'required|date',
+            'bypass_reserved_date_lock' => 'sometimes|boolean',
         ], [
             'date_needed.required' => 'Preferred date is required.',
             'date_needed.date' => 'Preferred date must be a valid date.',
         ]);
+
+        $bypassReservedDateLock = (bool) ($validated['bypass_reserved_date_lock'] ?? false);
 
         $currentDate = InspectionRequest::query()
             ->findOrFail($id)
@@ -138,18 +141,20 @@ class InspectionRequestController extends Controller
 
         $result = $this->preferredDateLockService->withLockedDates(
             [$validated['date_needed'], $currentDate],
-            function () use ($id, $validated) {
-                return DB::transaction(function () use ($id, $validated) {
+            function () use ($id, $validated, $bypassReservedDateLock) {
+                return DB::transaction(function () use ($id, $validated, $bypassReservedDateLock) {
                     $inspectionRequest = InspectionRequest::query()
                         ->with(['customer', 'technician'])
                         ->lockForUpdate()
                         ->findOrFail($id);
 
-                    $this->preferredDateLockService->ensureDateIsAvailable(
-                        $validated['date_needed'],
-                        $inspectionRequest->id,
-                        InspectionRequest::class
-                    );
+                    if (! $bypassReservedDateLock) {
+                        $this->preferredDateLockService->ensureDateIsAvailable(
+                            $validated['date_needed'],
+                            $inspectionRequest->id,
+                            InspectionRequest::class
+                        );
+                    }
 
                     $previousDate = $inspectionRequest->date_needed;
                     $inspectionRequest->date_needed = $validated['date_needed'];
@@ -284,5 +289,49 @@ class InspectionRequestController extends Controller
             'message' => 'Official inspection request status updated successfully.',
             'inspection_request' => $inspectionRequest,
         ]);
+    }
+
+    public function cancelByCustomer(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'cancellation_note' => 'required|string|min:5|max:1000',
+        ]);
+
+        $inspectionRequest = InspectionRequest::query()
+            ->with(['customer', 'technician', 'completionReport.technician', 'completionReport.approver'])
+            ->findOrFail($id);
+
+        if ((int) $inspectionRequest->user_id !== (int) $request->user()->id) {
+            return response()->json([
+                'message' => 'You are not allowed to cancel this inspection request.',
+            ], 403);
+        }
+
+        $currentStatus = strtolower((string) $inspectionRequest->status);
+        if (in_array($currentStatus, ['completed', 'cancelled', 'declined'], true)) {
+            return response()->json([
+                'message' => 'This inspection request cannot be cancelled in its current status.',
+            ], 422);
+        }
+
+        if ($inspectionRequest->cancellation_note !== null) {
+            return response()->json([
+                'message' => 'A cancellation request has already been submitted for this inspection request.',
+            ], 422);
+        }
+
+        $inspectionRequest->cancellation_note = $validated['cancellation_note'];
+        $inspectionRequest->save();
+
+        $this->notificationService->notifyAdminsOfInspectionRequestCancellation(
+            $inspectionRequest,
+            $validated['cancellation_note'],
+            $request->user()->id
+        );
+
+        return response()->json([
+            'message' => 'Cancellation request submitted. The admin will review and update the status.',
+            'inspection_request' => $inspectionRequest,
+        ], 200);
     }
 }

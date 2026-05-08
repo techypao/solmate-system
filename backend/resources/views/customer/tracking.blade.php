@@ -211,6 +211,29 @@
     }
     .trk-request-group:last-child { margin-bottom: 0; }
 
+    /* ── Collapsible request group ── */
+    .trk-req-header {
+        cursor: pointer;
+        user-select: none;
+        border-radius: 10px;
+        transition: background .15s;
+    }
+    .trk-req-header:hover { background: rgba(18,58,90,.04); }
+    .trk-req-header-chevron {
+        transition: transform 0.25s ease;
+        flex-shrink: 0;
+        color: #7F92A3;
+    }
+    .trk-request-group.collapsed .trk-req-header-chevron {
+        transform: rotate(-90deg);
+    }
+    .trk-req-body {
+        overflow: hidden;
+    }
+    .trk-request-group.collapsed .trk-req-body {
+        display: none;
+    }
+
     /* ── Request header band ── */
     .trk-req-header {
         display: flex;
@@ -464,6 +487,104 @@
     .trk-terminal-banner svg { flex-shrink: 0; margin-top: 2px; }
     .trk-terminal-banner-body { flex: 1; }
     .trk-terminal-banner-title { font-weight: 700; margin-bottom: 2px; }
+
+    /* ── Cancel button ── */
+    .trk-cancel-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 18px;
+        padding: 9px 18px;
+        border: 1.5px solid #fca5a5;
+        border-radius: 10px;
+        background: #fff1f1;
+        color: #b91c1c;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background .15s, border-color .15s;
+    }
+    .trk-cancel-btn:hover { background: #fee2e2; border-color: #ef4444; }
+    .trk-cancel-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+    /* ── Cancellation reason box ── */
+    .trk-cancel-reason {
+        margin-top: 16px;
+        padding: 12px 16px;
+        background: #fff1f1;
+        border: 1px solid #fca5a5;
+        border-radius: 10px;
+        font-size: 13px;
+        color: #7f1d1d;
+        line-height: 1.55;
+    }
+    .trk-cancel-reason-label {
+        font-weight: 700;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    /* ── Cancel modal ── */
+    .trk-modal-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15,47,74,.45);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .trk-modal-backdrop.open { display: flex; }
+    .trk-modal {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #DDE7EE;
+        padding: 24px;
+        width: 100%;
+        max-width: 480px;
+        box-shadow: 0 8px 32px rgba(18,58,90,.12);
+    }
+    .trk-modal-title { font-size: 18px; font-weight: 800; color: #123A5A; margin: 0 0 6px; }
+    .trk-modal-sub { font-size: 13px; color: #5E7288; margin: 0 0 14px; line-height: 1.5; }
+    .trk-modal textarea {
+        width: 100%;
+        min-height: 110px;
+        border: 1px solid #DDE7EE;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 13px;
+        color: #123A5A;
+        background: #F8FAFC;
+        resize: vertical;
+        font-family: inherit;
+        box-sizing: border-box;
+    }
+    .trk-modal textarea:focus { outline: none; border-color: #F4D000; }
+    .trk-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
+    .trk-modal-close-btn {
+        padding: 9px 18px;
+        border: 1.5px solid #DDE7EE;
+        border-radius: 10px;
+        background: #fff;
+        color: #123A5A;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .trk-modal-close-btn:hover { background: #f8fafc; }
+    .trk-modal-submit-btn {
+        padding: 9px 18px;
+        border: none;
+        border-radius: 10px;
+        background: #123A5A;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .trk-modal-submit-btn:hover { background: #0f2f4a; }
+    .trk-modal-submit-btn:disabled { opacity: .55; cursor: not-allowed; }
 
     /* ── Divider between requests ── */
     .trk-group-divider {
@@ -975,17 +1096,22 @@
         var reqType = buildRequestTypeLabel(sr);
         var title = sr.tracking_title || ('Request #' + sr.id);
 
-        var html = '<div class="trk-request-group">';
+        var html = '<div class="trk-request-group collapsed">';
 
         /* ── Request header band ── */
-        html += '<div class="trk-req-header">'
+        html += '<div class="trk-req-header" role="button" tabindex="0" aria-expanded="false">'
             + '<div>'
             + '<div class="trk-req-id">' + escHtml(title) + '</div>'
             + '<div class="trk-req-type">' + escHtml(reqType) + '</div>'
             + '<div class="trk-req-date">Submitted ' + fmtDate(sr.created_at) + '</div>'
             + '</div>'
+            + '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">'
             + '<span class="trk-status-badge ' + statusBadgeClass(status) + '">' + escHtml(statusLabel(status)) + '</span>'
+            + '<svg class="trk-req-header-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>'
+            + '</div>'
             + '</div>';
+
+        html += '<div class="trk-req-body">';
 
         /* Terminal banner */
         if (isTerm) html += buildTerminalBanner(status);
@@ -1075,9 +1201,35 @@
             + buildRequestSummaryMeta(sr)
             + '<div class="trk-notes-meta-item"><div class="trk-notes-meta-label">Contact Number</div><div class="trk-notes-meta-value">' + escHtml(sr.contact_number || '\u2014') + '</div></div>'
             + '<div class="trk-notes-meta-item"><div class="trk-notes-meta-label">Preferred Date</div><div class="trk-notes-meta-value">' + escHtml(fmtDate(sr.date_needed)) + '</div></div>'
-            + '</div>'
+            + '</div>'  /* end card 3 body */
             + '</div></div>'; /* end card 3 */
 
+        /* ── Cancellation reason (if already cancelled) ── */
+        if (sr.cancellation_note) {
+            html += '<div class="trk-cancel-reason">'
+                + '<span class="trk-cancel-reason-label">Your cancellation reason</span>'
+                + escHtml(sr.cancellation_note)
+                + '</div>';
+        }
+
+        /* ── Cancel button (only for cancellable requests with no pending note) ── */
+        var canCancel = !isTerm && status !== 'in_progress' && status !== 'completed' && !sr.cancellation_note;
+        if (canCancel) {
+            html += '<button class="trk-cancel-btn" data-cancel-id="' + sr.id + '" data-cancel-category="' + sr.tracking_category + '" type="button">'
+                + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>'
+                + 'Cancel Service Request'
+                + '</button>';
+        }
+
+        /* ── Cancellation pending notice (note submitted but admin hasn't acted yet) ── */
+        if (sr.cancellation_note && !isTerm) {
+            html += '<div class="trk-cancel-reason" style="margin-top:16px;">'
+                + '<span class="trk-cancel-reason-label" style="color:#92400e;">&#9203; Cancellation Pending</span>'
+                + 'Your cancellation request is under review by the admin. We will notify you once the status is updated.'
+                + '</div>';
+        }
+
+        html += '</div>'; /* end trk-req-body */
         html += '</div>'; /* end request group */
         return html;
     }
@@ -1224,6 +1376,139 @@
             trkList.removeAttribute('aria-busy');
         }
     }
+
+    /* ── Cancel modal bootstrap ── */
+    var cancelModal = (function () {
+        var backdrop = document.createElement('div');
+        backdrop.className = 'trk-modal-backdrop';
+        backdrop.setAttribute('role', 'dialog');
+        backdrop.setAttribute('aria-modal', 'true');
+        backdrop.setAttribute('aria-labelledby', 'trk-modal-heading');
+        backdrop.innerHTML = [
+            '<div class="trk-modal">',
+            '  <h2 class="trk-modal-title" id="trk-modal-heading">Cancel Service Request</h2>',
+            '  <p class="trk-modal-sub">Tell us why you want to cancel. The admin will review this note before making changes.</p>',
+            '  <textarea id="trk-cancel-note" placeholder="Please enter your reason for cancellation&hellip;" maxlength="1000"></textarea>',
+            '  <div id="trk-cancel-inline-err" style="color:#b91c1c;font-size:13px;margin-top:6px;display:none;"></div>',
+            '  <div class="trk-modal-actions">',
+            '    <button class="trk-modal-close-btn" id="trk-cancel-close" type="button">Close</button>',
+            '    <button class="trk-modal-submit-btn" id="trk-cancel-submit" type="button">Submit Cancellation</button>',
+            '  </div>',
+            '</div>',
+        ].join('');
+        document.body.appendChild(backdrop);
+
+        var noteEl    = backdrop.querySelector('#trk-cancel-note');
+        var errEl     = backdrop.querySelector('#trk-cancel-inline-err');
+        var closeBtn  = backdrop.querySelector('#trk-cancel-close');
+        var submitBtn = backdrop.querySelector('#trk-cancel-submit');
+        var targetId  = null;
+        var targetCategory = null;
+
+        function show(id, category) {
+            targetId = id;
+            targetCategory = category;
+            noteEl.value = '';
+            errEl.style.display = 'none';
+            errEl.textContent = '';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Cancellation';
+            backdrop.classList.add('open');
+            noteEl.focus();
+        }
+
+        function hide() {
+            backdrop.classList.remove('open');
+            targetId = null;
+            targetCategory = null;
+        }
+
+        async function submit() {
+            var note = noteEl.value.trim();
+            if (note.length < 5) {
+                errEl.textContent = 'Please provide at least 5 characters explaining your reason.';
+                errEl.style.display = 'block';
+                return;
+            }
+            errEl.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting…';
+
+            try {
+                await ensureCsrf();
+                var endpoint = (targetCategory === 'inspection')
+                    ? '/api/inspection-requests/' + targetId + '/cancel'
+                    : '/api/service-requests/' + targetId + '/cancel';
+                var resp = await fetch(endpoint, {
+                    method: 'PUT',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-XSRF-TOKEN': decodeURIComponent(getCookie('XSRF-TOKEN') || ''),
+                    },
+                    body: JSON.stringify({ cancellation_note: note }),
+                });
+                var payload = await resp.json().catch(function () { return {}; });
+                if (!resp.ok) {
+                    throw new Error(payload.message || 'Could not cancel the request right now.');
+                }
+
+                /* Update local state: only store the note — admin will change status */
+                state.requests = state.requests.map(function (r) {
+                    if (r.id === targetId && r.tracking_category === targetCategory) {
+                        return Object.assign({}, r, { cancellation_note: note });
+                    }
+                    return r;
+                });
+                hide();
+                renderRequests();
+                showMsg('success', 'Your cancellation request has been submitted. The admin will review and update the status.');
+            } catch (err) {
+                errEl.textContent = err.message || 'Cancellation failed. Please try again.';
+                errEl.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Cancellation';
+            }
+        }
+
+        closeBtn.addEventListener('click', hide);
+        submitBtn.addEventListener('click', submit);
+        backdrop.addEventListener('click', function (e) {
+            if (e.target === backdrop) hide();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && backdrop.classList.contains('open')) hide();
+        });
+
+        return { show: show };
+    }());
+
+    /* Delegate cancel button clicks and collapse toggles from rendered cards */
+    trkList.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-cancel-id]');
+        if (btn) {
+            cancelModal.show(Number(btn.getAttribute('data-cancel-id')), btn.getAttribute('data-cancel-category'));
+            return;
+        }
+        var header = e.target.closest('.trk-req-header');
+        if (header) {
+            var group = header.closest('.trk-request-group');
+            if (!group) return;
+            var collapsed = group.classList.toggle('collapsed');
+            header.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        }
+    });
+
+    trkList.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        var header = e.target.closest('.trk-req-header');
+        if (header) {
+            e.preventDefault();
+            header.click();
+        }
+    });
 
     trkTabButtons.forEach(function (button) {
         button.addEventListener('click', function () {

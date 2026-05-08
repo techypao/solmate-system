@@ -2,11 +2,13 @@ import React, {useCallback, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Modal,
   Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
@@ -14,6 +16,7 @@ import {useFocusEffect} from '@react-navigation/native';
 import {AppButton, CompletionReportCard} from '../components';
 import {ApiError} from '../src/services/api';
 import {
+  cancelServiceRequestByCustomer,
   getServiceRequestById,
   getTechnicianServiceRequestById,
   ServiceRequest,
@@ -163,6 +166,8 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
   const [loading, setLoading] = useState(!initialServiceRequest);
   const [errorMessage, setErrorMessage] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancellationNote, setCancellationNote] = useState('');
   const [showCompletionReportForm, setShowCompletionReportForm] = useState(
     !initialServiceRequest?.completion_report &&
       !!initialServiceRequest?.technician_marked_done_at,
@@ -188,6 +193,11 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
     customerRequestCategory === 'installation'
       ? 'Installation Service Type'
       : 'Maintenance Service Type';
+  const customerCanCancel =
+    mode === 'customer' &&
+    !['completed', 'cancelled', 'declined'].includes(
+      (serviceRequest?.status || '').toLowerCase(),
+    );
 
   const loadServiceRequest = useCallback(
     async (showLoadingState = false) => {
@@ -388,8 +398,72 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
         description: 'Service completed',
       });
     }
+    if (s === 'cancelled') {
+      events.push({
+        datetime: formatDateTime(serviceRequest.updated_at),
+        status: 'cancelled',
+        description: 'Cancellation requested by customer',
+      });
+    }
     return events;
   }, [serviceRequest]);
+
+  const handleCustomerCancellation = async () => {
+    if (!serviceRequest || actionLoading) {
+      return;
+    }
+
+    const trimmedNote = cancellationNote.trim();
+    if (trimmedNote.length < 5) {
+      Alert.alert(
+        'Notes required',
+        'Please provide at least 5 characters to explain why you want to cancel this request.',
+      );
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      const updatedServiceRequest = await cancelServiceRequestByCustomer(
+        serviceRequest.id,
+        trimmedNote,
+      );
+
+      const nextRequest =
+        updatedServiceRequest?.id !== undefined
+          ? updatedServiceRequest
+          : {
+              ...serviceRequest,
+              status: 'cancelled',
+              cancellation_note: trimmedNote,
+            };
+
+      setServiceRequest(nextRequest);
+      setShowCancelModal(false);
+      setCancellationNote('');
+      navigation.replace(route.name, {
+        serviceRequestId: nextRequest.id,
+        initialServiceRequest: nextRequest,
+        mode,
+        requestCategory: customerRequestCategory,
+      });
+      Alert.alert(
+        'Cancellation submitted',
+        'Your service request was cancelled and the admin has been notified.',
+      );
+    } catch (error) {
+      if (error instanceof ApiError) {
+        Alert.alert('Cancellation failed', error.message);
+      } else {
+        Alert.alert(
+          'Cancellation failed',
+          'Could not submit your cancellation request right now.',
+        );
+      }
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -553,6 +627,12 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
             label="Technician Assigned"
             value={serviceRequest.technician?.name || 'Not assigned'}
           />
+          {serviceRequest.cancellation_note ? (
+            <InlineRow
+              label="Cancellation Note"
+              value={serviceRequest.cancellation_note}
+            />
+          ) : null}
         </View>
 
         {/* ── Updates Timeline ── */}
@@ -645,8 +725,77 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
             ]}
             textStyle={{color: NAVY}}
           />
+          {customerCanCancel ? (
+            <AppButton
+              title={actionLoading ? 'Submitting...' : 'Cancel Service Request'}
+              onPress={() => setShowCancelModal(true)}
+              disabled={actionLoading}
+              style={[
+                styles.actionBtn,
+                {
+                  backgroundColor: solmateColors.dangerSoft,
+                  borderColor: solmateColors.danger,
+                  borderWidth: 1,
+                },
+              ]}
+              textStyle={{color: solmateColors.danger}}
+            />
+          ) : null}
         </View>
       </ScrollView>
+
+      <Modal
+        visible={showCancelModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          if (!actionLoading) {
+            setShowCancelModal(false);
+          }
+        }}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Cancel Service Request</Text>
+            <Text style={styles.modalSubtitle}>
+              Tell us why you want to cancel. Admin will review this note.
+            </Text>
+            <TextInput
+              value={cancellationNote}
+              onChangeText={setCancellationNote}
+              editable={!actionLoading}
+              placeholder="Please enter your reason for cancellation"
+              placeholderTextColor={MUTED}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              style={styles.modalInput}
+              maxLength={1000}
+            />
+            <View style={styles.modalActions}>
+              <Pressable
+                onPress={() => setShowCancelModal(false)}
+                disabled={actionLoading}
+                style={({pressed}) => [
+                  styles.modalSecondaryBtn,
+                  pressed && !actionLoading && styles.backBtnPressed,
+                ]}>
+                <Text style={styles.modalSecondaryBtnText}>Close</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleCustomerCancellation}
+                disabled={actionLoading}
+                style={({pressed}) => [
+                  styles.modalPrimaryBtn,
+                  (pressed || actionLoading) && styles.backBtnPressed,
+                ]}>
+                <Text style={styles.modalPrimaryBtnText}>
+                  {actionLoading ? 'Submitting...' : 'Submit'}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -853,5 +1002,70 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     textAlign: 'center',
     marginBottom: 16,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 47, 74, 0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    width: '100%',
+    backgroundColor: CARD,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: DIVIDER,
+    padding: 16,
+  },
+  modalTitle: {
+    color: NAVY,
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+  modalSubtitle: {
+    color: MUTED,
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 10,
+  },
+  modalInput: {
+    minHeight: 110,
+    borderWidth: 1,
+    borderColor: DIVIDER,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: NAVY,
+    backgroundColor: BG,
+  },
+  modalActions: {
+    marginTop: 12,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
+  modalSecondaryBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: DIVIDER,
+    backgroundColor: CARD,
+  },
+  modalSecondaryBtnText: {
+    color: NAVY,
+    fontWeight: '600',
+  },
+  modalPrimaryBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: NAVY,
+  },
+  modalPrimaryBtnText: {
+    color: CARD,
+    fontWeight: '700',
   },
 });
