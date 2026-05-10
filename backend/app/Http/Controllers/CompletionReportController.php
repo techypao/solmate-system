@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\CompletionReport;
+use App\Models\CompletionReportPhoto;
 use App\Models\InspectionRequest;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Services\InAppNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class CompletionReportController extends Controller
 {
@@ -18,7 +20,7 @@ class CompletionReportController extends Controller
 
     public function submitForService(Request $request, int $id)
     {
-        $validated = $request->validate($this->rules());
+        $validated = $request->validate($this->serviceRules());
         $technician = $request->user();
 
         if ($technician->role !== User::ROLE_TECHNICIAN) {
@@ -52,12 +54,10 @@ class CompletionReportController extends Controller
         }
 
         DB::transaction(function () use ($serviceRequest, $technician, $validated) {
-            CompletionReport::query()->create([
+            $report = CompletionReport::query()->create([
                 'service_request_id' => $serviceRequest->id,
                 'technician_id' => $technician->id,
                 'report_text' => trim($validated['report_text']),
-                'findings' => $this->nullableTrimmed($validated['findings'] ?? null),
-                'recommendations' => $this->nullableTrimmed($validated['recommendations'] ?? null),
                 'status' => CompletionReport::STATUS_PENDING,
                 'completed_at' => $validated['completed_at'],
                 'submitted_at' => now(),
@@ -65,9 +65,26 @@ class CompletionReportController extends Controller
 
             $serviceRequest->technician_marked_done_at = now();
             $serviceRequest->save();
+
+            $storedPaths = [];
+            try {
+                foreach ($validated['completion_photos'] as $photo) {
+                    $path = $photo->store("completion-reports/{$report->id}", CompletionReportPhoto::PUBLIC_DISK);
+                    $storedPaths[] = $path;
+                    CompletionReportPhoto::query()->create([
+                        'completion_report_id' => $report->id,
+                        'image_path' => $path,
+                    ]);
+                }
+            } catch (\Throwable $throwable) {
+                foreach ($storedPaths as $path) {
+                    Storage::disk(CompletionReportPhoto::PUBLIC_DISK)->delete($path);
+                }
+                throw $throwable;
+            }
         });
 
-        $serviceRequest->load(['customer', 'technician', 'completionReport.technician', 'completionReport.approver']);
+        $serviceRequest->load(['customer', 'technician', 'completionReport.technician', 'completionReport.approver', 'completionReport.photos']);
         $this->notificationService->notifyAdminsOfCompletionReportSubmission($serviceRequest, $technician->id);
 
         return response()->json([
@@ -129,6 +146,16 @@ class CompletionReportController extends Controller
             'message' => 'Inspection completion notes submitted for admin approval.',
             'inspection_request' => $inspectionRequest,
         ], 201);
+    }
+
+    private function serviceRules(): array
+    {
+        return [
+            'report_text' => ['required', 'string'],
+            'completed_at' => ['required', 'date'],
+            'completion_photos' => ['required', 'array', 'min:1'],
+            'completion_photos.*' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+        ];
     }
 
     private function rules(): array

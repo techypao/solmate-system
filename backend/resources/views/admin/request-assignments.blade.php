@@ -660,6 +660,85 @@
                 min-width: 0;
             }
         }
+
+        /* ── Completion photo grid ── */
+        .completion-photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .completion-photo-thumb {
+            display: block;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #DDE7EE;
+            background: #f1f5f9;
+            cursor: pointer;
+            padding: 0;
+            transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+        }
+
+        .completion-photo-thumb:hover {
+            border-color: #20a7c9;
+            transform: scale(1.03);
+            box-shadow: 0 4px 14px rgba(15, 23, 42, .12);
+        }
+
+        .completion-photo-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* ── Photo lightbox modal ── */
+        #completion-photo-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9000;
+            align-items: center;
+            justify-content: center;
+            background: rgba(10, 25, 47, 0.82);
+            backdrop-filter: blur(4px);
+            padding: 24px;
+        }
+
+        #completion-photo-modal.is-open {
+            display: flex;
+        }
+
+        #completion-photo-modal img {
+            max-width: min(90vw, 960px);
+            max-height: 85vh;
+            border-radius: 12px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+            object-fit: contain;
+            display: block;
+        }
+
+        #completion-photo-modal-close {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: #fff;
+            font-size: 28px;
+            line-height: 1;
+            cursor: pointer;
+            border-radius: 8px;
+            padding: 2px 10px;
+            transition: background .15s ease;
+        }
+
+        #completion-photo-modal-close:hover {
+            background: rgba(255,255,255,0.28);
+        }
     </style>
 
     <form id="service-popup-redirect-form" method="POST" action="{{ route('admin.request-assignments.service-popup') }}" hidden>
@@ -667,6 +746,12 @@
         <input type="hidden" name="action" value="">
         <input type="hidden" name="redirect_to" value="">
     </form>
+
+    {{-- Completion photo lightbox --}}
+    <div id="completion-photo-modal" role="dialog" aria-modal="true" aria-label="Completion photo preview">
+        <button id="completion-photo-modal-close" aria-label="Close">&times;</button>
+        <img id="completion-photo-modal-img" src="" alt="Completion photo preview" />
+    </div>
 
     @if (! empty($adminServicePopup['message']))
         <div class="solmate-toast" id="admin-service-popup-toast" role="status" aria-live="polite">
@@ -1308,20 +1393,32 @@
                                     </div>
 
                                     <div class="info-box request-detail-box">
-                                        <strong>Completion notes:</strong> {{ $completionReport->report_text }}
+                                        <strong>Completion summary:</strong> {{ $completionReport->report_text }}
                                     </div>
 
-                                    @if (filled($completionReport->findings))
-                                        <div class="info-box request-detail-box">
-                                            <strong>Findings:</strong> {{ $completionReport->findings }}
-                                        </div>
-                                    @endif
-
-                                    @if (filled($completionReport->recommendations))
-                                        <div class="info-box request-detail-box">
-                                            <strong>Recommendations:</strong> {{ $completionReport->recommendations }}
-                                        </div>
-                                    @endif
+                                    {{-- Completion Photos --}}
+                                    <div style="margin-top: 14px;">
+                                        <div style="font-size: 12px; font-weight: 800; color: #123A5A; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em;">Completion Photos</div>
+                                        @php $reportPhotos = $completionReport->photos ?? collect(); @endphp
+                                        @if ($reportPhotos->isNotEmpty())
+                                            <div class="completion-photo-grid">
+                                                @foreach ($reportPhotos as $photo)
+                                                    @if ($photo->image_url)
+                                                        <button
+                                                            type="button"
+                                                            class="completion-photo-thumb"
+                                                            data-photo-src="{{ $photo->image_url }}"
+                                                            aria-label="View completion photo"
+                                                        >
+                                                            <img src="{{ $photo->image_url }}" alt="Completion photo" loading="lazy" />
+                                                        </button>
+                                                    @endif
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <div class="info-box request-detail-box" style="color: #5E7288; font-style: italic;">No completion photos submitted.</div>
+                                        @endif
+                                    </div>
                                 @endif
 
                                 <div class="stack">
@@ -1633,20 +1730,32 @@
                                     </div>
 
                                     <div class="info-box request-detail-box">
-                                        <strong>Completion notes:</strong> {{ $completionReport->report_text }}
+                                        <strong>Completion summary:</strong> {{ $completionReport->report_text }}
                                     </div>
 
-                                    @if (filled($completionReport->findings))
-                                        <div class="info-box request-detail-box">
-                                            <strong>Findings:</strong> {{ $completionReport->findings }}
-                                        </div>
-                                    @endif
-
-                                    @if (filled($completionReport->recommendations))
-                                        <div class="info-box request-detail-box">
-                                            <strong>Recommendations:</strong> {{ $completionReport->recommendations }}
-                                        </div>
-                                    @endif
+                                    {{-- Completion Photos --}}
+                                    <div style="margin-top: 14px;">
+                                        <div style="font-size: 12px; font-weight: 800; color: #123A5A; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em;">Completion Photos</div>
+                                        @php $reportPhotos = $completionReport->photos ?? collect(); @endphp
+                                        @if ($reportPhotos->isNotEmpty())
+                                            <div class="completion-photo-grid">
+                                                @foreach ($reportPhotos as $photo)
+                                                    @if ($photo->image_url)
+                                                        <button
+                                                            type="button"
+                                                            class="completion-photo-thumb"
+                                                            data-photo-src="{{ $photo->image_url }}"
+                                                            aria-label="View completion photo"
+                                                        >
+                                                            <img src="{{ $photo->image_url }}" alt="Completion photo" loading="lazy" />
+                                                        </button>
+                                                    @endif
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <div class="info-box request-detail-box" style="color: #5E7288; font-style: italic;">No completion photos submitted.</div>
+                                        @endif
+                                    </div>
                                 @endif
 
                                 <div class="stack">
@@ -1745,6 +1854,49 @@
 
 @push('scripts')
     @include('customer.partials.preferred-date-picker-script')
+
+    {{-- Completion photo lightbox --}}
+    <script>
+        (function () {
+            const modal = document.getElementById('completion-photo-modal');
+            const modalImg = document.getElementById('completion-photo-modal-img');
+            const modalClose = document.getElementById('completion-photo-modal-close');
+
+            function openModal(src) {
+                modalImg.src = src;
+                modal.classList.add('is-open');
+                document.body.style.overflow = 'hidden';
+                modalClose.focus();
+            }
+
+            function closeModal() {
+                modal.classList.remove('is-open');
+                document.body.style.overflow = '';
+                modalImg.src = '';
+            }
+
+            document.addEventListener('click', function (e) {
+                const thumb = e.target.closest('.completion-photo-thumb');
+                if (thumb) {
+                    openModal(thumb.dataset.photoSrc);
+                }
+            });
+
+            modalClose.addEventListener('click', closeModal);
+
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && modal.classList.contains('is-open')) {
+                    closeModal();
+                }
+            });
+        })();
+    </script>
     <script type="application/json" id="__data_serviceRequestRecords">@json($serviceRequestRecords)</script>
     <script type="application/json" id="__data_inspectionRequestRecords">@json($inspectionRequestRecords)</script>
     <script type="application/json" id="__data_serviceTabCounts">@json($serviceTabCounts)</script>

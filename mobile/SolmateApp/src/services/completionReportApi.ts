@@ -9,6 +9,13 @@ export type CompletionReportUser = {
   email?: string | null;
 };
 
+export type CompletionReportPhoto = {
+  id: number;
+  completion_report_id: number;
+  image_path: string;
+  image_url?: string | null;
+};
+
 export type CompletionReport = {
   id: number;
   service_request_id?: number | null;
@@ -24,11 +31,24 @@ export type CompletionReport = {
   approved_at?: string | null;
   technician?: CompletionReportUser | null;
   approver?: CompletionReportUser | null;
+  photos?: CompletionReportPhoto[];
 };
 
 export type CompletionReportPayload = {
   report_text: string;
   findings?: string;
   recommendations?: string;
+  completed_at: string;
+};
+
+export type LocalCompletionPhoto = {
+  uri: string;
+  type: string;
+  name: string | null;
+};
+
+export type ServiceCompletionReportPayload = {
+  report_text: string;
+  completion_photos: LocalCompletionPhoto[];
   completed_at: string;
 };

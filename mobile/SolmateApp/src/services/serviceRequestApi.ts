@@ -1,5 +1,5 @@
-import { apiGet, apiPost, apiPut } from './api';
-import {CompletionReport, CompletionReportPayload} from './completionReportApi';
+import { apiGet, apiPost, apiPostForm, apiPut } from './api';
+import {CompletionReport, CompletionReportPayload, ServiceCompletionReportPayload} from './completionReportApi';
 
 export type UserSummary = {
   id: number;
@@ -102,11 +102,23 @@ export async function updateTechnicianServiceRequestStatus(
 
 export async function submitTechnicianServiceCompletionReport(
   id: number,
-  payload: CompletionReportPayload,
+  payload: ServiceCompletionReportPayload,
 ) {
-  const response = await apiPost<{message?: string; data?: ServiceRequest}>(
+  const formData = new FormData();
+  formData.append('report_text', payload.report_text);
+  formData.append('completed_at', payload.completed_at);
+
+  payload.completion_photos.forEach((photo, index) => {
+    formData.append('completion_photos[]', {
+      uri: photo.uri,
+      type: photo.type || 'image/jpeg',
+      name: photo.name || `completion-photo-${Date.now()}-${index}.jpg`,
+    } as any);
+  });
+
+  const response = await apiPostForm<{message?: string; data?: ServiceRequest}>(
     `/technician/service-requests/${id}/completion-report`,
-    payload,
+    formData,
   );
 
   return response?.data ?? ({} as ServiceRequest);

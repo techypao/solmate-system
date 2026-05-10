@@ -30,7 +30,7 @@ class RequestAssignmentPageController extends Controller
                 ->orderBy('name')
                 ->get(),
             'serviceRequests' => ServiceRequest::query()
-                ->with(['customer', 'technician', 'completionReport.technician', 'completionReport.approver'])
+                ->with(['customer', 'technician', 'completionReport.technician', 'completionReport.approver', 'completionReport.photos'])
                 ->orderByRaw("CASE WHEN technician_marked_done_at IS NOT NULL AND status != 'completed' THEN 0 WHEN technician_id IS NULL THEN 1 ELSE 2 END")
                 ->latest()
                 ->get(),

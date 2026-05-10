@@ -13,7 +13,8 @@ import {
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 
-import {AppButton, CompletionReportCard} from '../components';
+import {AppButton} from '../components';
+import ServiceCompletionReportCard from '../components/ServiceCompletionReportCard';
 import {ApiError} from '../src/services/api';
 import {
   cancelServiceRequestByCustomer,
@@ -307,8 +308,7 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
 
   const handleCompletionReportSubmit = async (payload: {
     report_text: string;
-    findings?: string;
-    recommendations?: string;
+    completion_photos: Array<{uri: string; type: string; name: string | null}>;
     completed_at: string;
   }) => {
     if (!serviceRequest || actionLoading) {
@@ -673,9 +673,9 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
             ) : null}
 
             {showCompletionReportForm || serviceRequest.completion_report ? (
-              <CompletionReportCard
+              <ServiceCompletionReportCard
                 title="Service Completion Notes"
-                subtitle="Submit the completion notes after finishing the on-site work. Admin approval is required before this request becomes completed."
+                subtitle="Submit the completion report after finishing the on-site work. Admin approval is required before this request becomes completed."
                 report={serviceRequest.completion_report}
                 canSubmit={
                   (serviceRequest.status || '').toLowerCase() === 'in_progress' &&

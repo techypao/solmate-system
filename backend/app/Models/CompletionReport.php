@@ -26,6 +26,11 @@ class CompletionReport extends Model
         'approved_at',
     ];
 
+    public function photos()
+    {
+        return $this->hasMany(CompletionReportPhoto::class);
+    }
+
     protected function casts(): array
     {
         return [
