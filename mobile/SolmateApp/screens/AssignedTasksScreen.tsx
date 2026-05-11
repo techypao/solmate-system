@@ -111,7 +111,7 @@ function ProfileIcon({active}: {active?: boolean}) {
   );
 }
 
-function BottomNav({onPress}: {onPress: (t: Tab) => void}) {
+function BottomNav({onPress, activeTab}: {onPress: (t: Tab) => void; activeTab: Tab}) {
   const tabs: {key: Tab; label: string; Icon: React.FC<{active?: boolean}>}[] = [
     {key: 'Home',        label: 'Home',        Icon: HomeIcon},
     {key: 'Inspections', label: 'Inspections', Icon: InspectIcon},
@@ -121,9 +121,9 @@ function BottomNav({onPress}: {onPress: (t: Tab) => void}) {
   return (
     <View style={nav.bar}>
       {tabs.map(({key, label, Icon}) => (
-        <Pressable key={key} style={[nav.tab, key === 'Inspections' && nav.tabActive]} onPress={() => onPress(key)}>
-          <Icon active={key === 'Inspections'} />
-          <Text style={[nav.label, key === 'Inspections' && nav.labelActive]}>
+        <Pressable key={key} style={[nav.tab, key === activeTab && nav.tabActive]} onPress={() => onPress(key)}>
+          <Icon active={key === activeTab} />
+          <Text style={[nav.label, key === activeTab && nav.labelActive]}>
             {label}
           </Text>
         </Pressable>
@@ -302,7 +302,7 @@ export default function AssignedTasksScreen({navigation}: any) {
       </SafeAreaView>
 
       {/* ── bottom nav ── */}
-      <BottomNav onPress={handleTabPress} />
+      <BottomNav onPress={handleTabPress} activeTab="Inspections" />
     </View>
   );
 }

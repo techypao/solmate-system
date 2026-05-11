@@ -5,13 +5,13 @@ import {
   Pressable,
   RefreshControl,
   SafeAreaView,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 
+import {AppButton} from '../components';
 import {ApiError} from '../src/services/api';
 import {
   getTechnicianServiceRequests,
@@ -25,16 +25,18 @@ const GOLD    = '#F4D000';
 const MUTED   = '#5E7288';
 const BG      = '#F8FAFC';
 const CARD    = '#ffffff';
-const DIVIDER = '#DDE7EE';
+const SHADOW  = '#8a9bbd';
+const BORDER  = '#DDE7EE';
+const SOFT_YELLOW = '#FFF7CC';
 
 /* ── filter config ─────────────────────────────────────────── */
 
-type FilterKey = 'All' | 'Installation' | 'Maintenance';
+type FilterValue = 'all' | 'installation' | 'maintenance';
 
-const FILTERS: FilterKey[] = [
-  'All',
-  'Installation',
-  'Maintenance',
+const FILTERS: {label: string; value: FilterValue}[] = [
+  {label: 'All', value: 'all'},
+  {label: 'Installation', value: 'installation'},
+  {label: 'Maintenance', value: 'maintenance'},
 ];
 
 /* ── helpers ────────────────────────────────────────────────── */
@@ -72,19 +74,19 @@ function getTypePillColors(type: string) {
   const t = (type ?? '').toLowerCase();
   if (t.includes('maintenance'))  return {bg: '#fffbeb', text: '#b45309', border: '#fde68a'};
   if (t.includes('installation')) return {bg: '#f0f9ff', text: '#0369a1', border: '#bae6fd'};
-  return {bg: '#f1f5f9', text: MUTED, border: DIVIDER};
+  return {bg: '#f1f5f9', text: MUTED, border: BORDER};
 }
 
 function applyFilter(
   items: ServiceRequest[],
-  filter: FilterKey,
+  filter: FilterValue,
 ): ServiceRequest[] {
   switch (filter) {
-    case 'Installation':
+    case 'installation':
       return items.filter(i =>
         i.request_type?.toLowerCase().includes('installation'),
       );
-    case 'Maintenance':
+    case 'maintenance':
       return items.filter(i =>
         i.request_type?.toLowerCase().includes('maintenance'),
       );
@@ -143,16 +145,18 @@ function ServiceRequestCard({
       </View>
 
       {/* title */}
-      <Text style={s.cardTitle}>Service Request ID: SR-{item.id}</Text>
+      <Text style={s.cardId}>Service Request ID: SR-{item.id}</Text>
 
       {/* customer */}
-      <Text style={s.cardMeta}>Customer: {customerName}</Text>
+      <Text style={s.cardMeta}>Customer Name: {customerName}</Text>
       <Text style={s.cardMeta}>Address: {item.address || 'Not provided'}</Text>
 
       {/* schedule */}
       <Text style={s.cardMeta}>
         Schedule: {formatSchedule(item.date_needed)}
       </Text>
+
+      <View style={s.divider} />
 
       {/* view details row */}
       <View style={s.viewDetailsRow}>
@@ -167,12 +171,10 @@ function ServiceRequestCard({
 
 function EmptyState() {
   return (
-    <View style={s.empty}>
-      <Text style={s.emptyIcon}>{'\uD83D\uDCCB'}</Text>
-      <Text style={s.emptyTitle}>No service requests found</Text>
+    <View style={s.emptyState}>
+      <Text style={s.emptyTitle}>No service requests</Text>
       <Text style={s.emptyText}>
-        Assigned service requests will appear here once they are linked to your
-        account.
+        No service requests have been assigned to your account yet.
       </Text>
     </View>
   );
@@ -225,7 +227,7 @@ function ProfileIcon({active}: {active?: boolean}) {
   );
 }
 
-function BottomNav({onPress}: {onPress: (t: Tab) => void}) {
+function BottomNav({onPress, activeTab}: {onPress: (t: Tab) => void; activeTab: Tab}) {
   const tabs: {key: Tab; label: string; Icon: React.FC<{active?: boolean}>}[] =
     [
       {key: 'Home',        label: 'Home',        Icon: HomeIcon},
@@ -237,9 +239,9 @@ function BottomNav({onPress}: {onPress: (t: Tab) => void}) {
   return (
     <View style={nav.bar}>
       {tabs.map(({key, label, Icon}) => (
-        <Pressable key={key} style={[nav.tab, key === 'Services' && nav.tabActive]} onPress={() => onPress(key)}>
-          <Icon active={key === 'Services'} />
-          <Text style={[nav.label, key === 'Services' && nav.labelActive]}>
+        <Pressable key={key} style={[nav.tab, key === activeTab && nav.tabActive]} onPress={() => onPress(key)}>
+          <Icon active={key === activeTab} />
+          <Text style={[nav.label, key === activeTab && nav.labelActive]}>
             {label}
           </Text>
         </Pressable>
@@ -257,7 +259,7 @@ export default function TechnicianServiceRequestListScreen({
   const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError]           = useState('');
-  const [filter, setFilter]         = useState<FilterKey>('All');
+  const [filter, setFilter]         = useState<FilterValue>('all');
 
   const load = useCallback(async (showSpinner = false) => {
     try {
@@ -292,80 +294,89 @@ export default function TechnicianServiceRequestListScreen({
   /* ── loading state ── */
   if (loading) {
     return (
-      <SafeAreaView style={s.root}>
+      <View style={s.root}>
+        <SafeAreaView style={s.safe}>
         <View style={s.centered}>
-          <ActivityIndicator color={GOLD} size="large" />
+          <ActivityIndicator color={NAVY} size="large" />
           <Text style={s.loadingText}>Loading service requests…</Text>
         </View>
-      </SafeAreaView>
+        </SafeAreaView>
+      </View>
     );
   }
 
   /* ── main render ── */
   return (
-    <SafeAreaView style={s.root}>
-      {/* ── header + chips ── */}
-      <View style={s.header}>
-        <Text style={s.brand}>
-          Sol<Text style={s.brandAccent}>Mate</Text>
-        </Text>
-        <Text style={s.title}>Service Request</Text>
-        <Text style={s.subtitle}>Handle installation and maintenance tasks</Text>
+    <View style={s.root}>
+      <SafeAreaView style={s.safe}>
+        {/* ── header ── */}
+        <View style={s.header}>
+          <View style={s.brandRow}>
+            <Text style={s.brandSol}>Sol</Text>
+            <Text style={s.brandGold}>Mate</Text>
+          </View>
+        </View>
 
-        {/* filter chips embedded in header */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={s.chipRow}
-          style={s.chipScroll}>
+        {/* ── page title ── */}
+        <View style={s.titleBlock}>
+          <Text style={s.pageTitle}>Service Request</Text>
+          <Text style={s.pageSub}>Handle installation and maintenance tasks</Text>
+        </View>
+
+        {/* ── filter chips ── */}
+        <View style={s.chipRow}>
           {FILTERS.map(f => (
             <Pressable
-              key={f}
-              onPress={() => setFilter(f)}
-              style={[s.chip, filter === f && s.chipActive]}>
-              <Text style={[s.chipText, filter === f && s.chipTextActive]}>
-                {f}
+              key={f.value}
+              onPress={() => setFilter(f.value)}
+              style={[s.chip, filter === f.value && s.chipActive]}>
+              <Text style={[s.chipText, filter === f.value && s.chipTextActive]}>
+                {f.label}
               </Text>
             </Pressable>
           ))}
-        </ScrollView>
-      </View>
-
-      {/* ── error banner ── */}
-      {error ? (
-        <View style={s.errorBanner}>
-          <Text style={s.errorMsg}>{error}</Text>
-          <Pressable onPress={() => load(true)} style={s.retryBtn}>
-            <Text style={s.retryText}>Retry</Text>
-          </Pressable>
         </View>
-      ) : null}
 
-      {/* ── list ── */}
-      <FlatList
-        contentContainerStyle={[
-          s.listPad,
-          filtered.length === 0 && s.listPadGrow,
-        ]}
-        data={filtered}
-        keyExtractor={item => item.id.toString()}
-        renderItem={({item}) => (
-          <ServiceRequestCard item={item} navigation={navigation} />
-        )}
-        refreshControl={
-          <RefreshControl
-            onRefresh={handleRefresh}
-            refreshing={refreshing}
-            tintColor={GOLD}
+        {/* ── content ── */}
+        {error ? (
+          <View style={s.errorWrap}>
+            <View style={s.errorCard}>
+              <Text style={s.errorTitle}>Something went wrong</Text>
+              <Text style={s.errorText}>{error}</Text>
+              <AppButton
+                title="Try again"
+                onPress={() => load(true)}
+                style={s.retryBtn}
+              />
+            </View>
+          </View>
+        ) : (
+          <FlatList
+            contentContainerStyle={[
+              s.listContent,
+              filtered.length === 0 && s.emptyListContent,
+            ]}
+            data={filtered}
+            keyExtractor={item => item.id.toString()}
+            renderItem={({item}) => (
+              <ServiceRequestCard item={item} navigation={navigation} />
+            )}
+            refreshControl={
+              <RefreshControl
+                onRefresh={handleRefresh}
+                refreshing={refreshing}
+                tintColor={NAVY}
+              />
+            }
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={<EmptyState />}
           />
-        }
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={<EmptyState />}
-      />
+        )}
+      </SafeAreaView>
 
       {/* ── bottom nav ── */}
-      <BottomNav onPress={handleTabPress} />
-    </SafeAreaView>
+      <BottomNav onPress={handleTabPress} activeTab="Services" />
+    </View>
   );
 }
 
@@ -376,11 +387,12 @@ const nav = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: CARD,
     borderTopWidth: 1,
-    borderTopColor: DIVIDER,
+    borderTopColor: BORDER,
     paddingBottom: 8,
     paddingTop: 8,
+    paddingHorizontal: 6,
   },
-  tab:        {flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3},
+  tab:        {flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, paddingVertical: 8, borderRadius: 16},
   label:      {fontSize: 10, color: MUTED, fontWeight: '500'},
   labelActive:{color: NAVY, fontWeight: '700'},
   iconWrap:   {width: 24, height: 22, alignItems: 'center', justifyContent: 'flex-end'},
@@ -390,7 +402,7 @@ const nav = StyleSheet.create({
     paddingHorizontal: 3, gap: 3,
   },
   listLine:    {height: 2, width: 10, backgroundColor: CARD, borderRadius: 1},
-  tabActive:   {backgroundColor: '#FFF7CC', borderWidth: 1, borderColor: 'rgba(244, 208, 0, 0.34)'},
+  tabActive:   {backgroundColor: SOFT_YELLOW, borderWidth: 1, borderColor: 'rgba(244, 208, 0, 0.34)'},
   gear: {
     width: 20, height: 20, borderRadius: 10,
     borderWidth: 3, alignItems: 'center', justifyContent: 'center',
@@ -403,126 +415,155 @@ const nav = StyleSheet.create({
 /* ── screen styles ───────────────────────────────────────────── */
 
 const s = StyleSheet.create({
-  root:        {flex: 1, backgroundColor: BG},
-  centered:    {flex: 1, alignItems: 'center', justifyContent: 'center'},
-  loadingText: {color: MUTED, fontSize: 14, marginTop: 14},
+  root:  {flex: 1, backgroundColor: BG},
+  safe:  {flex: 1, backgroundColor: BG},
+
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 40,
+  },
+  loadingText: {color: MUTED, fontSize: 14, marginTop: 10},
   pressed:     {opacity: 0.85},
 
   /* header */
-  header:      {paddingHorizontal: 22, paddingTop: 12, paddingBottom: 8},
-  brand:       {fontSize: 18, fontWeight: '800', color: NAVY, marginBottom: 4},
-  brandAccent: {color: GOLD},
-  title:       {fontSize: 24, fontWeight: '900', color: NAVY, marginBottom: 2},
-  subtitle:    {fontSize: 13, color: MUTED, marginBottom: 10},
+  header: {
+    paddingHorizontal: 18,
+    paddingTop: 12,
+    paddingBottom: 10,
+    marginHorizontal: 18,
+    marginTop: 8,
+    marginBottom: 6,
+    borderRadius: 20,
+    backgroundColor: CARD,
+    borderWidth: 1,
+    borderColor: BORDER,
+    shadowColor: SHADOW,
+    shadowOffset: {width: 0, height: 8},
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    elevation: 3,
+  },
+  brandRow: {flexDirection: 'row', alignItems: 'center'},
+  brandSol:  {fontSize: 22, fontWeight: '800', color: NAVY},
+  brandGold: {fontSize: 22, fontWeight: '800', color: GOLD},
+
+  /* title block */
+  titleBlock: {
+    paddingHorizontal: 18,
+    marginBottom: 12,
+  },
+  pageTitle: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: NAVY,
+    marginBottom: 2,
+  },
+  pageSub: {
+    fontSize: 13,
+    color: MUTED,
+  },
 
   /* filter chips */
-  chipScroll: {height: 52},
   chipRow:    {
-    paddingVertical: 6,
-    gap: 8,
     flexDirection: 'row',
-    alignItems: 'center',
+    paddingHorizontal: 18,
+    gap: 8,
+    marginBottom: 14,
   },
   chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
     borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: '#c9d4e8',
+    borderWidth: 1,
+    borderColor: '#b8c4d8',
+    paddingVertical: 5,
+    paddingHorizontal: 14,
     backgroundColor: CARD,
   },
-  chipActive:     {backgroundColor: NAVY, borderColor: NAVY},
-  chipText:       {fontSize: 14, color: NAVY, fontWeight: '600'},
-  chipTextActive: {color: CARD, fontWeight: '700'},
+  chipActive: {
+    backgroundColor: NAVY,
+    borderColor: NAVY,
+  },
+  chipText:       {fontSize: 13, color: NAVY, fontWeight: '600'},
+  chipTextActive: {color: CARD},
 
   /* error */
-  errorBanner: {
-    marginHorizontal: 22,
-    marginTop: 4,
-    marginBottom: 8,
-    backgroundColor: '#fee2e2',
-    borderRadius: 14,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  errorWrap:   {flex: 1, padding: 18},
+  errorCard: {
+    backgroundColor: CARD,
+    borderColor: '#fecaca',
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 20,
   },
-  errorMsg:  {color: '#991b1b', fontSize: 13, flex: 1},
-  retryBtn:  {
-    marginLeft: 12,
-    backgroundColor: '#991b1b',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  retryText: {color: CARD, fontSize: 12, fontWeight: '700'},
+  errorTitle: {color: '#b91c1c', fontSize: 17, fontWeight: '700', marginBottom: 6},
+  errorText:  {color: '#991b1b', fontSize: 14, lineHeight: 20},
+  retryBtn:   {marginTop: 16},
 
   /* list */
-  listPad:     {paddingHorizontal: 22, paddingTop: 10, paddingBottom: 20},
-  listPadGrow: {flexGrow: 1},
+  listContent:      {paddingHorizontal: 18, paddingBottom: 24, paddingTop: 2},
+  emptyListContent: {flexGrow: 1},
+  emptyState: {
+    alignItems: 'center',
+    backgroundColor: CARD,
+    borderRadius: 20,
+    padding: 32,
+    marginTop: 8,
+  },
+  emptyTitle: {
+    color: NAVY,
+    fontSize: 17,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptyText: {color: MUTED, fontSize: 14, lineHeight: 20, textAlign: 'center'},
 
   /* card */
   card: {
     backgroundColor: CARD,
     borderRadius: 20,
     marginBottom: 14,
-    padding: 18,
-    shadowColor: '#8a9bbd',
-    shadowOffset: {width: 0, height: 3},
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    shadowColor: SHADOW,
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.10,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowRadius: 10,
+    elevation: 2,
   },
   cardTopRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    justifyContent: 'space-between',
+    marginBottom: 8,
   },
   typePill: {
+    backgroundColor: '#e8edf7',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 999,
-    borderWidth: 1.5,
   },
-  typePillText:    {fontSize: 12, fontWeight: '700'},
+  typePillText:    {fontSize: 12, fontWeight: '600', color: NAVY},
   statusBadge:     {paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999},
   statusBadgeText: {fontSize: 12, fontWeight: '700'},
-  cardTitle: {
-    fontSize: 16,
+  cardId: {
+    fontSize: 15,
     fontWeight: '800',
     color: NAVY,
-    marginBottom: 6,
-    lineHeight: 22,
+    marginBottom: 4,
   },
-  cardMeta:       {fontSize: 13, color: MUTED, marginBottom: 3, lineHeight: 19},
+  cardMeta:       {fontSize: 13, color: MUTED, lineHeight: 20},
+  divider: {
+    height: 1,
+    backgroundColor: '#DDE7EE',
+    marginVertical: 10,
+  },
   viewDetailsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 10,
-    gap: 4,
+    justifyContent: 'space-between',
   },
   viewDetailsText: {fontSize: 14, fontWeight: '700', color: NAVY},
-  chevron:         {fontSize: 20, color: NAVY, marginTop: -1},
-
-  /* empty */
-  empty: {
-    alignItems: 'center',
-    padding: 32,
-    backgroundColor: CARD,
-    borderRadius: 20,
-    shadowColor: '#8a9bbd',
-    shadowOffset: {width: 0, height: 3},
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  emptyIcon:  {fontSize: 32, marginBottom: 12},
-  emptyTitle: {fontSize: 17, fontWeight: '800', color: NAVY, marginBottom: 8},
-  emptyText:  {
-    fontSize: 14,
-    color: MUTED,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
+  chevron:         {fontSize: 22, color: MUTED, fontWeight: '400', lineHeight: 24},
 });
