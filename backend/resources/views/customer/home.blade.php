@@ -537,6 +537,22 @@
             </span>
         </a>
 
+        {{-- 7. Mobile App --}}
+        <a href="{{ route('customer.mobile-app') }}" class="ch-action-card">
+            <div class="ch-action-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2" aria-hidden="true">
+                    <rect x="7" y="2" width="10" height="20" rx="2" ry="2"/>
+                    <line x1="11" y1="18" x2="13" y2="18"/>
+                </svg>
+            </div>
+            <p class="ch-action-title">Mobile App</p>
+            <p class="ch-action-desc">Open our app page for Android download details and future APK releases</p>
+            <span class="ch-action-cta">
+                Visit
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </span>
+        </a>
+
     </div>
 </section>
 

@@ -465,6 +465,7 @@
                         <a href="{{ route('public.testimonies') }}" class="public-home-nav-link is-active">All Reviews</a>
                         <a href="{{ route('home') }}#about" class="public-home-nav-link">About</a>
                         <a href="{{ route('public.contact') }}" class="public-home-nav-link">Contact</a>
+                        <a href="{{ route('home') }}#download-app" class="public-home-nav-link">Download App</a>
                     </nav>
 
                     <div class="public-home-actions">

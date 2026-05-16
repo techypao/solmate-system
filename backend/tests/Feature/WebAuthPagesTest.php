@@ -210,6 +210,51 @@ class WebAuthPagesTest extends TestCase
         $this->assertAuthenticatedAs($admin);
     }
 
+    public function test_technician_cannot_log_in_to_the_website(): void
+    {
+        $technician = User::query()->create([
+            'name' => 'Web Technician',
+            'email' => 'web_technician@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_TECHNICIAN,
+        ]);
+
+        $this->from('/login')
+            ->post('/login', [
+                'email' => $technician->email,
+                'password' => 'password123',
+            ])
+            ->assertRedirect('/login')
+            ->assertSessionHasErrors([
+                'email' => 'Technician accounts can only sign in through the SolMate mobile app.',
+            ]);
+
+        $this->assertGuest();
+    }
+
+    public function test_archived_customer_cannot_log_in_to_the_website(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Archived Web Customer',
+            'email' => 'archived_web_customer@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+            'archived_at' => now(),
+        ]);
+
+        $this->from('/login')
+            ->post('/login', [
+                'email' => $customer->email,
+                'password' => 'password123',
+            ])
+            ->assertRedirect('/login')
+            ->assertSessionHasErrors([
+                'email' => 'This customer account has been archived. Please contact support for assistance.',
+            ]);
+
+        $this->assertGuest();
+    }
+
     public function test_authenticated_user_can_log_out_and_is_redirected_with_success_flash(): void
     {
         $customer = User::query()->create([

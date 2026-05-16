@@ -2121,6 +2121,8 @@
                         </div>{{-- /.solmate-services-wrapper --}}
                         <a href="{{ route('customer.tracking') }}"
                            class="solmate-nav-link {{ request()->routeIs('customer.tracking') ? 'active' : '' }}">Tracking</a>
+                                <a href="{{ route('customer.mobile-app') }}"
+                                    class="solmate-nav-link {{ request()->routeIs('customer.mobile-app') ? 'active' : '' }}">Download App</a>
                         <a href="{{ route('customer.testimonies') }}"
                            class="solmate-nav-link {{ request()->routeIs('customer.testimonies') ? 'active' : '' }}">Feedback</a>
                         <a href="{{ route('dashboard') }}"

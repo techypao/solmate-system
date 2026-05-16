@@ -66,6 +66,24 @@ function formatDateTime(value?: string | null, fallback = 'Not available') {
   return `${datePart} • ${timePart}`;
 }
 
+function isScheduledForToday(value?: string | null) {
+  if (!value) {
+    return false;
+  }
+
+  const scheduledDate = new Date(value);
+  if (Number.isNaN(scheduledDate.getTime())) {
+    return false;
+  }
+
+  const today = new Date();
+  return (
+    scheduledDate.getFullYear() === today.getFullYear() &&
+    scheduledDate.getMonth() === today.getMonth() &&
+    scheduledDate.getDate() === today.getDate()
+  );
+}
+
 function getFriendlyErrorMessage(error: unknown) {
   if (error instanceof ApiError) {
     return error.message;
@@ -248,8 +266,9 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
 
   const availableActions = useMemo(() => {
     const currentStatus = (serviceRequest?.status || '').toLowerCase();
+    const canUpdateToday = isScheduledForToday(serviceRequest?.date_needed);
 
-    if (mode !== 'technician') {
+    if (mode !== 'technician' || !canUpdateToday) {
       return [];
     }
 
@@ -263,6 +282,14 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
     successMessage: string,
   ) => {
     if (!serviceRequest || actionLoading) {
+      return;
+    }
+
+    if (!isScheduledForToday(serviceRequest.date_needed)) {
+      Alert.alert(
+        'Status update unavailable',
+        'Mark In Progress is only available for tasks scheduled today.',
+      );
       return;
     }
 

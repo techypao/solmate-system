@@ -174,6 +174,7 @@
             <a href="{{ route('public.testimonies') }}" class="gst-nav-link">All Reviews</a>
             <a href="{{ route('home') }}#about" class="gst-nav-link">About</a>
             <a href="{{ route('public.contact') }}" class="gst-nav-link gst-nav-link--active">Contact</a>
+            <a href="{{ route('home') }}#download-app" class="gst-nav-link">Download App</a>
         </nav>
         <div class="gst-header-actions">
             <a href="{{ route('login') }}" class="gst-btn-login">Log in</a>

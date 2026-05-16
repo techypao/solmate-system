@@ -57,6 +57,24 @@ function formatSchedule(dateNeeded?: string | null) {
   );
 }
 
+function isScheduledForToday(dateNeeded?: string | null) {
+  if (!dateNeeded) {
+    return false;
+  }
+
+  const scheduledDate = new Date(dateNeeded);
+  if (isNaN(scheduledDate.getTime())) {
+    return false;
+  }
+
+  const today = new Date();
+  return (
+    scheduledDate.getFullYear() === today.getFullYear() &&
+    scheduledDate.getMonth() === today.getMonth() &&
+    scheduledDate.getDate() === today.getDate()
+  );
+}
+
 // ─── InfoRow ──────────────────────────────────────────────────────────────────
 function InfoRow({label, value}: {label: string; value?: string | null}) {
   return (
@@ -206,6 +224,13 @@ export default function RequestDetailsScreen({navigation, route}: any) {
   // Save = apply the selected status pill (if changed), then stay on screen
   const handleSave = async () => {
     if (!inspectionRequest) {navigation.goBack(); return;}
+    if (!isScheduledForToday(inspectionRequest.date_needed)) {
+      Alert.alert(
+        'Status update unavailable',
+        'Task status can only be updated for tasks scheduled today.',
+      );
+      return;
+    }
     const statusToSave = selectedStatus;
     if (!statusToSave || statusToSave === inspectionRequest.status) {
       Alert.alert('No changes', 'Select a new status before saving.');
@@ -335,6 +360,7 @@ export default function RequestDetailsScreen({navigation, route}: any) {
         textColor: '#92400e',
       }
     : null;
+  const canUpdateStatusToday = isScheduledForToday(inspectionRequest.date_needed);
 
   return (
     <View style={s.root}>
@@ -396,6 +422,11 @@ export default function RequestDetailsScreen({navigation, route}: any) {
           {/* ── Update Status ── */}
           <View style={s.card}>
             <Text style={s.cardTitle}>Update Status</Text>
+            {!canUpdateStatusToday ? (
+              <Text style={s.statusLockMessage}>
+                Status updates are only allowed for today&apos;s tasks.
+              </Text>
+            ) : null}
             <View style={s.statusRow}>
               {STATUS_OPTIONS.map(opt => {
                 const isActive = activeStatus === opt.value;
@@ -404,7 +435,7 @@ export default function RequestDetailsScreen({navigation, route}: any) {
                     key={opt.value}
                     style={[s.statusPill, isActive && s.statusPillActive]}
                     onPress={() => setSelectedStatus(opt.value)}
-                    disabled={actionLoading}>
+                    disabled={actionLoading || !canUpdateStatusToday}>
                     <Text
                       style={[s.statusPillText, isActive && s.statusPillTextActive]}>
                       {opt.label}
@@ -457,11 +488,11 @@ export default function RequestDetailsScreen({navigation, route}: any) {
           <Pressable
             style={({pressed}) => [
               s.btnSecondary,
-              actionLoading && s.btnDisabled,
+              (actionLoading || !canUpdateStatusToday) && s.btnDisabled,
               pressed && s.pressed,
             ]}
             onPress={handleSave}
-            disabled={actionLoading}>
+            disabled={actionLoading || !canUpdateStatusToday}>
             <Text style={s.btnSecondaryText}>
               {actionLoading ? 'Saving…' : 'Save'}
             </Text>
@@ -635,6 +666,13 @@ const s = StyleSheet.create({
   },
   statusPillText:       {fontSize: 13, color: NAVY, fontWeight: '600'},
   statusPillTextActive: {color: CARD},
+  statusLockMessage: {
+    fontSize: 13,
+    color: MUTED,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#DDE7EE',
+  },
 
   // action buttons
   btnPrimary: {

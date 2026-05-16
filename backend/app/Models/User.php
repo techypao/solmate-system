@@ -30,6 +30,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'archived_at',
         'address',
         'contact_number',
         'landline_number',
@@ -82,6 +83,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'archived_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -90,6 +92,11 @@ class User extends Authenticatable
     public function hasRole(string $role): bool
     {
         return $this->role === $role;
+    }
+
+    public function isArchivedCustomer(): bool
+    {
+        return $this->role === self::ROLE_CUSTOMER && $this->archived_at !== null;
     }
 
     public function serviceRequests()

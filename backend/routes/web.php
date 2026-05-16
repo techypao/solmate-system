@@ -108,6 +108,9 @@ Route::middleware('auth')->group(function () {
         Route::put('/admin/customers/{customer}', [AdminCustomerController::class, 'update'])
             ->name('admin.customers.update');
 
+        Route::patch('/admin/customers/{customer}/archive', [AdminCustomerController::class, 'archive'])
+            ->name('admin.customers.archive');
+
         Route::delete('/admin/customers/{customer}', [AdminCustomerController::class, 'destroy'])
             ->name('admin.customers.destroy');
 
@@ -177,5 +180,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/customer/maintenance', function () {
             return view('customer.maintenance');
         })->name('customer.maintenance');
+
+        Route::get('/customer/mobile-app', function () {
+            return view('customer.mobile-app');
+        })->name('customer.mobile-app');
     });
 });

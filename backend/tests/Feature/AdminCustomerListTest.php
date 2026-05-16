@@ -69,4 +69,46 @@ class AdminCustomerListTest extends TestCase
             'Zulu Customer',
         ], $customers->pluck('name')->all());
     }
+
+    public function test_admin_can_archive_customer_and_archived_customer_moves_to_archived_list(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_archive_customer@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $customer = User::query()->create([
+            'name' => 'Archive Me Customer',
+            'email' => 'archive_me_customer@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.customers.archive', $customer))
+            ->assertRedirect(route('admin.customers'))
+            ->assertSessionHas('status', 'Customer "Archive Me Customer" was archived successfully.');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $customer->id,
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        $this->assertNotNull($customer->fresh()->archived_at);
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.customers'));
+
+        $response->assertOk();
+
+        $activeCustomers = $response->viewData('customers');
+        $archivedCustomers = $response->viewData('archivedCustomers');
+
+        $this->assertNotNull($activeCustomers);
+        $this->assertNotNull($archivedCustomers);
+        $this->assertSame([], $activeCustomers->pluck('name')->all());
+        $this->assertSame(['Archive Me Customer'], $archivedCustomers->pluck('name')->all());
+    }
 }

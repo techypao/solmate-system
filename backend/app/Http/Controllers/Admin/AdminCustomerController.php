@@ -15,10 +15,17 @@ class AdminCustomerController extends Controller
 
         $customers = User::query()
             ->where('role', User::ROLE_CUSTOMER)
+            ->whereNull('archived_at')
             ->latest()
             ->get();
 
-        return view('admin.customers', compact('customers'));
+        $archivedCustomers = User::query()
+            ->where('role', User::ROLE_CUSTOMER)
+            ->whereNotNull('archived_at')
+            ->latest('archived_at')
+            ->get();
+
+        return view('admin.customers', compact('customers', 'archivedCustomers'));
     }
 
     public function edit(Request $request, User $customer)
@@ -76,5 +83,21 @@ class AdminCustomerController extends Controller
         return redirect()
             ->route('admin.customers')
             ->with('status', "Customer \"{$customerName}\" was deleted successfully.");
+    }
+
+    public function archive(Request $request, User $customer)
+    {
+        abort_unless($request->user()?->role === User::ROLE_ADMIN, 403);
+        abort_unless($customer->role === User::ROLE_CUSTOMER, 404);
+
+        if ($customer->archived_at === null) {
+            $customer->forceFill([
+                'archived_at' => now(),
+            ])->save();
+        }
+
+        return redirect()
+            ->route('admin.customers')
+            ->with('status', "Customer \"{$customer->name}\" was archived successfully.");
     }
 }

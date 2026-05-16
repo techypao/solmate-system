@@ -24,6 +24,24 @@ class RoleMiddleware
         /** @var User $user */
         $user = Auth::user();
 
+        if ($user->isArchivedCustomer()) {
+            Auth::logout();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'This customer account has been archived. Please contact support for assistance.',
+                ], 403);
+            }
+
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')
+                ->withErrors([
+                    'email' => 'This customer account has been archived. Please contact support for assistance.',
+                ]);
+        }
+
         if ($user->hasRole($role)) {
             return $next($request);
         }

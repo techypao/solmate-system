@@ -55,6 +55,30 @@ class AuthController extends Controller
             }
         }
 
+        if ($request->user()?->role === User::ROLE_TECHNICIAN) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()
+                ->withErrors([
+                    'email' => 'Technician accounts can only sign in through the SolMate mobile app.',
+                ])
+                ->onlyInput('email');
+        }
+
+        if ($request->user()?->isArchivedCustomer()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()
+                ->withErrors([
+                    'email' => 'This customer account has been archived. Please contact support for assistance.',
+                ])
+                ->onlyInput('email');
+        }
+
         $request->session()->regenerate();
 
         return redirect($this->redirectPath($request->user()))

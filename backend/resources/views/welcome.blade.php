@@ -71,6 +71,60 @@
         .gst-services-cta a { display: inline-flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 600; color: #123A5A; border: 2px solid #123A5A; padding: 12px 26px; border-radius: 10px; text-decoration: none; transition: background .15s, color .15s; }
         .gst-services-cta a:hover { background: #123A5A; color: #ffffff; }
 
+        /* APP DOWNLOAD */
+        .gst-app { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); padding: 80px 32px; }
+        .gst-app-inner { max-width: 1200px; margin: 0 auto; }
+        .gst-app-shell { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr); gap: 24px; align-items: stretch; }
+        .gst-app-card,
+        .gst-app-panel { background: #ffffff; border: 1px solid #DDE7EE; border-radius: 22px; box-shadow: 0 14px 36px rgba(15,23,42,0.07); }
+        .gst-app-card {
+            position: relative;
+            overflow: hidden;
+            padding: 30px;
+            background:
+                radial-gradient(circle at top right, rgba(244,208,0,0.18), transparent 34%),
+                linear-gradient(135deg, #123A5A 0%, #123A5A 56%, #1f4d76 100%);
+            color: #ffffff;
+        }
+        .gst-app-card::after {
+            content: "";
+            position: absolute;
+            right: -40px;
+            bottom: -55px;
+            width: 190px;
+            height: 190px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            pointer-events: none;
+        }
+        .gst-app-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.18);
+            color: #f8d774;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .gst-app-title { margin: 18px 0 10px; font-size: 32px; font-weight: 700; line-height: 1.15; letter-spacing: -0.03em; }
+        .gst-app-copy { margin: 0; max-width: 620px; font-size: 15px; line-height: 1.8; color: rgba(255,255,255,0.84); }
+        .gst-app-points { display: grid; gap: 12px; margin: 24px 0 0; }
+        .gst-app-point { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); }
+        .gst-app-point-dot { width: 10px; height: 10px; border-radius: 50%; background: #F4D000; margin-top: 5px; flex-shrink: 0; }
+        .gst-app-point strong { display: block; font-size: 14px; margin-bottom: 4px; color: #ffffff; }
+        .gst-app-point span { display: block; font-size: 13px; line-height: 1.65; color: rgba(255,255,255,0.78); }
+        .gst-app-panel { padding: 26px 24px; display: flex; flex-direction: column; justify-content: center; }
+        .gst-app-panel-tag { display: inline-flex; align-items: center; width: fit-content; padding: 6px 11px; border-radius: 999px; background: #FFF7CC; color: #92400e; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+        .gst-app-panel-title { margin: 14px 0 8px; font-size: 22px; font-weight: 700; color: #123A5A; line-height: 1.2; }
+        .gst-app-panel-copy { margin: 0; font-size: 14px; line-height: 1.75; color: #5E7288; }
+        .gst-app-panel-note { margin-top: 18px; padding: 14px 16px; border-radius: 14px; background: #F8FAFC; border: 1px dashed #DDE7EE; color: #5E7288; font-size: 13px; line-height: 1.65; }
+        .gst-app-panel-btn { margin-top: 20px; min-height: 48px; border: 1.5px dashed #CBDDE8; border-radius: 12px; background: #F8FAFC; color: #94A3B8; font-size: 13px; font-weight: 700; cursor: not-allowed; }
+
         /* NEWS */
         .gst-news { background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%); padding: 80px 32px; }
         .gst-news-inner { max-width: 1200px; margin: 0 auto; }
@@ -336,6 +390,7 @@
         @media (max-width: 1000px) {
             .gst-hero-inner { gap: 40px; }
             .gst-trust-grid { grid-template-columns: repeat(2,1fr); }
+            .gst-app-shell { grid-template-columns: 1fr; }
             .gst-news-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .solmate-footer-upper { grid-template-columns: 1fr 1fr; gap: 36px; }
         }
@@ -345,13 +400,14 @@
             .gst-hero-card-main { padding: 28px 22px; }
             .gst-hero-h1 { font-size: 34px; }
             .gst-hero { padding: 60px 20px 64px; }
-            .gst-trust, .gst-news, .gst-testimonies, .gst-about, .gst-cta-section { padding: 56px 20px; }
+            .gst-trust, .gst-app, .gst-news, .gst-testimonies, .gst-about, .gst-cta-section { padding: 56px 20px; }
             .gst-trust-grid { grid-template-columns: 1fr; }
             .gst-news-grid { grid-template-columns: 1fr; }
             .gst-about-highlights { grid-template-columns: 1fr; }
             .gst-section-title { font-size: 26px; }
             .gst-cta-title { font-size: 28px; }
             .gst-about-title { font-size: 28px; }
+            .gst-app-title { font-size: 26px; }
             .gst-header-inner { padding: 0 16px; }
             .gst-nav-links { display: none; }
             .gst-testimonies-viewport { min-height: 420px; }
@@ -363,6 +419,7 @@
             .gst-testimony-placeholder-panel { width: 118px; height: 72px; bottom: 124px; }
             .gst-testimony-placeholder-panel.is-center { bottom: 110px; }
             .gst-news-card-body { padding: 22px 20px 24px; }
+            .gst-app-card, .gst-app-panel { padding-left: 22px; padding-right: 22px; }
         }
         @media (max-width: 560px) {
             .solmate-footer-upper { grid-template-columns: 1fr; gap: 28px; }
@@ -404,6 +461,7 @@
             <a href="{{ route('public.testimonies') }}" class="gst-nav-link">All Reviews</a>
             <a href="#about" class="gst-nav-link">About</a>
             <a href="{{ route('public.contact') }}" class="gst-nav-link">Contact</a>
+            <a href="#download-app" class="gst-nav-link">Download App</a>
         </nav>
         <div class="gst-header-actions">
             <a href="{{ route('login') }}" class="gst-btn-login">Log in</a>
@@ -454,6 +512,7 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </a>
                 <a href="{{ route('customer.inspection') }}" class="gst-cta-secondary">Request Inspection</a>
+                <a href="#download-app" class="gst-cta-secondary">Download Now</a>
             </div>
             <p class="gst-hero-note">Create an account or sign in to save your requests and follow each update inside SolMate.</p>
         </div>
@@ -673,6 +732,54 @@
     </div>
 </section>
 
+{{-- APP DOWNLOAD --}}
+<section class="gst-app" id="download-app" aria-label="Download app">
+    <div class="gst-app-inner">
+        <div class="gst-section-heading">
+            <span class="gst-section-eyebrow">Mobile App</span>
+            <h2 class="gst-section-title">Download the SolMate app</h2>
+            <p class="gst-section-sub">This download area now lives directly on the homepage, so visitors can view it without being redirected to login.</p>
+        </div>
+        <div class="gst-app-shell">
+            <article class="gst-app-card">
+                <span class="gst-app-badge">Android APK</span>
+                <h3 class="gst-app-title">The public app-download section is ready on the landing page.</h3>
+                <p class="gst-app-copy">Once your Android build is ready for release, this section can display the current APK version, release notes, file size, and installation instructions directly on the homepage.</p>
+                <div class="gst-app-points">
+                    <div class="gst-app-point">
+                        <span class="gst-app-point-dot" aria-hidden="true"></span>
+                        <div>
+                            <strong>Latest APK slot</strong>
+                            <span>Prepared for the version name, build date, and download size.</span>
+                        </div>
+                    </div>
+                    <div class="gst-app-point">
+                        <span class="gst-app-point-dot" aria-hidden="true"></span>
+                        <div>
+                            <strong>Install guide area</strong>
+                            <span>Ready for the steps customers need before installing from Android.</span>
+                        </div>
+                    </div>
+                    <div class="gst-app-point">
+                        <span class="gst-app-point-dot" aria-hidden="true"></span>
+                        <div>
+                            <strong>Release notes block</strong>
+                            <span>Reserved for feature highlights, fixes, and important update reminders.</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            <aside class="gst-app-panel">
+                <span class="gst-app-panel-tag">Coming Soon</span>
+                <h3 class="gst-app-panel-title">Download will appear here</h3>
+                <p class="gst-app-panel-copy">The APK is not published yet, but the public-facing download area is already in place on the homepage.</p>
+                <div class="gst-app-panel-note">When you are ready, I can replace this placeholder with a live APK button and version details.</div>
+                <button type="button" class="gst-app-panel-btn" disabled>APK Download Unavailable</button>
+            </aside>
+        </div>
+    </div>
+</section>
+
 {{-- FOOTER --}}
 <footer class="solmate-footer" aria-label="Site footer">
     <div class="solmate-footer-inner">
@@ -693,6 +800,7 @@
                     <li><a href="#rdy">RDY</a></li>
                     <li><a href="{{ route('public.testimonies') }}">All Reviews</a></li>
                     <li><a href="{{ route('public.contact') }}">Contact Us</a></li>
+                    <li><a href="#download-app">Download App</a></li>
                     <li><a href="{{ route('login') }}">Log In</a></li>
                 </ul>
             </div>

@@ -53,6 +53,29 @@
     </div>
 
     <div class="card admin-section-surface">
+        <div class="section-header" style="margin-bottom: 16px;">
+            <div>
+                <h2 class="admin-section-title">Archive Customer</h2>
+                <p class="admin-section-copy">Archive <strong>{{ $customer->name }}</strong> to revoke login access while keeping records for reporting and history.</p>
+            </div>
+        </div>
+
+        <form method="POST"
+              action="{{ route('admin.customers.archive', $customer) }}"
+              onsubmit="return confirm('Archive customer {{ addslashes($customer->name) }}? They will no longer be able to sign in.')"
+              style="margin-bottom: 20px;">
+            @csrf
+            @method('PATCH')
+
+            <button type="submit"
+                    class="button-link secondary"
+                    style="border-color:#facc15; color:#a16207; font-weight:600;">
+                Archive Customer
+            </button>
+        </form>
+
+        <hr style="border:0; border-top:1px solid #e5e7eb; margin: 20px 0;">
+
         <div class="section-header">
             <div>
                 <h2 class="admin-section-title">Delete Customer</h2>
