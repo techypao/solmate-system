@@ -127,6 +127,24 @@
 
         /* NEWS */
         .gst-news { background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%); padding: 80px 32px; }
+
+        /* PROMOTIONS */
+        .gst-promos { background: linear-gradient(135deg, #F8FAFC 0%, #EAF9FD 60%, #fff8e7 100%); padding: 80px 32px; }
+        .gst-promos-inner { max-width: 1200px; margin: 0 auto; }
+        .gst-promos-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+        .gst-promo-card { display: flex; flex-direction: column; background: #ffffff; border-radius: 20px; overflow: hidden; border: 1px solid #DDE7EE; box-shadow: 0 8px 24px rgba(15,23,42,0.07); transition: transform .2s, box-shadow .2s; }
+        .gst-promo-card:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(15,23,42,0.12); }
+        .gst-promo-card-media { aspect-ratio: 16 / 7; overflow: hidden; background: #DDE7EE; }
+        .gst-promo-card-media img { width: 100%; height: 100%; display: block; object-fit: cover; }
+        .gst-promo-card-media--gradient { background: linear-gradient(135deg, #123A5A 0%, #1f4d76 56%, #20A7C9 100%); display: flex; align-items: center; justify-content: center; }
+        .gst-promo-no-img-icon { color: rgba(255,255,255,0.6); }
+        .gst-promo-card-body { display: flex; flex-direction: column; gap: 12px; padding: 22px 22px 24px; flex: 1; }
+        .gst-promo-card-tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: #FFF7CC; border: 1px solid rgba(212,160,23,0.28); border-radius: 999px; font-size: 11.5px; font-weight: 700; color: #92400e; text-transform: uppercase; letter-spacing: 0.05em; width: fit-content; }
+        .gst-promo-card-title { font-size: 18px; font-weight: 800; color: #0F2F4A; line-height: 1.3; margin: 0; }
+        .gst-promo-card-desc { font-size: 13.5px; color: #5E7288; line-height: 1.7; margin: 0; flex: 1; }
+        .gst-promo-card-cta { display: inline-flex; align-items: center; gap: 7px; margin-top: 4px; padding: 11px 22px; background: #123A5A; color: #ffffff; font-size: 14px; font-weight: 700; border-radius: 10px; text-decoration: none; width: fit-content; transition: background .15s, transform .1s; }
+        .gst-promo-card-cta:hover { background: #0F2F4A; transform: translateY(-1px); color: #ffffff; text-decoration: none; }
+        .gst-promo-card-cta-static { display: inline-flex; align-items: center; margin-top: 4px; padding: 11px 22px; background: #EAF9FD; color: #123A5A; font-size: 14px; font-weight: 700; border-radius: 10px; border: 1.5px solid #20A7C9; width: fit-content; }
         .gst-news-inner { max-width: 1200px; margin: 0 auto; }
         .gst-news-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
         .gst-news-card {
@@ -392,6 +410,7 @@
             .gst-trust-grid { grid-template-columns: repeat(2,1fr); }
             .gst-app-shell { grid-template-columns: 1fr; }
             .gst-news-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .gst-promos-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .solmate-footer-upper { grid-template-columns: 1fr 1fr; gap: 36px; }
         }
         @media (max-width: 720px) {
@@ -400,9 +419,10 @@
             .gst-hero-card-main { padding: 28px 22px; }
             .gst-hero-h1 { font-size: 34px; }
             .gst-hero { padding: 60px 20px 64px; }
-            .gst-trust, .gst-app, .gst-news, .gst-testimonies, .gst-about, .gst-cta-section { padding: 56px 20px; }
+            .gst-trust, .gst-app, .gst-news, .gst-promos, .gst-testimonies, .gst-about, .gst-cta-section { padding: 56px 20px; }
             .gst-trust-grid { grid-template-columns: 1fr; }
             .gst-news-grid { grid-template-columns: 1fr; }
+            .gst-promos-grid { grid-template-columns: 1fr; }
             .gst-about-highlights { grid-template-columns: 1fr; }
             .gst-section-title { font-size: 26px; }
             .gst-cta-title { font-size: 28px; }
@@ -656,6 +676,50 @@
         @endif
     </div>
 </section>
+
+{{-- PROMOTIONS --}}
+@php $publicPromotions = $promotions ?? collect(); @endphp
+@if ($publicPromotions->isNotEmpty())
+<section class="gst-promos" id="promotions" aria-label="Special offers and promotions">
+    <div class="gst-promos-inner">
+        <div class="gst-section-heading">
+            <span class="gst-section-eyebrow">Special Offers</span>
+            <h2 class="gst-section-title">Promotions</h2>
+            <p class="gst-section-sub">Limited-time deals and solar offers from RDY Solar Panel Installation.</p>
+        </div>
+        <div class="gst-promos-grid">
+            @foreach ($publicPromotions as $promo)
+                <article class="gst-promo-card">
+                    @if ($promo->image_url)
+                        <div class="gst-promo-card-media">
+                            <img src="{{ $promo->image_url }}" alt="{{ $promo->title }} banner">
+                        </div>
+                    @else
+                        <div class="gst-promo-card-media gst-promo-card-media--gradient">
+                            <span class="gst-promo-no-img-icon" aria-hidden="true">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            </span>
+                        </div>
+                    @endif
+                    <div class="gst-promo-card-body">
+                        <span class="gst-promo-card-tag">
+                            @if ($promo->end_date)
+                                Ends {{ $promo->end_date->format('M d, Y') }}
+                            @else
+                                Special Offer
+                            @endif
+                        </span>
+                        <h3 class="gst-promo-card-title">{{ $promo->title }}</h3>
+                        @if ($promo->description)
+                            <p class="gst-promo-card-desc">{{ $promo->description }}</p>
+                        @endif
+                    </div>
+                </article>
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
 
 {{-- ABOUT US --}}
 <section class="gst-about" id="about" aria-label="About RDY Solar Panel Installation">

@@ -43,6 +43,9 @@ class VisualHighlight extends Model
             return null;
         }
 
-        return Storage::disk(self::PUBLIC_DISK)->url($this->image_path);
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+        $disk = Storage::disk(self::PUBLIC_DISK);
+
+        return $disk->url($this->image_path);
     }
 }

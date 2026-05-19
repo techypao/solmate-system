@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\InspectionRequest;
+use App\Models\Promotion;
 use App\Models\Quotation;
 use App\Models\ServiceRequest;
 use App\Models\Testimony;
@@ -14,6 +15,7 @@ use App\Notifications\AdminNewServiceRequestNotification;
 use App\Notifications\AdminServiceRequestCancellationRequestedNotification;
 use App\Notifications\AdminNewTestimonyNotification;
 use App\Notifications\FinalQuotationAvailableNotification;
+use App\Notifications\NewPromotionNotification;
 use App\Notifications\InspectionRequestAssignedNotification;
 use App\Notifications\InspectionRequestStatusUpdatedNotification;
 use App\Notifications\ScheduleRescheduledNotification;
@@ -211,6 +213,16 @@ class InAppNotificationService
         $quotation->customer->notify(
             new FinalQuotationAvailableNotification($quotation, $actorId)
         );
+    }
+
+    public function notifyAllCustomersOfNewPromotion(Promotion $promotion, ?int $actorId = null): void
+    {
+        User::query()
+            ->where('role', User::ROLE_CUSTOMER)
+            ->get()
+            ->each(fn (User $customer) => $customer->notify(
+                new NewPromotionNotification($promotion, $actorId)
+            ));
     }
 
     private function adminRecipients(): Collection

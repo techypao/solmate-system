@@ -1,11 +1,13 @@
 import React, {useCallback, useContext, useState} from 'react';
 import {
+  FlatList,
   Image,
   Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
@@ -13,6 +15,10 @@ import {useFocusEffect} from '@react-navigation/native';
 import {AuthContext} from '../src/context/AuthContext';
 import {ApiError} from '../src/services/api';
 import {getUnreadNotificationCount} from '../src/services/notificationApi';
+import {
+  getActivePromotions,
+  type Promotion,
+} from '../src/services/promotionApi';
 import {getProfilePictureUrl, getUserInitial} from '../src/utils/profilePicture';
 
 const NAVY = '#123A5A';
@@ -100,14 +106,45 @@ function ActionCard({
   );
 }
 
+function PromotionCard({promo, width}: {promo: Promotion; width?: number}) {
+  return (
+    <View style={[s.promoCard, width !== undefined ? {width} : undefined]}>
+      {promo.image_url ? (
+        <Image source={{uri: promo.image_url}} style={s.promoBanner} />
+      ) : (
+        <View style={s.promoBannerPlaceholder}>
+          <Text style={s.promoBannerPlaceholderIcon}>{'⭐'}</Text>
+        </View>
+      )}
+      <View style={s.promoCardBody}>
+        <View style={s.promoTagRow}>
+          <Text style={s.promoTag}>
+            {promo.end_date
+              ? `Ends ${new Date(promo.end_date).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}`
+              : 'Special Offer'}
+          </Text>
+        </View>
+        <Text style={s.promoTitle}>{promo.title}</Text>
+        {promo.description ? (
+          <Text style={s.promoDesc}>{promo.description}</Text>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
 /* ── main screen ────────────────────────────────────────────── */
 
 export default function HomeScreen({navigation}: any) {
   const {user} = useContext(AuthContext);
   const customerName = user?.name || 'Customer';
   const profilePictureUrl = getProfilePictureUrl(user?.profile_picture);
+  const {width: SCREEN_W} = useWindowDimensions();
+  const PROMO_W = SCREEN_W - 40;
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationsLoading, setNotificationsLoading] = useState(true);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [promoIndex, setPromoIndex] = useState(0);
 
   const loadUnreadCount = useCallback(async () => {
     try {
@@ -124,10 +161,20 @@ export default function HomeScreen({navigation}: any) {
     }
   }, []);
 
+  const loadPromotions = useCallback(async () => {
+    try {
+      const data = await getActivePromotions();
+      setPromotions(data);
+    } catch {
+      setPromotions([]);
+    }
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       loadUnreadCount();
-    }, [loadUnreadCount]),
+      loadPromotions();
+    }, [loadUnreadCount, loadPromotions]),
   );
 
   const initial = getUserInitial(customerName, 'C');
@@ -247,6 +294,50 @@ export default function HomeScreen({navigation}: any) {
             <Text style={s.moreBtnText}>My Quotations</Text>
           </Pressable>
         </View>
+
+        {/* ── promotions ─────────────────────────────── */}
+        {promotions.length > 0 && (
+          <>
+            <View style={s.promoHeaderRow}>
+              <Text style={s.sectionTitle}>Special Offers</Text>
+              {promotions.length > 1 && (
+                <Text style={s.promoCounter}>
+                  {promoIndex + 1} / {promotions.length}
+                </Text>
+              )}
+            </View>
+            <FlatList
+              data={promotions}
+              keyExtractor={item => String(item.id)}
+              renderItem={({item}) => (
+                <PromotionCard promo={item} width={PROMO_W} />
+              )}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={e => {
+                const idx = Math.round(
+                  e.nativeEvent.contentOffset.x / PROMO_W,
+                );
+                setPromoIndex(idx);
+              }}
+              style={s.promoList}
+            />
+            {promotions.length > 1 && (
+              <View style={s.promoDots}>
+                {promotions.map((_, i) => (
+                  <View
+                    key={i}
+                    style={[
+                      s.promoDot,
+                      i === promoIndex && s.promoDotActive,
+                    ]}
+                  />
+                ))}
+              </View>
+            )}
+          </>
+        )}
 
         {/* ── chatbot shortcut ───────────────────────── */}
         <Pressable
@@ -508,4 +599,80 @@ const s = StyleSheet.create({
   navIconActive: {fontSize: 20, marginBottom: 2, color: CYAN},
   navLabel: {fontSize: 11, color: MUTED, fontWeight: '600'},
   navLabelActive: {fontSize: 11, color: NAVY, fontWeight: '700'},
+
+  /* promotion cards */
+  promoHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    marginTop: 6,
+  },
+  promoCounter: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: MUTED,
+  },
+  promoList: {
+    marginBottom: 10,
+  },
+  promoDots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 14,
+    gap: 6,
+  },
+  promoDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 999,
+    backgroundColor: BORDER,
+  },
+  promoDotActive: {
+    backgroundColor: NAVY,
+    width: 18,
+  },
+  promoCard: {
+    backgroundColor: CARD,
+    borderRadius: R,
+    overflow: 'hidden',
+    marginBottom: 4,
+    shadowColor: '#8a9bbd',
+    shadowOffset: {width: 0, height: 6},
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: BORDER,
+  },
+  promoBanner: {
+    width: '100%',
+    aspectRatio: 16 / 7,
+    backgroundColor: '#DDE7EE',
+  },
+  promoBannerPlaceholder: {
+    width: '100%',
+    aspectRatio: 16 / 7,
+    backgroundColor: NAVY,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  promoBannerPlaceholderIcon: {fontSize: 28},
+  promoCardBody: {padding: 16, gap: 8},
+  promoTagRow: {flexDirection: 'row'},
+  promoTag: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#92400e',
+    backgroundColor: SOFT_YELLOW,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    overflow: 'hidden',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  promoTitle: {fontSize: 17, fontWeight: '800', color: NAVY, lineHeight: 22},
+  promoDesc: {fontSize: 13, color: MUTED, lineHeight: 19},
 });

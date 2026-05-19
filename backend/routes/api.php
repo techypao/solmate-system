@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\PricingItemController;
+use App\Http\Controllers\Admin\PromotionController as AdminPromotionController;
 use App\Http\Controllers\Admin\QuotationSettingsController;
 use App\Http\Controllers\Admin\NewsArticleController as AdminNewsArticleController;
 use App\Http\Controllers\Admin\VisualHighlightController as AdminVisualHighlightController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\CompletionReportController;
 use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\InspectionRequestController;
 use App\Http\Controllers\NewsArticleController;
+use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PreferredDateAvailabilityController;
 use App\Http\Controllers\QuotationController;
@@ -26,6 +28,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/public/testimonies', [TestimonyController::class, 'publicIndex']);
 Route::get('/public/visual-highlights', [VisualHighlightController::class, 'index']);
 Route::get('/public/news-articles', [NewsArticleController::class, 'index']);
+Route::get('/public/promotions', [PromotionController::class, 'index']);
 Route::post('/contact-messages', [ContactMessageController::class, 'store']);
 
 // PROTECTED GENERAL ROUTES
@@ -75,6 +78,11 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::patch('/admin/news-articles/{newsArticle}/toggle', [AdminNewsArticleController::class, 'toggle']);
     Route::post('/admin/news-articles/{newsArticle}/refresh', [AdminNewsArticleController::class, 'refresh']);
     Route::delete('/admin/news-articles/{newsArticle}', [AdminNewsArticleController::class, 'destroy']);
+    Route::get('/admin/promotions', [AdminPromotionController::class, 'index']);
+    Route::post('/admin/promotions', [AdminPromotionController::class, 'store']);
+    Route::post('/admin/promotions/{promotion}', [AdminPromotionController::class, 'update']);
+    Route::patch('/admin/promotions/{promotion}/toggle', [AdminPromotionController::class, 'toggle']);
+    Route::delete('/admin/promotions/{promotion}', [AdminPromotionController::class, 'destroy']);
     Route::get('/admin/visual-highlights', [AdminVisualHighlightController::class, 'index']);
     Route::post('/admin/visual-highlights', [AdminVisualHighlightController::class, 'store']);
     Route::match(['put', 'patch'], '/admin/visual-highlights/{visualHighlight}', [AdminVisualHighlightController::class, 'update']);

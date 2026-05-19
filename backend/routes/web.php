@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminCustomerController;
 use App\Http\Controllers\Admin\ContactMessagePageController;
 use App\Http\Controllers\Admin\NewsArticlePageController;
+use App\Http\Controllers\Admin\PromotionPageController;
 use App\Http\Controllers\Admin\QuotationSettingsPageController;
 use App\Http\Controllers\Admin\PricingCatalogPageController;
 use App\Http\Controllers\Admin\NotificationPageController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\PublicTestimonyPageController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\QuotationItemBuilderPageController;
 use App\Models\NewsArticle;
+use App\Models\Promotion;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +28,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/landing', function () {
     return view('welcome', [
         'newsArticles' => NewsArticle::query()->active()->latest()->get(),
+        'promotions' => Promotion::query()->currentlyLive()->orderByDesc('created_at')->get(),
     ]);
 })->name('landing');
 
@@ -38,6 +41,7 @@ Route::get('/', function () {
     if (!Auth::check()) {
         return response(view('welcome', [
             'newsArticles' => NewsArticle::query()->active()->latest()->get(),
+            'promotions' => Promotion::query()->currentlyLive()->orderByDesc('created_at')->get(),
         ]), 200, $headers);
     }
 
@@ -131,6 +135,9 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/admin/news-articles', [NewsArticlePageController::class, 'show'])
             ->name('admin.news-articles');
+
+        Route::get('/admin/promotions', [PromotionPageController::class, 'show'])
+            ->name('admin.promotions');
 
         Route::get('/admin/profile', [ProfilePageController::class, 'show'])
             ->name('admin.profile.show');

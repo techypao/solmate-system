@@ -1513,6 +1513,12 @@
             padding: 10px 12px 4px;
         }
 
+        .admin-sidebar-divider {
+            height: 1px;
+            background: #E4EBF0;
+            margin: 6px 12px;
+        }
+
         .admin-sidebar-link {
             display: flex;
             align-items: center;
@@ -1781,6 +1787,9 @@
 
             @if (auth()->user()->role === \App\Models\User::ROLE_ADMIN)
 
+                <div class="admin-sidebar-divider"></div>
+                <span class="admin-sidebar-nav-section">People</span>
+
                 {{-- Customers --}}
                 <a href="{{ route('admin.customers') }}"
                    class="admin-sidebar-link {{ request()->routeIs('admin.customers') ? 'active' : '' }}">
@@ -1800,6 +1809,9 @@
                     </svg>
                     Technician
                 </a>
+
+                <div class="admin-sidebar-divider"></div>
+                <span class="admin-sidebar-nav-section">Operations</span>
 
                 {{-- Services --}}
                      <a href="{{ route('admin.request-assignments') }}"
@@ -1836,6 +1848,9 @@
                     Pricing Management
                 </a>
 
+                <div class="admin-sidebar-divider"></div>
+                <span class="admin-sidebar-nav-section">Engagement</span>
+
                 {{-- Testimonies --}}
                 <a href="{{ route('admin.testimonies') }}"
                    class="admin-sidebar-link {{ request()->routeIs('admin.testimonies') ? 'active' : '' }}">
@@ -1865,6 +1880,9 @@
                     Reports
                 </a>
 
+                <div class="admin-sidebar-divider"></div>
+                <span class="admin-sidebar-nav-section">Content</span>
+
                 {{-- Visual Highlights --}}
                 <a href="{{ route('admin.visual-highlights') }}"
                    class="admin-sidebar-link {{ request()->routeIs('admin.visual-highlights') ? 'active' : '' }}">
@@ -1888,6 +1906,18 @@
                     </svg>
                     Manage News
                 </a>
+
+                {{-- Homepage Promotions --}}
+                <a href="{{ route('admin.promotions') }}"
+                   class="admin-sidebar-link {{ request()->routeIs('admin.promotions') ? 'active' : '' }}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    Promotions
+                </a>
+
+                <div class="admin-sidebar-divider"></div>
+                <span class="admin-sidebar-nav-section">System</span>
 
                 {{-- Contact Messages --}}
                 <a href="{{ route('admin.contact-messages') }}"
