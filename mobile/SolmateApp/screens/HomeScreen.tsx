@@ -13,6 +13,7 @@ import {
 import {useFocusEffect} from '@react-navigation/native';
 
 import {AuthContext} from '../src/context/AuthContext';
+import CustomerBottomNav from '../src/components/CustomerBottomNav';
 import {ApiError} from '../src/services/api';
 import {getUnreadNotificationCount} from '../src/services/notificationApi';
 import {
@@ -28,7 +29,6 @@ const BG = '#F8FAFC';
 const CARD = '#ffffff';
 const BORDER = '#DDE7EE';
 const CYAN = '#20A7C9';
-const SOFT_YELLOW = '#FFF7CC';
 const R = 18;
 
 /* ── tiny presentational helpers ────────────────────────────── */
@@ -209,6 +209,50 @@ export default function HomeScreen({navigation}: any) {
         </Text>
         <Text style={s.welcomeSub}>Your solar overview at a glance.</Text>
 
+        {/* ── promotions ─────────────────────────────── */}
+        {promotions.length > 0 && (
+          <>
+            <View style={s.promoHeaderRow}>
+              <Text style={s.sectionTitle}>Special Offers</Text>
+              {promotions.length > 1 && (
+                <Text style={s.promoCounter}>
+                  {promoIndex + 1} / {promotions.length}
+                </Text>
+              )}
+            </View>
+            <FlatList
+              data={promotions}
+              keyExtractor={item => String(item.id)}
+              renderItem={({item}) => (
+                <PromotionCard promo={item} width={PROMO_W} />
+              )}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={e => {
+                const idx = Math.round(
+                  e.nativeEvent.contentOffset.x / PROMO_W,
+                );
+                setPromoIndex(idx);
+              }}
+              style={s.promoList}
+            />
+            {promotions.length > 1 && (
+              <View style={s.promoDots}>
+                {promotions.map((_, i) => (
+                  <View
+                    key={i}
+                    style={[
+                      s.promoDot,
+                      i === promoIndex && s.promoDotActive,
+                    ]}
+                  />
+                ))}
+              </View>
+            )}
+          </>
+        )}
+
         {/* ── summary ────────────────────────────────── */}
         <Text style={s.sectionTitle}>Summary</Text>
         <View style={s.summaryRow}>
@@ -295,50 +339,6 @@ export default function HomeScreen({navigation}: any) {
           </Pressable>
         </View>
 
-        {/* ── promotions ─────────────────────────────── */}
-        {promotions.length > 0 && (
-          <>
-            <View style={s.promoHeaderRow}>
-              <Text style={s.sectionTitle}>Special Offers</Text>
-              {promotions.length > 1 && (
-                <Text style={s.promoCounter}>
-                  {promoIndex + 1} / {promotions.length}
-                </Text>
-              )}
-            </View>
-            <FlatList
-              data={promotions}
-              keyExtractor={item => String(item.id)}
-              renderItem={({item}) => (
-                <PromotionCard promo={item} width={PROMO_W} />
-              )}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              onMomentumScrollEnd={e => {
-                const idx = Math.round(
-                  e.nativeEvent.contentOffset.x / PROMO_W,
-                );
-                setPromoIndex(idx);
-              }}
-              style={s.promoList}
-            />
-            {promotions.length > 1 && (
-              <View style={s.promoDots}>
-                {promotions.map((_, i) => (
-                  <View
-                    key={i}
-                    style={[
-                      s.promoDot,
-                      i === promoIndex && s.promoDotActive,
-                    ]}
-                  />
-                ))}
-              </View>
-            )}
-          </>
-        )}
-
         {/* ── chatbot shortcut ───────────────────────── */}
         <Pressable
           onPress={() => navigation.navigate('Chatbot')}
@@ -350,36 +350,7 @@ export default function HomeScreen({navigation}: any) {
         </Pressable>
 
         {/* ── bottom nav row ─────────────────────────── */}
-        <View style={s.bottomNav}>
-          <Pressable style={[s.navItem, s.navItemActive]} onPress={() => {}}>
-            <Text style={s.navIconActive}>{'\ud83c\udfe0'}</Text>
-            <Text style={s.navLabelActive}>Home</Text>
-          </Pressable>
-          <Pressable
-            style={s.navItem}
-            onPress={() => navigation.navigate('QuotationList')}>
-            <Text style={s.navIcon}>{'\ud83d\udccb'}</Text>
-            <Text style={s.navLabel}>Quotation</Text>
-          </Pressable>
-          <Pressable
-            style={s.navItem}
-            onPress={() => navigation.navigate('ServicesHome')}>
-            <Text style={s.navIcon}>{'\u2699\ufe0f'}</Text>
-            <Text style={s.navLabel}>Services</Text>
-          </Pressable>
-          <Pressable
-            style={s.navItem}
-            onPress={() => navigation.navigate('TrackingHub')}>
-            <Text style={s.navIcon}>{'\ud83d\udccd'}</Text>
-            <Text style={s.navLabel}>Tracking</Text>
-          </Pressable>
-          <Pressable
-            style={s.navItem}
-            onPress={() => navigation.navigate('CustomerSettings')}>
-            <Text style={s.navIcon}>{'\ud83d\udc64'}</Text>
-            <Text style={s.navLabel}>Profile</Text>
-          </Pressable>
-        </View>
+        <CustomerBottomNav activeTab="Home" />
       </ScrollView>
     </SafeAreaView>
   );
@@ -577,29 +548,6 @@ const s = StyleSheet.create({
   },
   chatBtnIcon: {fontSize: 22},
 
-  /* bottom nav */
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: CARD,
-    borderRadius: 22,
-    paddingVertical: 8,
-    paddingHorizontal: 6,
-    borderWidth: 1,
-    borderColor: BORDER,
-    shadowColor: '#8a9bbd',
-    shadowOffset: {width: 0, height: -2},
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  navItem: {alignItems: 'center', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 16},
-  navItemActive: {backgroundColor: SOFT_YELLOW, borderWidth: 1, borderColor: 'rgba(244, 208, 0, 0.38)'},
-  navIcon: {fontSize: 20, marginBottom: 2},
-  navIconActive: {fontSize: 20, marginBottom: 2, color: CYAN},
-  navLabel: {fontSize: 11, color: MUTED, fontWeight: '600'},
-  navLabelActive: {fontSize: 11, color: NAVY, fontWeight: '700'},
-
   /* promotion cards */
   promoHeaderRow: {
     flexDirection: 'row',
@@ -665,7 +613,7 @@ const s = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: '#92400e',
-    backgroundColor: SOFT_YELLOW,
+    backgroundColor: '#FFF7CC',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import {ApiError} from '../src/services/api';
+import CustomerBottomNav from '../src/components/CustomerBottomNav';
 import {getQuotations} from '../src/services/quotationApi';
 import {formatQuotationCurrency} from '../src/utils/currency';
 
@@ -21,7 +22,6 @@ const GOLD = '#F4D000';
 const MUTED = '#5E7288';
 const BG = '#F8FAFC';
 const CARD = '#ffffff';
-const DIVIDER = '#DDE7EE';
 
 /* ── types ── */
 
@@ -378,28 +378,7 @@ export default function QuotationListScreen({navigation}: any) {
       </View>
 
       {/* ── bottom nav ── */}
-      <View style={s.bottomNav}>
-        <Pressable style={s.navItem} onPress={() => navigation.navigate('Home')}>
-          <Text style={s.navIcon}>{'\uD83C\uDFE0'}</Text>
-          <Text style={s.navLabel}>Home</Text>
-        </Pressable>
-        <Pressable style={s.navItem} onPress={() => navigation.navigate('QuotationList')}>
-          <Text style={s.navIconActive}>{'\uD83D\uDCCB'}</Text>
-          <Text style={s.navLabelActive}>Quotation</Text>
-        </Pressable>
-        <Pressable style={s.navItem} onPress={() => navigation.navigate('ServicesHome')}>
-          <Text style={s.navIcon}>{'\u2699\uFE0F'}</Text>
-          <Text style={s.navLabel}>Services</Text>
-        </Pressable>
-        <Pressable style={s.navItem} onPress={() => navigation.navigate('TrackingHub')}>
-          <Text style={s.navIcon}>{'\uD83D\uDCCD'}</Text>
-          <Text style={s.navLabel}>Tracking</Text>
-        </Pressable>
-        <Pressable style={s.navItem} onPress={() => navigation.navigate('CustomerSettings')}>
-          <Text style={s.navIcon}>{'\uD83D\uDC64'}</Text>
-          <Text style={s.navLabel}>Profile</Text>
-        </Pressable>
-      </View>
+      <CustomerBottomNav activeTab="Quotation" />
     </SafeAreaView>
   );
 }
@@ -643,18 +622,4 @@ const s = StyleSheet.create({
   /* loading */
   loadingText: {color: MUTED, fontSize: 14, marginTop: 12},
 
-  /* bottom nav */
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: CARD,
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: DIVIDER,
-  },
-  navItem: {alignItems: 'center', paddingHorizontal: 6},
-  navIcon: {fontSize: 20, marginBottom: 2},
-  navIconActive: {fontSize: 20, marginBottom: 2},
-  navLabel: {fontSize: 11, color: MUTED, fontWeight: '600'},
-  navLabelActive: {fontSize: 11, color: NAVY, fontWeight: '700'},
 });

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -74,6 +75,10 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $appends = [
+        'profile_picture_url',
+    ];
+
     /**
      * Get the attributes that should be cast.
      *
@@ -122,6 +127,15 @@ class User extends Authenticatable
     public function testimonies()
     {
         return $this->hasMany(Testimony::class);
+    }
+
+    public function getProfilePictureUrlAttribute(): ?string
+    {
+        if (! $this->profile_picture) {
+            return null;
+        }
+
+        return Storage::url($this->profile_picture);
     }
 
     /**

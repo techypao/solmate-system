@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 
+import CustomerBottomNav from '../src/components/CustomerBottomNav';
 import {ApiError, apiGet} from '../src/services/api';
 import {formatQuotationCurrency} from '../src/utils/currency';
 
@@ -50,7 +51,6 @@ const GOLD = '#F4D000';
 const MUTED = '#5E7288';
 const BG = '#F8FAFC';
 const CARD = '#ffffff';
-const R = 18;
 
 /* ── format helpers (preserved) ── */
 
@@ -277,28 +277,7 @@ export default function QuotationDetailScreen({route, navigation}: any) {
         <View style={s.spacer} />
 
         {/* ── bottom nav ── */}
-        <View style={s.bottomNav}>
-          <Pressable style={s.navItem} onPress={() => navigation.navigate('Home')}>
-            <Text style={s.navIcon}>{'\uD83C\uDFE0'}</Text>
-            <Text style={s.navLabel}>Home</Text>
-          </Pressable>
-          <Pressable style={s.navItem} onPress={() => navigation.navigate('QuotationList')}>
-            <Text style={s.navIconActive}>{'\uD83D\uDCCB'}</Text>
-            <Text style={s.navLabelActive}>Quotation</Text>
-          </Pressable>
-          <Pressable style={s.navItem} onPress={() => navigation.navigate('ServicesHome')}>
-            <Text style={s.navIcon}>{'\u2699\uFE0F'}</Text>
-            <Text style={s.navLabel}>Services</Text>
-          </Pressable>
-          <Pressable style={s.navItem} onPress={() => navigation.navigate('TrackingHub')}>
-            <Text style={s.navIcon}>{'\uD83D\uDCCD'}</Text>
-            <Text style={s.navLabel}>Tracking</Text>
-          </Pressable>
-          <Pressable style={s.navItem} onPress={() => navigation.navigate('CustomerSettings')}>
-            <Text style={s.navIcon}>{'\uD83D\uDC64'}</Text>
-            <Text style={s.navLabel}>Profile</Text>
-          </Pressable>
-        </View>
+        <CustomerBottomNav activeTab="Quotation" />
       </ScrollView>
     </SafeAreaView>
   );
@@ -429,16 +408,4 @@ const s = StyleSheet.create({
   errTitle: {color: NAVY, fontSize: 20, fontWeight: '700', marginBottom: 8, textAlign: 'center'},
   errText: {color: '#dc2626', fontSize: 14, lineHeight: 20, textAlign: 'center'},
 
-  /* bottom nav */
-  bottomNav: {
-    flexDirection: 'row', justifyContent: 'space-around',
-    backgroundColor: CARD, borderRadius: R, paddingVertical: 10,
-    shadowColor: '#8a9bbd', shadowOffset: {width: 0, height: -2},
-    shadowOpacity: 0.08, shadowRadius: 8, elevation: 4,
-  },
-  navItem: {alignItems: 'center', paddingHorizontal: 6},
-  navIcon: {fontSize: 20, marginBottom: 2},
-  navIconActive: {fontSize: 20, marginBottom: 2},
-  navLabel: {fontSize: 11, color: MUTED, fontWeight: '600'},
-  navLabelActive: {fontSize: 11, color: NAVY, fontWeight: '700'},
 });

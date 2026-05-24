@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Asset, launchImageLibrary } from 'react-native-image-picker';
 
 import { AuthContext } from '../src/context/AuthContext';
+import CustomerBottomNav from '../src/components/CustomerBottomNav';
 import {
   updateCustomerAccount,
   updateCustomerPassword,
@@ -569,40 +570,7 @@ export default function CustomerSettingsScreen() {
           </Pressable>
 
           {/* \u2500\u2500 bottom nav \u2500\u2500 */}
-          <View style={s.bottomNav}>
-            <Pressable
-              style={s.navItem}
-              onPress={() => navigation.navigate('Home')}
-            >
-              <Text style={s.navIcon}>{'\ud83c\udfe0'}</Text>
-              <Text style={s.navLabel}>Home</Text>
-            </Pressable>
-            <Pressable
-              style={s.navItem}
-              onPress={() => navigation.navigate('QuotationList')}
-            >
-              <Text style={s.navIcon}>{'\ud83d\udccb'}</Text>
-              <Text style={s.navLabel}>Quotation</Text>
-            </Pressable>
-            <Pressable
-              style={s.navItem}
-              onPress={() => navigation.navigate('ServicesHome')}
-            >
-              <Text style={s.navIcon}>{'\u2699\ufe0f'}</Text>
-              <Text style={s.navLabel}>Services</Text>
-            </Pressable>
-            <Pressable
-              style={s.navItem}
-              onPress={() => navigation.navigate('TrackingHub')}
-            >
-              <Text style={s.navIcon}>{'\ud83d\udccd'}</Text>
-              <Text style={s.navLabel}>Tracking</Text>
-            </Pressable>
-            <Pressable style={s.navItem} onPress={() => {}}>
-              <Text style={s.navIconActive}>{'\ud83d\udc64'}</Text>
-              <Text style={s.navLabelActive}>Profile</Text>
-            </Pressable>
-          </View>
+          <CustomerBottomNav activeTab="Profile" />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -834,22 +802,4 @@ const s = StyleSheet.create({
   },
   chatFabIcon: { fontSize: 22 },
 
-  /* bottom nav */
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: CARD,
-    borderRadius: 18,
-    paddingVertical: 10,
-    shadowColor: '#8a9bbd',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  navItem: { alignItems: 'center', paddingHorizontal: 6 },
-  navIcon: { fontSize: 20, marginBottom: 2 },
-  navIconActive: { fontSize: 20, marginBottom: 2 },
-  navLabel: { fontSize: 11, color: MUTED, fontWeight: '600' },
-  navLabelActive: { fontSize: 11, color: NAVY, fontWeight: '700' },
 });

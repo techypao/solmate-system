@@ -306,7 +306,7 @@ class TestimonyController extends Controller
     private function relationships(): array
     {
         return [
-            'user:id,name',
+            'user:id,name,profile_picture',
             'serviceRequest:id,user_id,technician_id,request_type,status,date_needed',
             'inspectionRequest:id,user_id,technician_id,status,date_needed',
             'images',

@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 
 import { MapLocationPickerModal, PreferredDateCalendar } from '../components';
+import CustomerBottomNav from '../src/components/CustomerBottomNav';
 import { AuthContext } from '../src/context/AuthContext';
 import { ApiError } from '../src/services/api';
 import { getUnavailablePreferredDates } from '../src/services/preferredDateAvailabilityApi';
@@ -826,43 +827,7 @@ export default function InstallationRequestScreen({ navigation }: any) {
             </Pressable>
           </View>
 
-          <View style={styles.bottomNav}>
-            <Pressable
-              style={styles.navItem}
-              onPress={() => navigation.navigate('Home')}
-            >
-              <Text style={styles.navIcon}>{'🏠'}</Text>
-              <Text style={styles.navLabel}>Home</Text>
-            </Pressable>
-            <Pressable
-              style={styles.navItem}
-              onPress={() => navigation.navigate('QuotationList')}
-            >
-              <Text style={styles.navIcon}>{'📋'}</Text>
-              <Text style={styles.navLabel}>Quotation</Text>
-            </Pressable>
-            <Pressable
-              style={styles.navItem}
-              onPress={() => navigation.navigate('ServicesHome')}
-            >
-              <Text style={styles.navIconActive}>{'⚙️'}</Text>
-              <Text style={styles.navLabelActive}>Services</Text>
-            </Pressable>
-            <Pressable
-              style={styles.navItem}
-              onPress={() => navigation.navigate('TrackingHub')}
-            >
-              <Text style={styles.navIcon}>{'📍'}</Text>
-              <Text style={styles.navLabel}>Tracking</Text>
-            </Pressable>
-            <Pressable
-              style={styles.navItem}
-              onPress={() => navigation.navigate('CustomerSettings')}
-            >
-              <Text style={styles.navIcon}>{'👤'}</Text>
-              <Text style={styles.navLabel}>Profile</Text>
-            </Pressable>
-          </View>
+          <CustomerBottomNav activeTab="Services" />
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -1137,22 +1102,4 @@ const styles = StyleSheet.create({
   },
   secondaryBtnText: { fontSize: 14, fontWeight: '700', color: NAVY },
 
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: CARD,
-    borderRadius: 18,
-    paddingVertical: 12,
-    marginTop: 8,
-    shadowColor: '#8a9bbd',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  navItem: { alignItems: 'center' },
-  navIcon: { fontSize: 18, color: MUTED, marginBottom: 4 },
-  navIconActive: { fontSize: 18, color: NAVY, marginBottom: 4 },
-  navLabel: { fontSize: 12, color: MUTED, fontWeight: '600' },
-  navLabelActive: { fontSize: 12, color: NAVY, fontWeight: '800' },
 });

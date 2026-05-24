@@ -8,13 +8,14 @@ import {
   View,
 } from 'react-native';
 
+import CustomerBottomNav from '../src/components/CustomerBottomNav';
+
 /* ── design tokens ── */
 const NAVY = '#123A5A';
 const GOLD = '#F4D000';
 const MUTED = '#5E7288';
 const BG = '#F8FAFC';
 const CARD = '#ffffff';
-const DIVIDER = '#DDE7EE';
 
 /* ── tracking categories ── */
 const CATEGORIES = [
@@ -93,37 +94,7 @@ export default function TrackingHubScreen({navigation}: any) {
         ))}
       </ScrollView>
 
-      {/* ── bottom nav ── */}
-      <View style={s.bottomNav}>
-        <Pressable
-          style={s.navItem}
-          onPress={() => navigation.navigate('Home')}>
-          <Text style={s.navIcon}>🏠</Text>
-          <Text style={s.navLabel}>Home</Text>
-        </Pressable>
-        <Pressable
-          style={s.navItem}
-          onPress={() => navigation.navigate('QuotationList')}>
-          <Text style={s.navIcon}>📋</Text>
-          <Text style={s.navLabel}>Quotation</Text>
-        </Pressable>
-        <Pressable
-          style={s.navItem}
-          onPress={() => navigation.navigate('ServicesHome')}>
-          <Text style={s.navIcon}>⚙️</Text>
-          <Text style={s.navLabel}>Services</Text>
-        </Pressable>
-        <Pressable style={s.navItem} onPress={() => {}}>
-          <Text style={s.navIconActive}>📍</Text>
-          <Text style={s.navLabelActive}>Tracking</Text>
-        </Pressable>
-        <Pressable
-          style={s.navItem}
-          onPress={() => navigation.navigate('CustomerSettings')}>
-          <Text style={s.navIcon}>👤</Text>
-          <Text style={s.navLabel}>Profile</Text>
-        </Pressable>
-      </View>
+      <CustomerBottomNav activeTab="Tracking" />
     </SafeAreaView>
   );
 }
@@ -184,21 +155,6 @@ const s = StyleSheet.create({
   cardTitle: {fontSize: 16, fontWeight: '800', color: NAVY, marginBottom: 4},
   cardSub: {fontSize: 13, color: MUTED, lineHeight: 18},
   chevron: {fontSize: 24, color: GOLD, fontWeight: '700'},
-
-  /* bottom nav */
-  bottomNav: {
-    flexDirection: 'row',
-    backgroundColor: CARD,
-    borderTopWidth: 1,
-    borderTopColor: DIVIDER,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-  },
-  navItem: {flex: 1, alignItems: 'center', gap: 3},
-  navIcon: {fontSize: 22},
-  navLabel: {fontSize: 10, color: MUTED, fontWeight: '600'},
-  navIconActive: {fontSize: 22},
-  navLabelActive: {fontSize: 10, color: GOLD, fontWeight: '800'},
 
   /* misc */
   pressed: {opacity: 0.75},

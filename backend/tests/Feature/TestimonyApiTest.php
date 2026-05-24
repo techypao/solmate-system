@@ -19,12 +19,14 @@ class TestimonyApiTest extends TestCase
     public function test_customer_can_submit_testimony_for_completed_service_request_and_public_endpoint_only_returns_approved_items(): void
     {
         Storage::fake(TestimonyImage::PUBLIC_DISK);
+        Storage::disk(TestimonyImage::PUBLIC_DISK)->put('profile_pictures/customer-user.png', 'avatar');
 
         $customer = User::query()->create([
             'name' => 'Customer User',
             'email' => 'customer_testimony_create@example.com',
             'password' => 'password123',
             'role' => User::ROLE_CUSTOMER,
+            'profile_picture' => 'profile_pictures/customer-user.png',
         ]);
 
         $admin = User::query()->create([
@@ -97,7 +99,11 @@ class TestimonyApiTest extends TestCase
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.id', $pendingTestimonyId)
             ->assertJsonPath('data.0.status', Testimony::STATUS_APPROVED)
-            ->assertJsonPath('data.0.user.name', 'Customer User');
+            ->assertJsonPath('data.0.user.name', 'Customer User')
+            ->assertJsonPath(
+                'data.0.user.profile_picture_url',
+                Storage::url('profile_pictures/customer-user.png')
+            );
     }
 
     public function test_testimony_creation_is_restricted_to_customers_with_their_own_completed_requests(): void

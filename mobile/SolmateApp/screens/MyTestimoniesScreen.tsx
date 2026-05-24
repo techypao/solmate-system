@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 
+import CustomerBottomNav from '../src/components/CustomerBottomNav';
 import {ApiError} from '../src/services/api';
 import {
   deleteTestimony,
@@ -294,6 +295,7 @@ export default function MyTestimoniesScreen({navigation}: any) {
           <ActivityIndicator color={GOLD} size="large" />
           <Text style={s.loadingText}>Loading your testimonies\u2026</Text>
         </View>
+        <CustomerBottomNav activeTab="Home" />
       </SafeAreaView>
     );
   }
@@ -384,6 +386,9 @@ export default function MyTestimoniesScreen({navigation}: any) {
           ) : null
         }
       />
+      <View style={s.bottomNavWrap}>
+        <CustomerBottomNav activeTab="Home" />
+      </View>
     </SafeAreaView>
   );
 }
@@ -405,6 +410,7 @@ const s = StyleSheet.create({
 
   /* list */
   listContent: {paddingHorizontal: 22, paddingTop: 20, paddingBottom: 30},
+  bottomNavWrap: {paddingHorizontal: 22, paddingBottom: 20},
 
   /* brand */
   brand: {fontSize: 22, fontWeight: '800', color: NAVY, marginBottom: 10},

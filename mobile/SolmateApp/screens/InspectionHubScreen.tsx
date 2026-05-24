@@ -8,6 +8,8 @@ import {
   View,
 } from 'react-native';
 
+import CustomerBottomNav from '../src/components/CustomerBottomNav';
+
 const NAVY = '#123A5A';
 const GOLD = '#F4D000';
 const MUTED = '#5E7288';
@@ -93,36 +95,7 @@ export default function InspectionHubScreen({navigation}: any) {
       </ScrollView>
 
       <View style={styles.bottomNavShell}>
-        <View style={styles.bottomNav}>
-          <Pressable
-            style={styles.navItem}
-            onPress={() => navigation.navigate('Home')}>
-            <Text style={styles.navIcon}>{'🏠'}</Text>
-            <Text style={styles.navLabel}>Home</Text>
-          </Pressable>
-          <Pressable
-            style={styles.navItem}
-            onPress={() => navigation.navigate('QuotationList')}>
-            <Text style={styles.navIcon}>{'📋'}</Text>
-            <Text style={styles.navLabel}>Quotation</Text>
-          </Pressable>
-          <Pressable
-            style={styles.navItem}
-            onPress={() => navigation.navigate('ServicesHome')}>
-            <Text style={styles.navIcon}>{'⚙️'}</Text>
-            <Text style={styles.navLabel}>Services</Text>
-          </Pressable>
-          <Pressable style={styles.navItem} onPress={() => {}}>
-            <Text style={styles.navIconActive}>{'📍'}</Text>
-            <Text style={styles.navLabelActive}>Tracking</Text>
-          </Pressable>
-          <Pressable
-            style={styles.navItem}
-            onPress={() => navigation.navigate('CustomerSettings')}>
-            <Text style={styles.navIcon}>{'👤'}</Text>
-            <Text style={styles.navLabel}>Profile</Text>
-          </Pressable>
-        </View>
+        <CustomerBottomNav activeTab="Tracking" />
       </View>
     </SafeAreaView>
   );
@@ -213,21 +186,4 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 16,
   },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: CARD,
-    borderRadius: 18,
-    paddingVertical: 12,
-    shadowColor: '#8a9bbd',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  navItem: {alignItems: 'center'},
-  navIcon: {fontSize: 18, color: MUTED, marginBottom: 4},
-  navIconActive: {fontSize: 18, color: NAVY, marginBottom: 4},
-  navLabel: {fontSize: 12, color: MUTED, fontWeight: '600'},
-  navLabelActive: {fontSize: 12, color: NAVY, fontWeight: '800'},
 });

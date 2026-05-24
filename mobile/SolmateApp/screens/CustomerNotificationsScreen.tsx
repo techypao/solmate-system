@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 
+import CustomerBottomNav from '../src/components/CustomerBottomNav';
 import {ApiError} from '../src/services/api';
 import {
   AppNotification,
@@ -409,6 +410,9 @@ export default function CustomerNotificationsScreen({navigation}: any) {
           <ActivityIndicator color={GOLD} size="large" />
           <Text style={s.loadingText}>Loading notifications\u2026</Text>
         </View>
+        <View style={s.bottomNavWrap}>
+          <CustomerBottomNav activeTab="Home" />
+        </View>
       </SafeAreaView>
     );
   }
@@ -523,6 +527,9 @@ export default function CustomerNotificationsScreen({navigation}: any) {
           }
         />
       )}
+      <View style={s.bottomNavWrap}>
+        <CustomerBottomNav activeTab="Home" />
+      </View>
     </SafeAreaView>
   );
 }
@@ -556,6 +563,10 @@ const s = StyleSheet.create({
     marginTop: 14,
     color: MUTED,
     fontSize: 14,
+  },
+  bottomNavWrap: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
 
   /* top row / back button */

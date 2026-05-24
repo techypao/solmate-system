@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 
+import CustomerBottomNav from '../src/components/CustomerBottomNav';
 import {ApiError} from '../src/services/api';
 import {
   getServiceRequests,
@@ -423,29 +424,7 @@ export default function ServiceRequestListScreen({navigation, route}: any) {
         />
       )}
 
-      {/* ── bottom nav ── */}
-      <View style={s.bottomNav}>
-        <Pressable style={s.navItem} onPress={() => navigation.navigate('Home')}>
-          <Text style={s.navIcon}>{'\uD83C\uDFE0'}</Text>
-          <Text style={s.navLabel}>Home</Text>
-        </Pressable>
-        <Pressable style={s.navItem} onPress={() => navigation.navigate('QuotationList')}>
-          <Text style={s.navIcon}>{'\uD83D\uDCCB'}</Text>
-          <Text style={s.navLabel}>Quotation</Text>
-        </Pressable>
-        <Pressable style={s.navItem} onPress={() => navigation.navigate('ServicesHome')}>
-          <Text style={s.navIconActive}>{'\u2699\uFE0F'}</Text>
-          <Text style={s.navLabelActive}>Services</Text>
-        </Pressable>
-        <Pressable style={s.navItem} onPress={() => navigation.navigate('TrackingHub')}>
-          <Text style={s.navIcon}>{'\uD83D\uDCCD'}</Text>
-          <Text style={s.navLabel}>Tracking</Text>
-        </Pressable>
-        <Pressable style={s.navItem} onPress={() => navigation.navigate('CustomerSettings')}>
-          <Text style={s.navIcon}>{'\uD83D\uDC64'}</Text>
-          <Text style={s.navLabel}>Profile</Text>
-        </Pressable>
-      </View>
+      <CustomerBottomNav activeTab="Services" />
     </SafeAreaView>
   );
 }
@@ -725,24 +704,4 @@ const s = StyleSheet.create({
     color: NAVY,
   },
 
-  /* ── bottom nav ── */
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: CARD,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    paddingVertical: 10,
-    paddingBottom: 14,
-    shadowColor: '#8a9bbd',
-    shadowOffset: {width: 0, height: -2},
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  navItem: {alignItems: 'center', paddingHorizontal: 6},
-  navIcon: {fontSize: 20, marginBottom: 2},
-  navIconActive: {fontSize: 20, marginBottom: 2},
-  navLabel: {fontSize: 11, color: MUTED, fontWeight: '600'},
-  navLabelActive: {fontSize: 11, color: NAVY, fontWeight: '700'},
 });

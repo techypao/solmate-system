@@ -281,6 +281,60 @@
             min-width: 0;
         }
 
+        .public-review-customer-wrap {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .public-review-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 999px;
+            border: 1px solid #DDE7EE;
+            background: linear-gradient(135deg, #EAF9FD 0%, #FFF4C2 100%);
+            color: #123A5A;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+        }
+
+        .public-review-avatar.has-image {
+            background: #EAF0FB;
+        }
+
+        .public-review-avatar-image {
+            display: none;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .public-review-avatar.has-image .public-review-avatar-image {
+            display: block;
+        }
+
+        .public-review-avatar.has-image .public-review-avatar-fallback {
+            display: none;
+        }
+
+        .public-review-avatar-fallback {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
         .public-review-customer-name {
             margin: 0 0 4px;
             color: #123A5A;
@@ -447,6 +501,11 @@
             .public-review-card {
                 padding: 18px;
             }
+
+            .public-review-avatar {
+                width: 40px;
+                height: 40px;
+            }
         }
     </style>
 
@@ -570,6 +629,42 @@
             return testimony?.user?.name || 'Anonymous customer';
         }
 
+        function getCustomerInitials(testimony) {
+            const name = getCustomerName(testimony).trim();
+            if (!name) {
+                return 'AC';
+            }
+
+            const parts = name.split(/\s+/).filter(Boolean);
+            return parts
+                .slice(0, 2)
+                .map((part) => part.charAt(0))
+                .join('')
+                .toUpperCase() || 'AC';
+        }
+
+        function getCustomerProfileImageUrl(testimony) {
+            return testimony?.user?.profile_picture_url
+                || testimony?.user?.avatar
+                || testimony?.user?.profileImage
+                || testimony?.user?.photo_url
+                || testimony?.user?.photoUrl
+                || null;
+        }
+
+        function getCustomerAvatarMarkup(testimony) {
+            const customerName = getCustomerName(testimony);
+            const avatarUrl = getCustomerProfileImageUrl(testimony);
+            const initials = getCustomerInitials(testimony);
+
+            return `
+                <div class="public-review-avatar${avatarUrl ? ' has-image' : ''}" aria-hidden="true">
+                    ${avatarUrl ? `<img class="public-review-avatar-image" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(customerName)} profile picture" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ''}
+                    <span class="public-review-avatar-fallback">${escapeHtml(initials)}</span>
+                </div>
+            `;
+        }
+
         function getDisplayDate(testimony) {
             return testimony?.created_at || testimony?.updated_at || null;
         }
@@ -679,9 +774,12 @@
                 return `
                     <article class="public-review-card">
                         <div class="public-review-card-top">
-                            <div class="public-review-customer">
-                                <h2 class="public-review-customer-name">${escapeHtml(getCustomerName(testimony))}</h2>
-                                <p class="public-review-customer-meta">Submitted ${escapeHtml(formatDate(getDisplayDate(testimony)))}</p>
+                            <div class="public-review-customer-wrap">
+                                ${getCustomerAvatarMarkup(testimony)}
+                                <div class="public-review-customer">
+                                    <h2 class="public-review-customer-name">${escapeHtml(getCustomerName(testimony))}</h2>
+                                    <p class="public-review-customer-meta">Submitted ${escapeHtml(formatDate(getDisplayDate(testimony)))}</p>
+                                </div>
                             </div>
                             ${getRatingMarkup(testimony.rating)}
                         </div>
@@ -692,6 +790,17 @@
                     </article>
                 `;
             }).join('');
+
+            listContainer.querySelectorAll('.public-review-avatar-image').forEach((image) => {
+                image.addEventListener('error', () => {
+                    const avatar = image.closest('.public-review-avatar');
+                    if (avatar) {
+                        avatar.classList.remove('has-image');
+                    }
+
+                    image.removeAttribute('src');
+                }, {once: true});
+            });
 
             setVisible(emptyState, false);
             setVisible(listContainer, true, 'grid');
