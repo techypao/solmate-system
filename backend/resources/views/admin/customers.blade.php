@@ -45,7 +45,7 @@
                             <div class="muted">{{ $customer->email }}</div>
                         </div>
                         <div class="muted" style="font-size: 13px; white-space: nowrap;">
-                            Joined {{ $customer->created_at->format('M d, Y') }}
+                            Last activity {{ optional($customer->last_login_at ?? $customer->created_at)->format('M d, Y') }}
                         </div>
                         <span class="badge badge-neutral">Customer</span>
                         <div style="display:flex; gap:8px; flex-shrink:0;">
@@ -107,6 +107,18 @@
                         </div>
                         <span class="badge" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;">Archived</span>
                         <div style="display:flex; gap:8px; flex-shrink:0;">
+                            <form method="POST"
+                                  action="{{ route('admin.customers.restore', $customer) }}"
+                                  onsubmit="return confirm('Restore customer {{ addslashes($customer->name) }}? Their login access will be re-enabled.')">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit"
+                                        class="button-link secondary"
+                                        style="padding:6px 14px; font-size:13px; border-color:#86efac; color:#166534;">
+                                    Restore
+                                </button>
+                            </form>
+
                             <form method="POST"
                                   action="{{ route('admin.customers.destroy', $customer) }}"
                                   onsubmit="return confirm('Delete archived customer {{ addslashes($customer->name) }} permanently? This action cannot be undone.')">

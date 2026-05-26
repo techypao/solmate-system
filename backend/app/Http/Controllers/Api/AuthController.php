@@ -71,9 +71,11 @@ class AuthController extends Controller
 
         if ($user->isArchivedCustomer()) {
             return response()->json([
-                'message' => 'This customer account has been archived. Please contact support for assistance.',
+                'message' => User::archivedAccountMessage(),
             ], 403);
         }
+
+        $user->markLoginRecorded();
 
         $token = $user->createToken('auth_token')->plainTextToken;
 

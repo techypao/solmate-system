@@ -249,10 +249,27 @@ class WebAuthPagesTest extends TestCase
             ])
             ->assertRedirect('/login')
             ->assertSessionHasErrors([
-                'email' => 'This customer account has been archived. Please contact support for assistance.',
+                'email' => User::archivedAccountMessage(),
             ]);
 
         $this->assertGuest();
+    }
+
+    public function test_customer_web_login_records_last_login_at(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Web Login Customer',
+            'email' => 'web_login_customer@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        $this->post('/login', [
+            'email' => $customer->email,
+            'password' => 'password123',
+        ])->assertRedirect(route('home'));
+
+        $this->assertNotNull($customer->fresh()->last_login_at);
     }
 
     public function test_authenticated_user_can_log_out_and_is_redirected_with_success_flash(): void

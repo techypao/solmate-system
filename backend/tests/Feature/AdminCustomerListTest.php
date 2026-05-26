@@ -111,4 +111,38 @@ class AdminCustomerListTest extends TestCase
         $this->assertSame([], $activeCustomers->pluck('name')->all());
         $this->assertSame(['Archive Me Customer'], $archivedCustomers->pluck('name')->all());
     }
+
+    public function test_admin_can_restore_archived_customer(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_restore_customer@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $customer = User::query()->create([
+            'name' => 'Restore Me Customer',
+            'email' => 'restore_me_customer@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+            'is_archived' => true,
+            'archived_at' => now()->subDay(),
+        ]);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.customers.restore', $customer))
+            ->assertRedirect(route('admin.customers'))
+            ->assertSessionHas('status', 'Customer "Restore Me Customer" was restored successfully.');
+
+        $restoredCustomer = $customer->fresh();
+
+        $this->assertFalse($restoredCustomer->isArchivedCustomer());
+        $this->assertNull($restoredCustomer->archived_at);
+        $this->assertNotNull($restoredCustomer->last_login_at);
+        $this->assertDatabaseHas('customer_archive_audits', [
+            'user_id' => $customer->id,
+            'action' => 'restored',
+        ]);
+    }
 }

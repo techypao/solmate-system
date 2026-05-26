@@ -91,13 +91,31 @@ class AdminCustomerController extends Controller
         abort_unless($customer->role === User::ROLE_CUSTOMER, 404);
 
         if ($customer->archived_at === null) {
-            $customer->forceFill([
-                'archived_at' => now(),
-            ])->save();
+            $customer->archiveAccount(
+                performedByUserId: $request->user()?->id,
+                reason: 'manual_archive',
+            );
         }
 
         return redirect()
             ->route('admin.customers')
             ->with('status', "Customer \"{$customer->name}\" was archived successfully.");
+    }
+
+    public function restore(Request $request, User $customer)
+    {
+        abort_unless($request->user()?->role === User::ROLE_ADMIN, 403);
+        abort_unless($customer->role === User::ROLE_CUSTOMER, 404);
+
+        if ($customer->isArchivedCustomer()) {
+            $customer->restoreArchivedAccount(
+                performedByUserId: $request->user()?->id,
+                reason: 'manual_restore',
+            );
+        }
+
+        return redirect()
+            ->route('admin.customers')
+            ->with('status', "Customer \"{$customer->name}\" was restored successfully.");
     }
 }

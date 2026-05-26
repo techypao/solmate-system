@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -24,7 +24,7 @@ type LoginResponse = {
 };
 
 export default function LoginScreen({ navigation }: LoginScreenProps) {
-  const { login } = useContext(AuthContext);
+  const { login, authErrorMessage, clearAuthError } = useContext(AuthContext);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,6 +32,12 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberSession, setRememberSession] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (authErrorMessage) {
+      setErrorMessage(authErrorMessage);
+    }
+  }, [authErrorMessage]);
 
   const handleLogin = async () => {
     if (submitting) {
@@ -43,6 +49,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       return;
     }
 
+    clearAuthError();
     setErrorMessage('');
 
     const loginData = {
@@ -104,6 +111,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             keyboardType="email-address"
             onChangeText={value => {
               setEmail(value);
+              clearAuthError();
               if (errorMessage) {
                 setErrorMessage('');
               }
@@ -118,6 +126,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             <TextInput
               onChangeText={value => {
                 setPassword(value);
+                clearAuthError();
                 if (errorMessage) {
                   setErrorMessage('');
                 }

@@ -74,12 +74,13 @@ class AuthController extends Controller
 
             return back()
                 ->withErrors([
-                    'email' => 'This customer account has been archived. Please contact support for assistance.',
+                    'email' => User::archivedAccountMessage(),
                 ])
                 ->onlyInput('email');
         }
 
         $request->session()->regenerate();
+        $request->user()?->markLoginRecorded();
 
         return redirect($this->redirectPath($request->user()))
             ->with('login_success', 'Logged in successfully.');

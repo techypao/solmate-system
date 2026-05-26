@@ -7,6 +7,7 @@ use App\Models\ServiceRequest;
 use App\Models\Testimony;
 use App\Models\TestimonyImage;
 use App\Models\User;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -262,7 +263,7 @@ class TestimonyApiTest extends TestCase
         ]);
     }
 
-    public function test_admin_can_list_approve_reject_update_and_delete_testimonies(): void
+    public function test_admin_can_list_approve_reject_and_delete_testimonies_but_cannot_edit(): void
     {
         Storage::fake(TestimonyImage::PUBLIC_DISK);
 
@@ -326,10 +327,18 @@ class TestimonyApiTest extends TestCase
                 'status' => Testimony::STATUS_APPROVED,
                 'admin_note' => 'Approved after admin edit.',
             ])
-            ->assertOk()
-            ->assertJsonPath('data.rating', 4)
-            ->assertJsonPath('data.status', Testimony::STATUS_APPROVED)
-            ->assertJsonPath('data.admin_note', 'Approved after admin edit.');
+            ->assertForbidden()
+            ->assertJson([
+                'message' => 'Admins are not allowed to edit testimonies.',
+            ]);
+
+        $testimony->refresh();
+
+        $this->assertSame(5, $testimony->rating);
+        $this->assertSame('Needs review', $testimony->title);
+        $this->assertSame('Pending admin review.', $testimony->message);
+        $this->assertSame(Testimony::STATUS_REJECTED, $testimony->status);
+        $this->assertSame('Please revise the wording.', $testimony->admin_note);
 
         $this->actingAs($admin)
             ->deleteJson("/api/admin/testimonies/{$testimony->id}")
@@ -343,6 +352,8 @@ class TestimonyApiTest extends TestCase
     public function test_customer_can_create_and_update_testimony_images_and_public_and_admin_responses_include_them(): void
     {
         Storage::fake(TestimonyImage::PUBLIC_DISK);
+        /** @var FilesystemAdapter $publicDisk */
+        $publicDisk = Storage::disk(TestimonyImage::PUBLIC_DISK);
 
         $admin = User::query()->create([
             'name' => 'Admin User',
@@ -392,8 +403,8 @@ class TestimonyApiTest extends TestCase
             $adminNotifications->first()->data['message']
         );
 
-        Storage::disk(TestimonyImage::PUBLIC_DISK)->assertExists($firstImagePath);
-        Storage::disk(TestimonyImage::PUBLIC_DISK)->assertExists($secondImagePath);
+        $publicDisk->assertExists($firstImagePath);
+        $publicDisk->assertExists($secondImagePath);
 
         $updateResponse = $this->actingAs($customer)
             ->post("/api/testimonies/{$testimonyId}", [
@@ -410,7 +421,7 @@ class TestimonyApiTest extends TestCase
             ->assertOk()
             ->assertJsonCount(2, 'data.images');
 
-        Storage::disk(TestimonyImage::PUBLIC_DISK)->assertMissing($firstImagePath);
+        $publicDisk->assertMissing($firstImagePath);
 
         $remainingPaths = collect($updateResponse->json('data.images'))->pluck('image_path')->all();
         $this->assertContains($secondImagePath, $remainingPaths);
@@ -435,6 +446,8 @@ class TestimonyApiTest extends TestCase
     public function test_testimony_image_validation_limits_and_cleanup_on_delete_work(): void
     {
         Storage::fake(TestimonyImage::PUBLIC_DISK);
+        /** @var FilesystemAdapter $publicDisk */
+        $publicDisk = Storage::disk(TestimonyImage::PUBLIC_DISK);
 
         $customer = User::query()->create([
             'name' => 'Customer User',
@@ -493,13 +506,13 @@ class TestimonyApiTest extends TestCase
         $testimonyId = $createResponse->json('data.id');
         $imagePath = $createResponse->json('data.images.0.image_path');
 
-        Storage::disk(TestimonyImage::PUBLIC_DISK)->assertExists($imagePath);
+        $publicDisk->assertExists($imagePath);
 
         $this->actingAs($customer)
             ->deleteJson("/api/testimonies/{$testimonyId}")
             ->assertOk();
 
-        Storage::disk(TestimonyImage::PUBLIC_DISK)->assertMissing($imagePath);
+        $publicDisk->assertMissing($imagePath);
         $this->assertDatabaseMissing('testimony_images', [
             'testimony_id' => $testimonyId,
         ]);

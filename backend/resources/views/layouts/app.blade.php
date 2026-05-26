@@ -1871,6 +1871,14 @@
                     <span id="admin-notification-badge" class="admin-sidebar-link-badge" style="display:none;">0</span>
                 </a>
 
+                <a href="{{ route('admin.chat') }}"
+                   class="admin-sidebar-link {{ request()->routeIs('admin.chat') ? 'active' : '' }}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    Support Chat
+                </a>
+
                 {{-- Reports --}}
                 <a href="{{ route('admin.reports') }}"
                    class="admin-sidebar-link {{ request()->routeIs('admin.reports') ? 'active' : '' }}">
@@ -2151,6 +2159,8 @@
                         </div>{{-- /.solmate-services-wrapper --}}
                         <a href="{{ route('customer.tracking') }}"
                            class="solmate-nav-link {{ request()->routeIs('customer.tracking') ? 'active' : '' }}">Tracking</a>
+                                <a href="{{ route('customer.chat') }}"
+                                    class="solmate-nav-link {{ request()->routeIs('customer.chat') ? 'active' : '' }}">Chat</a>
                                 <a href="{{ route('customer.mobile-app') }}"
                                     class="solmate-nav-link {{ request()->routeIs('customer.mobile-app') ? 'active' : '' }}">Download App</a>
                         <a href="{{ route('customer.testimonies') }}"

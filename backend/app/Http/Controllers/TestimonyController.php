@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\AdminModerateTestimonyRequest;
-use App\Http\Requests\AdminUpdateTestimonyRequest;
 use App\Http\Requests\StoreTestimonyRequest;
 use App\Http\Requests\UpdateTestimonyRequest;
 use App\Models\InspectionRequest;
@@ -90,7 +89,7 @@ class TestimonyController extends Controller
         ], 201);
     }
 
-    public function update(UpdateTestimonyRequest $request, $id): JsonResponse
+    public function update(UpdateTestimonyRequest $request, int $id): JsonResponse
     {
         $testimony = $this->findCustomerTestimony($request->user()->id, $id);
 
@@ -154,7 +153,7 @@ class TestimonyController extends Controller
         ], 200);
     }
 
-    public function destroy(Request $request, $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
         $testimony = $this->findCustomerTestimony($request->user()->id, $id);
 
@@ -183,7 +182,7 @@ class TestimonyController extends Controller
         ], 200);
     }
 
-    public function approve(AdminModerateTestimonyRequest $request, $id): JsonResponse
+    public function approve(AdminModerateTestimonyRequest $request, int $id): JsonResponse
     {
         $testimony = $this->findTestimony($id);
 
@@ -205,7 +204,7 @@ class TestimonyController extends Controller
         ], 200);
     }
 
-    public function reject(AdminModerateTestimonyRequest $request, $id): JsonResponse
+    public function reject(AdminModerateTestimonyRequest $request, int $id): JsonResponse
     {
         $testimony = $this->findTestimony($id);
 
@@ -227,61 +226,14 @@ class TestimonyController extends Controller
         ], 200);
     }
 
-    public function adminUpdate(AdminUpdateTestimonyRequest $request, $id): JsonResponse
+    public function adminUpdate(Request $request, int $id): JsonResponse
     {
-        $testimony = $this->findTestimony($id);
-
-        if (! $testimony) {
-            return response()->json([
-                'message' => 'Testimony not found.',
-            ], 404);
-        }
-
-        $validated = $request->validated();
-        $serviceRequestId = array_key_exists('service_request_id', $validated)
-            ? $validated['service_request_id']
-            : $testimony->service_request_id;
-        $inspectionRequestId = array_key_exists('inspection_request_id', $validated)
-            ? $validated['inspection_request_id']
-            : $testimony->inspection_request_id;
-
-        $eligibilityError = $this->validateLinkedRequests(
-            $testimony->user_id,
-            $serviceRequestId,
-            $inspectionRequestId,
-        );
-
-        if ($eligibilityError) {
-            return $eligibilityError;
-        }
-
-        $testimony->rating = $validated['rating'];
-        $testimony->message = $validated['message'];
-        $testimony->service_request_id = $serviceRequestId;
-        $testimony->inspection_request_id = $inspectionRequestId;
-
-        if (array_key_exists('title', $validated)) {
-            $testimony->title = $validated['title'];
-        }
-
-        if (array_key_exists('status', $validated)) {
-            $testimony->status = $validated['status'];
-        }
-
-        if (array_key_exists('admin_note', $validated)) {
-            $testimony->admin_note = $validated['admin_note'];
-        }
-
-        $testimony->save();
-        $testimony->load($this->relationships());
-
         return response()->json([
-            'message' => 'Testimony updated successfully.',
-            'data' => $testimony,
-        ], 200);
+            'message' => 'Admins are not allowed to edit testimonies.',
+        ], 403);
     }
 
-    public function adminDestroy($id): JsonResponse
+    public function adminDestroy(int $id): JsonResponse
     {
         $testimony = $this->findTestimony($id);
 

@@ -19,10 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             \App\Http\Middleware\CheckSessionTimeout::class,
+            \App\Http\Middleware\EnsureUserIsNotArchived::class,
         ]);
 
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'active.user' => \App\Http\Middleware\EnsureUserIsNotArchived::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

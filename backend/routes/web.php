@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminCustomerController;
+use App\Http\Controllers\Admin\ChatConversationPageController;
 use App\Http\Controllers\Admin\ContactMessagePageController;
 use App\Http\Controllers\Admin\NewsArticlePageController;
 use App\Http\Controllers\Admin\PromotionPageController;
@@ -115,6 +116,9 @@ Route::middleware('auth')->group(function () {
         Route::patch('/admin/customers/{customer}/archive', [AdminCustomerController::class, 'archive'])
             ->name('admin.customers.archive');
 
+        Route::patch('/admin/customers/{customer}/restore', [AdminCustomerController::class, 'restore'])
+            ->name('admin.customers.restore');
+
         Route::delete('/admin/customers/{customer}', [AdminCustomerController::class, 'destroy'])
             ->name('admin.customers.destroy');
 
@@ -123,6 +127,9 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/admin/notifications', [NotificationPageController::class, 'show'])
             ->name('admin.notifications');
+
+        Route::get('/admin/chat', [ChatConversationPageController::class, 'show'])
+            ->name('admin.chat');
 
         Route::get('/admin/reports', [ReportsPageController::class, 'show'])
             ->name('admin.reports');
@@ -187,6 +194,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/customer/maintenance', function () {
             return view('customer.maintenance');
         })->name('customer.maintenance');
+
+        Route::get('/customer/chat', function (\Illuminate\Http\Request $request) {
+            abort_unless($request->user()?->role === User::ROLE_CUSTOMER, 403);
+
+            return view('customer.chat');
+        })->name('customer.chat');
 
         Route::get('/customer/mobile-app', function () {
             return view('customer.mobile-app');

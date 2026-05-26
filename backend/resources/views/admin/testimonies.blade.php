@@ -149,57 +149,6 @@
 
         <div id="detail-view-panel" class="detail-panel"></div>
 
-        <form id="testimony-edit-form" class="form-grid" style="display: none;">
-            <div class="form-grid two-columns">
-                <div>
-                    <label for="edit_rating">Rating</label>
-                    <select id="edit_rating" name="rating" required>
-                        @for ($rating = 1; $rating <= 5; $rating++)
-                            <option value="{{ $rating }}">{{ $rating }}</option>
-                        @endfor
-                    </select>
-                    <div class="field-error" data-edit-error-for="rating"></div>
-                </div>
-
-                <div>
-                    <label for="edit_status">Status</label>
-                    <select id="edit_status" name="status">
-                        <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                    </select>
-                    <div class="field-error" data-edit-error-for="status"></div>
-                </div>
-            </div>
-
-            <div>
-                <label for="edit_title">Title</label>
-                <input id="edit_title" name="title" type="text" maxlength="255">
-                <div class="field-error" data-edit-error-for="title"></div>
-            </div>
-
-            <div>
-                <label for="edit_message">Message</label>
-                <textarea id="edit_message" name="message" rows="6" required></textarea>
-                <div class="field-error" data-edit-error-for="message"></div>
-            </div>
-
-            <div>
-                <label for="edit_admin_note">Admin note</label>
-                <textarea id="edit_admin_note" name="admin_note" rows="4"></textarea>
-                <div class="field-error" data-edit-error-for="admin_note"></div>
-            </div>
-
-            <div class="info-box" style="margin-bottom: 0;">
-                Linked request stays attached to the original completed service or inspection request during admin edits.
-            </div>
-
-            <div class="actions">
-                <button id="save-edit-button" type="submit">Save changes</button>
-                <button id="cancel-edit-button" type="button" class="secondary">Cancel</button>
-            </div>
-        </form>
-
         <form id="testimony-reject-form" class="form-grid" style="display: none;">
             <div>
                 <label for="reject_admin_note">Optional rejection note</label>
@@ -230,11 +179,8 @@
         const detailViewPanel = document.getElementById('detail-view-panel');
         const refreshButton = document.getElementById('refresh-testimonies-button');
         const detailCloseButton = document.getElementById('detail-close-button');
-        const editForm = document.getElementById('testimony-edit-form');
         const rejectForm = document.getElementById('testimony-reject-form');
-        const saveEditButton = document.getElementById('save-edit-button');
         const submitRejectButton = document.getElementById('submit-reject-button');
-        const cancelEditButton = document.getElementById('cancel-edit-button');
         const cancelRejectButton = document.getElementById('cancel-reject-button');
 
         const state = {
@@ -540,7 +486,6 @@
                             <button type="button" class="secondary" data-action="view" data-id="${testimony.id}">View</button>
                             <button type="button" data-action="approve" data-id="${testimony.id}">Approve</button>
                             <button type="button" class="danger" data-action="reject" data-id="${testimony.id}">Reject</button>
-                            <button type="button" class="secondary" data-action="edit" data-id="${testimony.id}">Edit</button>
                             <button type="button" class="danger" data-action="delete" data-id="${testimony.id}">Delete</button>
                         </div>
                     </div>
@@ -549,14 +494,6 @@
 
             setVisible(emptyState, false);
             setVisible(listContainer, true);
-        }
-
-        function populateEditForm(testimony) {
-            editForm.elements.namedItem('rating').value = String(testimony.rating || 1);
-            editForm.elements.namedItem('status').value = testimony.status || 'pending';
-            editForm.elements.namedItem('title').value = testimony.title || '';
-            editForm.elements.namedItem('message').value = testimony.message || '';
-            editForm.elements.namedItem('admin_note').value = testimony.admin_note || '';
         }
 
         function populateRejectForm(testimony) {
@@ -643,19 +580,16 @@
                 <div class="actions" style="margin-top: 0;">
                     <button id="detail-approve-action" type="button">Approve</button>
                     <button id="detail-reject-action" type="button" class="danger">Reject</button>
-                    <button id="detail-edit-action" type="button" class="secondary">Edit</button>
                     <button id="detail-delete-action" type="button" class="danger">Delete</button>
                 </div>
             `;
 
             const approveButton = document.getElementById('detail-approve-action');
             const rejectButton = document.getElementById('detail-reject-action');
-            const editButton = document.getElementById('detail-edit-action');
             const deleteButton = document.getElementById('detail-delete-action');
 
             approveButton?.addEventListener('click', () => moderateTestimony(testimony.id, 'approve'));
             rejectButton?.addEventListener('click', () => openDetail(testimony.id, 'reject'));
-            editButton?.addEventListener('click', () => openDetail(testimony.id, 'edit'));
             deleteButton?.addEventListener('click', () => handleDelete(testimony.id));
         }
 
@@ -672,13 +606,10 @@
             detailSubtitle.textContent = `Customer: ${getCustomerName(testimony)} | Linked request: ${getLinkedRequestLabel(testimony)}`;
 
             renderDetailView(testimony);
-            populateEditForm(testimony);
             populateRejectForm(testimony);
-            clearFieldErrors('[data-edit-error-for]');
             clearFieldErrors('[data-reject-error-for]');
 
             setVisible(detailViewPanel, state.detailMode === 'view');
-            setVisible(editForm, state.detailMode === 'edit');
             setVisible(rejectForm, state.detailMode === 'reject');
             setVisible(detailCard, true);
         }
@@ -801,11 +732,6 @@
                 return;
             }
 
-            if (action === 'edit') {
-                openDetail(id, 'edit');
-                return;
-            }
-
             if (action === 'reject') {
                 openDetail(id, 'reject');
                 return;
@@ -818,47 +744,6 @@
 
             if (action === 'delete') {
                 handleDelete(id);
-            }
-        });
-
-        editForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-
-            const testimony = getSelectedTestimony();
-
-            if (!testimony) {
-                return;
-            }
-
-            clearMessages();
-            clearFieldErrors('[data-edit-error-for]');
-            saveEditButton.disabled = true;
-            saveEditButton.textContent = 'Saving...';
-
-            try {
-                const payload = {
-                    rating: Number(editForm.elements.namedItem('rating').value),
-                    title: editForm.elements.namedItem('title').value || null,
-                    message: editForm.elements.namedItem('message').value,
-                    status: editForm.elements.namedItem('status').value || null,
-                    admin_note: editForm.elements.namedItem('admin_note').value || null,
-                };
-
-                const response = await apiRequest(`/api/admin/testimonies/${testimony.id}`, {
-                    method: 'PUT',
-                    body: payload,
-                });
-
-                showSuccess(response.message || 'Testimony updated successfully.');
-                state.detailMode = 'view';
-                await loadTestimonies();
-                openDetail(testimony.id, 'view');
-            } catch (error) {
-                applyFieldErrors(error.errors || {}, 'data-edit-error-for');
-                showError(error.message || 'Could not update testimony.');
-            } finally {
-                saveEditButton.disabled = false;
-                saveEditButton.textContent = 'Save changes';
             }
         });
 
@@ -900,13 +785,6 @@
 
         refreshButton.addEventListener('click', loadTestimonies);
         detailCloseButton.addEventListener('click', closeDetail);
-        cancelEditButton.addEventListener('click', () => {
-            const testimony = getSelectedTestimony();
-
-            if (testimony) {
-                openDetail(testimony.id, 'view');
-            }
-        });
         cancelRejectButton.addEventListener('click', () => {
             const testimony = getSelectedTestimony();
 

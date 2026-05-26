@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -12,9 +12,15 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import {sendChatbotMessage} from '../src/services/chatbotService';
+import {
+  fetchSupportConversation,
+  requestSupportAdminTakeover,
+  sendSupportMessage,
+  SupportChatConversationPayload,
+  SupportChatMessage,
+} from '../src/services/supportChatService';
 
-type ChatSender = 'user' | 'bot';
+type ChatSender = 'user' | 'bot' | 'admin' | 'system';
 
 type ChatMessage = {
   id: string;
@@ -22,6 +28,7 @@ type ChatMessage = {
   sender: ChatSender;
   timestamp: number;
   status?: 'default' | 'error';
+  senderName?: string | null;
   suggestions?: string[];
   suggestionsEnabled?: boolean;
 };
@@ -38,12 +45,10 @@ const QUICK_HELP = [
   {title: 'ROI Explanation', subtitle: 'Understand payback and savings.', prompt: 'Can you explain ROI for solar panels?'},
 ];
 
-const WELCOME_TEXT = "Hi! I\u2019m SolBot";
+const WELCOME_TEXT = 'Hi! I\'m SolBot';
 const WELCOME_SUB = 'Ask about quotation, ROI or any solar related.';
 
 const INITIAL_MESSAGES: ChatMessage[] = [];
-
-/* \u2500\u2500 message bubble \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
 
 function MessageBubble({
   message,
@@ -55,35 +60,87 @@ function MessageBubble({
   onSuggestionPress: (messageId: string, suggestion: string) => void;
 }) {
   const isUser = message.sender === 'user';
+  const isAdmin = message.sender === 'admin';
+  const isSystem = message.sender === 'system';
   const isError = message.status === 'error';
   const showSuggestions =
     !isUser
+    && !isAdmin
+    && !isSystem
     && message.suggestionsEnabled
     && Array.isArray(message.suggestions)
     && message.suggestions.length > 0;
+  const senderLabel = isUser
+    ? 'You'
+    : isAdmin
+      ? (message.senderName || 'Admin')
+      : isSystem
+        ? 'System'
+        : 'SolBot';
 
   return (
     <View
       style={[
         cs.msgRow,
-        isUser ? cs.msgRowUser : cs.msgRowBot,
+        isUser ? cs.msgRowUser : isSystem ? cs.msgRowSystem : cs.msgRowBot,
       ]}>
-      {!isUser && (
+      {!isUser && !isSystem ? (
         <View style={cs.botAvatar}>
-          <Text style={cs.botAvatarText}>{'\ud83e\udd16'}</Text>
+          <Text style={cs.botAvatarText}>{isAdmin ? 'A' : '🤖'}</Text>
         </View>
-      )}
+      ) : null}
       <View style={cs.bubbleWrap}>
-        <View style={[cs.bubble, isUser ? cs.userBubble : cs.botBubble, isError && cs.errorBubble]}>
-          <Text style={[cs.msgSender, isUser ? cs.userSender : cs.botSender]}>
-            {isUser ? 'You' : 'SolBot'}
-          </Text>
-          {isError && <Text style={cs.errorBadge}>Retry available</Text>}
+        <View
+          style={[
+            cs.bubble,
+            isUser
+              ? cs.userBubble
+              : isAdmin
+                ? cs.adminBubble
+                : isSystem
+                  ? cs.systemBubble
+                  : cs.botBubble,
+            isError && cs.errorBubble,
+          ]}>
           <Text
-            style={[cs.msgText, isUser ? cs.userText : cs.botText, isError && cs.errorText]}>
+            style={[
+              cs.msgSender,
+              isUser
+                ? cs.userSender
+                : isAdmin
+                  ? cs.adminSender
+                  : isSystem
+                    ? cs.systemSender
+                    : cs.botSender,
+            ]}>
+            {senderLabel}
+          </Text>
+          {isError ? <Text style={cs.errorBadge}>Retry available</Text> : null}
+          <Text
+            style={[
+              cs.msgText,
+              isUser
+                ? cs.userText
+                : isAdmin
+                  ? cs.adminText
+                  : isSystem
+                    ? cs.systemText
+                    : cs.botText,
+              isError && cs.errorText,
+            ]}>
             {message.text}
           </Text>
-          <Text style={[cs.msgTime, isUser ? cs.userTime : cs.botTime]}>
+          <Text
+            style={[
+              cs.msgTime,
+              isUser
+                ? cs.userTime
+                : isAdmin
+                  ? cs.adminTime
+                  : isSystem
+                    ? cs.systemTime
+                    : cs.botTime,
+            ]}>
             {formatTimestamp(message.timestamp)}
           </Text>
           {showSuggestions ? (
@@ -114,7 +171,7 @@ function TypingBubble() {
   return (
     <View style={[cs.msgRow, cs.msgRowBot]}>
       <View style={cs.botAvatar}>
-        <Text style={cs.botAvatarText}>{'\ud83e\udd16'}</Text>
+        <Text style={cs.botAvatarText}>🤖</Text>
       </View>
       <View style={[cs.bubble, cs.botBubble]}>
         <Text style={cs.botSender}>SolBot</Text>
@@ -127,23 +184,45 @@ function TypingBubble() {
   );
 }
 
-/* \u2500\u2500 main screen \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
-
 export default function ChatbotScreen({navigation}: any) {
   const [draftMessage, setDraftMessage] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
+  const [conversation, setConversation] = useState<SupportChatConversationPayload['conversation'] | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [lastFailedMessage, setLastFailedMessage] = useState('');
   const listRef = useRef<FlatList<ChatMessage>>(null);
   const isMountedRef = useRef(true);
 
-  const deactivateSuggestionChips = (items: ChatMessage[]) =>
-    items.map(item =>
-      item.suggestionsEnabled ? {...item, suggestionsEnabled: false} : item,
-    );
+  const deactivateSuggestionChips = useCallback(
+    (items: ChatMessage[]) =>
+      items.map(item =>
+        item.suggestionsEnabled ? {...item, suggestionsEnabled: false} : item,
+      ),
+    [],
+  );
 
-  const sendMessage = async (rawText: string, clearDraft = true) => {
+  const applyConversationPayload = useCallback((payload: SupportChatConversationPayload) => {
+    setConversation(payload.conversation);
+    setMessages(payload.messages.map(mapServerMessage));
+  }, []);
+
+  const loadConversation = useCallback(async () => {
+    try {
+      const payload = await fetchSupportConversation();
+
+      if (!isMountedRef.current) {
+        return;
+      }
+
+      applyConversationPayload(payload);
+    } catch (error) {
+      console.log('Load support conversation error:', error);
+    }
+  }, [applyConversationPayload]);
+
+  const sendMessage = useCallback(async (rawText: string, clearDraft = true) => {
     const trimmedText = rawText.trim();
+
     if (!trimmedText || isSending) {
       return;
     }
@@ -152,37 +231,37 @@ export default function ChatbotScreen({navigation}: any) {
       ...deactivateSuggestionChips(cur),
       createMessage(trimmedText, 'user'),
     ]);
+
     if (clearDraft) {
       setDraftMessage('');
     }
+
     setLastFailedMessage('');
 
     try {
       setIsSending(true);
-      const botReply = await sendChatbotMessage(trimmedText);
+      const payload = await sendSupportMessage(trimmedText);
+
       if (!isMountedRef.current) {
         return;
       }
-      setMessages(cur => [
-        ...cur,
-        createMessage(botReply.text, 'bot', 'default', {
-          suggestions: botReply.suggestions,
-          suggestionsEnabled: botReply.suggestions.length > 0,
-        }),
-      ]);
+
+      applyConversationPayload(payload);
     } catch (error: any) {
       if (!isMountedRef.current) {
         return;
       }
+
       const errorMessage =
         typeof error?.message === 'string' && error.message.trim()
           ? error.message.trim()
           : 'I ran into a problem while responding. Please try again in a moment.';
+
       setMessages(cur => [
         ...cur,
         createMessage(
           errorMessage + '\n\nYou can tap Retry below to send your last question again.',
-          'bot',
+          'system',
           'error',
         ),
       ]);
@@ -192,34 +271,70 @@ export default function ChatbotScreen({navigation}: any) {
         setIsSending(false);
       }
     }
-  };
+  }, [applyConversationPayload, deactivateSuggestionChips, isSending]);
 
-  const handleSuggestionPress = (messageId: string, suggestion: string) => {
+  const handleSuggestionPress = useCallback((messageId: string, suggestion: string) => {
     setMessages(cur =>
       cur.map(item =>
-        (item.id === messageId || item.suggestionsEnabled)
-          ? {
-              ...item,
-              suggestionsEnabled: false,
-            }
+        item.id === messageId || item.suggestionsEnabled
+          ? {...item, suggestionsEnabled: false}
           : item,
       ),
     );
     sendMessage(suggestion);
-  };
+  }, [sendMessage]);
+
+  const requestAdminTakeover = useCallback(async () => {
+    if (isSending || conversation?.is_admin_active) {
+      return;
+    }
+
+    try {
+      setIsSending(true);
+      const payload = await requestSupportAdminTakeover();
+
+      if (!isMountedRef.current) {
+        return;
+      }
+
+      applyConversationPayload(payload);
+    } catch (error) {
+      console.log('Admin takeover request error:', error);
+    } finally {
+      if (isMountedRef.current) {
+        setIsSending(false);
+      }
+    }
+  }, [applyConversationPayload, conversation?.is_admin_active, isSending]);
 
   useEffect(() => {
-    const t = setTimeout(() => listRef.current?.scrollToEnd({animated: true}), 40);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => listRef.current?.scrollToEnd({animated: true}), 40);
+    return () => clearTimeout(timer);
   }, [isSending, messages]);
 
   useEffect(() => {
+    loadConversation();
+    const intervalId = setInterval(loadConversation, 5000);
+
     return () => {
       isMountedRef.current = false;
+      clearInterval(intervalId);
     };
-  }, []);
+  }, [loadConversation]);
 
   const hasMessages = messages.length > 0;
+  const isAdminActive = !!conversation?.is_admin_active;
+  const isAwaitingAdmin = !!conversation?.is_awaiting_admin;
+  const headerSubtitle = isAdminActive
+    ? `Live admin support${conversation?.admin?.name ? ` · ${conversation.admin.name}` : ''}`
+    : isAwaitingAdmin
+      ? 'Waiting for admin takeover'
+      : 'Help & FAQs';
+  const statusBanner = isAdminActive
+    ? `You are now chatting with ${conversation?.admin?.name || 'a real admin'}. SolBot is paused.`
+    : isAwaitingAdmin
+      ? 'A real admin has been requested. SolBot is paused until an admin joins this thread.'
+      : '';
 
   return (
     <SafeAreaView style={cs.safe}>
@@ -227,32 +342,35 @@ export default function ChatbotScreen({navigation}: any) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
         style={cs.flex1}>
-
-        {/* \u2500\u2500 sheet panel \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */}
         <View style={cs.sheet}>
-          {/* drag handle */}
           <View style={cs.handleRow}>
             <View style={cs.handle} />
           </View>
 
-          {/* header row */}
           <View style={cs.headerRow}>
             <View style={cs.headerLeft}>
               <View style={cs.headerIcon}>
-                <Text style={cs.headerIconText}>{'\ud83e\udd16'}</Text>
+                <Text style={cs.headerIconText}>🤖</Text>
               </View>
               <View>
                 <Text style={cs.headerTitle}>SolBot</Text>
-                <Text style={cs.headerSub}>Help & FAQs</Text>
+                <Text style={cs.headerSub}>{headerSubtitle}</Text>
               </View>
             </View>
             <Pressable onPress={() => navigation.goBack()} style={cs.closeBtn}>
-              <Text style={cs.closeBtnText}>{'\u2715'}</Text>
+              <Text style={cs.closeBtnText}>✕</Text>
             </Pressable>
           </View>
 
-          {/* \u2500\u2500 quick help + intro (only when no messages) \u2500\u2500 */}
-          {!hasMessages && (
+          {statusBanner ? (
+            <View style={[cs.statusBanner, isAdminActive ? cs.statusBannerAdmin : cs.statusBannerWaiting]}>
+              <Text style={[cs.statusBannerText, isAdminActive ? cs.statusBannerTextAdmin : cs.statusBannerTextWaiting]}>
+                {statusBanner}
+              </Text>
+            </View>
+          ) : null}
+
+          {!hasMessages ? (
             <ScrollView
               style={cs.msgList}
               contentContainerStyle={cs.quickScrollContent}
@@ -272,7 +390,7 @@ export default function ChatbotScreen({navigation}: any) {
                     </View>
                   </Pressable>
                 ))}
-                <Text style={cs.moreHint}>More options inside chat \u2192</Text>
+                <Text style={cs.moreHint}>More options inside chat →</Text>
               </View>
 
               <View style={cs.introCard}>
@@ -280,10 +398,7 @@ export default function ChatbotScreen({navigation}: any) {
                 <Text style={cs.introSub}>{WELCOME_SUB}</Text>
               </View>
             </ScrollView>
-          )}
-
-          {/* \u2500\u2500 message list \u2500\u2500 */}
-          {hasMessages && (
+          ) : (
             <FlatList
               ref={listRef}
               contentContainerStyle={cs.msgListContent}
@@ -292,7 +407,7 @@ export default function ChatbotScreen({navigation}: any) {
               keyboardShouldPersistTaps="handled"
               onContentSizeChange={() => listRef.current?.scrollToEnd({animated: true})}
               removeClippedSubviews={false}
-              ListFooterComponent={isSending ? <TypingBubble /> : <View style={cs.listFooterSpacer} />}
+              ListFooterComponent={!isAdminActive && isSending ? <TypingBubble /> : <View style={cs.listFooterSpacer} />}
               renderItem={({item}) => (
                 <MessageBubble
                   isSending={isSending}
@@ -305,8 +420,23 @@ export default function ChatbotScreen({navigation}: any) {
             />
           )}
 
-          {/* \u2500\u2500 composer \u2500\u2500 */}
           <View style={cs.composerWrap}>
+            {!isAdminActive ? (
+              <Pressable
+                accessibilityRole="button"
+                disabled={isSending || isAwaitingAdmin}
+                onPress={requestAdminTakeover}
+                style={({pressed}) => [
+                  cs.escalateBtn,
+                  (isSending || isAwaitingAdmin) && cs.escalateBtnDisabled,
+                  pressed && !isSending && !isAwaitingAdmin && cs.pressed,
+                ]}>
+                <Text style={cs.escalateBtnText}>
+                  {isAwaitingAdmin ? 'Admin Requested' : 'Talk to a Real Admin'}
+                </Text>
+              </Pressable>
+            ) : null}
+
             <View style={cs.composer}>
               <TextInput
                 autoCapitalize="sentences"
@@ -330,7 +460,7 @@ export default function ChatbotScreen({navigation}: any) {
                   (isSending || !draftMessage.trim()) && cs.sendBtnDisabled,
                   pressed && draftMessage.trim() && !isSending && cs.sendBtnPressed,
                 ]}>
-                <Text style={cs.sendBtnIcon}>{'\u27A4'}</Text>
+                <Text style={cs.sendBtnIcon}>➤</Text>
               </Pressable>
             </View>
 
@@ -353,23 +483,39 @@ export default function ChatbotScreen({navigation}: any) {
   );
 }
 
-/* \u2500\u2500 helpers \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
-
 function createMessage(
   text: string,
   sender: ChatSender,
   status: ChatMessage['status'] = 'default',
-  extras: Pick<ChatMessage, 'suggestions' | 'suggestionsEnabled'> = {},
+  extras: Pick<ChatMessage, 'suggestions' | 'suggestionsEnabled' | 'senderName'> = {},
 ): ChatMessage {
   return {
-    id: sender + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+    id: `${sender}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     text,
     sender,
     status,
     timestamp: Date.now(),
+    senderName: extras.senderName,
     suggestions: extras.suggestions,
     suggestionsEnabled: extras.suggestionsEnabled,
   };
+}
+
+function mapServerMessage(message: SupportChatMessage): ChatMessage {
+  const suggestions = Array.isArray(message.metadata?.suggestions)
+    ? message.metadata.suggestions
+    : [];
+
+  return createMessage(
+    message.body,
+    message.sender_type,
+    message.metadata?.status === 'error' ? 'error' : 'default',
+    {
+      senderName: message.sender_name ?? null,
+      suggestions,
+      suggestionsEnabled: message.sender_type === 'bot' && suggestions.length > 0,
+    },
+  );
 }
 
 function formatTimestamp(timestamp: number) {
@@ -379,14 +525,10 @@ function formatTimestamp(timestamp: number) {
   });
 }
 
-/* \u2500\u2500 styles \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
-
 const cs = StyleSheet.create({
   safe: {flex: 1, backgroundColor: BG},
   flex1: {flex: 1},
   pressed: {opacity: 0.85},
-
-  /* sheet */
   sheet: {
     flex: 1,
     backgroundColor: CARD,
@@ -399,8 +541,6 @@ const cs = StyleSheet.create({
     shadowRadius: 16,
     elevation: 8,
   },
-
-  /* drag handle */
   handleRow: {alignItems: 'center', paddingTop: 10, paddingBottom: 6},
   handle: {
     width: 40,
@@ -408,8 +548,6 @@ const cs = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: '#c4cdd8',
   },
-
-  /* header */
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -441,8 +579,30 @@ const cs = StyleSheet.create({
     justifyContent: 'center',
   },
   closeBtnText: {fontSize: 16, color: NAVY, fontWeight: '700'},
-
-  /* quick help */
+  statusBanner: {
+    marginHorizontal: 20,
+    marginTop: 14,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  statusBannerWaiting: {
+    backgroundColor: '#fff7ed',
+    borderWidth: 1,
+    borderColor: '#fdba74',
+  },
+  statusBannerAdmin: {
+    backgroundColor: '#ecfdf3',
+    borderWidth: 1,
+    borderColor: '#86efac',
+  },
+  statusBannerText: {
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 18,
+  },
+  statusBannerTextWaiting: {color: '#9a3412'},
+  statusBannerTextAdmin: {color: '#166534'},
   quickScrollContent: {paddingBottom: 16},
   quickSection: {paddingHorizontal: 20, paddingTop: 16},
   quickTitle: {fontSize: 16, fontWeight: '800', color: NAVY, marginBottom: 10},
@@ -457,8 +617,6 @@ const cs = StyleSheet.create({
   quickCardTitle: {fontSize: 15, fontWeight: '800', color: NAVY, marginBottom: 3},
   quickCardSub: {fontSize: 13, color: MUTED},
   moreHint: {fontSize: 12, color: MUTED, marginTop: 4, marginBottom: 8},
-
-  /* intro card */
   introCard: {
     marginHorizontal: 20,
     marginTop: 6,
@@ -470,14 +628,13 @@ const cs = StyleSheet.create({
   },
   introTitle: {fontSize: 17, fontWeight: '800', color: NAVY, marginBottom: 4},
   introSub: {fontSize: 13, color: MUTED, lineHeight: 19},
-
-  /* message list */
   msgList: {flex: 1},
   msgListContent: {paddingHorizontal: 20, paddingTop: 12, paddingBottom: 20},
   listFooterSpacer: {height: 8},
   msgRow: {flexDirection: 'row', alignItems: 'flex-end', marginBottom: 12},
   msgRowBot: {},
   msgRowUser: {justifyContent: 'flex-end'},
+  msgRowSystem: {justifyContent: 'center'},
   botAvatar: {
     width: 30,
     height: 30,
@@ -503,6 +660,16 @@ const cs = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e4eaf3',
   },
+  adminBubble: {
+    backgroundColor: '#fff4cc',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+  },
+  systemBubble: {
+    backgroundColor: '#eef2ff',
+    borderWidth: 1,
+    borderColor: '#c7d2fe',
+  },
   userBubble: {
     backgroundColor: NAVY,
   },
@@ -518,6 +685,8 @@ const cs = StyleSheet.create({
     textTransform: 'uppercase',
   },
   botSender: {color: GOLD},
+  adminSender: {color: '#b45309'},
+  systemSender: {color: '#4338ca'},
   userSender: {color: '#8fa8d0'},
   errorBadge: {
     alignSelf: 'flex-start',
@@ -528,10 +697,14 @@ const cs = StyleSheet.create({
   },
   msgText: {fontSize: 14, lineHeight: 21},
   botText: {color: '#1e293b'},
+  adminText: {color: '#92400e'},
+  systemText: {color: '#3730a3'},
   userText: {color: '#ffffff'},
   errorText: {color: '#9a3412'},
   msgTime: {fontSize: 10, fontWeight: '600', marginTop: 6, alignSelf: 'flex-start'},
   botTime: {color: '#7F92A3'},
+  adminTime: {color: '#b45309'},
+  systemTime: {color: '#6366f1'},
   userTime: {color: '#8fa8d0'},
   suggestionWrap: {
     flexDirection: 'row',
@@ -558,8 +731,6 @@ const cs = StyleSheet.create({
   },
   typingRow: {flexDirection: 'row', alignItems: 'center'},
   typingText: {color: MUTED, fontSize: 13, marginLeft: 8},
-
-  /* composer */
   composerWrap: {
     paddingHorizontal: 16,
     paddingBottom: 16,
@@ -567,6 +738,26 @@ const cs = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#DDE7EE',
     backgroundColor: CARD,
+  },
+  escalateBtn: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#fff7ed',
+    borderWidth: 1,
+    borderColor: '#fdba74',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 10,
+  },
+  escalateBtnDisabled: {
+    opacity: 0.6,
+  },
+  escalateBtnText: {
+    color: '#9a3412',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
   composer: {
     flexDirection: 'row',
@@ -600,8 +791,6 @@ const cs = StyleSheet.create({
   sendBtnDisabled: {backgroundColor: '#dde3ec'},
   sendBtnPressed: {opacity: 0.85},
   sendBtnIcon: {fontSize: 18, color: '#fff'},
-
-  /* retry */
   retryCard: {
     flexDirection: 'row',
     alignItems: 'center',

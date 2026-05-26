@@ -6,6 +6,8 @@ use App\Http\Controllers\Admin\QuotationSettingsController;
 use App\Http\Controllers\Admin\NewsArticleController as AdminNewsArticleController;
 use App\Http\Controllers\Admin\VisualHighlightController as AdminVisualHighlightController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AdminChatConversationController;
+use App\Http\Controllers\Api\ChatConversationController;
 use App\Http\Controllers\Api\CustomerAccountController;
 use App\Http\Controllers\Api\TechnicianAccountController;
 use App\Http\Controllers\CompletionReportController;
@@ -32,7 +34,7 @@ Route::get('/public/promotions', [PromotionController::class, 'index']);
 Route::post('/contact-messages', [ContactMessageController::class, 'store']);
 
 // PROTECTED GENERAL ROUTES
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'active.user'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/user/profile-picture', [AuthController::class, 'updateProfilePicture']);
 
@@ -97,6 +99,12 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/admin/contact-messages', [ContactMessageController::class, 'index']);
     Route::patch('/admin/contact-messages/{id}/status', [ContactMessageController::class, 'updateStatus']);
     Route::delete('/admin/contact-messages/{id}', [ContactMessageController::class, 'destroy']);
+
+    Route::get('/admin/chat/conversations', [AdminChatConversationController::class, 'index']);
+    Route::get('/admin/chat/conversations/{conversation}', [AdminChatConversationController::class, 'show']);
+    Route::post('/admin/chat/conversations/{conversation}/takeover', [AdminChatConversationController::class, 'takeOver']);
+    Route::post('/admin/chat/conversations/{conversation}/return-to-bot', [AdminChatConversationController::class, 'returnToBot']);
+    Route::post('/admin/chat/conversations/{conversation}/messages', [AdminChatConversationController::class, 'storeMessage']);
 });
 
 // TECHNICIAN ROUTES
@@ -142,4 +150,7 @@ Route::middleware(['auth:sanctum', 'role:customer'])->group(function () {
     Route::get('/customer/final-quotations/{inspection_request_id}', [QuotationController::class, 'getCustomerFinalQuotation']);
     Route::put('/customer/account', [CustomerAccountController::class, 'updateProfile']);
     Route::put('/customer/account/password', [CustomerAccountController::class, 'updatePassword']);
+    Route::get('/chat/conversation', [ChatConversationController::class, 'show']);
+    Route::post('/chat/conversation/messages', [ChatConversationController::class, 'storeMessage']);
+    Route::post('/chat/conversation/escalate', [ChatConversationController::class, 'escalate']);
 });

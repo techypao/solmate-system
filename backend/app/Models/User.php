@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -19,6 +20,8 @@ class User extends Authenticatable
 
     const ROLE_TECHNICIAN = 'technician';
 
+    const DEFAULT_ARCHIVED_ACCOUNT_MESSAGE = 'Your account has been archived due to inactivity. Please contact support to reactivate.';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -32,6 +35,9 @@ class User extends Authenticatable
         'password',
         'role',
         'archived_at',
+        'is_archived',
+        'last_login_at',
+        'archive_warning_sent_at',
         'address',
         'contact_number',
         'landline_number',
@@ -62,6 +68,14 @@ class User extends Authenticatable
                 $landlineNumber = trim((string) $user->landline_number);
                 $user->landline_number = $landlineNumber !== '' ? $landlineNumber : null;
             }
+
+            if ($user->isDirty('archived_at') && ! $user->isDirty('is_archived')) {
+                $user->is_archived = $user->archived_at !== null;
+            }
+
+            if ($user->isDirty('is_archived') && ! $user->isDirty('archived_at')) {
+                $user->archived_at = $user->is_archived ? ($user->archived_at ?? now()) : null;
+            }
         });
     }
 
@@ -89,6 +103,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'archived_at' => 'datetime',
+            'is_archived' => 'boolean',
+            'last_login_at' => 'datetime',
+            'archive_warning_sent_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -101,7 +118,100 @@ class User extends Authenticatable
 
     public function isArchivedCustomer(): bool
     {
-        return $this->role === self::ROLE_CUSTOMER && $this->archived_at !== null;
+        return $this->role === self::ROLE_CUSTOMER && $this->isArchived();
+    }
+
+    public function isArchived(): bool
+    {
+        return (bool) $this->is_archived || $this->archived_at !== null;
+    }
+
+    public static function archivedAccountMessage(): string
+    {
+        return (string) config('customer_archiving.blocked_message', self::DEFAULT_ARCHIVED_ACCOUNT_MESSAGE);
+    }
+
+    public function markLoginRecorded(): void
+    {
+        $this->forceFill([
+            'last_login_at' => now(),
+            'archive_warning_sent_at' => null,
+        ])->save();
+    }
+
+    public function archiveAccount(?int $performedByUserId = null, string $reason = 'manual_archive', array $context = []): void
+    {
+        if ($this->isArchivedCustomer()) {
+            return;
+        }
+
+        DB::transaction(function () use ($performedByUserId, $reason, $context): void {
+            $archivedAt = now();
+
+            $this->forceFill([
+                'is_archived' => true,
+                'archived_at' => $archivedAt,
+            ])->save();
+
+            $this->tokens()->delete();
+
+            DB::table('sessions')
+                ->where('user_id', $this->id)
+                ->delete();
+
+            CustomerArchiveAudit::query()->create([
+                'user_id' => $this->id,
+                'performed_by_user_id' => $performedByUserId,
+                'action' => 'archived',
+                'reason' => $reason,
+                'context' => array_merge($context, [
+                    'archived_at' => $archivedAt->toDateTimeString(),
+                ]),
+            ]);
+        });
+    }
+
+    public function restoreArchivedAccount(?int $performedByUserId = null, string $reason = 'manual_restore', array $context = []): void
+    {
+        if (! $this->isArchivedCustomer()) {
+            return;
+        }
+
+        DB::transaction(function () use ($performedByUserId, $reason, $context): void {
+            $restoredAt = now();
+
+            $this->forceFill([
+                'is_archived' => false,
+                'archived_at' => null,
+                'archive_warning_sent_at' => null,
+                'last_login_at' => $restoredAt,
+            ])->save();
+
+            CustomerArchiveAudit::query()->create([
+                'user_id' => $this->id,
+                'performed_by_user_id' => $performedByUserId,
+                'action' => 'restored',
+                'reason' => $reason,
+                'context' => array_merge($context, [
+                    'restored_at' => $restoredAt->toDateTimeString(),
+                ]),
+            ]);
+        });
+    }
+
+    public function customerArchiveAudits()
+    {
+        return $this->hasMany(CustomerArchiveAudit::class);
+    }
+
+    public function chatConversation()
+    {
+        return $this->hasOne(ChatConversation::class, 'customer_user_id');
+    }
+
+    public function adminChatConversations()
+    {
+        return $this->hasMany(ChatConversation::class, 'admin_user_id');
     }
 
     public function serviceRequests()

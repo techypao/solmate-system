@@ -9,7 +9,7 @@ use App\Models\User;
 
 class RoleMiddleware
 {
-    public function handle(Request $request, Closure $next, $role)
+    public function handle(Request $request, Closure $next, string $role): mixed
     {
         // If not authenticated at all
         if (!Auth::check()) {
@@ -29,7 +29,7 @@ class RoleMiddleware
 
             if ($request->expectsJson()) {
                 return response()->json([
-                    'message' => 'This customer account has been archived. Please contact support for assistance.',
+                    'message' => User::archivedAccountMessage(),
                 ], 403);
             }
 
@@ -38,7 +38,7 @@ class RoleMiddleware
 
             return redirect()->route('login')
                 ->withErrors([
-                    'email' => 'This customer account has been archived. Please contact support for assistance.',
+                    'email' => User::archivedAccountMessage(),
                 ]);
         }
 

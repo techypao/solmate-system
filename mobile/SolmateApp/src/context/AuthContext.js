@@ -13,6 +13,7 @@ export const AuthProvider = ({children}) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authErrorMessage, setAuthErrorMessage] = useState('');
 
   const fetchUser = useCallback(async authToken => {
     try {
@@ -20,12 +21,18 @@ export const AuthProvider = ({children}) => {
       const userData = await apiGet('/user');
       setUser(userData);
       setToken(authToken);
+      setAuthErrorMessage('');
     } catch (error) {
       console.log('Fetch user error:', error?.message || error);
       setSessionToken(null);
       await removeStoredToken();
       setUser(null);
       setToken(null);
+
+      if (error?.status === 403 && typeof error?.message === 'string') {
+        setAuthErrorMessage(error.message);
+      }
+
       throw error;
     }
   }, []);
@@ -50,6 +57,8 @@ export const AuthProvider = ({children}) => {
     const {rememberSession = true} = options;
 
     try {
+      setAuthErrorMessage('');
+
       if (rememberSession) {
         await saveStoredToken(newToken);
       } else {
@@ -69,9 +78,14 @@ export const AuthProvider = ({children}) => {
       await removeStoredToken();
       setUser(null);
       setToken(null);
+      setAuthErrorMessage('');
     } catch (error) {
       console.log('Logout error:', error);
     }
+  };
+
+  const clearAuthError = () => {
+    setAuthErrorMessage('');
   };
 
   useEffect(() => {
@@ -84,9 +98,11 @@ export const AuthProvider = ({children}) => {
         user,
         token,
         loading,
+        authErrorMessage,
         login,
         logout,
         setUser,
+        clearAuthError,
       }}>
       {children}
     </AuthContext.Provider>
