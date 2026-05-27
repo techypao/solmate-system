@@ -1074,6 +1074,29 @@
                                         <strong>Completion notes:</strong> {{ $completionReport->report_text }}
                                     </div>
 
+                                    <div style="margin-top: 14px;">
+                                        <div style="font-size: 12px; font-weight: 800; color: #123A5A; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em;">Completion Photos</div>
+                                        @php $reportPhotos = $completionReport->photos ?? collect(); @endphp
+                                        @if ($reportPhotos->isNotEmpty())
+                                            <div class="completion-photo-grid">
+                                                @foreach ($reportPhotos as $photo)
+                                                    @if ($photo->image_url)
+                                                        <button
+                                                            type="button"
+                                                            class="completion-photo-thumb"
+                                                            data-photo-src="{{ $photo->image_url }}"
+                                                            aria-label="View completion photo"
+                                                        >
+                                                            <img src="{{ $photo->image_url }}" alt="Completion photo" loading="lazy" />
+                                                        </button>
+                                                    @endif
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <div class="info-box request-detail-box" style="color: #5E7288; font-style: italic;">No completion photos submitted.</div>
+                                        @endif
+                                    </div>
+
                                     @if (filled($completionReport->findings))
                                         <div class="info-box request-detail-box">
                                             <strong>Findings:</strong> {{ $completionReport->findings }}

@@ -24,7 +24,8 @@ class AdminQuotationSettingsTest extends TestCase
             ->assertJsonPath('data.rate_per_kwh', '14.00')
             ->assertJsonPath('data.days_in_month', 30)
             ->assertJsonPath('data.default_panel_watts', '610.00')
-            ->assertJsonPath('data.initial_price_per_kw', '50000.00');
+            ->assertJsonPath('data.initial_price_per_kw', '50000.00')
+            ->assertJsonPath('data.net_metering_price', '30000.00');
 
         $this->assertDatabaseCount('quotation_settings', 1);
     }
@@ -41,6 +42,7 @@ class AdminQuotationSettingsTest extends TestCase
             'labor_percentage' => 12.5,
             'default_bos_cost' => 25000,
             'initial_price_per_kw' => 52000,
+            'net_metering_price' => 34000,
         ]);
 
         $response->assertOk()
@@ -49,6 +51,7 @@ class AdminQuotationSettingsTest extends TestCase
             ->assertJsonPath('data.labor_percentage', '12.50')
             ->assertJsonPath('data.default_bos_cost', '25000.00')
             ->assertJsonPath('data.initial_price_per_kw', '52000.00')
+            ->assertJsonPath('data.net_metering_price', '34000.00')
             ->assertJsonPath('data.days_in_month', 30);
 
         $this->assertDatabaseHas('quotation_settings', [
@@ -57,6 +60,7 @@ class AdminQuotationSettingsTest extends TestCase
             'labor_percentage' => 12.50,
             'default_bos_cost' => 25000.00,
             'initial_price_per_kw' => 52000.00,
+            'net_metering_price' => 34000.00,
             'days_in_month' => 30,
         ]);
     }
@@ -86,6 +90,7 @@ class AdminQuotationSettingsTest extends TestCase
             'sun_hours' => 0,
             'default_panel_watts' => 0,
             'initial_price_per_kw' => -1,
+            'net_metering_price' => -1,
         ]);
 
         $response->assertStatus(422)
@@ -94,6 +99,7 @@ class AdminQuotationSettingsTest extends TestCase
                 'sun_hours',
                 'default_panel_watts',
                 'initial_price_per_kw',
+                'net_metering_price',
             ]);
     }
 

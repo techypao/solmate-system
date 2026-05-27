@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -16,9 +16,7 @@ import {
   getInspectionRequestById,
   InspectionRequest,
 } from '../src/services/inspectionRequestApi';
-import {solmateColors} from '../src/theme/colors';
-
-/* \u2500\u2500 design tokens \u2500\u2500 */
+import {getSolmateStatusColors, solmateColors} from '../src/theme/colors';
 
 const NAVY = solmateColors.navy;
 const GOLD = solmateColors.primary;
@@ -26,8 +24,6 @@ const MUTED = solmateColors.muted;
 const BG = solmateColors.background;
 const CARD = solmateColors.white;
 const DIVIDER = solmateColors.border;
-
-/* \u2500\u2500 helpers (preserved) \u2500\u2500 */
 
 function formatDate(value?: string | null, fallback = 'Flexible') {
   if (!value) return fallback;
@@ -43,12 +39,29 @@ function formatDateTime(value?: string | null, fallback = 'Not available') {
   return parsedDate.toLocaleString();
 }
 
+function formatInspectionStatus(status?: string | null) {
+  switch ((status || '').toLowerCase()) {
+    case 'pending':
+      return 'Pending';
+    case 'assigned':
+      return 'Assigned';
+    case 'in_progress':
+      return 'In Progress';
+    case 'completed':
+      return 'Completed';
+    case 'cancelled':
+      return 'Cancelled';
+    case 'declined':
+      return 'Declined';
+    default:
+      return 'Pending';
+  }
+}
+
 function getFriendlyErrorMessage(error: unknown) {
   if (error instanceof ApiError) return error.message;
   return 'Could not load the inspection request details.';
 }
-
-/* \u2500\u2500 DetailRow \u2500\u2500 */
 
 function DetailRow({
   label,
@@ -69,9 +82,39 @@ function DetailRow({
   );
 }
 
-/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-   Main screen
-   \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+function TimelineItem({
+  datetime,
+  status,
+  description,
+  isLast,
+}: {
+  datetime: string;
+  status: string;
+  description: string;
+  isLast: boolean;
+}) {
+  const colors = getSolmateStatusColors(status);
+
+  return (
+    <View style={s.timelineItem}>
+      <View style={s.timelineDotCol}>
+        <View style={s.timelineDot} />
+        {!isLast ? <View style={s.timelineConnector} /> : null}
+      </View>
+      <View style={s.timelineBody}>
+        <Text style={s.timelineDatetime}>{datetime}</Text>
+        <View style={s.timelineRow}>
+          <View style={[s.timelineBadge, {backgroundColor: colors.backgroundColor}]}>
+            <Text style={[s.timelineBadgeText, {color: colors.textColor}]}>
+              {formatInspectionStatus(status)}
+            </Text>
+          </View>
+          <Text style={s.timelineDesc}>{description}</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
 
 export default function InspectionRequestDetailScreen({navigation, route}: any) {
   const inspectionRequestId = route?.params?.inspectionRequestId;
@@ -121,20 +164,16 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
     }, [inspectionRequest, loadInspectionRequest]),
   );
 
-  /* \u2500\u2500 loading \u2500\u2500 */
-
   if (loading) {
     return (
       <SafeAreaView style={s.safe}>
         <View style={s.centered}>
           <ActivityIndicator size="large" color={GOLD} />
-          <Text style={s.loadingText}>Loading inspection request\u2026</Text>
+          <Text style={s.loadingText}>Loading inspection request...</Text>
         </View>
       </SafeAreaView>
     );
   }
-
-  /* \u2500\u2500 error / missing \u2500\u2500 */
 
   if (errorMessage || !inspectionRequest) {
     return (
@@ -159,37 +198,86 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
     );
   }
 
-  /* \u2500\u2500 main \u2500\u2500 */
-
   const canOpenFinalQuotation = inspectionRequest.status === 'completed';
+  const timelineEvents = useMemo(() => {
+    const events: Array<{
+      datetime: string;
+      status: string;
+      description: string;
+    }> = [];
+
+    if (inspectionRequest.created_at) {
+      events.push({
+        datetime: formatDateTime(inspectionRequest.created_at),
+        status: 'pending',
+        description: 'Request submitted',
+      });
+    }
+
+    const normalizedStatus = (inspectionRequest.status || '').toLowerCase();
+
+    if (['assigned', 'in_progress', 'completed'].includes(normalizedStatus)) {
+      events.push({
+        datetime: formatDateTime(inspectionRequest.updated_at),
+        status: 'assigned',
+        description: 'Assigned to technician',
+      });
+    }
+
+    if (['in_progress', 'completed'].includes(normalizedStatus)) {
+      events.push({
+        datetime: formatDateTime(inspectionRequest.updated_at),
+        status: 'in_progress',
+        description: 'Inspection started',
+      });
+    }
+
+    if (inspectionRequest.completion_report?.submitted_at) {
+      events.push({
+        datetime: formatDateTime(inspectionRequest.completion_report.submitted_at),
+        status: 'in_progress',
+        description: 'Completion report submitted',
+      });
+    }
+
+    if ((inspectionRequest.completion_report?.status || '').toLowerCase() === 'approved') {
+      events.push({
+        datetime: formatDateTime(inspectionRequest.completion_report.approved_at),
+        status: 'approved',
+        description: 'Completion report approved',
+      });
+    }
+
+    if (normalizedStatus === 'completed') {
+      events.push({
+        datetime: formatDateTime(inspectionRequest.updated_at),
+        status: 'completed',
+        description: 'Inspection completed',
+      });
+    }
+
+    return events;
+  }, [inspectionRequest]);
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView
-        contentContainerStyle={s.scroll}
-        showsVerticalScrollIndicator={false}>
-
-        {/* \u2500\u2500 brand \u2500\u2500 */}
+      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         <Text style={s.brand}>
           Sol<Text style={s.brandAccent}>Mate</Text>
         </Text>
 
-        {/* \u2500\u2500 back \u2500\u2500 */}
         <Pressable
           hitSlop={14}
           onPress={() => navigation.goBack()}
           style={({pressed}) => [s.backBtn, pressed && s.pressed]}>
-          <Text style={s.backIcon}>{'\u2039'}</Text>
+          <Text style={s.backIcon}>{'‹'}</Text>
         </Pressable>
 
-        {/* \u2500\u2500 title \u2500\u2500 */}
         <Text style={s.title}>Inspection Details</Text>
         <Text style={s.subtitle}>
-          Review the request details, current progress, and technician
-          assignment for this inspection.
+          Review the request details, current progress, and technician assignment for this inspection.
         </Text>
 
-        {/* \u2500\u2500 badges row \u2500\u2500 */}
         <View style={s.badgeRow}>
           <View style={s.typeBadge}>
             <Text style={s.typeBadgeText}>Inspection</Text>
@@ -197,54 +285,20 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
           <StatusBadge status={inspectionRequest.status} />
         </View>
 
-        {/* \u2500\u2500 Inspection Information \u2500\u2500 */}
         <View style={s.card}>
           <Text style={s.cardTitle}>Inspection Information</Text>
-
-          <DetailRow
-            label="Inspection Request ID"
-            value={'IR-' + inspectionRequest.id}
-            bold
-          />
-          <DetailRow
-            label="Status"
-            value={inspectionRequest.status
-              ? inspectionRequest.status.charAt(0).toUpperCase() +
-                inspectionRequest.status.slice(1).replace(/_/g, ' ')
-              : 'Pending'}
-            bold
-          />
-          <DetailRow
-            label="Created At"
-            value={formatDateTime(inspectionRequest.created_at)}
-          />
-          <DetailRow
-            label="Schedule Date"
-            value={formatDate(inspectionRequest.date_needed)}
-          />
-          <DetailRow
-            label="Technician Assigned"
-            value={inspectionRequest.technician?.name || 'Pending assignment'}
-            bold
-          />
+          <DetailRow label="Inspection Request ID" value={`IR-${inspectionRequest.id}`} bold />
+          <DetailRow label="Status" value={formatInspectionStatus(inspectionRequest.status)} bold />
+          <DetailRow label="Created At" value={formatDateTime(inspectionRequest.created_at)} />
+          <DetailRow label="Schedule Date" value={formatDate(inspectionRequest.date_needed)} />
+          <DetailRow label="Technician Assigned" value={inspectionRequest.technician?.name || 'Pending assignment'} bold />
         </View>
 
-        {/* \u2500\u2500 Request Details \u2500\u2500 */}
         <View style={s.card}>
           <Text style={s.cardTitle}>Request Details</Text>
-
-          <DetailRow
-            label="Contact Number"
-            value={inspectionRequest.contact_number || 'Not provided'}
-          />
-          <DetailRow
-            label="Address"
-            value={inspectionRequest.address || 'Not provided'}
-          />
-          <DetailRow
-            label="Address Additional Details"
-            value={inspectionRequest.address_details || 'Not provided'}
-          />
+          <DetailRow label="Contact Number" value={inspectionRequest.contact_number || 'Not provided'} />
+          <DetailRow label="Address" value={inspectionRequest.address || 'Not provided'} />
+          <DetailRow label="Address Additional Details" value={inspectionRequest.address_details || 'Not provided'} />
 
           <View style={s.descBlock}>
             <Text style={s.descLabel}>Problem Description</Text>
@@ -252,7 +306,23 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
           </View>
         </View>
 
-        {/* \u2500\u2500 Inspection-Based Quotation \u2500\u2500 */}
+        <View style={s.card}>
+          <Text style={s.cardTitle}>Updates Timeline</Text>
+          {timelineEvents.length === 0 ? (
+            <Text style={s.cardSubtitle}>No updates yet.</Text>
+          ) : (
+            timelineEvents.map((event, index) => (
+              <TimelineItem
+                key={`${event.status}-${event.datetime}-${index}`}
+                datetime={event.datetime}
+                status={event.status}
+                description={event.description}
+                isLast={index === timelineEvents.length - 1}
+              />
+            ))
+          )}
+        </View>
+
         <View style={s.card}>
           <Text style={s.cardTitle}>Inspection-Based Quotation</Text>
           <Text style={s.cardSubtitle}>
@@ -272,16 +342,12 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
               canOpenFinalQuotation ? s.goldBtn : s.disabledBtn,
               pressed && canOpenFinalQuotation && s.pressed,
             ]}>
-            <Text
-              style={
-                canOpenFinalQuotation ? s.goldBtnText : s.disabledBtnText
-              }>
+            <Text style={canOpenFinalQuotation ? s.goldBtnText : s.disabledBtnText}>
               View Inspection-Based Quotation
             </Text>
           </Pressable>
         </View>
 
-        {/* \u2500\u2500 bottom button \u2500\u2500 */}
         <Pressable
           onPress={() => navigation.goBack()}
           style={({pressed}) => [s.outlineBtn, pressed && s.pressed]}>
@@ -294,18 +360,14 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
   );
 }
 
-/* \u2500\u2500 styles \u2500\u2500 */
-
 const s = StyleSheet.create({
   safe: {flex: 1, backgroundColor: BG},
   scroll: {paddingHorizontal: 22, paddingTop: 20, paddingBottom: 30},
   pressed: {opacity: 0.85},
 
-  /* brand */
   brand: {fontSize: 22, fontWeight: '800', color: NAVY, marginBottom: 10},
   brandAccent: {color: GOLD},
 
-  /* back */
   backBtn: {
     width: 40,
     height: 40,
@@ -322,11 +384,9 @@ const s = StyleSheet.create({
   },
   backIcon: {fontSize: 28, color: NAVY, fontWeight: '600', marginTop: -2},
 
-  /* title */
   title: {fontSize: 26, fontWeight: '900', color: NAVY, marginBottom: 4},
   subtitle: {fontSize: 14, color: MUTED, lineHeight: 20, marginBottom: 18},
 
-  /* centered / loading */
   centered: {
     flex: 1,
     alignItems: 'center',
@@ -335,7 +395,6 @@ const s = StyleSheet.create({
   },
   loadingText: {color: MUTED, fontSize: 14, marginTop: 14},
 
-  /* error */
   errorTitle: {
     color: NAVY,
     fontSize: 22,
@@ -351,7 +410,6 @@ const s = StyleSheet.create({
     marginBottom: 16,
   },
 
-  /* badges row */
   badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -366,7 +424,6 @@ const s = StyleSheet.create({
   },
   typeBadgeText: {color: NAVY, fontSize: 12, fontWeight: '700'},
 
-  /* card */
   card: {
     backgroundColor: CARD,
     borderRadius: 22,
@@ -386,7 +443,6 @@ const s = StyleSheet.create({
     marginBottom: 14,
   },
 
-  /* detail row (horizontal label-value) */
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -405,7 +461,6 @@ const s = StyleSheet.create({
   },
   detailValueBold: {fontWeight: '800'},
 
-  /* description block */
   descBlock: {paddingTop: 14, borderTopColor: DIVIDER, borderTopWidth: 1},
   descLabel: {
     color: MUTED,
@@ -416,7 +471,59 @@ const s = StyleSheet.create({
   },
   descText: {color: NAVY, fontSize: 14, lineHeight: 22, opacity: 0.85},
 
-  /* buttons */
+  timelineItem: {
+    flexDirection: 'row',
+    marginTop: 12,
+  },
+  timelineDotCol: {
+    alignItems: 'center',
+    width: 18,
+    marginRight: 10,
+  },
+  timelineDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: NAVY,
+    zIndex: 1,
+  },
+  timelineConnector: {
+    flex: 1,
+    width: 2,
+    backgroundColor: DIVIDER,
+    marginTop: 3,
+    marginBottom: -6,
+  },
+  timelineBody: {
+    flex: 1,
+    paddingBottom: 10,
+  },
+  timelineDatetime: {
+    color: MUTED,
+    fontSize: 12,
+    marginBottom: 5,
+  },
+  timelineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  timelineBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+  },
+  timelineBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  timelineDesc: {
+    color: NAVY,
+    fontSize: 13,
+    flex: 1,
+  },
+
   goldBtn: {
     backgroundColor: GOLD,
     borderRadius: 28,
@@ -455,6 +562,5 @@ const s = StyleSheet.create({
   },
   disabledBtnText: {fontSize: 15, fontWeight: '800', color: MUTED},
 
-  /* spacer */
   spacer: {minHeight: 20},
 });

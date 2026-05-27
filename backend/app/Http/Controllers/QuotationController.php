@@ -717,6 +717,7 @@ private function finalQuotationOptions(): array
         'battery_factor' => (float) $defaultSettings['battery_factor'],
         'battery_voltage' => (float) $defaultSettings['battery_voltage'],
         'default_panel_watts' => (float) $defaultSettings['default_panel_watts'],
+        'net_metering_price' => (float) $defaultSettings['net_metering_price'],
     ];
 
     return $options;

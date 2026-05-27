@@ -73,7 +73,7 @@ class InspectionRequestController extends Controller
         ], 201);
     }
 
-    public function assignTechnician(Request $request, $id)
+    public function assignTechnician(Request $request, int $id)
     {
         $request->validate([
             'technician_id' => 'required|exists:users,id',
@@ -123,7 +123,7 @@ class InspectionRequestController extends Controller
         ]);
     }
 
-    public function updatePreferredDate(Request $request, $id)
+    public function updatePreferredDate(Request $request, int $id)
     {
         $validated = $request->validate([
             'date_needed' => 'required|date',
@@ -196,16 +196,22 @@ class InspectionRequestController extends Controller
         }
 
         $inspectionRequests = InspectionRequest::with(['customer', 'technician', 'completionReport.technician', 'completionReport.approver'])
+            ->withCount(['finalQuotation as final_quotation_count'])
             ->where('technician_id', $user->id)
             ->latest()
             ->get();
+
+        $inspectionRequests->each(function (InspectionRequest $inspectionRequest) {
+            $inspectionRequest->setAttribute('has_final_quotation', (bool) ($inspectionRequest->final_quotation_count ?? 0));
+            unset($inspectionRequest->final_quotation_count);
+        });
 
         return response()->json([
             'inspection_requests' => $inspectionRequests,
         ]);
     }
 
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request, int $id)
     {
         $request->validate([
             'status' => 'required|in:assigned,in_progress',
@@ -221,6 +227,7 @@ class InspectionRequestController extends Controller
 
         $inspectionRequest = InspectionRequest::query()
             ->with(['customer', 'technician', 'completionReport.technician', 'completionReport.approver'])
+            ->withCount(['finalQuotation as final_quotation_count'])
             ->findOrFail($id);
         $previousStatus = $inspectionRequest->status;
 
@@ -240,13 +247,16 @@ class InspectionRequestController extends Controller
             );
         }
 
+        $inspectionRequest->setAttribute('has_final_quotation', (bool) ($inspectionRequest->final_quotation_count ?? 0));
+        unset($inspectionRequest->final_quotation_count);
+
         return response()->json([
             'message' => 'Inspection request status updated successfully.',
             'inspection_request' => $inspectionRequest,
         ]);
     }
 
-    public function updateAdminStatus(Request $request, $id)
+    public function updateAdminStatus(Request $request, int $id)
     {
         $request->validate([
             'status' => 'required|in:pending,approved,scheduled,assigned,in_progress,cancelled,declined,completed',
@@ -291,7 +301,7 @@ class InspectionRequestController extends Controller
         ]);
     }
 
-    public function cancelByCustomer(Request $request, $id)
+    public function cancelByCustomer(Request $request, int $id)
     {
         $validated = $request->validate([
             'cancellation_note' => 'required|string|min:5|max:1000',

@@ -14,6 +14,7 @@ import AppButton from './AppButton';
 import AppInput from './AppInput';
 import {
   CompletionReport,
+  CompletionReportPayload,
   LocalCompletionPhoto,
   ServiceCompletionReportPayload,
 } from '../src/services/completionReportApi';
@@ -78,7 +79,17 @@ type Props = {
   report?: CompletionReport | null;
   canSubmit: boolean;
   submitting?: boolean;
-  onSubmit: (payload: ServiceCompletionReportPayload) => Promise<void> | void;
+  onSubmit: (
+    payload: (CompletionReportPayload | ServiceCompletionReportPayload) & {
+      completion_photos?: LocalCompletionPhoto[];
+    },
+  ) => Promise<void> | void;
+  showPhotoPicker?: boolean;
+  photosRequired?: boolean;
+  showFindingsField?: boolean;
+  showRecommendationsField?: boolean;
+  submitButtonTitle?: string;
+  blockedSubtitle?: string;
 };
 
 export default function ServiceCompletionReportCard({
@@ -88,13 +99,28 @@ export default function ServiceCompletionReportCard({
   canSubmit,
   submitting = false,
   onSubmit,
+  showPhotoPicker = true,
+  photosRequired = true,
+  showFindingsField = false,
+  showRecommendationsField = false,
+  submitButtonTitle = 'Submit Completion Report',
+  blockedSubtitle = 'Move this task to In Progress before submitting the completion report.',
 }: Props) {
   const [reportText, setReportText] = useState(report?.report_text || '');
+  const [findings, setFindings] = useState(report?.findings || '');
+  const [recommendations, setRecommendations] = useState(
+    report?.recommendations || '',
+  );
   const [photos, setPhotos] = useState<LocalCompletionPhoto[]>([]);
-  const [errors, setErrors] = useState<{summary?: string; photos?: string}>({});
+  const [errors, setErrors] = useState<{
+    summary?: string;
+    photos?: string;
+  }>({});
 
   useEffect(() => {
     setReportText(report?.report_text || '');
+    setFindings(report?.findings || '');
+    setRecommendations(report?.recommendations || '');
     setPhotos([]);
     setErrors({});
   }, [report]);
@@ -138,7 +164,7 @@ export default function ServiceCompletionReportCard({
       nextErrors.summary = 'Completion summary is required.';
     }
 
-    if (photos.length === 0) {
+    if (showPhotoPicker && photosRequired && photos.length === 0) {
       nextErrors.photos = 'At least one completion photo is required.';
     }
 
@@ -151,8 +177,12 @@ export default function ServiceCompletionReportCard({
 
     await onSubmit({
       report_text: trimmedReportText,
-      completion_photos: photos,
       completed_at: new Date().toISOString(),
+      findings: showFindingsField ? findings.trim() || undefined : undefined,
+      recommendations: showRecommendationsField
+        ? recommendations.trim() || undefined
+        : undefined,
+      completion_photos: showPhotoPicker ? photos : undefined,
     });
   };
 
@@ -203,7 +233,21 @@ export default function ServiceCompletionReportCard({
           </Text>
         </View>
 
-        {reportPhotos.length > 0 ? (
+        {report?.findings ? (
+          <View style={styles.readOnlyBlock}>
+            <Text style={styles.fieldLabel}>Findings</Text>
+            <Text style={styles.readOnlyText}>{report.findings}</Text>
+          </View>
+        ) : null}
+
+        {report?.recommendations ? (
+          <View style={styles.readOnlyBlock}>
+            <Text style={styles.fieldLabel}>Recommendations</Text>
+            <Text style={styles.readOnlyText}>{report.recommendations}</Text>
+          </View>
+        ) : null}
+
+        {showPhotoPicker && reportPhotos.length > 0 ? (
           <View style={styles.readOnlyBlock}>
             <Text style={styles.fieldLabel}>
               Completion Photos ({reportPhotos.length})
@@ -230,7 +274,7 @@ export default function ServiceCompletionReportCard({
       <Text style={styles.cardSubtitle}>
         {canSubmit
           ? subtitle
-          : 'Move this task to In Progress before submitting the completion report.'}
+          : blockedSubtitle}
       </Text>
 
       <AppInput
@@ -252,61 +296,94 @@ export default function ServiceCompletionReportCard({
         <Text style={styles.errorText}>{errors.summary}</Text>
       ) : null}
 
-      <View style={styles.photoSection}>
-        <Text style={styles.photoSectionLabel}>
-          Completion Photos <Text style={styles.requiredTag}>Required</Text>
-        </Text>
-        <Text style={styles.photoSectionHint}>
-          Upload at least one photo as proof of completion.
-        </Text>
+      {showFindingsField ? (
+        <AppInput
+          label="Findings"
+          value={findings}
+          onChangeText={setFindings}
+          placeholder="Optional: note issues observed, technical findings, or site constraints."
+          multiline
+          numberOfLines={4}
+          editable={canSubmit && !submitting}
+          style={styles.textArea}
+        />
+      ) : null}
 
-        <Pressable
-          onPress={handlePickPhotos}
-          disabled={!canSubmit || submitting}
-          style={({pressed}) => [
-            styles.photoPickerBtn,
-            (!canSubmit || submitting) && styles.photoPickerBtnDisabled,
-            pressed && styles.pressed,
-          ]}>
-          <Text
-            style={[
-              styles.photoPickerBtnText,
-              (!canSubmit || submitting) && styles.photoPickerBtnTextDisabled,
-            ]}>
-            Add Photos
+      {showRecommendationsField ? (
+        <AppInput
+          label="Recommendations"
+          value={recommendations}
+          onChangeText={setRecommendations}
+          placeholder="Optional: add next steps, quotation guidance, or follow-up reminders."
+          multiline
+          numberOfLines={4}
+          editable={canSubmit && !submitting}
+          style={styles.textArea}
+        />
+      ) : null}
+
+      {showPhotoPicker ? (
+        <View style={styles.photoSection}>
+          <Text style={styles.photoSectionLabel}>
+            Completion Photos{' '}
+            {photosRequired ? (
+              <Text style={styles.requiredTag}>Required</Text>
+            ) : null}
           </Text>
-        </Pressable>
+          <Text style={styles.photoSectionHint}>
+            {photosRequired
+              ? 'Upload at least one photo as proof of completion.'
+              : 'Upload photos if you want to attach proof of completion.'}
+          </Text>
 
-        {errors.photos ? (
-          <Text style={styles.errorText}>{errors.photos}</Text>
-        ) : null}
+          <Pressable
+            onPress={handlePickPhotos}
+            disabled={!canSubmit || submitting}
+            style={({pressed}) => [
+              styles.photoPickerBtn,
+              (!canSubmit || submitting) && styles.photoPickerBtnDisabled,
+              pressed && styles.pressed,
+            ]}>
+            <Text
+              style={[
+                styles.photoPickerBtnText,
+                (!canSubmit || submitting) && styles.photoPickerBtnTextDisabled,
+              ]}>
+              Add Photos
+            </Text>
+          </Pressable>
 
-        {photos.length > 0 ? (
-          <View style={styles.photoGrid}>
-            {photos.map(photo => (
-              <View key={photo.uri} style={styles.photoCard}>
-                <Image
-                  source={{uri: photo.uri}}
-                  style={styles.photoPreview}
-                  resizeMode="cover"
-                />
-                <Pressable
-                  onPress={() => handleRemovePhoto(photo.uri)}
-                  disabled={submitting}
-                  style={({pressed}) => [
-                    styles.photoRemoveBtn,
-                    pressed && styles.pressed,
-                  ]}>
-                  <Text style={styles.photoRemoveBtnText}>Remove</Text>
-                </Pressable>
-              </View>
-            ))}
-          </View>
-        ) : null}
-      </View>
+          {errors.photos ? (
+            <Text style={styles.errorText}>{errors.photos}</Text>
+          ) : null}
+
+          {photos.length > 0 ? (
+            <View style={styles.photoGrid}>
+              {photos.map(photo => (
+                <View key={photo.uri} style={styles.photoCard}>
+                  <Image
+                    source={{uri: photo.uri}}
+                    style={styles.photoPreview}
+                    resizeMode="cover"
+                  />
+                  <Pressable
+                    onPress={() => handleRemovePhoto(photo.uri)}
+                    disabled={submitting}
+                    style={({pressed}) => [
+                      styles.photoRemoveBtn,
+                      pressed && styles.pressed,
+                    ]}>
+                    <Text style={styles.photoRemoveBtnText}>Remove</Text>
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          ) : null}
+        </View>
+      ) : null}
 
       <AppButton
-        title={submitting ? 'Submitting...' : 'Submit Completion Report'}
+        title={submitting ? 'Submitting...' : submitButtonTitle}
         disabled={!canSubmit || submitting}
         onPress={handleSubmit}
         style={styles.submitButton}

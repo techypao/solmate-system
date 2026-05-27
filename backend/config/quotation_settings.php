@@ -13,5 +13,6 @@ return [
         'default_misc_cost' => 0.00,
         'default_panel_watts' => 610.00,
         'initial_price_per_kw' => 50000.00,
+        'net_metering_price' => 30000.00,
     ],
 ];

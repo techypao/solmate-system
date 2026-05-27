@@ -20,11 +20,11 @@ class QuotationItemBuilderPageController extends Controller
             'categories' => PricingItem::CATEGORIES,
             'initialQuotationId' => $request->query('quotation_id'),
             'availableQuotations' => Quotation::query()
-                ->with('customer:id,name')
+                ->with(['customer:id,name', 'inspectionRequest:id,status'])
                 ->where('quotation_type', 'final')
                 ->latest()
                 ->limit(10)
-                ->get(['id', 'user_id', 'quotation_type', 'status', 'created_at']),
+                ->get(['id', 'user_id', 'inspection_request_id', 'quotation_type', 'status', 'created_at']),
         ]);
     }
 }

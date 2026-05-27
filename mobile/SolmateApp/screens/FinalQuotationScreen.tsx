@@ -49,6 +49,7 @@ type FinalQuotationFormState = {
   battery_voltage: string;
   pv_system_type: PvSystemType | '';
   with_battery: boolean;
+  include_net_metering: boolean;
   inverter_type: string;
   battery_model: string;
   battery_capacity_ah: string;
@@ -97,6 +98,7 @@ type ComputedTotals = {
   laborCost: number;
   projectCost: number;
   optionalItemsSubtotal: number;
+  netMeteringCost: number;
   finalProjectCost: number;
   roiYears: number | null;
 };
@@ -155,6 +157,8 @@ const WIZARD_STEPS = [
 ] as const;
 
 const REQUEST_TIMEOUT_MS = 10000;
+const NET_METERING_LINE_ITEM_DESCRIPTION = 'Net Metering';
+const CUSTOM_LINE_ITEM_CATEGORY = 'misc';
 
 function sanitizeNumericInput(value: string) {
   const cleanedValue = value.replace(/[^0-9.]/g, '');
@@ -325,6 +329,7 @@ function buildInitialFormState(): FinalQuotationFormState {
     battery_voltage: '',
     pv_system_type: '',
     with_battery: true,
+    include_net_metering: false,
     inverter_type: '',
     battery_model: '',
     battery_capacity_ah: '',
@@ -632,9 +637,11 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         battery_factor: 1,
         battery_voltage: 51.2,
         default_panel_watts: 610,
+        net_metering_price: 30000,
       },
     [finalQuotationOptions?.computation_defaults],
   );
+  const netMeteringPrice = computationDefaults.net_metering_price;
   const supportsBatteryFlow =
     form.with_battery && form.pv_system_type !== 'on-grid';
   const sizingPreview = useMemo(
@@ -834,7 +841,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         unit: 'item',
         unit_amount: Number(unitAmount.toFixed(2)),
         total_amount: Number((qty * unitAmount).toFixed(2)),
-        category: 'optional',
+        category: CUSTOM_LINE_ITEM_CATEGORY,
       };
     });
   }, [form.optional_items]);
@@ -843,6 +850,21 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     () => optionalLineItems.filter(item => item.qty > 0),
     [optionalLineItems],
   );
+  const netMeteringLineItem = useMemo<OptionalQuotationLineItem | null>(() => {
+    if (!form.include_net_metering || netMeteringPrice <= 0) {
+      return null;
+    }
+
+    return {
+      id: -1,
+      description: NET_METERING_LINE_ITEM_DESCRIPTION,
+      qty: 1,
+      unit: 'service',
+      unit_amount: Number(netMeteringPrice.toFixed(2)),
+      total_amount: Number(netMeteringPrice.toFixed(2)),
+      category: CUSTOM_LINE_ITEM_CATEGORY,
+    };
+  }, [form.include_net_metering, netMeteringPrice]);
 
   const computedTotals = useMemo<ComputedTotals>(() => {
     const totals = {
@@ -854,6 +876,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
       laborCost: 0,
       projectCost: 0,
       optionalItemsSubtotal: 0,
+      netMeteringCost: 0,
       finalProjectCost: 0,
       roiYears: null as number | null,
     };
@@ -890,8 +913,13 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         .reduce((sum, item) => sum + item.total_amount, 0)
         .toFixed(2),
     );
+    totals.netMeteringCost = Number((netMeteringLineItem?.total_amount ?? 0).toFixed(2));
     totals.finalProjectCost = Number(
-      (totals.projectCost + totals.optionalItemsSubtotal).toFixed(2),
+      (
+        totals.projectCost +
+        totals.optionalItemsSubtotal +
+        totals.netMeteringCost
+      ).toFixed(2),
     );
 
     const monthlyBill = toNumberOrUndefined(form.monthly_electric_bill);
@@ -902,7 +930,12 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     }
 
     return totals;
-  }, [form.monthly_electric_bill, optionalLineItems, selectedLineItems]);
+  }, [
+    form.monthly_electric_bill,
+    netMeteringLineItem,
+    optionalLineItems,
+    selectedLineItems,
+  ]);
 
   const validationMessage = useMemo(() => {
     if (!form.monthly_electric_bill) {
@@ -1226,6 +1259,13 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           ? toNumberOrUndefined(form.battery_capacity_ah)
           : undefined,
         panel_watts: toNumberOrUndefined(form.panel_watts),
+        panel_cost: computedTotals.panelCost,
+        inverter_cost: computedTotals.inverterCost,
+        battery_cost: computedTotals.batteryCost,
+        bos_cost: computedTotals.bosCost,
+        materials_subtotal: computedTotals.materialsSubtotal,
+        labor_cost: computedTotals.laborCost,
+        project_cost: computedTotals.finalProjectCost,
         status: form.status,
         remarks: form.remarks.trim() || undefined,
       });
@@ -1270,6 +1310,17 @@ export default function FinalQuotationScreen({navigation, route}: any) {
             unit: item.unit,
             unit_amount: item.unit_amount,
           })),
+          ...(netMeteringLineItem
+            ? [
+                {
+                  description: netMeteringLineItem.description,
+                  category: netMeteringLineItem.category,
+                  qty: netMeteringLineItem.qty,
+                  unit: netMeteringLineItem.unit,
+                  unit_amount: netMeteringLineItem.unit_amount,
+                },
+              ]
+            : []),
           ...syncedOptionalLineItems.map(item => ({
             description: item.description,
             category: item.category,
@@ -1544,6 +1595,30 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           thumbColor={form.with_battery ? '#F4D000' : '#f8fafc'}
           value={form.with_battery}
           onValueChange={handleBatteryToggle}
+        />
+      </View>
+
+      <View style={styles.switchRow}>
+        <View style={styles.switchTextWrap}>
+          <Text style={styles.switchLabel}>Include Net Metering?</Text>
+          <Text style={styles.switchHint}>
+            {form.include_net_metering
+              ? `Yes. Adds ${formatQuotationCurrency(netMeteringPrice, {
+                  currency: 'PHP',
+                  fallback: 'PHP 0.00',
+                  spaceAfterCurrency: true,
+                })} to the saved quotation total.`
+              : 'No. Leave this off when the customer does not want net metering included.'}
+          </Text>
+          <Text style={styles.switchStateText}>
+            Selected: {form.include_net_metering ? 'Yes' : 'No'}
+          </Text>
+        </View>
+        <Switch
+          trackColor={{false: '#DDE7EE', true: '#fde68a'}}
+          thumbColor={form.include_net_metering ? '#F4D000' : '#f8fafc'}
+          value={form.include_net_metering}
+          onValueChange={value => updateField('include_net_metering', value)}
         />
       </View>
 
@@ -1931,8 +2006,40 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     <FormSection
       title="Optional Items"
       subtitle="Extra technician-added items that will be included in the final quotation computation.">
-      {form.optional_items.length > 0 ? (
+      {form.optional_items.length > 0 || netMeteringLineItem ? (
         <>
+          {netMeteringLineItem ? (
+            <View style={styles.selectedItemCard}>
+              <View style={styles.selectedItemHeader}>
+                <View style={styles.selectedItemTextWrap}>
+                  <Text style={styles.selectedItemName}>
+                    {netMeteringLineItem.description}
+                  </Text>
+                  <Text style={styles.selectedItemMeta}>
+                    Qty {netMeteringLineItem.qty.toFixed(0)} •{' '}
+                    {formatQuotationCurrency(netMeteringLineItem.unit_amount, {
+                      currency: 'PHP',
+                      fallback: 'PHP 0.00',
+                      spaceAfterCurrency: true,
+                    })}{' '}
+                    each
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.selectedItemTotalsRow}>
+                <Text style={styles.selectedItemTotalsLabel}>Net metering total</Text>
+                <Text style={styles.selectedItemTotalsValue}>
+                  {formatQuotationCurrency(netMeteringLineItem.total_amount, {
+                    currency: 'PHP',
+                    fallback: 'PHP 0.00',
+                    spaceAfterCurrency: true,
+                  })}
+                </Text>
+              </View>
+            </View>
+          ) : null}
+
           {optionalLineItems.map((item, index) => (
             <View key={item.id} style={styles.selectedItemCard}>
               <View style={styles.selectedItemHeader}>
@@ -2061,6 +2168,16 @@ export default function FinalQuotationScreen({navigation, route}: any) {
             })}
           </Text>
         </View>
+        <View style={styles.totalCard}>
+          <Text style={styles.totalLabel}>Net metering</Text>
+          <Text style={styles.totalValue}>
+            {formatQuotationCurrency(computedTotals.netMeteringCost, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
+          </Text>
+        </View>
       </View>
 
       <View style={styles.projectTotalCard}>
@@ -2072,10 +2189,21 @@ export default function FinalQuotationScreen({navigation, route}: any) {
             spaceAfterCurrency: true,
           })}
         </Text>
-        {computedTotals.optionalItemsSubtotal > 0 ? (
+        {computedTotals.optionalItemsSubtotal > 0 ||
+        computedTotals.netMeteringCost > 0 ? (
           <Text style={styles.projectTotalSubtext}>
             Base project cost:{' '}
             {formatQuotationCurrency(computedTotals.projectCost, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
+          </Text>
+        ) : null}
+        {computedTotals.netMeteringCost > 0 ? (
+          <Text style={styles.projectTotalSubtext}>
+            Net metering add-on:{' '}
+            {formatQuotationCurrency(computedTotals.netMeteringCost, {
               currency: 'PHP',
               fallback: 'PHP 0.00',
               spaceAfterCurrency: true,
@@ -2118,6 +2246,18 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           <Text style={styles.summaryLabel}>With battery</Text>
           <Text style={styles.summaryValue}>
             {supportsBatteryFlow ? 'Yes' : 'No'}
+          </Text>
+        </View>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Include net metering</Text>
+          <Text style={styles.summaryValue}>
+            {form.include_net_metering
+              ? `Yes (${formatQuotationCurrency(netMeteringPrice, {
+                  currency: 'PHP',
+                  fallback: 'PHP 0.00',
+                  spaceAfterCurrency: true,
+                })})`
+              : 'No'}
           </Text>
         </View>
         <View style={styles.summaryRow}>
@@ -2721,6 +2861,13 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontSize: 13,
     lineHeight: 19,
+  },
+  switchStateText: {
+    color: NAVY,
+    fontSize: 12,
+    fontWeight: '800',
+    marginTop: 8,
+    textTransform: 'uppercase',
   },
   addOptionalItemButton: {
     borderColor: GOLD,

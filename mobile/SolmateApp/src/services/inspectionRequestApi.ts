@@ -27,6 +27,7 @@ export type InspectionRequest = {
   longitude?: number | null;
   date_needed?: string | null;
   status?: InspectionRequestStatus | null;
+  has_final_quotation?: boolean | null;
   completion_report?: CompletionReport | null;
   created_at?: string;
   updated_at?: string;

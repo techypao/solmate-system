@@ -142,6 +142,7 @@ export type FinalQuotationComputationDefaults = {
   battery_factor: number;
   battery_voltage: number;
   default_panel_watts: number;
+  net_metering_price: number;
 };
 
 export type ReplaceQuotationLineItemsPayload = {
@@ -264,6 +265,7 @@ export async function getFinalQuotationOptions() {
       battery_factor: 1,
       battery_voltage: 51.2,
       default_panel_watts: 610,
+      net_metering_price: 30000,
     },
   });
 }

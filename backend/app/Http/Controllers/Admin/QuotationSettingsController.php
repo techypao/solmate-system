@@ -48,6 +48,7 @@ class QuotationSettingsController extends Controller
             'default_misc_cost' => 'sometimes|numeric|min:0',
             'default_panel_watts' => 'sometimes|numeric|min:1',
             'initial_price_per_kw' => 'sometimes|numeric|min:0',
+            'net_metering_price' => 'sometimes|numeric|min:0',
         ];
     }
 
@@ -76,6 +77,8 @@ class QuotationSettingsController extends Controller
             'default_panel_watts.min' => 'Default panel watts must be at least 1.',
             'initial_price_per_kw.numeric' => 'Pre-inspection estimate price per kW must be a valid number.',
             'initial_price_per_kw.min' => 'Pre-inspection estimate price per kW must be at least 0.',
+            'net_metering_price.numeric' => 'Net metering price must be a valid number.',
+            'net_metering_price.min' => 'Net metering price must be at least 0.',
         ];
     }
 }

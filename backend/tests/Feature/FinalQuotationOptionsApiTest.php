@@ -25,6 +25,7 @@ class FinalQuotationOptionsApiTest extends TestCase
             'battery_factor' => 1.15,
             'battery_voltage' => 48.00,
             'default_panel_watts' => 650.00,
+            'net_metering_price' => 32500.00,
         ]);
 
         Sanctum::actingAs($technician);
@@ -38,7 +39,8 @@ class FinalQuotationOptionsApiTest extends TestCase
             ->assertJsonPath('data.computation_defaults.pv_safety_factor', 1.9)
             ->assertJsonPath('data.computation_defaults.battery_factor', 1.15)
             ->assertJsonPath('data.computation_defaults.battery_voltage', 48)
-            ->assertJsonPath('data.computation_defaults.default_panel_watts', 650);
+                ->assertJsonPath('data.computation_defaults.default_panel_watts', 650)
+                ->assertJsonPath('data.computation_defaults.net_metering_price', 32500);
     }
 
     private function createUser(string $role, string $prefix): User

@@ -281,19 +281,34 @@
                     <select id="available_quotation_id" name="available_quotation_id">
                         <option value="">Select a quotation ID</option>
                         @foreach ($availableQuotations as $availableQuotation)
+                            @php
+                                $displayStatus = $availableQuotation->status ?? 'pending';
+
+                                if (
+                                    strtolower((string) ($availableQuotation->quotation_type ?? 'initial')) === 'final'
+                                    && strtolower((string) $displayStatus) === 'pending'
+                                    && filled($availableQuotation->inspectionRequest?->status)
+                                ) {
+                                    $displayStatus = $availableQuotation->inspectionRequest->status;
+                                }
+                            @endphp
                             <option value="{{ $availableQuotation->id }}">
                                 #{{ $availableQuotation->id }}
                                 @if ($availableQuotation->customer?->name)
                                     · {{ $availableQuotation->customer->name }}
                                 @endif
                                 · {{ strtolower((string) ($availableQuotation->quotation_type ?? 'initial')) === 'final' ? 'Inspection-Based Quotation' : 'Pre-Inspection Estimate' }}
-                                · {{ \Illuminate\Support\Str::headline($availableQuotation->status ?? 'pending') }}
+                                · {{ \Illuminate\Support\Str::headline($displayStatus) }}
                             </option>
                         @endforeach
                     </select>
                 </div>
 
-                <div class="ib-table-wrap">
+                <div class="actions" id="available-quotation-back-row" style="display: none; justify-content: flex-start; margin-top: 12px;">
+                    <button type="button" id="show-available-quotations-button" class="ib-use-btn">Back to available quotation IDs</button>
+                </div>
+
+                <div id="available-quotation-table" class="ib-table-wrap">
                     <table class="ib-table">
                         <thead>
                             <tr>
@@ -306,13 +321,24 @@
                         </thead>
                         <tbody>
                             @foreach ($availableQuotations as $availableQuotation)
+                                @php
+                                    $displayStatus = $availableQuotation->status ?? 'pending';
+
+                                    if (
+                                        strtolower((string) ($availableQuotation->quotation_type ?? 'initial')) === 'final'
+                                        && strtolower((string) $displayStatus) === 'pending'
+                                        && filled($availableQuotation->inspectionRequest?->status)
+                                    ) {
+                                        $displayStatus = $availableQuotation->inspectionRequest->status;
+                                    }
+                                @endphp
                                 <tr>
                                     <td class="ib-table-id">#{{ $availableQuotation->id }}</td>
                                     <td>{{ $availableQuotation->customer?->name ?? '—' }}</td>
                                     <td>
                                         <div class="ib-meta-stack">
                                             <span>{{ strtolower((string) ($availableQuotation->quotation_type ?? 'initial')) === 'final' ? 'Inspection-Based Quotation' : 'Pre-Inspection Estimate' }}</span>
-                                            <span class="ib-inline-note">{{ \Illuminate\Support\Str::headline($availableQuotation->status ?? 'pending') }}</span>
+                                            <span class="ib-inline-note">{{ \Illuminate\Support\Str::headline($displayStatus) }}</span>
                                         </div>
                                     </td>
                                     <td>{{ optional($availableQuotation->created_at)->format('M d, Y h:i A') ?? '—' }}</td>
@@ -387,6 +413,9 @@
         const quotationLoaderForm = document.getElementById('quotation-loader-form');
         const quotationIdInput = document.getElementById('quotation_id');
         const availableQuotationSelect = document.getElementById('available_quotation_id');
+        const availableQuotationTable = document.getElementById('available-quotation-table');
+        const availableQuotationBackRow = document.getElementById('available-quotation-back-row');
+        const showAvailableQuotationsButton = document.getElementById('show-available-quotations-button');
         const quotationFillButtons = document.querySelectorAll('[data-quotation-fill]');
         const loaderError = document.querySelector('[data-loader-error]');
         const loadQuotationButton = document.getElementById('load-quotation-button');
@@ -410,6 +439,16 @@
 
         function setVisible(element, visible) {
             element.style.display = visible ? 'block' : 'none';
+        }
+
+        function setAvailableQuotationTableVisible(visible) {
+            if (availableQuotationTable) {
+                setVisible(availableQuotationTable, visible);
+            }
+
+            if (availableQuotationBackRow) {
+                availableQuotationBackRow.style.display = visible ? 'none' : 'flex';
+            }
         }
 
         function getCookie(name) {
@@ -506,6 +545,7 @@
             const normalizedId = Number(quotationId);
 
             if (!normalizedId) {
+                setAvailableQuotationTableVisible(true);
                 return;
             }
 
@@ -516,6 +556,21 @@
             }
 
             loaderError.textContent = '';
+            setAvailableQuotationTableVisible(false);
+        }
+
+        function resetBuilderView() {
+            quotationState = null;
+            lineItemsState = [];
+            quotationSummary.innerHTML = '';
+            lineItemsList.innerHTML = '';
+            totalsPreview.innerHTML = '';
+            setVisible(lineItemsEmpty, true);
+            setVisible(builderLoading, false);
+            setVisible(builderContent, false);
+            setVisible(builderLocked, false);
+            clearMessages();
+            updateUrl(null);
         }
 
         function categoryOptions(selectedValue) {
@@ -887,6 +942,24 @@
                 quotationIdInput.focus();
             });
         });
+
+        if (showAvailableQuotationsButton) {
+            showAvailableQuotationsButton.addEventListener('click', () => {
+                resetBuilderView();
+                setAvailableQuotationTableVisible(true);
+                quotationIdInput.value = '';
+
+                if (availableQuotationSelect) {
+                    availableQuotationSelect.value = '';
+                }
+
+                if (availableQuotationSelect) {
+                    availableQuotationSelect.focus();
+                } else {
+                    quotationIdInput.focus();
+                }
+            });
+        }
 
         addLineItemButton.addEventListener('click', () => {
             clearMessages();

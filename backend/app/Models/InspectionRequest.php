@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class InspectionRequest extends Model
 {
@@ -42,5 +43,10 @@ class InspectionRequest extends Model
     public function completionReport()
     {
         return $this->hasOne(CompletionReport::class);
+    }
+
+    public function finalQuotation(): HasOne
+    {
+        return $this->hasOne(Quotation::class)->where('quotation_type', 'final');
     }
 }

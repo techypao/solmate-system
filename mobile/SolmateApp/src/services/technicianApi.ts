@@ -1,5 +1,5 @@
-import {apiGet, apiPost, apiPut} from './api';
-import {CompletionReportPayload} from './completionReportApi';
+import {apiGet, apiPostForm, apiPut} from './api';
+import {InspectionCompletionReportPayload} from './completionReportApi';
 import {InspectionRequest} from './inspectionRequestApi';
 
 export type TechnicianInspectionRequest = InspectionRequest;
@@ -52,11 +52,23 @@ export async function updateInspectionRequestStatus(
 
 export async function submitInspectionCompletionReport(
   inspectionRequestId: number,
-  payload: CompletionReportPayload,
+  payload: InspectionCompletionReportPayload,
 ) {
-  const response = await apiPost<UpdatedInspectionRequestResponse>(
+  const formData = new FormData();
+  formData.append('report_text', payload.report_text);
+  formData.append('completed_at', payload.completed_at);
+
+  payload.completion_photos.forEach((photo, index) => {
+    formData.append('completion_photos[]', {
+      uri: photo.uri,
+      type: photo.type || 'image/jpeg',
+      name: photo.name || `completion-photo-${Date.now()}-${index}.jpg`,
+    } as any);
+  });
+
+  const response = await apiPostForm<UpdatedInspectionRequestResponse>(
     `/technician/inspection-requests/${inspectionRequestId}/completion-report`,
-    payload,
+    formData,
   );
 
   return response?.inspection_request ?? ({} as TechnicianInspectionRequest);

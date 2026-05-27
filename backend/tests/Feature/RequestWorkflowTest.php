@@ -4,9 +4,12 @@ namespace Tests\Feature;
 
 use App\Models\CompletionReport;
 use App\Models\InspectionRequest;
+use App\Models\Quotation;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class RequestWorkflowTest extends TestCase
@@ -364,6 +367,8 @@ class RequestWorkflowTest extends TestCase
 
     public function test_inspection_request_flow_still_allows_customer_creation_admin_assignment_report_submission_and_admin_completion(): void
     {
+        Storage::fake('public');
+
         $customer = User::query()->create([
             'name' => 'Customer User',
             'email' => 'customer_inspection_flow@example.com',
@@ -409,7 +414,8 @@ class RequestWorkflowTest extends TestCase
         $this->actingAs($technician)
             ->getJson('/api/technician/inspection-requests')
             ->assertOk()
-            ->assertJsonPath('inspection_requests.0.id', $inspectionRequestId);
+            ->assertJsonPath('inspection_requests.0.id', $inspectionRequestId)
+            ->assertJsonPath('inspection_requests.0.has_final_quotation', false);
 
         $this->actingAs($technician)
             ->putJson("/api/technician/inspection-requests/{$inspectionRequestId}/status", [
@@ -419,15 +425,36 @@ class RequestWorkflowTest extends TestCase
             ->assertJsonPath('inspection_request.status', 'in_progress');
 
         $this->actingAs($technician)
-            ->postJson("/api/technician/inspection-requests/{$inspectionRequestId}/completion-report", [
+            ->post("/api/technician/inspection-requests/{$inspectionRequestId}/completion-report", [
                 'report_text' => 'Inspected the roof, captured measurements, and verified placement constraints.',
-                'findings' => 'North-facing roof section is shaded after 4 PM.',
-                'recommendations' => 'Prepare final quotation with revised panel placement.',
                 'completed_at' => '2026-04-21 16:30:00',
-            ])
+                'completion_photos' => [
+                    UploadedFile::fake()->image('inspection-proof-before-quote.jpg'),
+                ],
+            ], ['Accept' => 'application/json'])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Create the inspection-based quotation before notifying admin that this inspection is done.');
+
+        Quotation::query()->create([
+            'user_id' => $customer->id,
+            'inspection_request_id' => $inspectionRequestId,
+            'quotation_type' => 'final',
+            'monthly_electric_bill' => 5000,
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($technician)
+            ->post("/api/technician/inspection-requests/{$inspectionRequestId}/completion-report", [
+                'report_text' => 'Inspected the roof, captured measurements, and verified placement constraints.',
+                'completed_at' => '2026-04-21 16:30:00',
+                'completion_photos' => [
+                    UploadedFile::fake()->image('inspection-proof.jpg'),
+                ],
+            ], ['Accept' => 'application/json'])
             ->assertCreated()
             ->assertJsonPath('inspection_request.status', 'in_progress')
-            ->assertJsonPath('inspection_request.completion_report.status', 'pending');
+            ->assertJsonPath('inspection_request.completion_report.status', 'pending')
+            ->assertJsonCount(1, 'inspection_request.completion_report.photos');
 
         $this->actingAs($admin)
             ->putJson("/api/admin/inspection-requests/{$inspectionRequestId}/status", [
@@ -447,6 +474,7 @@ class RequestWorkflowTest extends TestCase
             'inspection_request_id' => $inspectionRequestId,
             'status' => CompletionReport::STATUS_APPROVED,
         ]);
+        $this->assertDatabaseCount('completion_report_photos', 1);
     }
 
     public function test_inspection_request_can_store_optional_map_coordinates(): void

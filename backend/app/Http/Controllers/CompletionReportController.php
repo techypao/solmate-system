@@ -95,7 +95,7 @@ class CompletionReportController extends Controller
 
     public function submitForInspection(Request $request, int $id)
     {
-        $validated = $request->validate($this->rules());
+        $validated = $request->validate($this->inspectionRules());
         $technician = $request->user();
 
         if ($technician->role !== User::ROLE_TECHNICIAN) {
@@ -128,18 +128,43 @@ class CompletionReportController extends Controller
             ], 422);
         }
 
-        CompletionReport::query()->create([
-            'inspection_request_id' => $inspectionRequest->id,
-            'technician_id' => $technician->id,
-            'report_text' => trim($validated['report_text']),
-            'findings' => $this->nullableTrimmed($validated['findings'] ?? null),
-            'recommendations' => $this->nullableTrimmed($validated['recommendations'] ?? null),
-            'status' => CompletionReport::STATUS_PENDING,
-            'completed_at' => $validated['completed_at'],
-            'submitted_at' => now(),
-        ]);
+        if (! $inspectionRequest->finalQuotation()->exists()) {
+            return response()->json([
+                'message' => 'Create the inspection-based quotation before notifying admin that this inspection is done.',
+            ], 422);
+        }
 
-        $inspectionRequest->load(['customer', 'technician', 'completionReport.technician', 'completionReport.approver']);
+        DB::transaction(function () use ($inspectionRequest, $technician, $validated) {
+            $report = CompletionReport::query()->create([
+                'inspection_request_id' => $inspectionRequest->id,
+                'technician_id' => $technician->id,
+                'report_text' => trim($validated['report_text']),
+                'status' => CompletionReport::STATUS_PENDING,
+                'completed_at' => $validated['completed_at'],
+                'submitted_at' => now(),
+            ]);
+
+            $storedPaths = [];
+            try {
+                foreach ($validated['completion_photos'] as $photo) {
+                    $path = $photo->store("completion-reports/{$report->id}", CompletionReportPhoto::PUBLIC_DISK);
+                    $storedPaths[] = $path;
+                    CompletionReportPhoto::query()->create([
+                        'completion_report_id' => $report->id,
+                        'image_path' => $path,
+                    ]);
+                }
+            } catch (\Throwable $throwable) {
+                foreach ($storedPaths as $path) {
+                    Storage::disk(CompletionReportPhoto::PUBLIC_DISK)->delete($path);
+                }
+
+                throw $throwable;
+            }
+        });
+
+        $inspectionRequest->load(['customer', 'technician', 'completionReport.technician', 'completionReport.approver', 'completionReport.photos']);
+        $inspectionRequest->setAttribute('has_final_quotation', true);
         $this->notificationService->notifyAdminsOfCompletionReportSubmission($inspectionRequest, $technician->id);
 
         return response()->json([
@@ -158,20 +183,13 @@ class CompletionReportController extends Controller
         ];
     }
 
-    private function rules(): array
+    private function inspectionRules(): array
     {
         return [
             'report_text' => ['required', 'string'],
-            'findings' => ['nullable', 'string'],
-            'recommendations' => ['nullable', 'string'],
             'completed_at' => ['required', 'date'],
+            'completion_photos' => ['required', 'array', 'min:1'],
+            'completion_photos.*' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
         ];
-    }
-
-    private function nullableTrimmed(?string $value): ?string
-    {
-        $trimmed = trim((string) $value);
-
-        return $trimmed !== '' ? $trimmed : null;
     }
 }

@@ -30,6 +30,7 @@ class QuotationSettingsPageController extends Controller
                 'default_misc_cost'    => ['label' => 'Default misc cost',                'step' => '0.01', 'min' => '0'],
                 'default_panel_watts'  => ['label' => 'Default panel watts',              'step' => '0.01', 'min' => '1'],
                 'initial_price_per_kw' => ['label' => 'Pre-inspection estimate price per kW', 'step' => '0.01', 'min' => '0'],
+                'net_metering_price'   => ['label' => 'Net metering price',               'step' => '0.01', 'min' => '0'],
             ],
             'defaults' => $this->quotationSettingsService->defaultValues(),
         ]);

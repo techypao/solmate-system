@@ -335,10 +335,18 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
 
   const handleCompletionReportSubmit = async (payload: {
     report_text: string;
-    completion_photos: Array<{uri: string; type: string; name: string | null}>;
+    completion_photos?: Array<{uri: string; type: string; name: string | null}>;
     completed_at: string;
   }) => {
     if (!serviceRequest || actionLoading) {
+      return;
+    }
+
+    if (!payload.completion_photos || payload.completion_photos.length === 0) {
+      Alert.alert(
+        'Submission failed',
+        'At least one completion photo is required.',
+      );
       return;
     }
 
@@ -347,7 +355,11 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
 
       const updatedServiceRequest = await submitTechnicianServiceCompletionReport(
         serviceRequest.id,
-        payload,
+        {
+          report_text: payload.report_text,
+          completion_photos: payload.completion_photos,
+          completed_at: payload.completed_at,
+        },
       );
 
       const nextRequest =

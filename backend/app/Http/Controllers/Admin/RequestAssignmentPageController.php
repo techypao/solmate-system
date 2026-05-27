@@ -35,7 +35,7 @@ class RequestAssignmentPageController extends Controller
                 ->latest()
                 ->get(),
             'inspectionRequests' => InspectionRequest::query()
-                ->with(['customer', 'technician', 'completionReport.technician', 'completionReport.approver'])
+                ->with(['customer', 'technician', 'completionReport.technician', 'completionReport.approver', 'completionReport.photos'])
                 ->orderByRaw('CASE WHEN technician_id IS NULL THEN 0 ELSE 1 END')
                 ->latest()
                 ->get(),

@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 
-import {CompletionReportCard, StatusBadge} from '../components';
+import {AppButton, StatusBadge} from '../components';
+import ServiceCompletionReportCard from '../components/ServiceCompletionReportCard';
 import {ApiError} from '../src/services/api';
 import {
   getAssignedInspectionRequestById,
@@ -24,7 +25,9 @@ import {
   canCreateFinalQuotation,
   formatDateTime,
   getCustomerName,
+  formatServiceRequestStatus,
 } from '../src/utils/technicianRequests';
+import {getSolmateStatusColors} from '../src/theme/colors';
 
 // ─── colour tokens ────────────────────────────────────────────────────────────
 const NAVY   = '#123A5A';
@@ -72,6 +75,48 @@ function isScheduledForToday(dateNeeded?: string | null) {
     scheduledDate.getFullYear() === today.getFullYear() &&
     scheduledDate.getMonth() === today.getMonth() &&
     scheduledDate.getDate() === today.getDate()
+  );
+}
+
+function formatInspectionStatus(status?: string | null) {
+  return formatServiceRequestStatus(status);
+}
+
+function TimelineItem({
+  datetime,
+  status,
+  description,
+  isLast,
+}: {
+  datetime: string;
+  status: string;
+  description: string;
+  isLast: boolean;
+}) {
+  const colors = getSolmateStatusColors(status);
+
+  return (
+    <View style={s.timelineItem}>
+      <View style={s.timelineDotCol}>
+        <View style={s.timelineDot} />
+        {!isLast ? <View style={s.timelineConnector} /> : null}
+      </View>
+      <View style={s.timelineBody}>
+        <Text style={s.timelineDatetime}>{datetime}</Text>
+        <View style={s.timelineRow}>
+          <View
+            style={[
+              s.timelineBadge,
+              {backgroundColor: colors.backgroundColor},
+            ]}>
+            <Text style={[s.timelineBadgeText, {color: colors.textColor}]}>
+              {formatInspectionStatus(status)}
+            </Text>
+          </View>
+          <Text style={s.timelineDesc}>{description}</Text>
+        </View>
+      </View>
+    </View>
   );
 }
 
@@ -147,9 +192,18 @@ function BottomNav({onPress, activeTab}: {onPress: (t: Tab) => void; activeTab: 
 }
 
 // ─── status options ───────────────────────────────────────────────────────────
-const STATUS_OPTIONS: {label: string; value: TechnicianUpdatableStatus}[] = [
-  {label: 'Assigned',    value: 'assigned'},
-  {label: 'In Progress', value: 'in_progress'},
+const STATUS_OPTIONS: Array<{
+  label: string;
+  value: TechnicianUpdatableStatus;
+  currentStatuses: string[];
+  successMessage: string;
+}> = [
+  {
+    label: 'Mark In Progress',
+    value: 'in_progress',
+    currentStatuses: ['assigned'],
+    successMessage: 'The inspection request is now in progress.',
+  },
 ];
 
 // ─── shared header skeleton ───────────────────────────────────────────────────
@@ -181,8 +235,6 @@ export default function RequestDetailsScreen({navigation, route}: any) {
   const [showCompletionReportForm, setShowCompletionReportForm] = useState(
     !!initialInspectionRequest?.completion_report,
   );
-  const [selectedStatus, setSelectedStatus] =
-    useState<TechnicianUpdatableStatus | null>(null);
 
   const loadInspectionRequest = useCallback(
     async (showLoadingState = false) => {
@@ -221,9 +273,14 @@ export default function RequestDetailsScreen({navigation, route}: any) {
     }, [inspectionRequest, loadInspectionRequest]),
   );
 
-  // Save = apply the selected status pill (if changed), then stay on screen
-  const handleSave = async () => {
-    if (!inspectionRequest) {navigation.goBack(); return;}
+  const handleStatusUpdate = async (
+    nextStatus: TechnicianUpdatableStatus,
+    successMessage: string,
+  ) => {
+    if (!inspectionRequest || actionLoading) {
+      return;
+    }
+
     if (!isScheduledForToday(inspectionRequest.date_needed)) {
       Alert.alert(
         'Status update unavailable',
@@ -231,26 +288,34 @@ export default function RequestDetailsScreen({navigation, route}: any) {
       );
       return;
     }
-    const statusToSave = selectedStatus;
-    if (!statusToSave || statusToSave === inspectionRequest.status) {
-      Alert.alert('No changes', 'Select a new status before saving.');
-      return;
-    }
+
     try {
       setActionLoading(true);
       const updated = await updateInspectionRequestStatus(
         inspectionRequest.id,
-        statusToSave,
+        nextStatus,
       );
-      setInspectionRequest(updated);
-      if (statusToSave !== 'in_progress') {
+
+      const nextRequest =
+        updated?.id !== undefined
+          ? updated
+          : {
+              ...inspectionRequest,
+              status: nextStatus,
+            };
+
+      setInspectionRequest(nextRequest);
+      if (nextStatus !== 'in_progress') {
         setShowCompletionReportForm(false);
       }
-      setSelectedStatus(null);
-      Alert.alert('Saved', 'Status updated successfully.');
+      navigation.replace(route.name, {
+        inspectionRequestId: nextRequest.id,
+        initialInspectionRequest: nextRequest,
+      });
+      Alert.alert('Success', successMessage);
     } catch (error) {
       Alert.alert(
-        'Save failed',
+        'Update failed',
         error instanceof ApiError ? error.message : 'Could not update status.',
       );
     } finally {
@@ -260,11 +325,26 @@ export default function RequestDetailsScreen({navigation, route}: any) {
 
   const handleCompletionReportSubmit = async (payload: {
     report_text: string;
-    findings?: string;
-    recommendations?: string;
+    completion_photos?: Array<{uri: string; type: string; name: string | null}>;
     completed_at: string;
   }) => {
     if (!inspectionRequest || actionLoading) {
+      return;
+    }
+
+    if (!payload.completion_photos || payload.completion_photos.length === 0) {
+      Alert.alert(
+        'Submission failed',
+        'At least one completion photo is required.',
+      );
+      return;
+    }
+
+    if (!inspectionRequest.has_final_quotation) {
+      Alert.alert(
+        'Quotation required',
+        'Create the inspection-based quotation before notifying admin that this inspection is done.',
+      );
       return;
     }
 
@@ -272,10 +352,26 @@ export default function RequestDetailsScreen({navigation, route}: any) {
       setActionLoading(true);
       const updated = await submitInspectionCompletionReport(
         inspectionRequest.id,
-        payload,
+        {
+          report_text: payload.report_text,
+          completion_photos: payload.completion_photos,
+          completed_at: payload.completed_at,
+        },
       );
-      setInspectionRequest(updated);
+
+      const nextRequest =
+        updated?.id !== undefined
+          ? updated
+          : {
+              ...inspectionRequest,
+            };
+
+      setInspectionRequest(nextRequest);
       setShowCompletionReportForm(true);
+      navigation.replace(route.name, {
+        inspectionRequestId: nextRequest.id,
+        initialInspectionRequest: nextRequest,
+      });
       Alert.alert(
         'Report submitted',
         'Completion report submitted. Waiting for admin review.',
@@ -285,7 +381,7 @@ export default function RequestDetailsScreen({navigation, route}: any) {
           'Submission failed',
           error instanceof ApiError
             ? error.message
-          : 'Could not submit the completion notes.',
+          : 'Could not submit the completion report.',
         );
     } finally {
       setActionLoading(false);
@@ -343,8 +439,13 @@ export default function RequestDetailsScreen({navigation, route}: any) {
     );
   }
 
-  const activeStatus = selectedStatus ?? (inspectionRequest.status as TechnicianUpdatableStatus);
   const canCreateQuote = canCreateFinalQuotation(inspectionRequest.status);
+  const hasFinalQuotation = !!inspectionRequest.has_final_quotation;
+  const canNotifyAdminDone =
+    hasFinalQuotation &&
+    (inspectionRequest.status || '').toLowerCase() === 'in_progress' &&
+    !inspectionRequest.completion_report &&
+    !showCompletionReportForm;
   const pendingAdminReview =
     !!inspectionRequest.completion_report &&
     (inspectionRequest.completion_report.status || '').toLowerCase() !==
@@ -361,6 +462,76 @@ export default function RequestDetailsScreen({navigation, route}: any) {
       }
     : null;
   const canUpdateStatusToday = isScheduledForToday(inspectionRequest.date_needed);
+  const availableActions = canUpdateStatusToday
+    ? STATUS_OPTIONS.filter(option =>
+        option.currentStatuses.includes((inspectionRequest.status || '').toLowerCase()),
+      )
+    : [];
+  const timelineEvents = useMemo(() => {
+    if (!inspectionRequest) {
+      return [];
+    }
+
+    const events: Array<{
+      datetime: string;
+      status: string;
+      description: string;
+    }> = [];
+
+    if (inspectionRequest.created_at) {
+      events.push({
+        datetime: formatDateTime(inspectionRequest.created_at),
+        status: 'pending',
+        description: 'Request submitted',
+      });
+    }
+
+    const normalizedStatus = (inspectionRequest.status || '').toLowerCase();
+
+    if (['assigned', 'in_progress', 'completed'].includes(normalizedStatus)) {
+      events.push({
+        datetime: formatDateTime(inspectionRequest.updated_at),
+        status: 'assigned',
+        description: 'Assigned to technician',
+      });
+    }
+
+    if (['in_progress', 'completed'].includes(normalizedStatus)) {
+      events.push({
+        datetime: formatDateTime(inspectionRequest.updated_at),
+        status: 'in_progress',
+        description: 'Inspection started',
+      });
+    }
+
+    if (inspectionRequest.completion_report?.submitted_at) {
+      events.push({
+        datetime: formatDateTime(inspectionRequest.completion_report.submitted_at),
+        status: 'in_progress',
+        description: 'Completion report submitted',
+      });
+    }
+
+    if (
+      (inspectionRequest.completion_report?.status || '').toLowerCase() === 'approved'
+    ) {
+      events.push({
+        datetime: formatDateTime(inspectionRequest.completion_report?.approved_at),
+        status: 'approved',
+        description: 'Completion report approved',
+      });
+    }
+
+    if (normalizedStatus === 'completed') {
+      events.push({
+        datetime: formatDateTime(inspectionRequest.updated_at),
+        status: 'completed',
+        description: 'Inspection completed',
+      });
+    }
+
+    return events;
+  }, [inspectionRequest]);
 
   return (
     <View style={s.root}>
@@ -419,52 +590,60 @@ export default function RequestDetailsScreen({navigation, route}: any) {
             </Text>
           </View>
 
-          {/* ── Update Status ── */}
           <View style={s.card}>
-            <Text style={s.cardTitle}>Update Status</Text>
-            {!canUpdateStatusToday ? (
-              <Text style={s.statusLockMessage}>
-                Status updates are only allowed for today&apos;s tasks.
-              </Text>
-            ) : null}
-            <View style={s.statusRow}>
-              {STATUS_OPTIONS.map(opt => {
-                const isActive = activeStatus === opt.value;
-                return (
-                  <Pressable
-                    key={opt.value}
-                    style={[s.statusPill, isActive && s.statusPillActive]}
-                    onPress={() => setSelectedStatus(opt.value)}
-                    disabled={actionLoading || !canUpdateStatusToday}>
-                    <Text
-                      style={[s.statusPillText, isActive && s.statusPillTextActive]}>
-                      {opt.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+            <Text style={s.cardTitle}>Updates Timeline</Text>
+            {timelineEvents.length === 0 ? (
+              <Text style={s.emptyText}>No updates yet.</Text>
+            ) : (
+              timelineEvents.map((event, index) => (
+                <TimelineItem
+                  key={`${event.status}-${event.datetime}-${index}`}
+                  datetime={event.datetime}
+                  status={event.status}
+                  description={event.description}
+                  isLast={index === timelineEvents.length - 1}
+                />
+              ))
+            )}
           </View>
 
-          {(inspectionRequest.status || '').toLowerCase() === 'in_progress' &&
-          !inspectionRequest.completion_report &&
-          !showCompletionReportForm ? (
-            <Pressable
-              style={({pressed}) => [s.btnSecondary, pressed && s.pressed]}
-              onPress={() => setShowCompletionReportForm(true)}
-              disabled={actionLoading}>
-              <Text style={s.btnSecondaryText}>Notify Admin Inspection Done</Text>
-            </Pressable>
+          {!hasFinalQuotation &&
+          (inspectionRequest.status || '').toLowerCase() === 'in_progress' &&
+          !inspectionRequest.completion_report ? (
+            <View style={s.card}>
+              <Text style={s.cardTitle}>Quotation Required</Text>
+              <Text style={s.emptyText}>
+                Create the inspection-based quotation first before notifying admin that this inspection is done.
+              </Text>
+            </View>
+          ) : null}
+
+          {canNotifyAdminDone ? (
+            <View style={s.actionsBlock}>
+              <AppButton
+                title="Notify Admin Inspection Done"
+                onPress={() => setShowCompletionReportForm(true)}
+                disabled={actionLoading}
+                style={[s.actionBtn, s.actionBtnPrimary]}
+                textStyle={s.actionBtnPrimaryText}
+              />
+            </View>
           ) : null}
 
           {showCompletionReportForm || inspectionRequest.completion_report ? (
-            <CompletionReportCard
-              title="Inspection Completion Notes"
-              subtitle="Submit the technician completion notes after the site inspection is finished. Admin approval is required before this inspection becomes completed."
+            <ServiceCompletionReportCard
+              title="Completion Notes"
+              subtitle="Submit the completion report after finishing the on-site work. Admin approval is required before this request becomes completed."
               report={inspectionRequest.completion_report}
               canSubmit={
+                hasFinalQuotation &&
                 (inspectionRequest.status || '').toLowerCase() === 'in_progress' &&
                 !inspectionRequest.completion_report
+              }
+              blockedSubtitle={
+                hasFinalQuotation
+                  ? 'Move this task to In Progress before submitting the completion report.'
+                  : 'Create the inspection-based quotation before notifying admin that this inspection is done.'
               }
               submitting={actionLoading}
               onSubmit={handleCompletionReportSubmit}
@@ -472,31 +651,42 @@ export default function RequestDetailsScreen({navigation, route}: any) {
           ) : null}
 
           {/* ── Action Buttons ── */}
-          {canCreateQuote ? (
-            <Pressable
-              style={({pressed}) => [s.btnPrimary, pressed && s.pressed]}
-              onPress={() => {
-                navigation.navigate('FinalQuotationForm', {
-                  inspectionRequestId: inspectionRequest.id,
-                  inspectionRequest,
-                });
-              }}>
-              <Text style={s.btnPrimaryText}>Create Inspection-Based Quotation</Text>
-            </Pressable>
-          ) : null}
+          <View style={s.actionsBlock}>
+            {availableActions.map(action => (
+              <AppButton
+                key={action.value}
+                title={actionLoading ? 'Saving...' : action.label}
+                disabled={actionLoading}
+                onPress={() =>
+                  handleStatusUpdate(action.value, action.successMessage)
+                }
+                style={[s.actionBtn, s.actionBtnPrimary]}
+                textStyle={s.actionBtnPrimaryText}
+              />
+            ))}
 
-          <Pressable
-            style={({pressed}) => [
-              s.btnSecondary,
-              (actionLoading || !canUpdateStatusToday) && s.btnDisabled,
-              pressed && s.pressed,
-            ]}
-            onPress={handleSave}
-            disabled={actionLoading || !canUpdateStatusToday}>
-            <Text style={s.btnSecondaryText}>
-              {actionLoading ? 'Saving…' : 'Save'}
-            </Text>
-          </Pressable>
+            {canCreateQuote ? (
+              <AppButton
+                title="Create Inspection-Based Quotation"
+                onPress={() => {
+                  navigation.navigate('FinalQuotationForm', {
+                    inspectionRequestId: inspectionRequest.id,
+                    inspectionRequest,
+                  });
+                }}
+                style={[s.actionBtn, s.actionBtnPrimary]}
+                textStyle={s.actionBtnPrimaryText}
+              />
+            ) : null}
+
+            <AppButton
+              title="Back"
+              variant="outline"
+              onPress={() => navigation.goBack()}
+              style={[s.actionBtn, s.actionBtnSecondary]}
+              textStyle={s.actionBtnSecondaryText}
+            />
+          </View>
 
         </ScrollView>
       </SafeAreaView>
@@ -643,67 +833,87 @@ const s = StyleSheet.create({
     borderTopColor: '#DDE7EE',
   },
 
-  // status pills
-  statusRow: {
+  timelineItem: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#DDE7EE',
+    marginTop: 12,
   },
-  statusPill: {
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#b8c4d8',
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    backgroundColor: CARD,
+  timelineDotCol: {
+    alignItems: 'center',
+    width: 18,
+    marginRight: 10,
   },
-  statusPillActive: {
+  timelineDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: NAVY,
-    borderColor: NAVY,
+    zIndex: 1,
   },
-  statusPillText:       {fontSize: 13, color: NAVY, fontWeight: '600'},
-  statusPillTextActive: {color: CARD},
-  statusLockMessage: {
+  timelineConnector: {
+    flex: 1,
+    width: 2,
+    backgroundColor: BORDER,
+    marginTop: 3,
+    marginBottom: -6,
+  },
+  timelineBody: {
+    flex: 1,
+    paddingBottom: 10,
+  },
+  timelineDatetime: {
     fontSize: 13,
     color: MUTED,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#DDE7EE',
+    marginBottom: 5,
+  },
+  timelineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  timelineBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+  },
+  timelineBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  timelineDesc: {
+    color: NAVY,
+    fontSize: 13,
+    flex: 1,
+  },
+  emptyText: {
+    color: MUTED,
+    fontSize: 13,
+    fontStyle: 'italic',
+    marginTop: 8,
   },
 
   // action buttons
-  btnPrimary: {
-    backgroundColor: GOLD,
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
+  actionsBlock: {
     marginBottom: 10,
-    shadowColor: GOLD,
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.30,
-    shadowRadius: 8,
-    elevation: 3,
   },
-  btnPrimaryText: {
-    color: CARD,
-    fontSize: 16,
+  actionBtn: {
+    marginBottom: 10,
+  },
+  actionBtnPrimary: {
+    backgroundColor: GOLD,
+    borderColor: GOLD,
+  },
+  actionBtnPrimaryText: {
+    color: NAVY,
     fontWeight: '800',
   },
-  btnSecondary: {
+  actionBtnSecondary: {
     backgroundColor: CARD,
-    borderRadius: 14,
+    borderColor: NAVY,
     borderWidth: 1.5,
-    borderColor: '#b8c4d8',
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginBottom: 10,
   },
-  btnSecondaryText: {
+  actionBtnSecondaryText: {
     color: NAVY,
-    fontSize: 15,
     fontWeight: '700',
   },
   btnDisabled: {

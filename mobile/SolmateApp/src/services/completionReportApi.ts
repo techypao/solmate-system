@@ -52,3 +52,9 @@ export type ServiceCompletionReportPayload = {
   completion_photos: LocalCompletionPhoto[];
   completed_at: string;
 };
+
+export type InspectionCompletionReportPayload = {
+  report_text: string;
+  completion_photos: LocalCompletionPhoto[];
+  completed_at: string;
+};
