@@ -1,4 +1,4 @@
-import React, {useCallback, useMemo, useState} from 'react';
+import React, {useCallback, useContext, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -30,6 +30,7 @@ import {
   getServiceRequestStatusColors,
 } from '../src/utils/technicianRequests';
 import {getSolmateStatusColors, solmateColors} from '../src/theme/colors';
+import {AuthContext} from '../src/context/AuthContext';
 
 function formatDate(value?: string | null, fallback = 'Flexible') {
   if (!value) {
@@ -178,6 +179,8 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
   const initialServiceRequest = route?.params?.initialServiceRequest as
     | ServiceRequest
     | undefined;
+
+  const {user, setUser} = useContext(AuthContext) as any;
 
   const [serviceRequest, setServiceRequest] = useState<ServiceRequest | null>(
     initialServiceRequest || null,
@@ -463,14 +466,14 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
 
     try {
       setActionLoading(true);
-      const updatedServiceRequest = await cancelServiceRequestByCustomer(
+      const response = await cancelServiceRequestByCustomer(
         serviceRequest.id,
         trimmedNote,
       );
 
       const nextRequest =
-        updatedServiceRequest?.id !== undefined
-          ? updatedServiceRequest
+        response?.id !== undefined
+          ? response
           : {
               ...serviceRequest,
               status: 'cancelled',
@@ -480,16 +483,32 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
       setServiceRequest(nextRequest);
       setShowCancelModal(false);
       setCancellationNote('');
+
+      if (response?.cancellation_count !== undefined) {
+        setUser((prev: any) => ({
+          ...prev,
+          cancellation_count: response.cancellation_count,
+        }));
+      }
+
       navigation.replace(route.name, {
         serviceRequestId: nextRequest.id,
         initialServiceRequest: nextRequest,
         mode,
         requestCategory: customerRequestCategory,
       });
-      Alert.alert(
-        'Cancellation submitted',
-        'Your service request was cancelled and the admin has been notified.',
-      );
+
+      if (response?.account_archived) {
+        Alert.alert(
+          'Account Locked',
+          'Your account has been locked due to repeated cancellations. Please contact admin to regain access.',
+        );
+      } else {
+        Alert.alert(
+          'Cancellation submitted',
+          'Your service request was cancelled and the admin has been notified.',
+        );
+      }
     } catch (error) {
       if (error instanceof ApiError) {
         Alert.alert('Cancellation failed', error.message);
@@ -501,6 +520,26 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
       }
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const openCancelModal = () => {
+    const currentCount = (user?.cancellation_count ?? 0) as number;
+    if (currentCount >= 2) {
+      Alert.alert(
+        'Final Cancellation Warning',
+        'This is your 3rd cancellation. Proceeding will permanently lock your account and you will need to contact admin to regain access. Are you sure you want to continue?',
+        [
+          {text: 'Go Back', style: 'cancel'},
+          {
+            text: 'Proceed Anyway',
+            style: 'destructive',
+            onPress: () => setShowCancelModal(true),
+          },
+        ],
+      );
+    } else {
+      setShowCancelModal(true);
     }
   };
 
@@ -767,7 +806,7 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
           {customerCanCancel ? (
             <AppButton
               title={actionLoading ? 'Submitting...' : 'Cancel Service Request'}
-              onPress={() => setShowCancelModal(true)}
+              onPress={() => openCancelModal()}
               disabled={actionLoading}
               style={[
                 styles.actionBtn,

@@ -38,6 +38,7 @@ class User extends Authenticatable
         'is_archived',
         'last_login_at',
         'archive_warning_sent_at',
+        'cancellation_count',
         'address',
         'contact_number',
         'landline_number',
@@ -106,6 +107,7 @@ class User extends Authenticatable
             'is_archived' => 'boolean',
             'last_login_at' => 'datetime',
             'archive_warning_sent_at' => 'datetime',
+            'cancellation_count' => 'integer',
             'password' => 'hashed',
         ];
     }
@@ -171,6 +173,24 @@ class User extends Authenticatable
         });
     }
 
+    public function incrementCancellationCount(?int $performedByUserId = null): int
+    {
+        return DB::transaction(function () use ($performedByUserId): int {
+            $this->increment('cancellation_count');
+            $this->refresh();
+
+            if ($this->cancellation_count >= 3 && ! $this->isArchivedCustomer()) {
+                $this->archiveAccount(
+                    performedByUserId: $performedByUserId,
+                    reason: 'cancellation_limit_reached',
+                    context: ['cancellation_count' => $this->cancellation_count],
+                );
+            }
+
+            return (int) $this->cancellation_count;
+        });
+    }
+
     public function restoreArchivedAccount(?int $performedByUserId = null, string $reason = 'manual_restore', array $context = []): void
     {
         if (! $this->isArchivedCustomer()) {
@@ -185,6 +205,7 @@ class User extends Authenticatable
                 'archived_at' => null,
                 'archive_warning_sent_at' => null,
                 'last_login_at' => $restoredAt,
+                'cancellation_count' => 0,
             ])->save();
 
             CustomerArchiveAudit::query()->create([

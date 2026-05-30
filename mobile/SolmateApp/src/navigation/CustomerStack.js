@@ -7,7 +7,6 @@ import CustomerSettingsScreen from '../../screens/CustomerSettingsScreen';
 import CreateTestimonyScreen from '../../screens/CreateTestimonyScreen';
 import CustomerNotificationsScreen from '../../screens/CustomerNotificationsScreen';
 import EditTestimonyScreen from '../../screens/EditTestimonyScreen';
-import FinalQuotationViewScreen from '../../screens/FinalQuotationViewScreen';
 import ChatbotScreen from '../../screens/ChatbotScreen';
 import InspectionRequestDetailScreen from '../../screens/InspectionRequestDetailScreen';
 import InspectionHubScreen from '../../screens/InspectionHubScreen';
@@ -15,9 +14,6 @@ import InspectionRequestListScreen from '../../screens/InspectionRequestListScre
 import InspectionRequestScreen from '../../screens/InspectionRequestScreen';
 import InstallationRequestScreen from '../../screens/InstallationRequestScreen';
 import MyTestimoniesScreen from '../../screens/MyTestimoniesScreen';
-import QuotationDetailScreen from '../../screens/QuotationDetailScreen';
-import QuotationListScreen from '../../screens/QuotationListScreen';
-import QuotationScreen from '../../screens/QuotationScreen';
 import ServicesHubScreen from '../../screens/ServicesHubScreen';
 import ServiceRequestDetailScreen from '../../screens/ServiceRequestDetailScreen';
 import ServiceRequestListScreen from '../../screens/ServiceRequestListScreen';
@@ -75,20 +71,6 @@ export default function CustomerStack() {
         options={{ headerShown: false }}
       />
 
-      {/* Quotation creation form */}
-      <Stack.Screen
-        name="Quotations"
-        component={QuotationScreen}
-        options={{ headerShown: false }}
-      />
-
-      {/* Customer's list of submitted quotations */}
-      <Stack.Screen
-        name="QuotationList"
-        component={QuotationListScreen}
-        options={{ headerShown: false }}
-      />
-
       <Stack.Screen
         name="InspectionRequest"
         component={InspectionRequestScreen}
@@ -122,12 +104,6 @@ export default function CustomerStack() {
       <Stack.Screen
         name="InspectionRequestDetail"
         component={InspectionRequestDetailScreen}
-        options={{ headerShown: false }}
-      />
-
-      <Stack.Screen
-        name="FinalQuotationView"
-        component={FinalQuotationViewScreen}
         options={{ headerShown: false }}
       />
 
@@ -171,13 +147,6 @@ export default function CustomerStack() {
         name="ServiceRequestDetail"
         component={ServiceRequestDetailScreen}
         initialParams={{ mode: 'customer' }}
-        options={{ headerShown: false }}
-      />
-
-      {/* Single quotation detail page */}
-      <Stack.Screen
-        name="QuotationDetail"
-        component={QuotationDetailScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

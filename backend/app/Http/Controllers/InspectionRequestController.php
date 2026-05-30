@@ -47,7 +47,12 @@ class InspectionRequestController extends Controller
             [$validated['date_needed'] ?? null],
             function () use ($request, $validated, $resolvedAddress, $resolvedAddressDetails) {
                 return DB::transaction(function () use ($request, $validated, $resolvedAddress, $resolvedAddressDetails) {
-                    $this->preferredDateLockService->ensureDateIsAvailable($validated['date_needed'] ?? null);
+                    $this->preferredDateLockService->ensureDateIsAvailable(
+                        $validated['date_needed'] ?? null,
+                        null,
+                        null,
+                        \App\Services\PreferredDateLockService::REQUEST_TYPE_INSPECTION
+                    );
 
                     return InspectionRequest::create([
                         'user_id' => $request->user()->id,
@@ -152,7 +157,8 @@ class InspectionRequestController extends Controller
                         $this->preferredDateLockService->ensureDateIsAvailable(
                             $validated['date_needed'],
                             $inspectionRequest->id,
-                            InspectionRequest::class
+                            InspectionRequest::class,
+                            \App\Services\PreferredDateLockService::REQUEST_TYPE_INSPECTION
                         );
                     }
 
@@ -333,15 +339,20 @@ class InspectionRequestController extends Controller
         $inspectionRequest->cancellation_note = $validated['cancellation_note'];
         $inspectionRequest->save();
 
+        $user = $request->user();
+        $newCount = $user->incrementCancellationCount(performedByUserId: $user->id);
+
         $this->notificationService->notifyAdminsOfInspectionRequestCancellation(
             $inspectionRequest,
             $validated['cancellation_note'],
-            $request->user()->id
+            $user->id
         );
 
         return response()->json([
             'message' => 'Cancellation request submitted. The admin will review and update the status.',
             'inspection_request' => $inspectionRequest,
+            'cancellation_count' => $newCount,
+            'account_archived' => $user->fresh()->isArchivedCustomer(),
         ], 200);
     }
 }

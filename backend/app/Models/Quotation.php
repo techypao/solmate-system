@@ -51,6 +51,8 @@ class Quotation extends Model
     'roi_years',
     'status',
     'remarks',
+    'applied_promo_id',
+    'promo_discount',
 ];
 
     public function user(): BelongsTo
@@ -81,5 +83,17 @@ class Quotation extends Model
     public function lineItems(): HasMany
     {
         return $this->hasMany(QuotationLineItem::class)->orderBy('id');
+    }
+
+    public function appliedPromo(): BelongsTo
+    {
+        return $this->belongsTo(Promotion::class, 'applied_promo_id');
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'promo_discount' => 'decimal:2',
+        ];
     }
 }

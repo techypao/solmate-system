@@ -962,24 +962,12 @@
                         <input type="hidden" name="latitude" id="mnt-latitude">
                         <input type="hidden" name="longitude" id="mnt-longitude">
 
-                        <div class="mnt-field-row">
-                            <div class="mnt-field">
-                                <label class="mnt-label" for="mnt-time">Preferred Time</label>
-                                <select id="mnt-time" class="mnt-select">
-                                    <option value="">Select preferred time</option>
-                                    <option value="Morning (8:00 AM - 11:00 AM)">Morning (8:00 AM - 11:00 AM)</option>
-                                    <option value="Midday (11:00 AM - 1:00 PM)">Midday (11:00 AM - 1:00 PM)</option>
-                                    <option value="Afternoon (1:00 PM - 4:00 PM)">Afternoon (1:00 PM - 4:00 PM)</option>
-                                </select>
-                                <div class="mnt-field-error" id="mnt-time-error" role="alert"></div>
-                            </div>
-                            <div class="mnt-field">
-                                <label class="mnt-label" for="mnt-visit-note">Visit Note</label>
-                                <input id="mnt-visit-note" class="mnt-input" type="text" placeholder="Optional schedule or access note">
-                            </div>
+                        <div class="mnt-field">
+                            <label class="mnt-label" for="mnt-visit-note">Visit Note</label>
+                            <input id="mnt-visit-note" class="mnt-input" type="text" placeholder="Optional schedule or access note">
                         </div>
 
-                        <p class="mnt-field-hint" style="margin-top:-2px;margin-bottom:16px;">Preferred time and visit notes are included in the request details so the technician can review them before confirmation.</p>
+                        <p class="mnt-field-hint" style="margin-top:-2px;margin-bottom:16px;">Visit notes are included in the request details so the technician can review them before confirmation.</p>
 
                         <button type="submit" class="mnt-submit-btn" id="mnt-submit-btn">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -1232,6 +1220,7 @@
     var datePicker = window.createPreferredDatePicker({
         inputId: 'mnt-date',
         mountId: 'mnt-date-picker',
+        endpoint: '/api/preferred-date-availability?type=maintenance',
         helperText: 'Booked dates are unavailable and cannot be selected.',
         fetchErrorText: 'Schedule availability could not be refreshed right now. The backend will still verify your preferred date when you submit.',
         placeholder: 'Select a preferred date'
@@ -1605,7 +1594,6 @@
         var contact = qs('#mnt-contact').value.trim();
         await datePicker.refreshAvailability();
         var dateNeeded = datePicker.getValue();
-        var time = qs('#mnt-time').value.trim();
         var visitNote = qs('#mnt-visit-note').value.trim();
         var address = addressInput.value.trim();
         var addressDetails = qs('#mnt-address-details').value.trim();
@@ -1633,10 +1621,6 @@
             showFieldError('mnt-date-picker', 'mnt-date-error', 'Selected date is already reserved. Please choose another date.');
             hasError = true;
         }
-        if (!time) {
-            showFieldError('mnt-time', 'mnt-time-error', 'Please choose a preferred time.');
-            hasError = true;
-        }
         if (!address) {
             showFieldError('mnt-address', 'mnt-address-error', 'Address is required.');
             hasError = true;
@@ -1645,7 +1629,6 @@
 
         var detailLines = [
             'Maintenance Concern: ' + selectedType,
-            'Preferred Time: ' + time,
             'Concern Description: ' + description
         ];
         if (extraConcern) detailLines.push('Additional Notes: ' + extraConcern);

@@ -98,8 +98,6 @@ export default function InspectionRequestListScreen({navigation}: any) {
   /* ── card renderer ── */
 
   const renderInspectionRequest = ({item}: {item: InspectionRequest}) => {
-    const canOpenFinalQuotation = item.status === 'completed';
-
     return (
       <View style={s.card}>
         {/* accent bar */}
@@ -148,36 +146,6 @@ export default function InspectionRequestListScreen({navigation}: any) {
           <Text style={s.outlineBtnText}>View Request Details</Text>
         </Pressable>
 
-        {/* inspection-based quotation section */}
-        <View style={s.quotationSection}>
-          <View style={s.quotationDivider} />
-          <Text style={s.quotationTitle}>Inspection-Based Quotation</Text>
-          <Text style={s.quotationText}>
-            {canOpenFinalQuotation
-              ? 'Open the technician-submitted inspection-based quotation for this inspection request.'
-              : 'The inspection-based quotation becomes viewable here after the inspection is completed.'}
-          </Text>
-          <Pressable
-            disabled={!canOpenFinalQuotation}
-            onPress={() =>
-              navigation.navigate('FinalQuotationView', {
-                inspectionRequestId: item.id,
-              })
-            }
-            style={({pressed}) => [
-              canOpenFinalQuotation ? s.primaryBtn : s.disabledBtn,
-              pressed && canOpenFinalQuotation && s.pressed,
-            ]}>
-            <Text
-              style={[
-                canOpenFinalQuotation
-                  ? s.primaryBtnText
-                  : s.disabledBtnText,
-              ]}>
-              View Inspection-Based Quotation
-            </Text>
-          </Pressable>
-        </View>
       </View>
     );
   };
@@ -216,8 +184,7 @@ export default function InspectionRequestListScreen({navigation}: any) {
         {/* title block */}
         <Text style={s.title}>My Inspection Requests</Text>
         <Text style={s.subtitle}>
-          Review inspection request progress and open the inspection-based quotation when
-          the technician has completed the visit.
+          Review inspection request progress and follow technician updates for each visit.
         </Text>
       </View>
 

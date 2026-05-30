@@ -22,6 +22,10 @@
                 <div class="summary-label">Archived customers</div>
                 <div class="summary-value">{{ $archivedCustomers->count() }}</div>
             </div>
+            <div class="summary-card">
+                <div class="summary-label">At cancellation limit</div>
+                <div class="summary-value">{{ $customers->where('cancellation_count', '>=', 2)->count() }}</div>
+            </div>
         </div>
     </div>
 
@@ -47,6 +51,11 @@
                         <div class="muted" style="font-size: 13px; white-space: nowrap;">
                             Last activity {{ optional($customer->last_login_at ?? $customer->created_at)->format('M d, Y') }}
                         </div>
+                        @if ($customer->cancellation_count > 0)
+                            <span class="badge" style="background:{{ $customer->cancellation_count >= 2 ? '#fee2e2' : '#fef3c7' }}; color:{{ $customer->cancellation_count >= 2 ? '#dc2626' : '#92400e' }}; border:1px solid {{ $customer->cancellation_count >= 2 ? '#fca5a5' : '#fde68a' }};">
+                                {{ $customer->cancellation_count }}/3 cancellations
+                            </span>
+                        @endif
                         <span class="badge badge-neutral">Customer</span>
                         <div style="display:flex; gap:8px; flex-shrink:0;">
                             <a href="{{ route('admin.customers.edit', $customer) }}"
@@ -105,6 +114,11 @@
                         <div class="muted" style="font-size: 13px; white-space: nowrap;">
                             Archived {{ optional($customer->archived_at)->format('M d, Y') }}
                         </div>
+                        @if ($customer->cancellation_count > 0)
+                            <span class="badge" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">
+                                {{ $customer->cancellation_count }} cancellations
+                            </span>
+                        @endif
                         <span class="badge" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;">Archived</span>
                         <div style="display:flex; gap:8px; flex-shrink:0;">
                             <form method="POST"

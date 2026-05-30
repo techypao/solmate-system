@@ -731,13 +731,13 @@
 <div class="insp-hero">
     <p class="insp-hero-eyebrow">Step 2 of 3</p>
     <h1 class="insp-hero-title">Request a <span>Site Inspection</span></h1>
-    <p class="insp-hero-sub">Our technicians will visit your property to verify installation feasibility and assess the site before finalising your custom solar quotation.</p>
+    <p class="insp-hero-sub">Our technicians will visit your property to verify installation feasibility and assess the site before preparing the next installation steps.</p>
     <div class="insp-hero-steps">
         <div class="insp-hero-step insp-step-done">
             <span class="insp-hero-step-num">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M5 13l4 4L19 7"/></svg>
             </span>
-            <span>Pre-Inspection Estimate</span>
+            <span>Request Submitted</span>
         </div>
         <div class="insp-step-connector"></div>
         <div class="insp-hero-step insp-step-active">
@@ -747,7 +747,7 @@
         <div class="insp-step-connector"></div>
         <div class="insp-hero-step">
             <span class="insp-hero-step-num">3</span>
-            <span>Inspection-Based Quotation</span>
+            <span>Service Planning</span>
         </div>
     </div>
 </div>
@@ -758,54 +758,7 @@
     {{-- ── LEFT: Form sections ── --}}
     <div>
 
-        {{-- CARD 1: Select Quotation --}}
-        <div class="insp-card">
-            <div class="insp-card-header">
-                <div class="insp-card-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2">
-                        <path d="M9 12h6M9 16h6M9 8h3M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"/>
-                    </svg>
-                </div>
-                <div>
-                    <p class="insp-card-title">Select Quotation</p>
-                    <p class="insp-card-subtitle">Choose the pre-inspection estimate this inspection is for</p>
-                </div>
-            </div>
-            <div class="insp-card-body">
-                <div class="insp-field">
-                    <label class="insp-label" for="insp-quote-select">Your Quotations</label>
-                    <select id="insp-quote-select" class="insp-select" aria-label="Select a quotation">
-                        <option value="">-- Loading your quotations... --</option>
-                    </select>
-                    <p class="insp-field-hint">Selecting a quotation will pre-fill the details field with its reference number.</p>
-                </div>
-
-                {{-- Summary panel -- shown when a quote is selected --}}
-                <div id="insp-quote-summary" class="insp-quote-summary" style="display:none;" aria-live="polite">
-                    <div class="insp-qs-grid">
-                        <div>
-                            <div class="insp-qs-label">Generated</div>
-                            <div class="insp-qs-value" id="insp-qs-date">—</div>
-                        </div>
-                        <div>
-                            <div class="insp-qs-label">System Size</div>
-                            <div class="insp-qs-value" id="insp-qs-system">—</div>
-                        </div>
-                        <div>
-                            <div class="insp-qs-label">Project Cost</div>
-                            <div class="insp-qs-value highlight" id="insp-qs-cost">—</div>
-                        </div>
-                        <div>
-                            <div class="insp-qs-label">ROI Period</div>
-                            <div class="insp-qs-value highlight" id="insp-qs-roi">—</div>
-                        </div>
-                    </div>
-                    <p class="insp-qs-note">The selected quote reference will be included in your inspection request details.</p>
-                </div>
-            </div>
-        </div>
-
-        {{-- CARD 2: Preferred Schedule & Details --}}
+        {{-- CARD 1: Preferred Schedule & Details --}}
         <div class="insp-card insp-card-schedule">
             <div class="insp-card-header">
                 <div class="insp-card-icon">
@@ -1004,8 +957,8 @@
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
                         </div>
                         <div class="insp-check-body">
-                            <p class="insp-check-title">Inspection-Based Quotation Preparation</p>
-                            <p class="insp-check-desc">All findings are compiled into an accurate, itemised inspection-based quotation for your approval.</p>
+                            <p class="insp-check-title">Site Assessment Review</p>
+                            <p class="insp-check-desc">All findings are compiled into a site assessment report so the SolMate team can plan the next installation steps.</p>
                         </div>
                     </div>
 
@@ -1013,7 +966,7 @@
 
                 <div class="insp-expect-box">
                     <p class="insp-expect-title">What to Expect</p>
-                    <p class="insp-expect-text">The inspection typically takes 1–2 hours. Our team will contact you to confirm the schedule. After the visit, your final detailed quotation will be ready within a few business days.</p>
+                    <p class="insp-expect-text">The inspection typically takes 1–2 hours. Our team will contact you to confirm the schedule. After the visit, we will review the site findings and coordinate the next installation steps with you.</p>
                 </div>
             </div>
         </div>
@@ -1137,8 +1090,6 @@
     }
 
     /* DOM refs */
-    var quoteSelect  = qs('#insp-quote-select');
-    var quoteSummary = qs('#insp-quote-summary');
     var form         = qs('#insp-form');
     var formMsg      = qs('#insp-form-msg');
     var submitBtn    = qs('#insp-submit-btn');
@@ -1159,12 +1110,12 @@
     var datePicker   = window.createPreferredDatePicker({
         inputId: 'insp-date',
         mountId: 'insp-date-picker',
+        endpoint: '/api/preferred-date-availability?type=inspection',
         helperText: 'Booked dates are unavailable and cannot be selected.',
         fetchErrorText: 'Live reserved-date updates could not be loaded right now. The backend will still verify your preferred date when you submit.',
         placeholder: 'Select a preferred date'
     });
 
-    var allQuotations = [];
     var locationMap = null;
     var locationMarker = null;
     var pendingCoords = null;
@@ -1452,50 +1403,6 @@
         }
     }
 
-    /* Populate quotation dropdown */
-    function populateQuoteSelect(quotations) {
-        var initialOnly = quotations.filter(function (q) {
-            return String(q.quotation_type || 'initial').toLowerCase() === 'initial';
-        });
-        quoteSelect.innerHTML = '';
-        var ph = document.createElement('option');
-        ph.value = '';
-        ph.textContent = initialOnly.length === 0
-            ? '\u2014 No pre-inspection estimates found \u2014'
-            : '\u2014 Select a quotation (optional) \u2014';
-        quoteSelect.appendChild(ph);
-        initialOnly.forEach(function (q) {
-            var opt = document.createElement('option');
-            opt.value = q.id;
-            var cost = q.project_cost ? fmtPeso(q.project_cost) : '';
-            opt.textContent = 'Quote #' + q.id + (cost ? '  \u00b7  ' + cost : '') + '  \u00b7  ' + fmtDate(q.created_at);
-            quoteSelect.appendChild(opt);
-        });
-    }
-
-    /* Quote select change handler */
-    quoteSelect.addEventListener('change', function () {
-        var id = quoteSelect.value;
-        if (!id) { quoteSummary.style.display = 'none'; return; }
-        var q = allQuotations.find(function (x) { return String(x.id) === String(id); });
-        if (!q) { quoteSummary.style.display = 'none'; return; }
-
-        qs('#insp-qs-date').textContent   = fmtDate(q.created_at);
-        qs('#insp-qs-system').textContent = q.system_kw ? Number(q.system_kw).toFixed(2) + ' kW' : '\u2014';
-        qs('#insp-qs-cost').innerHTML     = fmtPeso(q.project_cost);
-        qs('#insp-qs-roi').textContent    = q.roi_years ? Number(q.roi_years).toFixed(1) + ' years' : '\u2014';
-        quoteSummary.style.display = 'block';
-
-        /* Pre-fill details if empty */
-        var detailsEl = qs('#insp-details');
-        if (detailsEl && !detailsEl.value.trim()) {
-            detailsEl.value = 'Reference: Quote #' + q.id + '. ';
-            detailsEl.focus();
-            var len = detailsEl.value.length;
-            detailsEl.setSelectionRange(len, len);
-        }
-    });
-
     /* Field error helpers */
     function clearFieldErrors() {
         document.querySelectorAll('.insp-field-error').forEach(function (el) {
@@ -1662,8 +1569,6 @@
             form.reset();
             clearAddressNote();
             datePicker.clear();
-            quoteSelect.value = '';
-            quoteSummary.style.display = 'none';
             formMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } catch (err) {
             applyFieldErrors(err.errors || {});
@@ -1673,20 +1578,6 @@
             submitText.textContent = 'Submit Inspection Request';
         }
     });
-
-    /* Load quotations for dropdown */
-    async function loadQuotations() {
-        try {
-            var data = await apiRequest('/api/quotations');
-            allQuotations = Array.isArray(data) ? data : (data.data || []);
-            populateQuoteSelect(allQuotations);
-        } catch (err) {
-            quoteSelect.innerHTML = '<option value="">\u2014 Could not load quotations \u2014</option>';
-        }
-    }
-
-    /* Bootstrap */
-    loadQuotations();
 
 })();
 </script>

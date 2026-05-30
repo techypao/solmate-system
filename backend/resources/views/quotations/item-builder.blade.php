@@ -529,6 +529,104 @@
                 : 'Pre-Inspection Estimate';
         }
 
+        function formatPromoTypeLabel(type) {
+            switch (String(type || '').trim().toLowerCase()) {
+                case 'percentage':
+                    return 'Percentage Discount';
+                case 'fixed_amount':
+                    return 'Fixed Discount';
+                case 'free_item':
+                    return 'Free Item Promo';
+                case 'bundle':
+                    return 'Bundle Deal';
+                default:
+                    return 'Promo';
+            }
+        }
+
+        function getAppliedPromo() {
+            return quotationState?.applied_promo || null;
+        }
+
+        function buildPromoLineItemContext() {
+            const aggregates = {};
+
+            lineItemsState.forEach((item) => {
+                const category = String(item.category || '').trim();
+                const qty = Number(item.qty || 0);
+                const totalAmount = Number(calculateRowTotal(item) || 0);
+
+                if (!category || qty <= 0) {
+                    return;
+                }
+
+                if (!aggregates[category]) {
+                    aggregates[category] = {qty: 0, total: 0};
+                }
+
+                aggregates[category].qty += qty;
+                aggregates[category].total += totalAmount;
+            });
+
+            return Object.entries(aggregates).reduce((context, [category, aggregate]) => {
+                if (aggregate.qty <= 0) {
+                    return context;
+                }
+
+                context[`${category}_qty`] = aggregate.qty;
+                context[`${category}_unit_price`] = aggregate.total / aggregate.qty;
+                return context;
+            }, {});
+        }
+
+        function computePromoDiscountPreview(baseTotal) {
+            const promo = getAppliedPromo();
+
+            if (!promo || !promo.promo_type || baseTotal <= 0) {
+                return 0;
+            }
+
+            const value = Number(promo.discount_value || 0);
+
+            switch (promo.promo_type) {
+                case 'percentage':
+                    return Number((baseTotal * (value / 100)).toFixed(2));
+                case 'fixed_amount':
+                case 'bundle':
+                    return Number(Math.min(value, baseTotal).toFixed(2));
+                case 'free_item': {
+                    const context = buildPromoLineItemContext();
+                    const conditions = promo.conditions || {};
+                    const appliesTo = conditions.applies_to;
+                    const minQty = Number(conditions.min_qty || 0);
+                    const freeQty = Number(conditions.free_qty || 1);
+
+                    if (appliesTo && minQty > 0) {
+                        const actualQty = Number(context[`${appliesTo}_qty`] || 0);
+                        const unitPrice = Number(context[`${appliesTo}_unit_price`] || 0);
+
+                        if (actualQty < minQty || unitPrice <= 0) {
+                            return 0;
+                        }
+
+                        return Number(Math.min(freeQty * unitPrice, baseTotal).toFixed(2));
+                    }
+
+                    return value > 0 ? Number(Math.min(value, baseTotal).toFixed(2)) : 0;
+                }
+                default:
+                    return 0;
+            }
+        }
+
+        function formatAppliedPromoLabel(promo) {
+            if (!promo) {
+                return 'No promo applied';
+            }
+
+            return `${promo.title} (${formatPromoTypeLabel(promo.promo_type)})`;
+        }
+
         function updateUrl(quotationId) {
             const url = new URL(window.location.href);
 
@@ -666,6 +764,8 @@
                 return;
             }
 
+            const appliedPromo = getAppliedPromo();
+
             quotationSummary.innerHTML = `
                 <div><strong>Quotation ID:</strong> ${quotationState.id}</div>
                 <div><strong>Type:</strong> ${escapeHtml(formatQuotationTypeLabel(quotationState.quotation_type))}</div>
@@ -673,7 +773,9 @@
                 <div><strong>Monthly electric bill:</strong> ${formatMoney(quotationState.monthly_electric_bill)}</div>
                 <div><strong>Saved materials subtotal:</strong> ${formatMoney(quotationState.materials_subtotal)}</div>
                 <div><strong>Saved labor cost:</strong> ${formatMoney(quotationState.labor_cost)}</div>
-                <div><strong>Saved project cost:</strong> ${formatMoney(quotationState.project_cost)}</div>
+                <div><strong>Applied promo:</strong> ${escapeHtml(formatAppliedPromoLabel(appliedPromo))}</div>
+                <div><strong>Saved promo discount:</strong> ${formatMoney(quotationState.promo_discount)}</div>
+                <div><strong>Saved final project cost:</strong> ${formatMoney(quotationState.project_cost)}</div>
                 <div><strong>Remarks:</strong> ${escapeHtml(quotationState.remarks || 'No remarks')}</div>
             `;
         }
@@ -763,12 +865,18 @@
         function renderTotals() {
             const subtotal = lineItemsState.reduce((sum, item) => sum + calculateRowTotal(item), 0);
             const laborCost = Number(quotationState?.labor_cost || 0);
-            const projectTotal = subtotal + laborCost;
+            const baseTotal = subtotal + laborCost;
+            const promoDiscount = computePromoDiscountPreview(baseTotal);
+            const appliedPromo = getAppliedPromo();
+            const finalTotal = Math.max(0, baseTotal - promoDiscount);
 
             totalsPreview.innerHTML = `
                 <div><strong>Line-item subtotal:</strong> ${formatMoney(subtotal)}</div>
                 <div><strong>Labor cost:</strong> ${formatMoney(laborCost)}</div>
-                <div><strong>Projected total:</strong> ${formatMoney(projectTotal)}</div>
+                <div><strong>Base total:</strong> ${formatMoney(baseTotal)}</div>
+                <div><strong>Applied promo:</strong> ${escapeHtml(formatAppliedPromoLabel(appliedPromo))}</div>
+                <div><strong>Promo discount preview:</strong> ${formatMoney(promoDiscount)}</div>
+                <div><strong>Projected final total:</strong> ${formatMoney(finalTotal)}</div>
             `;
         }
 

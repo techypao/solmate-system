@@ -13,6 +13,13 @@ class Promotion extends Model
 
     public const PUBLIC_DISK = 'public';
 
+    public const PROMO_TYPES = [
+        'percentage',
+        'fixed_amount',
+        'free_item',
+        'bundle',
+    ];
+
     protected $fillable = [
         'title',
         'description',
@@ -20,6 +27,10 @@ class Promotion extends Model
         'start_date',
         'end_date',
         'is_active',
+        'promo_type',
+        'discount_value',
+        'free_item_description',
+        'conditions',
     ];
 
     protected $appends = [
@@ -32,6 +43,8 @@ class Promotion extends Model
             'is_active' => 'boolean',
             'start_date' => 'date',
             'end_date' => 'date',
+            'discount_value' => 'decimal:2',
+            'conditions' => 'array',
         ];
     }
 

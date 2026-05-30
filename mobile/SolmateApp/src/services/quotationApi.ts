@@ -72,6 +72,8 @@ export type Quotation = {
   estimated_annual_savings?: number | null;
   roi_years?: number | null;
   remarks?: string | null;
+  applied_promo_id?: number | null;
+  promo_discount?: number | null;
   created_at?: string;
   updated_at?: string;
   customer?: UserSummary | null;
@@ -125,6 +127,7 @@ export type SubmitFinalQuotationPayload = {
   project_cost?: number;
   status?: QuotationStatus;
   remarks?: string;
+  applied_promo_id?: number;
 };
 
 export type FinalQuotationOption<T extends string | number = string | number> = {
@@ -174,11 +177,6 @@ export type SubmitFinalQuotationResponse = {
   message?: string;
   quotation: Quotation;
   inspectionRequest?: InspectionRequest | null;
-};
-
-export type CompleteQuotationResponse = {
-  message?: string;
-  quotation: Quotation;
 };
 
 type ApiEnvelope<T> = {
@@ -284,30 +282,6 @@ export async function getCustomerFinalQuotation(inspectionRequestId: number) {
   );
 
   return extractEnvelopeData<Quotation>(response, {} as Quotation);
-}
-
-export async function completeQuotation(
-  quotationId: number,
-): Promise<CompleteQuotationResponse> {
-  const response = await apiPost<Quotation | ApiEnvelope<Quotation>>(
-    `/quotations/${quotationId}/complete`,
-    {},
-  );
-
-  if (
-    response &&
-    typeof response === 'object' &&
-    'data' in response
-  ) {
-    return {
-      message: response.message,
-      quotation: response.data ?? ({} as Quotation),
-    };
-  }
-
-  return {
-    quotation: (response ?? {}) as Quotation,
-  };
 }
 
 export async function replaceQuotationLineItems(

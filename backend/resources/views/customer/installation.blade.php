@@ -824,11 +824,11 @@
             <div>
                 <p class="inst-hero-eyebrow">Customer Service Booking</p>
                 <h1 class="inst-hero-title">Book <span>Installation Service</span></h1>
-                <p class="inst-hero-sub">Schedule an installation appointment for your solar setup. Add site notes, choose your preferred schedule, and send the request to the SolMate team.</p>
+                <p class="inst-hero-sub">Schedule an installation appointment for your solar setup. Add site notes, choose your preferred date, and send the request to the SolMate team.</p>
                 <div class="inst-hero-steps" aria-label="Installation booking steps">
-                    <span class="inst-hero-step"><span class="inst-hero-step-num">1</span>Choose quotation reference</span>
-                    <span class="inst-hero-step"><span class="inst-hero-step-num">2</span>Add installation details</span>
-                    <span class="inst-hero-step"><span class="inst-hero-step-num">3</span>Choose schedule</span>
+                    <span class="inst-hero-step"><span class="inst-hero-step-num">1</span>Add installation details</span>
+                    <span class="inst-hero-step"><span class="inst-hero-step-num">2</span>Choose preferred date</span>
+                    <span class="inst-hero-step"><span class="inst-hero-step-num">3</span>Submit request</span>
                 </div>
             </div>
             <div class="inst-hero-art" aria-hidden="true">
@@ -850,51 +850,6 @@
 
     <div class="inst-layout">
         <div>
-            <div class="inst-card">
-                <div class="inst-card-header">
-                    <div class="inst-card-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E6C200" stroke-width="2">
-                            <path d="M9 12h6M9 16h6M9 8h3M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="inst-card-title">Quotation Reference</p>
-                        <p class="inst-card-subtitle">Connect this request to your quotation or installation coordination needs</p>
-                    </div>
-                </div>
-                <div class="inst-card-body">
-                    <div class="inst-field">
-                        <label class="inst-label" for="inst-quote-select">Quotation Reference</label>
-                        <select id="inst-quote-select" class="inst-select" aria-label="Select a quotation">
-                            <option value="">Loading your quotations...</option>
-                        </select>
-                        <p class="inst-field-hint">If you already have an approved quotation, select it so the request includes its reference.</p>
-                    </div>
-
-                    <div id="inst-quote-summary" class="inst-quote-summary" aria-live="polite">
-                        <div class="inst-quote-grid">
-                            <div>
-                                <div class="inst-quote-label">Generated</div>
-                                <div class="inst-quote-value" id="inst-qs-date">-</div>
-                            </div>
-                            <div>
-                                <div class="inst-quote-label">System Size</div>
-                                <div class="inst-quote-value" id="inst-qs-system">-</div>
-                            </div>
-                            <div>
-                                <div class="inst-quote-label">Project Cost</div>
-                                <div class="inst-quote-value highlight" id="inst-qs-cost">-</div>
-                            </div>
-                            <div>
-                                <div class="inst-quote-label">ROI Period</div>
-                                <div class="inst-quote-value highlight" id="inst-qs-roi">-</div>
-                            </div>
-                        </div>
-                        <p class="inst-quote-note">The selected quotation number will be included in your installation request details.</p>
-                    </div>
-                </div>
-            </div>
-
             <div class="inst-card">
                 <div class="inst-card-header">
                     <div class="inst-card-icon">
@@ -1009,24 +964,12 @@
                         <input type="hidden" name="latitude" id="inst-latitude">
                         <input type="hidden" name="longitude" id="inst-longitude">
 
-                        <div class="inst-field-row">
-                            <div class="inst-field">
-                                <label class="inst-label" for="inst-time">Preferred Time</label>
-                                <select id="inst-time" class="inst-select">
-                                    <option value="">Select preferred time</option>
-                                    <option value="Morning (8:00 AM - 11:00 AM)">Morning (8:00 AM - 11:00 AM)</option>
-                                    <option value="Midday (11:00 AM - 1:00 PM)">Midday (11:00 AM - 1:00 PM)</option>
-                                    <option value="Afternoon (1:00 PM - 4:00 PM)">Afternoon (1:00 PM - 4:00 PM)</option>
-                                </select>
-                                <div class="inst-field-error" id="inst-time-error" role="alert"></div>
-                            </div>
-                            <div class="inst-field">
-                                <label class="inst-label" for="inst-extra">Additional Notes</label>
-                                <input id="inst-extra" class="inst-input" type="text" placeholder="Optional scheduling or access note">
-                            </div>
+                        <div class="inst-field">
+                            <label class="inst-label" for="inst-extra">Additional Notes</label>
+                            <input id="inst-extra" class="inst-input" type="text" placeholder="Optional scheduling or access note">
                         </div>
 
-                        <p class="inst-field-hint" style="margin-top:-2px;margin-bottom:16px;">Preferred time and extra notes are included in your request details for scheduling review.</p>
+                        <p class="inst-field-hint" style="margin-top:-2px;margin-bottom:16px;">Extra notes are included in your request details for scheduling review.</p>
 
                         <button type="submit" class="inst-submit-btn" id="inst-submit-btn">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -1053,7 +996,7 @@
                         </div>
                         <div>
                             <p class="inst-check-title">Confirm your quotation</p>
-                            <p class="inst-check-desc">Select your quotation reference if your installation request is tied to an approved or inspection-based quotation.</p>
+                            <p class="inst-check-desc">Confirm the installation type, address, and site notes before submitting the request.</p>
                         </div>
                     </div>
                     <div class="inst-check">
@@ -1267,8 +1210,6 @@
         }
     }
 
-    var quoteSelect = qs('#inst-quote-select');
-    var quoteSummary = qs('#inst-quote-summary');
     var form = qs('#inst-form');
     var formMsg = qs('#inst-form-msg');
     var submitBtn = qs('#inst-submit-btn');
@@ -1289,11 +1230,11 @@
     var datePicker = window.createPreferredDatePicker({
         inputId: 'inst-date',
         mountId: 'inst-date-picker',
+        endpoint: '/api/preferred-date-availability?type=installation',
         helperText: 'Booked dates are unavailable and cannot be selected.',
         fetchErrorText: 'Schedule availability could not be refreshed right now. The backend will still verify your preferred date when you submit.',
         placeholder: 'Select a preferred date'
     });
-    var allQuotations = [];
     var locationMap = null;
     var locationMarker = null;
     var pendingCoords = null;
@@ -1598,58 +1539,6 @@
         });
     });
 
-    function populateQuotationSelect(quotations) {
-        var options = quotations.filter(function (quotation) {
-            return ['initial', 'final'].indexOf(String(quotation.quotation_type || 'initial').toLowerCase()) !== -1;
-        });
-
-        quoteSelect.innerHTML = '';
-        var placeholder = document.createElement('option');
-        placeholder.value = '';
-        placeholder.textContent = options.length ? 'Select a quotation (optional)' : 'No quotations available';
-        quoteSelect.appendChild(placeholder);
-
-        options.forEach(function (quotation) {
-            var opt = document.createElement('option');
-            opt.value = quotation.id;
-            opt.textContent = 'Quote #' + quotation.id + ' · ' + fmtPeso(quotation.project_cost) + ' · ' + fmtDate(quotation.created_at);
-            quoteSelect.appendChild(opt);
-        });
-    }
-
-    quoteSelect.addEventListener('change', function () {
-        var selectedId = quoteSelect.value;
-        if (!selectedId) {
-            quoteSummary.style.display = 'none';
-            return;
-        }
-
-        var quotation = allQuotations.find(function (item) {
-            return String(item.id) === String(selectedId);
-        });
-
-        if (!quotation) {
-            quoteSummary.style.display = 'none';
-            return;
-        }
-
-        qs('#inst-qs-date').textContent = fmtDate(quotation.created_at);
-        qs('#inst-qs-system').textContent = quotation.system_kw ? Number(quotation.system_kw).toFixed(2) + ' kW' : '-';
-        qs('#inst-qs-cost').textContent = fmtPeso(quotation.project_cost);
-        qs('#inst-qs-roi').textContent = quotation.roi_years ? Number(quotation.roi_years).toFixed(1) + ' years' : '-';
-        quoteSummary.style.display = 'block';
-    });
-
-    async function loadQuotations() {
-        try {
-            var response = await apiRequest('/api/quotations');
-            allQuotations = Array.isArray(response) ? response : (response.data || []);
-            populateQuotationSelect(allQuotations);
-        } catch (error) {
-            quoteSelect.innerHTML = '<option value="">Could not load quotations</option>';
-        }
-    }
-
     if (mapOpenBtn && mapModal && mapConfirmBtn && mapCancelBtn && mapCloseBtn && useLocationBtn) {
         mapOpenBtn.addEventListener('click', function () {
             openMapModal();
@@ -1714,10 +1603,8 @@
         var contact = qs('#inst-contact').value.trim();
         await datePicker.refreshAvailability();
         var dateNeeded = datePicker.getValue();
-        var time = qs('#inst-time').value.trim();
         var detailsText = qs('#inst-details').value.trim();
         var extra = qs('#inst-extra').value.trim();
-        var quotationId = quoteSelect.value;
         var address = addressInput.value.trim();
         var addressDetails = qs('#inst-address-details').value.trim();
         var latitude = latitudeInput ? latitudeInput.value.trim() : '';
@@ -1744,10 +1631,6 @@
             showFieldError('inst-date-picker', 'inst-date-error', 'Selected date is already reserved. Please choose another date.');
             hasError = true;
         }
-        if (!time) {
-            showFieldError('inst-time', 'inst-time-error', 'Please choose a preferred time.');
-            hasError = true;
-        }
         if (!address) {
             showFieldError('inst-address', 'inst-address-error', 'Address is required.');
             hasError = true;
@@ -1755,10 +1638,8 @@
         if (hasError) return;
 
         var detailLines = [];
-        if (quotationId) detailLines.push('Quotation Reference: Quote #' + quotationId);
         detailLines.push('Installation Request Basis: ' + basis);
         detailLines.push('Installation Type: ' + selectedType);
-        detailLines.push('Preferred Time: ' + time);
         detailLines.push('Installation Notes: ' + detailsText);
         if (extra) detailLines.push('Additional Notes: ' + extra);
 
@@ -1784,8 +1665,6 @@
             form.reset();
             clearAddressNote();
             datePicker.clear();
-            quoteSelect.value = '';
-            quoteSummary.style.display = 'none';
             qsa('.inst-choice').forEach(function (item) {
                 item.classList.remove('is-selected');
             });
@@ -1813,7 +1692,6 @@
         }
     });
 
-    loadQuotations();
 })();
 </script>
 @endpush

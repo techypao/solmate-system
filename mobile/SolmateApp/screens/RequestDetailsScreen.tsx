@@ -395,6 +395,72 @@ export default function RequestDetailsScreen({navigation, route}: any) {
     if (tab === 'Profile')     {navigation.navigate('TechnicianSettings');}
   }
 
+  const timelineEvents = useMemo(() => {
+    if (!inspectionRequest) {
+      return [];
+    }
+
+    const events: Array<{
+      datetime: string;
+      status: string;
+      description: string;
+    }> = [];
+
+    if (inspectionRequest.created_at) {
+      events.push({
+        datetime: formatDateTime(inspectionRequest.created_at),
+        status: 'pending',
+        description: 'Request submitted',
+      });
+    }
+
+    const normalizedStatus = (inspectionRequest.status || '').toLowerCase();
+
+    if (['assigned', 'in_progress', 'completed'].includes(normalizedStatus)) {
+      events.push({
+        datetime: formatDateTime(inspectionRequest.updated_at),
+        status: 'assigned',
+        description: 'Assigned to technician',
+      });
+    }
+
+    if (['in_progress', 'completed'].includes(normalizedStatus)) {
+      events.push({
+        datetime: formatDateTime(inspectionRequest.updated_at),
+        status: 'in_progress',
+        description: 'Inspection started',
+      });
+    }
+
+    if (inspectionRequest.completion_report?.submitted_at) {
+      events.push({
+        datetime: formatDateTime(inspectionRequest.completion_report.submitted_at),
+        status: 'in_progress',
+        description: 'Completion report submitted',
+      });
+    }
+
+    if (
+      (inspectionRequest.completion_report?.status || '').toLowerCase() === 'approved'
+    ) {
+      events.push({
+        datetime: formatDateTime(inspectionRequest.completion_report?.approved_at),
+        status: 'approved',
+        description: 'Completion report approved',
+      });
+    }
+
+    if (normalizedStatus === 'completed') {
+      events.push({
+        datetime: formatDateTime(inspectionRequest.updated_at),
+        status: 'completed',
+        description: 'Inspection completed',
+      });
+    }
+
+    return events;
+  }, [inspectionRequest]);
+
   // ── loading state ─────────────────────────────────────────────────────────
   if (loading) {
     return (
@@ -467,71 +533,6 @@ export default function RequestDetailsScreen({navigation, route}: any) {
         option.currentStatuses.includes((inspectionRequest.status || '').toLowerCase()),
       )
     : [];
-  const timelineEvents = useMemo(() => {
-    if (!inspectionRequest) {
-      return [];
-    }
-
-    const events: Array<{
-      datetime: string;
-      status: string;
-      description: string;
-    }> = [];
-
-    if (inspectionRequest.created_at) {
-      events.push({
-        datetime: formatDateTime(inspectionRequest.created_at),
-        status: 'pending',
-        description: 'Request submitted',
-      });
-    }
-
-    const normalizedStatus = (inspectionRequest.status || '').toLowerCase();
-
-    if (['assigned', 'in_progress', 'completed'].includes(normalizedStatus)) {
-      events.push({
-        datetime: formatDateTime(inspectionRequest.updated_at),
-        status: 'assigned',
-        description: 'Assigned to technician',
-      });
-    }
-
-    if (['in_progress', 'completed'].includes(normalizedStatus)) {
-      events.push({
-        datetime: formatDateTime(inspectionRequest.updated_at),
-        status: 'in_progress',
-        description: 'Inspection started',
-      });
-    }
-
-    if (inspectionRequest.completion_report?.submitted_at) {
-      events.push({
-        datetime: formatDateTime(inspectionRequest.completion_report.submitted_at),
-        status: 'in_progress',
-        description: 'Completion report submitted',
-      });
-    }
-
-    if (
-      (inspectionRequest.completion_report?.status || '').toLowerCase() === 'approved'
-    ) {
-      events.push({
-        datetime: formatDateTime(inspectionRequest.completion_report?.approved_at),
-        status: 'approved',
-        description: 'Completion report approved',
-      });
-    }
-
-    if (normalizedStatus === 'completed') {
-      events.push({
-        datetime: formatDateTime(inspectionRequest.updated_at),
-        status: 'completed',
-        description: 'Inspection completed',
-      });
-    }
-
-    return events;
-  }, [inspectionRequest]);
 
   return (
     <View style={s.root}>

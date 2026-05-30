@@ -60,7 +60,12 @@ class ServiceRequestController extends Controller
             [$validated['date_needed'] ?? null],
             function () use ($request, $validated, $resolvedAddress, $resolvedAddressDetails) {
                 return DB::transaction(function () use ($request, $validated, $resolvedAddress, $resolvedAddressDetails) {
-                    $this->preferredDateLockService->ensureDateIsAvailable($validated['date_needed'] ?? null);
+                    $this->preferredDateLockService->ensureDateIsAvailable(
+                        $validated['date_needed'] ?? null,
+                        null,
+                        null,
+                        strtolower((string) ($validated['request_type'] ?? ''))
+                    );
 
                     return ServiceRequest::query()->create([
                         'user_id' => $request->user()->id,
@@ -147,14 +152,14 @@ class ServiceRequestController extends Controller
 
         $bypassReservedDateLock = (bool) ($validated['bypass_reserved_date_lock'] ?? false);
 
-        $currentDate = ServiceRequest::query()
-            ->findOrFail($id)
-            ->date_needed;
+        $currentRecord = ServiceRequest::query()->findOrFail($id);
+        $currentDate = $currentRecord->date_needed;
+        $recordRequestType = strtolower((string) $currentRecord->request_type);
 
         $result = $this->preferredDateLockService->withLockedDates(
             [$validated['date_needed'], $currentDate],
-            function () use ($id, $validated, $bypassReservedDateLock) {
-                return DB::transaction(function () use ($id, $validated, $bypassReservedDateLock) {
+            function () use ($id, $validated, $bypassReservedDateLock, $recordRequestType) {
+                return DB::transaction(function () use ($id, $validated, $bypassReservedDateLock, $recordRequestType) {
                     $serviceRequest = ServiceRequest::query()
                         ->with(['customer', 'technician'])
                         ->lockForUpdate()
@@ -164,7 +169,8 @@ class ServiceRequestController extends Controller
                         $this->preferredDateLockService->ensureDateIsAvailable(
                             $validated['date_needed'],
                             $serviceRequest->id,
-                            ServiceRequest::class
+                            ServiceRequest::class,
+                            $recordRequestType
                         );
                     }
 
@@ -308,15 +314,20 @@ class ServiceRequestController extends Controller
         $serviceRequest->cancellation_note = trim((string) $validated['cancellation_note']);
         $serviceRequest->save();
 
+        $user = $request->user();
+        $newCount = $user->incrementCancellationCount(performedByUserId: $user->id);
+
         $this->notificationService->notifyAdminsOfServiceRequestCancellation(
             $serviceRequest,
             $serviceRequest->cancellation_note,
-            $request->user()->id
+            $user->id
         );
 
         return response()->json([
             'message' => 'Cancellation request submitted. The admin will review and update the status.',
             'data' => $serviceRequest,
+            'cancellation_count' => $newCount,
+            'account_archived' => $user->fresh()->isArchivedCustomer(),
         ], 200);
     }
 

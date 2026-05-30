@@ -201,6 +201,100 @@
             color: #5E7288;
             font-size: 13px;
         }
+
+        .promo-free-item-mode-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .promo-free-item-mode-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            width: 100%;
+            min-height: 0;
+            padding: 14px 16px;
+            border: 1.5px solid #DDE7EE;
+            border-radius: 12px;
+            background: #ffffff;
+            cursor: pointer;
+            transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        .promo-free-item-mode-card:hover {
+            border-color: rgba(32, 167, 201, 0.44);
+            background: #f9fdff;
+        }
+
+        .promo-free-item-mode-card.is-selected {
+            border-color: #20A7C9;
+            background: #F0F9FF;
+            box-shadow: 0 0 0 1px rgba(32, 167, 201, 0.06);
+        }
+
+        .promo-free-item-mode-radio {
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            margin: 2px 0 0;
+            padding: 0;
+            border: 0;
+            border-radius: 50%;
+            background: transparent;
+            box-shadow: none;
+            accent-color: #20A7C9;
+            flex-shrink: 0;
+            pointer-events: none;
+        }
+
+        .solmate-admin-shell .promo-free-item-mode-radio,
+        .solmate-admin-shell .promo-free-item-mode-radio:hover,
+        .solmate-admin-shell .promo-free-item-mode-radio:focus {
+            width: 18px;
+            height: 18px;
+            padding: 0;
+            border: 0;
+            border-radius: 50%;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .promo-free-item-mode-copy {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .promo-free-item-mode-title {
+            margin: 0 0 4px;
+            color: #0F2F4A;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+
+        .promo-free-item-mode-description {
+            margin: 0;
+            color: #5E7288;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .promo-conditions-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        @media (max-width: 720px) {
+            .promo-free-item-mode-card {
+                padding: 12px 14px;
+                gap: 10px;
+            }
+
+            .promo-conditions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 
     <div class="card admin-section-surface">
@@ -234,6 +328,88 @@
                         <div class="field-error" data-promo-error-for="description"></div>
                     </div>
 
+                    {{-- Quotation discount fields --}}
+                    <div style="grid-column: 1 / -1;">
+                        <label for="promo_type">Discount Type</label>
+                        <select id="promo_type" name="promo_type">
+                            <option value="">— No automatic discount —</option>
+                            <option value="percentage">Percentage off</option>
+                            <option value="fixed_amount">Fixed peso amount off</option>
+                            <option value="free_item">Free item / accessory</option>
+                            <option value="bundle">Bundle deal</option>
+                        </select>
+                        <small class="muted" id="promo-type-hint" style="display:block; margin-top:4px;">This determines how the discount is calculated when a technician applies this promo to a quotation. Leave as "No automatic discount" if this promo is for display purposes only.</small>
+                        <div class="field-error" data-promo-error-for="promo_type"></div>
+                    </div>
+
+                    {{-- Free item: discount method toggle (only shown for free_item type) --}}
+                    <div id="promo-free-item-mode-wrap" style="grid-column: 1 / -1; display:none;">
+                        <label style="margin-bottom:8px;">How should the discount be computed?</label>
+                        <div class="promo-free-item-mode-list">
+                            <div id="free-item-mode-condition-row"
+                                 class="promo-free-item-mode-card">
+                                <input type="radio" id="free_item_mode_condition" name="free_item_mode" value="condition" class="promo-free-item-mode-radio">
+                                <div class="promo-free-item-mode-copy">
+                                    <p class="promo-free-item-mode-title">Item quantity rule</p>
+                                    <p class="promo-free-item-mode-description">Auto-deduct the catalog unit price when a minimum quantity is reached, like buy 5 panels and get 1 free. No manual peso amount needed.</p>
+                                </div>
+                            </div>
+                            <div id="free-item-mode-fixed-row"
+                                 class="promo-free-item-mode-card">
+                                <input type="radio" id="free_item_mode_fixed" name="free_item_mode" value="fixed" class="promo-free-item-mode-radio">
+                                <div class="promo-free-item-mode-copy">
+                                    <p class="promo-free-item-mode-title">Fixed peso amount</p>
+                                    <p class="promo-free-item-mode-description">Enter a specific peso value to deduct, regardless of which items are selected in the quotation.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Condition fields (free_item condition mode) --}}
+                    <div id="promo-conditions-wrap" style="grid-column: 1 / -1; display:none;">
+                        <div class="promo-conditions-grid">
+                            <div>
+                                <label for="promo_conditions_applies_to">Item category</label>
+                                <select id="promo_conditions_applies_to" name="conditions[applies_to]">
+                                    <option value="">&mdash; Select an item &mdash;</option>
+                                    <option value="panel">Solar Panel</option>
+                                    <option value="inverter">Inverter</option>
+                                    <option value="battery">Battery</option>
+                                    <option value="protection">Protection device</option>
+                                    <option value="mounting">Mounting hardware</option>
+                                    <option value="wiring">Wiring</option>
+                                    <option value="grounding">Grounding</option>
+                                    <option value="misc">Miscellaneous</option>
+                                </select>
+                                <small class="muted" style="display:block; margin-top:4px;">Which catalog item this rule applies to.</small>
+                            </div>
+                            <div id="promo-conditions-qty-wrap">
+                                <label for="promo_conditions_min_qty">Min. quantity required</label>
+                                <input id="promo_conditions_min_qty" name="conditions[min_qty]" type="number" min="1" step="1" placeholder="e.g. 5">
+                                <small class="muted" style="display:block; margin-top:4px;">Promo activates only when at least this many items are in the quotation.</small>
+                            </div>
+                            <div id="promo-conditions-free-qty-wrap">
+                                <label for="promo_conditions_free_qty">Free item count</label>
+                                <input id="promo_conditions_free_qty" name="conditions[free_qty]" type="number" min="1" step="1" placeholder="e.g. 1">
+                                <small class="muted" style="display:block; margin-top:4px;">Their catalog unit price will be auto-deducted.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Fixed discount value (shown for percentage, fixed_amount, bundle, and free_item fixed mode) --}}
+                    <div id="promo-discount-value-wrap" style="display:none;">
+                        <label for="promo_discount_value" id="promo-discount-value-label">Discount Value</label>
+                        <input id="promo_discount_value" name="discount_value" type="number" min="0" step="0.01" placeholder="">
+                        <small class="muted" id="promo-discount-value-hint" style="display:block; margin-top:4px;"></small>
+                        <div class="field-error" data-promo-error-for="discount_value"></div>
+                    </div>
+
+                    <div id="promo-free-item-wrap" style="grid-column: 1 / -1; display:none;">
+                        <label for="promo_free_item_description">Included free / bundle items</label>
+                        <input id="promo_free_item_description" name="free_item_description" type="text" placeholder="e.g. Free inverter upgrade, 1 extra solar panel, complimentary monitoring device">
+                        <small class="muted" style="display:block; margin-top:4px;">Shown to the technician when they select this promo during quotation.</small>
+                        <div class="field-error" data-promo-error-for="free_item_description"></div>
+                    </div>
                     <div style="grid-column: 1 / -1;">
                         <label for="promo_image">Banner / Image</label>
                         <input id="promo_image" name="image" type="file" accept="image/jpg,image/jpeg,image/png,image/webp">
@@ -399,6 +575,127 @@
     function showError(msg) { errorBox.textContent = msg; setVisible(errorBox, true); }
     function showSuccess(msg) { successBox.textContent = msg; setVisible(successBox, true); }
 
+    /* ── promo type UI ───────────────────────────────────────── */
+
+    function syncFreeItemMode(mode) {
+        const discountWrap = document.getElementById('promo-discount-value-wrap');
+        const conditionsWrap = document.getElementById('promo-conditions-wrap');
+        const rowCondition = document.getElementById('free-item-mode-condition-row');
+        const rowFixed = document.getElementById('free-item-mode-fixed-row');
+        const radioCondition = document.getElementById('free_item_mode_condition');
+        const radioFixed = document.getElementById('free_item_mode_fixed');
+
+        if (radioCondition) radioCondition.checked = mode === 'condition';
+        if (radioFixed) radioFixed.checked = mode === 'fixed';
+
+        setVisible(conditionsWrap, mode === 'condition');
+        setVisible(discountWrap, mode === 'fixed');
+
+        rowCondition?.classList.toggle('is-selected', mode === 'condition');
+        rowFixed?.classList.toggle('is-selected', mode === 'fixed');
+
+        if (mode === 'fixed') {
+            // Clear condition fields so they don't get submitted
+            document.getElementById('promo_conditions_applies_to').value = '';
+            document.getElementById('promo_conditions_min_qty').value = '';
+            document.getElementById('promo_conditions_free_qty').value = '';
+            const label = document.getElementById('promo-discount-value-label');
+            const input = document.getElementById('promo_discount_value');
+            const hint  = document.getElementById('promo-discount-value-hint');
+            if (label) label.textContent = 'Free item value (₱) — optional';
+            if (input) input.placeholder = 'e.g. 2500  →  ₱2,500 deducted from total (leave blank if display only)';
+            if (hint)  hint.textContent  = 'Optional. Enter a peso amount to deduct. Leave blank if this promo is purely informational.';
+        } else {
+            // Clear discount_value so it doesn’t get submitted
+            document.getElementById('promo_discount_value').value = '';
+        }
+    }
+
+    function syncConditionsUI(appliesTo) {
+        // qty/free-qty fields are always visible in condition mode now — nothing to toggle
+    }
+
+    function syncPromoTypeUI(promoType) {
+        const discountValueWrap  = document.getElementById('promo-discount-value-wrap');
+        const freeItemWrap       = document.getElementById('promo-free-item-wrap');
+        const freeItemModeWrap   = document.getElementById('promo-free-item-mode-wrap');
+        const conditionsWrap     = document.getElementById('promo-conditions-wrap');
+        const rowCondition       = document.getElementById('free-item-mode-condition-row');
+        const rowFixed           = document.getElementById('free-item-mode-fixed-row');
+        const label              = document.getElementById('promo-discount-value-label');
+        const input              = document.getElementById('promo_discount_value');
+        const hint               = document.getElementById('promo-discount-value-hint');
+
+        const showFreeItem = promoType === 'free_item' || promoType === 'bundle';
+        setVisible(freeItemWrap, showFreeItem);
+        setVisible(freeItemModeWrap, promoType === 'free_item');
+
+        if (promoType === 'percentage') {
+            setVisible(discountValueWrap, true);
+            setVisible(conditionsWrap, false);
+            if (label) label.textContent = 'Percentage off (%)';
+            if (input) input.placeholder = 'e.g. 10  →  10% off total';
+            if (hint)  hint.textContent  = 'Enter a number from 1–100. Example: 15 gives 15% off the project cost.';
+        } else if (promoType === 'fixed_amount') {
+            setVisible(discountValueWrap, true);
+            setVisible(conditionsWrap, false);
+            if (label) label.textContent = 'Peso amount off (₱)';
+            if (input) input.placeholder = 'e.g. 5000  →  ₱5,000 off total';
+            if (hint)  hint.textContent  = 'Enter the exact peso amount to deduct. Example: 5000 deducts ₱5,000 from the project cost.';
+        } else if (promoType === 'bundle') {
+            setVisible(discountValueWrap, true);
+            setVisible(conditionsWrap, false);
+            if (label) label.textContent = 'Bundle savings (₱)';
+            if (input) input.placeholder = 'e.g. 3000  →  ₱3,000 off for this bundle';
+            if (hint)  hint.textContent  = 'Enter the fixed peso discount for this bundle deal.';
+        } else if (promoType === 'free_item') {
+            // Determine which mode to activate based on existing data.
+            // Default to 'condition' for new promos; use 'fixed' only when a
+            // discount_value is already set and no condition applies_to is set.
+            const hasCondition   = !!document.getElementById('promo_conditions_applies_to').value;
+            const hasFixedAmount = !!document.getElementById('promo_discount_value').value;
+            const checkedRadio   = document.querySelector('input[name="free_item_mode"]:checked');
+            const mode = checkedRadio?.value ?? (hasCondition || !hasFixedAmount ? 'condition' : 'fixed');
+            document.querySelector(`input[name="free_item_mode"][value="${mode}"]`).checked = true;
+            syncFreeItemMode(mode);
+        } else {
+            setVisible(discountValueWrap, false);
+            setVisible(conditionsWrap, false);
+            rowCondition?.classList.remove('is-selected');
+            rowFixed?.classList.remove('is-selected');
+            if (label) label.textContent = 'Discount Value';
+            if (input) input.placeholder = '';
+            if (hint)  hint.textContent  = '';
+        }
+    }
+
+    document.getElementById('promo_type').addEventListener('change', (e) => {
+        syncPromoTypeUI(e.target.value);
+    });
+
+    document.getElementById('free-item-mode-condition-row')?.addEventListener('click', () => {
+        syncFreeItemMode('condition');
+    });
+
+    document.getElementById('free-item-mode-fixed-row')?.addEventListener('click', () => {
+        syncFreeItemMode('fixed');
+    });
+
+    document.querySelectorAll('input[name="free_item_mode"]').forEach((radio) => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                syncFreeItemMode(e.target.value);
+            }
+        });
+    });
+
+    document.getElementById('promo_conditions_applies_to').addEventListener('change', (e) => {
+        syncConditionsUI(e.target.value);
+    });
+
+    // Initialise on page load
+    syncPromoTypeUI(document.getElementById('promo_type').value);
+
     /* ── image preview ───────────────────────────────────────── */
 
     imageInput.addEventListener('change', () => {
@@ -422,6 +719,13 @@
             return;
         }
 
+        const promoTypeLabels = {
+            percentage: 'Percentage',
+            fixed_amount: 'Fixed Amount',
+            free_item: 'Free Item',
+            bundle: 'Bundle Deal',
+        };
+
         list.innerHTML = promotions.map((promo) => {
             const expired = isExpired(promo);
             const statusClass = promo.is_active ? 'badge badge-success' : 'badge badge-warning';
@@ -429,6 +733,24 @@
             const mediaHtml = promo.image_url
                 ? `<img src="${escapeHtml(promo.image_url)}" alt="${escapeHtml(promo.title)} banner">`
                 : `<div class="promo-admin-thumb-placeholder">No banner uploaded yet.</div>`;
+
+            let discountHtml = '';
+            if (promo.promo_type) {
+                const typeLabel = promoTypeLabels[promo.promo_type] || promo.promo_type;
+                let valueText = '';
+                if (promo.promo_type === 'percentage' && promo.discount_value != null) {
+                    valueText = ` — ${escapeHtml(String(promo.discount_value))}% off`;
+                } else if ((promo.promo_type === 'fixed_amount' || promo.promo_type === 'bundle') && promo.discount_value != null) {
+                    valueText = ` — ₱${escapeHtml(Number(promo.discount_value).toLocaleString())} off`;
+                } else if (promo.promo_type === 'free_item' && promo.free_item_description) {
+                    valueText = `: ${escapeHtml(promo.free_item_description)}`;
+                }
+                discountHtml = `<div class="promo-admin-meta-item">
+                    <span class="promo-admin-meta-label">Discount</span>
+                    <span class="promo-admin-meta-value">${escapeHtml(typeLabel)}${valueText}</span>
+                </div>`;
+            }
+
             return `
                 <article class="promo-admin-card">
                     <div class="promo-admin-thumb">${mediaHtml}</div>
@@ -450,6 +772,7 @@
                                 <span class="promo-admin-meta-label">End Date</span>
                                 <span class="promo-admin-meta-value">${escapeHtml(formatDate(promo.end_date))}</span>
                             </div>
+                            ${discountHtml}
                         </div>
 
                         <div class="promo-admin-actions">
@@ -495,6 +818,7 @@
         formHeading.textContent = 'Add Promotion';
         submitBtn.textContent = 'Save Promotion';
         setVisible(cancelBtn, false);
+        syncPromoTypeUI('');
     }
 
     /* ── populate form for editing ───────────────────────────── */
@@ -506,6 +830,21 @@
         document.getElementById('promo_start_date').value = promo.start_date ? promo.start_date.slice(0, 10) : '';
         document.getElementById('promo_end_date').value = promo.end_date ? promo.end_date.slice(0, 10) : '';
         document.getElementById('promo_is_active').checked = !!promo.is_active;
+        document.getElementById('promo_type').value = promo.promo_type ?? '';
+        document.getElementById('promo_discount_value').value = promo.discount_value != null ? promo.discount_value : '';
+        document.getElementById('promo_free_item_description').value = promo.free_item_description ?? '';
+        document.getElementById('promo_conditions_applies_to').value = promo.conditions?.applies_to ?? '';
+        document.getElementById('promo_conditions_min_qty').value = promo.conditions?.min_qty != null ? promo.conditions.min_qty : '';
+        document.getElementById('promo_conditions_free_qty').value = promo.conditions?.free_qty != null ? promo.conditions.free_qty : '';
+
+        // Pre-select the correct radio mode for free_item promos
+        if (promo.promo_type === 'free_item') {
+            const mode = promo.conditions?.applies_to ? 'condition' : 'fixed';
+            const radio = document.querySelector(`input[name="free_item_mode"][value="${mode}"]`);
+            if (radio) radio.checked = true;
+        }
+
+        syncPromoTypeUI(promo.promo_type ?? '');
 
         if (promo.image_url) {
             imagePreviewImg.src = promo.image_url;

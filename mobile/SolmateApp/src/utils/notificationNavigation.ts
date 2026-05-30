@@ -12,9 +12,6 @@ export const CUSTOMER_NOTIFICATION_ROUTE_NAMES = [
   'ServiceRequestDetail',
   'InspectionRequestList',
   'InspectionRequestDetail',
-  'FinalQuotationView',
-  'QuotationList',
-  'QuotationDetail',
 ] as const;
 
 export const TECHNICIAN_NOTIFICATION_ROUTE_NAMES = [
@@ -94,10 +91,10 @@ export function getCustomerNotificationNavigationTarget(
     case 'CustomerFinalQuotationDetails':
       return inspectionRequestId
         ? {
-            routeName: 'FinalQuotationView',
+            routeName: 'InspectionRequestDetail',
             params: {inspectionRequestId},
           }
-        : {routeName: 'QuotationList'};
+        : {routeName: 'InspectionRequestList'};
     default:
       break;
   }
@@ -123,15 +120,10 @@ export function getCustomerNotificationNavigationTarget(
     case 'quotation':
       return inspectionRequestId
         ? {
-            routeName: 'FinalQuotationView',
+            routeName: 'InspectionRequestDetail',
             params: {inspectionRequestId},
           }
-        : quotationId
-          ? {
-              routeName: 'QuotationDetail',
-              params: {quotationId},
-            }
-          : {routeName: 'QuotationList'};
+        : {routeName: 'InspectionRequestList'};
     default:
       return {routeName: 'Home'};
   }

@@ -469,12 +469,6 @@ export default function CustomerSettingsScreen() {
           />
 
           <MenuRow
-            icon={'\ud83d\udcc2'}
-            label="My Quotations"
-            onPress={() => navigation.navigate('QuotationList')}
-          />
-
-          <MenuRow
             icon={'\u23f1\ufe0f'}
             label="My Maintenance History"
             onPress={() => navigation.navigate('ServiceRequestList')}

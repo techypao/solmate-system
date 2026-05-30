@@ -38,6 +38,13 @@ import {
   formatServiceRequestStatus,
   getCustomerName,
 } from '../src/utils/technicianRequests';
+import {
+  Promotion,
+  computePromoDiscount,
+  getActivePromotions,
+  getPromoConditionStatus,
+  getPromoTypeLabel,
+} from '../src/services/promotionApi';
 
 type FinalQuotationFormState = {
   monthly_electric_bill: string;
@@ -99,6 +106,7 @@ type ComputedTotals = {
   projectCost: number;
   optionalItemsSubtotal: number;
   netMeteringCost: number;
+  promoDiscount: number;
   finalProjectCost: number;
   roiYears: number | null;
 };
@@ -470,10 +478,12 @@ export default function FinalQuotationScreen({navigation, route}: any) {
   const [loading, setLoading] = useState(!initialInspectionRequest);
   const [optionsLoading, setOptionsLoading] = useState(true);
   const [catalogLoading, setCatalogLoading] = useState(true);
+  const [promosLoading, setPromosLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [optionsError, setOptionsError] = useState('');
   const [catalogError, setCatalogError] = useState('');
+  const [promosError, setPromosError] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [finalQuotationOptions, setFinalQuotationOptions] =
     useState<FinalQuotationOptions | null>(null);
@@ -481,6 +491,8 @@ export default function FinalQuotationScreen({navigation, route}: any) {
   const [catalogQuantities, setCatalogQuantities] = useState<CatalogQuantityState>(
     {},
   );
+  const [activePromos, setActivePromos] = useState<Promotion[]>([]);
+  const [selectedPromoId, setSelectedPromoId] = useState<number | null>(null);
   const [form, setForm] = useState<FinalQuotationFormState>(() =>
     buildInitialFormState(),
   );
@@ -605,6 +617,34 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     [],
   );
 
+  const loadActivePromos = useCallback(async () => {
+    try {
+      setPromosLoading(true);
+      setPromosError('');
+      const promos = await withTimeout(
+        getActivePromotions(),
+        'Active promotions',
+      );
+      // Only show promos that have a quotation discount type set
+      const quotationPromos = promos.filter(p => p.promo_type !== null);
+      setActivePromos(quotationPromos);
+      // Auto-select the first promo if only one is available
+      if (quotationPromos.length === 1 && selectedPromoId === null) {
+        setSelectedPromoId(quotationPromos[0].id);
+      }
+    } catch (error) {
+      console.warn('FinalQuotationScreen: loadActivePromos failed', error);
+      setActivePromos([]);
+      if (error instanceof ApiError) {
+        setPromosError(error.message);
+      } else {
+        setPromosError('Could not load active promotions.');
+      }
+    } finally {
+      setPromosLoading(false);
+    }
+  }, [selectedPromoId]);
+
   useFocusEffect(
     useCallback(() => {
       if (!inspectionRequest) {
@@ -616,12 +656,14 @@ export default function FinalQuotationScreen({navigation, route}: any) {
       if (pricingCatalog.length === 0) {
         loadPricingCatalog(true);
       }
+      loadActivePromos();
     }, [
       finalQuotationOptions,
       inspectionRequest,
       loadInspectionRequest,
       loadOptions,
       loadPricingCatalog,
+      loadActivePromos,
       pricingCatalog.length,
     ]),
   );
@@ -866,6 +908,11 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     };
   }, [form.include_net_metering, netMeteringPrice]);
 
+  const selectedPromo = useMemo(
+    () => activePromos.find(p => p.id === selectedPromoId) ?? null,
+    [activePromos, selectedPromoId],
+  );
+
   const computedTotals = useMemo<ComputedTotals>(() => {
     const totals = {
       panelCost: 0,
@@ -877,6 +924,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
       projectCost: 0,
       optionalItemsSubtotal: 0,
       netMeteringCost: 0,
+      promoDiscount: 0,
       finalProjectCost: 0,
       roiYears: null as number | null,
     };
@@ -914,12 +962,26 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         .toFixed(2),
     );
     totals.netMeteringCost = Number((netMeteringLineItem?.total_amount ?? 0).toFixed(2));
-    totals.finalProjectCost = Number(
+
+    const baseTotal = Number(
       (
         totals.projectCost +
         totals.optionalItemsSubtotal +
         totals.netMeteringCost
       ).toFixed(2),
+    );
+
+    if (selectedPromo && selectedPromo.promo_type) {
+      const lineItemContext = selectedLineItems.map(item => ({
+        category: item.category,
+        qty: item.qty,
+        unit_price: item.unit_amount,
+      }));
+      totals.promoDiscount = computePromoDiscount(selectedPromo, baseTotal, lineItemContext);
+    }
+
+    totals.finalProjectCost = Number(
+      Math.max(0, baseTotal - totals.promoDiscount).toFixed(2),
     );
 
     const monthlyBill = toNumberOrUndefined(form.monthly_electric_bill);
@@ -935,6 +997,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     netMeteringLineItem,
     optionalLineItems,
     selectedLineItems,
+    selectedPromo,
   ]);
 
   const validationMessage = useMemo(() => {
@@ -1192,6 +1255,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     loadInspectionRequest(true);
     loadOptions(true);
     loadPricingCatalog(true);
+    loadActivePromos();
   };
 
   const handleNextStep = () => {
@@ -1268,6 +1332,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         project_cost: computedTotals.finalProjectCost,
         status: form.status,
         remarks: form.remarks.trim() || undefined,
+        applied_promo_id: selectedPromoId ?? undefined,
       });
 
       const createdQuotation = submissionResult.quotation;
@@ -2093,6 +2158,106 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     </FormSection>
   );
 
+  const promoSelectionSection = (
+    <FormSection
+      title="Active Promotions"
+      subtitle="Select a promo to automatically apply a discount to the quotation total.">
+      {promosLoading ? (
+        <Text style={styles.emptyCatalogText}>Loading active promotions...</Text>
+      ) : promosError ? (
+        <>
+          <Text style={styles.emptyCatalogText}>{promosError}</Text>
+          <AppButton
+            title="Retry Promotions"
+            onPress={loadActivePromos}
+            variant="outline"
+            style={styles.secondaryButton}
+          />
+        </>
+      ) : activePromos.length === 0 ? (
+        <Text style={styles.emptyCatalogText}>
+          No active quotation promos are available right now. Make sure the promo is active, within its live date range, and has a discount type selected in admin.
+        </Text>
+      ) : (
+        activePromos.map(promo => {
+          const isSelected = selectedPromoId === promo.id;
+
+          // Build discount label
+          let discountLabel = '';
+          if (promo.promo_type === 'percentage' && promo.discount_value != null) {
+            discountLabel = `${promo.discount_value}% off total`;
+          } else if (
+            (promo.promo_type === 'fixed_amount' || promo.promo_type === 'bundle') &&
+            promo.discount_value != null
+          ) {
+            discountLabel = `₱${Number(promo.discount_value).toLocaleString()} off total`;
+          } else if (promo.promo_type === 'free_item') {
+            const conds = promo.conditions;
+            if (conds?.applies_to && conds?.min_qty) {
+              discountLabel = `Buy ${conds.min_qty}+ ${conds.applies_to}(s), get ${conds.free_qty ?? 1} free`;
+            } else {
+              discountLabel = promo.free_item_description
+                ? `Free: ${promo.free_item_description}`
+                : 'Free item included';
+              if (promo.discount_value && promo.discount_value > 0) {
+                discountLabel += ` (≈ ₱${Number(promo.discount_value).toLocaleString()} value)`;
+              }
+            }
+          }
+
+          // Condition status (for item-based free_item promos)
+          const lineItemContext = selectedLineItems.map(item => ({
+            category: item.category,
+            qty: item.qty,
+            unit_price: item.unit_amount,
+          }));
+          const condStatus = getPromoConditionStatus(promo, lineItemContext);
+          const conditionBlocked = condStatus.conditionRequired && !condStatus.conditionMet;
+
+          return (
+            <Pressable
+              key={promo.id}
+              onPress={() =>
+                conditionBlocked ? undefined : setSelectedPromoId(isSelected ? null : promo.id)
+              }
+              style={({pressed}) => [
+                styles.promoCard,
+                isSelected && styles.promoCardSelected,
+                conditionBlocked && styles.promoCardBlocked,
+                pressed && !conditionBlocked && styles.promoCardPressed,
+              ]}>
+              <View style={styles.promoCardHeader}>
+                <View style={[styles.promoCardCheckbox, conditionBlocked && styles.promoCardCheckboxBlocked]}>
+                  {isSelected ? (
+                    <Text style={styles.promoCardCheckmark}>✓</Text>
+                  ) : null}
+                </View>
+                <View style={styles.promoCardTextWrap}>
+                  <Text style={[styles.promoCardTitle, isSelected && styles.promoCardTitleSelected, conditionBlocked && styles.promoCardTitleBlocked]}>
+                    {promo.title}
+                  </Text>
+                  {discountLabel ? (
+                    <Text style={[styles.promoCardDiscount, conditionBlocked && styles.promoCardDiscountBlocked]}>
+                      {discountLabel}
+                    </Text>
+                  ) : null}
+                  {condStatus.conditionRequired ? (
+                    <Text style={condStatus.conditionMet ? styles.promoConditionMet : styles.promoConditionUnmet}>
+                      {condStatus.message}
+                    </Text>
+                  ) : null}
+                  {promo.description ? (
+                    <Text style={styles.promoCardDesc}>{promo.description}</Text>
+                  ) : null}
+                </View>
+              </View>
+            </Pressable>
+          );
+        })
+      )}
+    </FormSection>
+  );
+
   const computedTotalsSection = (
     <FormSection
       title="Computed totals"
@@ -2178,6 +2343,22 @@ export default function FinalQuotationScreen({navigation, route}: any) {
             })}
           </Text>
         </View>
+        {computedTotals.promoDiscount > 0 ? (
+          <View style={[styles.totalCard, styles.promoDiscountCard]}>
+            <Text style={[styles.totalLabel, styles.promoDiscountLabel]}>
+              {selectedPromo
+                ? `${getPromoTypeLabel(selectedPromo.promo_type)} — ${selectedPromo.title}`
+                : 'Promo Discount'}
+            </Text>
+            <Text style={[styles.totalValue, styles.promoDiscountValue]}>
+              -{formatQuotationCurrency(computedTotals.promoDiscount, {
+                currency: 'PHP',
+                fallback: 'PHP 0.00',
+                spaceAfterCurrency: true,
+              })}
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.projectTotalCard}>
@@ -2204,6 +2385,16 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           <Text style={styles.projectTotalSubtext}>
             Net metering add-on:{' '}
             {formatQuotationCurrency(computedTotals.netMeteringCost, {
+              currency: 'PHP',
+              fallback: 'PHP 0.00',
+              spaceAfterCurrency: true,
+            })}
+          </Text>
+        ) : null}
+        {computedTotals.promoDiscount > 0 ? (
+          <Text style={[styles.projectTotalSubtext, styles.promoDiscountSubtext]}>
+            Promo discount applied:{' '}
+            -{formatQuotationCurrency(computedTotals.promoDiscount, {
               currency: 'PHP',
               fallback: 'PHP 0.00',
               spaceAfterCurrency: true,
@@ -2277,6 +2468,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
       {computedRequirementSection}
       {selectedLineItemsSection}
       {optionalItemsReviewSection}
+      {promoSelectionSection}
       {computedTotalsSection}
     </>
   );
@@ -2307,6 +2499,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
                 automatically before the quotation is saved.
               </Text>
             </AppCard>
+            {promoSelectionSection}
             {selectedLineItemsSection}
             {pricingCatalogSection}
             {optionalItemsSection}
@@ -3244,5 +3437,104 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: '#ffffff',
     fontWeight: '900',
+  },
+  promoCard: {
+    backgroundColor: '#F8FAFC',
+    borderColor: DIVIDER,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    marginBottom: 10,
+    padding: 12,
+  },
+  promoCardSelected: {
+    backgroundColor: '#EEF8FF',
+    borderColor: '#2B7CC3',
+  },
+  promoCardPressed: {
+    opacity: 0.8,
+  },
+  promoCardHeader: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: 10,
+  },
+  promoCardCheckbox: {
+    alignItems: 'center',
+    borderColor: '#2B7CC3',
+    borderRadius: 12,
+    borderWidth: 2,
+    height: 22,
+    justifyContent: 'center',
+    marginTop: 2,
+    width: 22,
+  },
+  promoCardCheckmark: {
+    color: '#2B7CC3',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  promoCardTextWrap: {
+    flex: 1,
+  },
+  promoCardTitle: {
+    color: NAVY,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  promoCardTitleSelected: {
+    color: '#2B7CC3',
+  },
+  promoCardDiscount: {
+    color: '#1A7A4A',
+    fontSize: 13,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  promoCardDiscountBlocked: {
+    color: MUTED,
+  },
+  promoCardTitleBlocked: {
+    color: MUTED,
+  },
+  promoCardCheckboxBlocked: {
+    borderColor: MUTED,
+  },
+  promoCardBlocked: {
+    backgroundColor: '#F5F5F5',
+    borderColor: DIVIDER,
+    opacity: 0.75,
+  },
+  promoConditionMet: {
+    color: '#1A7A4A',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 3,
+  },
+  promoConditionUnmet: {
+    color: '#C05621',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 3,
+  },
+  promoCardDesc: {
+    color: MUTED,
+    fontSize: 13,
+    marginTop: 2,
+  },
+  promoDiscountCard: {
+    backgroundColor: '#F0FBF4',
+    borderColor: '#1A7A4A',
+    borderWidth: 1.5,
+  },
+  promoDiscountLabel: {
+    color: '#1A7A4A',
+    fontWeight: '700',
+  },
+  promoDiscountValue: {
+    color: '#1A7A4A',
+    fontWeight: '800',
+  },
+  promoDiscountSubtext: {
+    color: '#1A7A4A',
   },
 });

@@ -23,7 +23,7 @@ const CATEGORIES = [
     key: 'inspection',
     icon: '🔍',
     title: 'Inspection Requests',
-    subtitle: 'Track site inspection visits and inspection-based quotation status.',
+    subtitle: 'Track site inspection visits and status updates.',
     route: 'InspectionRequestList',
     params: undefined,
   },

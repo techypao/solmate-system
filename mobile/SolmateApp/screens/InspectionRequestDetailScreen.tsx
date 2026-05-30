@@ -1,11 +1,14 @@
-import React, {useCallback, useMemo, useState} from 'react';
+import React, {useCallback, useContext, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Modal,
   Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
@@ -13,9 +16,11 @@ import {useFocusEffect} from '@react-navigation/native';
 import {StatusBadge} from '../components';
 import {ApiError} from '../src/services/api';
 import {
+  cancelInspectionRequestByCustomer,
   getInspectionRequestById,
   InspectionRequest,
 } from '../src/services/inspectionRequestApi';
+import {AuthContext} from '../src/context/AuthContext';
 import {getSolmateStatusColors, solmateColors} from '../src/theme/colors';
 
 const NAVY = solmateColors.navy;
@@ -122,10 +127,20 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
     | InspectionRequest
     | undefined;
 
+  const {user, setUser} = useContext(AuthContext) as any;
+
   const [inspectionRequest, setInspectionRequest] =
     useState<InspectionRequest | null>(initialInspectionRequest || null);
   const [loading, setLoading] = useState(!initialInspectionRequest);
   const [errorMessage, setErrorMessage] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancellationNote, setCancellationNote] = useState('');
+
+  const customerCanCancel =
+    !['completed', 'cancelled', 'declined'].includes(
+      (inspectionRequest?.status || '').toLowerCase(),
+    ) && inspectionRequest?.cancellation_note == null;
 
   const loadInspectionRequest = useCallback(
     async (showLoadingState = false) => {
@@ -164,6 +179,96 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
     }, [inspectionRequest, loadInspectionRequest]),
   );
 
+  const handleCustomerCancellation = async () => {
+    if (!inspectionRequest || actionLoading) {
+      return;
+    }
+
+    const trimmedNote = cancellationNote.trim();
+    if (trimmedNote.length < 5) {
+      Alert.alert(
+        'Notes required',
+        'Please provide at least 5 characters to explain why you want to cancel this request.',
+      );
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      const response = await cancelInspectionRequestByCustomer(
+        inspectionRequest.id,
+        trimmedNote,
+      );
+
+      const nextRequest =
+        response?.inspection_request?.id !== undefined
+          ? response.inspection_request
+          : {
+              ...inspectionRequest,
+              cancellation_note: trimmedNote,
+            };
+
+      setInspectionRequest(nextRequest);
+      setShowCancelModal(false);
+      setCancellationNote('');
+
+      if (response?.cancellation_count !== undefined) {
+        setUser((prev: any) => ({
+          ...prev,
+          cancellation_count: response.cancellation_count,
+        }));
+      }
+
+      navigation.replace(route.name, {
+        inspectionRequestId: nextRequest.id,
+        initialInspectionRequest: nextRequest,
+      });
+
+      if (response?.account_archived) {
+        Alert.alert(
+          'Account Locked',
+          'Your account has been locked due to repeated cancellations. Please contact admin to regain access.',
+        );
+      } else {
+        Alert.alert(
+          'Cancellation submitted',
+          'Your inspection request cancellation was submitted and the admin has been notified.',
+        );
+      }
+    } catch (error) {
+      if (error instanceof ApiError) {
+        Alert.alert('Cancellation failed', error.message);
+      } else {
+        Alert.alert(
+          'Cancellation failed',
+          'Could not submit your cancellation request right now.',
+        );
+      }
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const openCancelModal = () => {
+    const currentCount = (user?.cancellation_count ?? 0) as number;
+    if (currentCount >= 2) {
+      Alert.alert(
+        'Final Cancellation Warning',
+        'This is your 3rd cancellation. Proceeding will permanently lock your account and you will need to contact admin to regain access. Are you sure you want to continue?',
+        [
+          {text: 'Go Back', style: 'cancel'},
+          {
+            text: 'Proceed Anyway',
+            style: 'destructive',
+            onPress: () => setShowCancelModal(true),
+          },
+        ],
+      );
+    } else {
+      setShowCancelModal(true);
+    }
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={s.safe}>
@@ -198,7 +303,6 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
     );
   }
 
-  const canOpenFinalQuotation = inspectionRequest.status === 'completed';
   const timelineEvents = useMemo(() => {
     const events: Array<{
       datetime: string;
@@ -323,39 +427,81 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
           )}
         </View>
 
-        <View style={s.card}>
-          <Text style={s.cardTitle}>Inspection-Based Quotation</Text>
-          <Text style={s.cardSubtitle}>
-            {canOpenFinalQuotation
-              ? 'The inspection is completed. You can now view the technician-submitted inspection-based quotation.'
-              : 'The inspection-based quotation becomes available after the inspection is marked as completed by the assigned technician.'}
-          </Text>
-
-          <Pressable
-            disabled={!canOpenFinalQuotation}
-            onPress={() =>
-              navigation.navigate('FinalQuotationView', {
-                inspectionRequestId: inspectionRequest.id,
-              })
-            }
-            style={({pressed}) => [
-              canOpenFinalQuotation ? s.goldBtn : s.disabledBtn,
-              pressed && canOpenFinalQuotation && s.pressed,
-            ]}>
-            <Text style={canOpenFinalQuotation ? s.goldBtnText : s.disabledBtnText}>
-              View Inspection-Based Quotation
-            </Text>
-          </Pressable>
-        </View>
-
         <Pressable
           onPress={() => navigation.goBack()}
           style={({pressed}) => [s.outlineBtn, pressed && s.pressed]}>
           <Text style={s.outlineBtnText}>Back</Text>
         </Pressable>
 
+        {customerCanCancel ? (
+          <Pressable
+            onPress={openCancelModal}
+            disabled={actionLoading}
+            style={({pressed}) => [
+              s.cancelBtn,
+              (pressed || actionLoading) && s.pressed,
+            ]}>
+            <Text style={s.cancelBtnText}>
+              {actionLoading ? 'Submitting...' : 'Cancel Inspection Request'}
+            </Text>
+          </Pressable>
+        ) : null}
+
         <View style={s.spacer} />
       </ScrollView>
+
+      <Modal
+        visible={showCancelModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          if (!actionLoading) {
+            setShowCancelModal(false);
+          }
+        }}>
+        <View style={s.modalBackdrop}>
+          <View style={s.modalCard}>
+            <Text style={s.modalTitle}>Cancel Inspection Request</Text>
+            <Text style={s.modalSubtitle}>
+              Tell us why you want to cancel. Admin will review this note.
+            </Text>
+            <TextInput
+              value={cancellationNote}
+              onChangeText={setCancellationNote}
+              editable={!actionLoading}
+              placeholder="Please enter your reason for cancellation"
+              placeholderTextColor={MUTED}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              style={s.modalInput}
+              maxLength={1000}
+            />
+            <View style={s.modalActions}>
+              <Pressable
+                onPress={() => setShowCancelModal(false)}
+                disabled={actionLoading}
+                style={({pressed}) => [
+                  s.modalSecondaryBtn,
+                  pressed && !actionLoading && s.pressed,
+                ]}>
+                <Text style={s.modalSecondaryBtnText}>Close</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleCustomerCancellation}
+                disabled={actionLoading}
+                style={({pressed}) => [
+                  s.modalPrimaryBtn,
+                  (pressed || actionLoading) && s.pressed,
+                ]}>
+                <Text style={s.modalPrimaryBtnText}>
+                  {actionLoading ? 'Submitting...' : 'Submit'}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -563,4 +709,68 @@ const s = StyleSheet.create({
   disabledBtnText: {fontSize: 15, fontWeight: '800', color: MUTED},
 
   spacer: {minHeight: 20},
+
+  cancelBtn: {
+    backgroundColor: solmateColors.dangerSoft,
+    borderRadius: 28,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: solmateColors.danger,
+  },
+  cancelBtnText: {fontSize: 15, fontWeight: '800', color: solmateColors.danger},
+
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalCard: {
+    backgroundColor: CARD,
+    borderRadius: 22,
+    padding: 24,
+    width: '100%',
+    maxWidth: 420,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 8},
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 10,
+  },
+  modalTitle: {fontSize: 20, fontWeight: '900', color: NAVY, marginBottom: 8},
+  modalSubtitle: {fontSize: 14, color: MUTED, lineHeight: 20, marginBottom: 16},
+  modalInput: {
+    borderWidth: 1.5,
+    borderColor: solmateColors.border,
+    borderRadius: 14,
+    padding: 12,
+    fontSize: 14,
+    color: NAVY,
+    minHeight: 100,
+    backgroundColor: BG,
+    marginBottom: 16,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
+  modalSecondaryBtn: {
+    paddingHorizontal: 18,
+    paddingVertical: 11,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: solmateColors.border,
+  },
+  modalSecondaryBtnText: {fontSize: 14, fontWeight: '700', color: NAVY},
+  modalPrimaryBtn: {
+    paddingHorizontal: 22,
+    paddingVertical: 11,
+    borderRadius: 22,
+    backgroundColor: solmateColors.danger,
+  },
+  modalPrimaryBtnText: {fontSize: 14, fontWeight: '800', color: CARD},
 });

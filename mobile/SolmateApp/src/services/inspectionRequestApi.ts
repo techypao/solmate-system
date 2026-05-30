@@ -1,4 +1,4 @@
-import {apiGet, apiPost} from './api';
+import {apiGet, apiPost, apiPut} from './api';
 import {CompletionReport} from './completionReportApi';
 
 export type UserSummary = {
@@ -27,6 +27,7 @@ export type InspectionRequest = {
   longitude?: number | null;
   date_needed?: string | null;
   status?: InspectionRequestStatus | null;
+  cancellation_note?: string | null;
   has_final_quotation?: boolean | null;
   completion_report?: CompletionReport | null;
   created_at?: string;
@@ -69,5 +70,22 @@ export function createInspectionRequest(
   return apiPost<CreateInspectionRequestResponse>(
     '/inspection-requests',
     payload,
+  );
+}
+
+type CancelInspectionRequestResponse = {
+  message: string;
+  inspection_request: InspectionRequest;
+  cancellation_count: number;
+  account_archived: boolean;
+};
+
+export function cancelInspectionRequestByCustomer(
+  id: number,
+  cancellationNote: string,
+) {
+  return apiPut<CancelInspectionRequestResponse>(
+    `/inspection-requests/${id}/cancel`,
+    {cancellation_note: cancellationNote},
   );
 }

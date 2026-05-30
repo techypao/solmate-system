@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use App\Models\Quotation;
+use App\Models\Promotion;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -14,22 +15,26 @@ use App\Models\ServiceRequest;
 use App\Models\InspectionRequest;
 use App\Services\QuotationComputationService;
 use App\Services\InAppNotificationService;
+use App\Services\PromotionDiscountService;
 use App\Services\QuotationSettingsService;
 
 class QuotationController extends Controller
 {
     private QuotationComputationService $quotationComputationService;
     private InAppNotificationService $notificationService;
+    private PromotionDiscountService $promotionDiscountService;
     private QuotationSettingsService $quotationSettingsService;
 
     public function __construct(
         QuotationComputationService $quotationComputationService,
         InAppNotificationService $notificationService,
+        PromotionDiscountService $promotionDiscountService,
         QuotationSettingsService $quotationSettingsService
     )
     {
         $this->quotationComputationService = $quotationComputationService;
         $this->notificationService = $notificationService;
+        $this->promotionDiscountService = $promotionDiscountService;
         $this->quotationSettingsService = $quotationSettingsService;
     }
 
@@ -319,8 +324,38 @@ public function storeFinalQuotation(Request $request)
     ]);
 
     $projectCost = $validated['project_cost'] ?? null;
+
+    // Resolve any active promo submitted by the technician.
+    // The backend re-validates the promo is currently live so the mobile app
+    // cannot apply an expired or inactive promo.
+    $appliedPromo = null;
+    $promoDiscount = null;
+
+    if (!empty($validated['applied_promo_id'])) {
+        $appliedPromo = Promotion::query()
+            ->currentlyLive()
+            ->find((int) $validated['applied_promo_id']);
+
+        if ($appliedPromo && $projectCost !== null) {
+            // Build context so item-based promo conditions can be evaluated.
+            // Panel unit price is derived from total panel cost / panel count.
+            $promoContext = [];
+            $panelQty = (int) ($computedValues['panel_quantity'] ?? 0);
+            $panelCost = (float) ($validated['panel_cost'] ?? 0);
+            if ($panelQty > 0 && $panelCost > 0) {
+                $promoContext['panel_qty'] = $panelQty;
+                $promoContext['panel_unit_price'] = round($panelCost / $panelQty, 2);
+            }
+            $promoDiscount = $this->promotionDiscountService->compute($appliedPromo, (float) $projectCost, $promoContext);
+        }
+    }
+
+    $discountedProjectCost = ($projectCost !== null && $promoDiscount !== null)
+        ? max(0, (float) $projectCost - $promoDiscount)
+        : $projectCost;
+
     $roiValues = $this->quotationComputationService->computeRoi(
-        $projectCost,
+        $discountedProjectCost,
         $monthlyElectricBill
     );
 
@@ -340,7 +375,10 @@ public function storeFinalQuotation(Request $request)
         $panelWatts,
         $withBattery,
         $computedValues,
-        $roiValues
+        $roiValues,
+        $appliedPromo,
+        $promoDiscount,
+        $discountedProjectCost
     ) {
         $lockedInspectionRequest = InspectionRequest::query()
             ->with(['customer', 'technician'])
@@ -404,12 +442,14 @@ public function storeFinalQuotation(Request $request)
             'bos_cost' => $validated['bos_cost'] ?? null,
             'materials_subtotal' => $validated['materials_subtotal'] ?? null,
             'labor_cost' => $validated['labor_cost'] ?? null,
-            'project_cost' => $validated['project_cost'] ?? null,
+            'project_cost' => $discountedProjectCost,
             'estimated_monthly_savings' => $roiValues['estimated_monthly_savings'],
             'estimated_annual_savings' => $roiValues['estimated_annual_savings'],
             'roi_years' => $roiValues['roi_years'],
             'status' => $validated['status'] ?? 'pending',
             'remarks' => $validated['remarks'] ?? null,
+            'applied_promo_id' => $appliedPromo?->id,
+            'promo_discount' => $promoDiscount,
         ]);
 
         return [
@@ -473,49 +513,13 @@ public function downloadCustomerFinalQuotationPdf(Request $request, int $inspect
     return $pdf->download($this->finalQuotationPdfFilename($quotation));
 }
 
-public function complete(Request $request, Quotation $quotation)
-{
-    $customer = $request->user();
-
-    if ($customer->role !== 'customer') {
-        return response()->json([
-            'message' => 'Only customers can mark inspection-based quotations as completed.',
-        ], 403);
-    }
-
-    if ($quotation->quotation_type !== 'final') {
-        return response()->json([
-            'message' => 'Only inspection-based quotations can be marked as completed.',
-        ], 422);
-    }
-
-    if ((int) $quotation->user_id !== (int) $customer->id) {
-        return response()->json([
-            'message' => 'You are not allowed to complete this quotation.',
-        ], 403);
-    }
-
-    if ($quotation->status !== 'completed') {
-        $quotation->status = 'completed';
-        $quotation->save();
-    }
-
-    $quotation->load(['customer', 'inspectionRequest.technician']);
-    $this->loadLineItemsForFinalQuotation($quotation);
-
-    return response()->json([
-        'message' => 'Inspection-based quotation marked as completed.',
-        'data' => $quotation,
-    ], 200);
-}
-
 private function loadLineItemsForFinalQuotation(Quotation $quotation): void
 {
     if ($quotation->quotation_type !== 'final') {
         return;
     }
 
-    $quotation->loadMissing(['lineItems.pricingItem']);
+    $quotation->loadMissing(['lineItems.pricingItem', 'appliedPromo']);
 }
 
 private function findCustomerFinalQuotation(int $customerId, int $inspectionRequestId): ?Quotation
@@ -654,6 +658,7 @@ private function storeFinalQuotationRules(): array
         'project_cost' => 'bail|nullable|numeric|min:0',
         'status' => 'bail|nullable|in:pending,approved,rejected,completed',
         'remarks' => 'nullable|string',
+        'applied_promo_id' => 'bail|nullable|integer|exists:promotions,id',
     ];
 }
 
@@ -736,4 +741,5 @@ private function finalQuotationOptionValues(string $key): array
 
     return $values;
 }
+
 }

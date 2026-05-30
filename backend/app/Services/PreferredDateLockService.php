@@ -7,7 +7,6 @@ use App\Models\ServiceRequest;
 use Closure;
 use DateTimeInterface;
 use Illuminate\Contracts\Cache\LockTimeoutException;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
@@ -22,6 +21,11 @@ class PreferredDateLockService
         'in_progress',
     ];
 
+    /** Maximum number of inspection bookings allowed per date. */
+    public const INSPECTION_MAX_BOOKINGS = 3;
+
+    public const REQUEST_TYPE_INSPECTION = 'inspection';
+
     private const DATE_FIELD = 'date_needed';
 
     private const STATUS_FIELD = 'status';
@@ -33,19 +37,30 @@ class PreferredDateLockService
     public function ensureDateIsAvailable(
         DateTimeInterface|string|null $preferredDate,
         ?int $excludeRecordId = null,
-        ?string $excludeModelClass = null
+        ?string $excludeModelClass = null,
+        string $requestType = self::REQUEST_TYPE_INSPECTION
     ): void {
-        if (! $this->isDateLocked($preferredDate, $excludeRecordId, $excludeModelClass)) {
+        if (! $this->isDateLocked($preferredDate, $excludeRecordId, $excludeModelClass, $requestType)) {
             return;
         }
 
         throw $this->reservedDateValidationException();
     }
 
+    /**
+     * Determine whether a date is locked for the given request type.
+     *
+     * Inspection: locked when the date already has 3+ inspection bookings
+     *             OR when any service (installation/maintenance) booking exists.
+     *
+     * Installation / Maintenance: locked when any service booking exists on that
+     *             date OR when any inspection booking exists.
+     */
     public function isDateLocked(
         DateTimeInterface|string|null $preferredDate,
         ?int $excludeRecordId = null,
-        ?string $excludeModelClass = null
+        ?string $excludeModelClass = null,
+        string $requestType = self::REQUEST_TYPE_INSPECTION
     ): bool {
         if ($preferredDate === null || $preferredDate === '') {
             return false;
@@ -53,35 +68,106 @@ class PreferredDateLockService
 
         $normalizedDate = $this->normalizeDate($preferredDate);
 
-        foreach ($this->lockingModels() as $modelClass) {
-            $query = $modelClass::query()
+        if ($requestType === self::REQUEST_TYPE_INSPECTION) {
+            // Lock if the inspection slot is full (>= 3 active bookings)
+            $inspectionQuery = InspectionRequest::query()
                 ->whereDate(self::DATE_FIELD, $normalizedDate)
                 ->whereIn(self::STATUS_FIELD, self::ACTIVE_LOCK_STATUSES);
 
-            if ($excludeRecordId !== null && $excludeModelClass === $modelClass) {
-                $query->whereKeyNot($excludeRecordId);
+            if ($excludeRecordId !== null && $excludeModelClass === InspectionRequest::class) {
+                $inspectionQuery->whereKeyNot($excludeRecordId);
             }
 
-            if ($query->exists()) {
+            if ($inspectionQuery->count() >= self::INSPECTION_MAX_BOOKINGS) {
                 return true;
             }
+
+            // Also lock if any service (installation/maintenance) booking exists
+            $serviceQuery = ServiceRequest::query()
+                ->whereDate(self::DATE_FIELD, $normalizedDate)
+                ->whereIn(self::STATUS_FIELD, self::ACTIVE_LOCK_STATUSES);
+
+            return $serviceQuery->exists();
         }
 
-        return false;
+        // Installation / Maintenance: locked if any service booking exists (excluding self)
+        $serviceQuery = ServiceRequest::query()
+            ->whereDate(self::DATE_FIELD, $normalizedDate)
+            ->whereIn(self::STATUS_FIELD, self::ACTIVE_LOCK_STATUSES);
+
+        if ($excludeRecordId !== null && $excludeModelClass === ServiceRequest::class) {
+            $serviceQuery->whereKeyNot($excludeRecordId);
+        }
+
+        if ($serviceQuery->exists()) {
+            return true;
+        }
+
+        // Also locked if any inspection booking exists on this date
+        return InspectionRequest::query()
+            ->whereDate(self::DATE_FIELD, $normalizedDate)
+            ->whereIn(self::STATUS_FIELD, self::ACTIVE_LOCK_STATUSES)
+            ->exists();
     }
 
-    public function getUnavailableDates(): array
+    /**
+     * Return unavailable dates for the given request type.
+     *
+     * Inspection: dates where inspection bookings >= 3, plus dates with any
+     *             service (installation/maintenance) booking.
+     *
+     * Installation / Maintenance: dates with any service booking, plus dates
+     *             with any inspection booking.
+     */
+    public function getUnavailableDates(string $requestType = self::REQUEST_TYPE_INSPECTION): array
     {
         $dates = [];
 
-        foreach ($this->lockingModels() as $modelClass) {
-            $modelDates = $modelClass::query()
+        if ($requestType === self::REQUEST_TYPE_INSPECTION) {
+            // Dates where inspection capacity is reached (>= 3 active bookings)
+            $inspectionCounts = InspectionRequest::query()
+                ->whereIn(self::STATUS_FIELD, self::ACTIVE_LOCK_STATUSES)
+                ->whereNotNull(self::DATE_FIELD)
+                ->selectRaw('date_needed, COUNT(*) as booking_count')
+                ->groupBy(self::DATE_FIELD)
+                ->havingRaw('COUNT(*) >= ?', [self::INSPECTION_MAX_BOOKINGS])
+                ->pluck(self::DATE_FIELD)
+                ->all();
+
+            foreach ($inspectionCounts as $date) {
+                $dates[] = $this->normalizeDate($date);
+            }
+
+            // Dates with any service (installation/maintenance) booking block inspection too
+            $serviceDates = ServiceRequest::query()
                 ->whereIn(self::STATUS_FIELD, self::ACTIVE_LOCK_STATUSES)
                 ->whereNotNull(self::DATE_FIELD)
                 ->pluck(self::DATE_FIELD)
                 ->all();
 
-            foreach ($modelDates as $date) {
+            foreach ($serviceDates as $date) {
+                $dates[] = $this->normalizeDate($date);
+            }
+        } else {
+            // Installation / Maintenance: any service booking blocks the date
+            $serviceDates = ServiceRequest::query()
+                ->whereIn(self::STATUS_FIELD, self::ACTIVE_LOCK_STATUSES)
+                ->whereNotNull(self::DATE_FIELD)
+                ->pluck(self::DATE_FIELD)
+                ->all();
+
+            foreach ($serviceDates as $date) {
+                $dates[] = $this->normalizeDate($date);
+            }
+
+            // Any inspection booking also blocks installation/maintenance
+            $inspectionDates = InspectionRequest::query()
+                ->whereIn(self::STATUS_FIELD, self::ACTIVE_LOCK_STATUSES)
+                ->whereNotNull(self::DATE_FIELD)
+                ->pluck(self::DATE_FIELD)
+                ->all();
+
+            foreach ($inspectionDates as $date) {
                 $dates[] = $this->normalizeDate($date);
             }
         }
@@ -110,17 +196,6 @@ class PreferredDateLockService
             $callback,
             $timeoutSeconds ?? self::LOCK_WAIT_SECONDS
         );
-    }
-
-    /**
-     * @return array<class-string<Model>>
-     */
-    private function lockingModels(): array
-    {
-        return [
-            InspectionRequest::class,
-            ServiceRequest::class,
-        ];
     }
 
     private function normalizeDate(DateTimeInterface|string $preferredDate): string

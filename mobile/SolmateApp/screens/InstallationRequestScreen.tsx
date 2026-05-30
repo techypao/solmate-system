@@ -1,7 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -20,7 +19,6 @@ import { ApiError } from '../src/services/api';
 import { getUnavailablePreferredDates } from '../src/services/preferredDateAvailabilityApi';
 import { getDefaultContactNumber } from '../src/utils/contactNumber';
 import { createServiceRequest } from '../src/services/serviceRequestApi';
-import { getQuotations, Quotation } from '../src/services/quotationApi';
 
 const NAVY = '#123A5A';
 const GOLD = '#F4D000';
@@ -34,12 +32,6 @@ const INSTALLATION_TYPE_OPTIONS = [
   'Ground-mounted solar setup',
   'System expansion or additional panels',
   'Installation schedule coordination',
-];
-
-const TIME_OPTIONS = [
-  'Morning (8:00 AM - 11:00 AM)',
-  'Midday (11:00 AM - 1:00 PM)',
-  'Afternoon (1:00 PM - 4:00 PM)',
 ];
 
 type FieldErrors = {
@@ -81,15 +73,6 @@ function getFieldValidationMessage(error: unknown, field: string) {
   return null;
 }
 
-function formatQuotationReference(quotation: Quotation) {
-  const prefix = quotation.quotation_type === 'final' ? 'FINAL' : 'INIT';
-  const status = quotation.status
-    ? quotation.status.charAt(0).toUpperCase() + quotation.status.slice(1)
-    : 'Pending';
-
-  return `${prefix}-${quotation.id} • ${status}`;
-}
-
 function ChoiceChip({
   label,
   selected,
@@ -123,13 +106,6 @@ function ChoiceChip({
 export default function InstallationRequestScreen({ navigation }: any) {
   const { user } = useContext(AuthContext);
   const defaultContactNumber = getDefaultContactNumber(user);
-  const [quotations, setQuotations] = useState<Quotation[]>([]);
-  const [quotationsLoading, setQuotationsLoading] = useState(true);
-  const [quotationMessage, setQuotationMessage] = useState('');
-  const [isQuotationDropdownOpen, setIsQuotationDropdownOpen] = useState(false);
-  const [selectedQuotationId, setSelectedQuotationId] = useState<number | null>(
-    null,
-  );
   const [installationType, setInstallationType] = useState('');
   const [details, setDetails] = useState('');
   const [contactNumber, setContactNumber] = useState(defaultContactNumber);
@@ -138,7 +114,6 @@ export default function InstallationRequestScreen({ navigation }: any) {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [preferredDate, setPreferredDate] = useState('');
-  const [preferredTime, setPreferredTime] = useState('');
   const [extraNotes, setExtraNotes] = useState('');
   const [unavailableDates, setUnavailableDates] = useState<string[]>([]);
   const [availabilityMessage, setAvailabilityMessage] = useState('');
@@ -149,11 +124,7 @@ export default function InstallationRequestScreen({ navigation }: any) {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  const selectedQuotation =
-    quotations.find(item => item.id === selectedQuotationId) ?? null;
-
   const resetForm = () => {
-    setSelectedQuotationId(null);
     setInstallationType('');
     setDetails('');
     setContactNumber(defaultContactNumber);
@@ -162,7 +133,6 @@ export default function InstallationRequestScreen({ navigation }: any) {
     setLatitude(null);
     setLongitude(null);
     setPreferredDate('');
-    setPreferredTime('');
     setExtraNotes('');
     setFieldErrors({});
     setAddressNote(null);
@@ -180,7 +150,7 @@ export default function InstallationRequestScreen({ navigation }: any) {
 
   const loadUnavailableDates = useCallback(async () => {
     try {
-      const dates = await getUnavailablePreferredDates();
+      const dates = await getUnavailablePreferredDates('installation');
       setUnavailableDates(dates);
       setAvailabilityMessage('');
     } catch {
@@ -190,30 +160,10 @@ export default function InstallationRequestScreen({ navigation }: any) {
     }
   }, []);
 
-  const loadQuotations = useCallback(async () => {
-    try {
-      setQuotationsLoading(true);
-      setQuotationMessage('');
-      const data = await getQuotations();
-      setQuotations(Array.isArray(data) ? data : []);
-      setIsQuotationDropdownOpen(false);
-    } catch (error) {
-      setQuotations([]);
-      if (error instanceof ApiError) {
-        setQuotationMessage(error.message);
-      } else {
-        setQuotationMessage('Select a quotation');
-      }
-    } finally {
-      setQuotationsLoading(false);
-    }
-  }, []);
-
   useFocusEffect(
     useCallback(() => {
       loadUnavailableDates();
-      loadQuotations();
-    }, [loadQuotations, loadUnavailableDates]),
+    }, [loadUnavailableDates]),
   );
 
   useEffect(() => {
@@ -291,7 +241,6 @@ export default function InstallationRequestScreen({ navigation }: any) {
     const trimmedAddress = address.trim();
     const trimmedAddressDetails = addressDetails.trim();
     const trimmedPreferredDate = preferredDate.trim();
-    const trimmedPreferredTime = preferredTime.trim();
     const trimmedExtraNotes = extraNotes.trim();
 
     if (
@@ -308,13 +257,7 @@ export default function InstallationRequestScreen({ navigation }: any) {
     }
 
     const detailLines = [];
-    if (selectedQuotationId) {
-      detailLines.push(`Quotation Reference: Quote #${selectedQuotationId}`);
-    }
     detailLines.push(`Installation Type: ${installationType.trim()}`);
-    if (trimmedPreferredTime) {
-      detailLines.push(`Preferred Time: ${trimmedPreferredTime}`);
-    }
     detailLines.push(`Installation Notes: ${trimmedDetails}`);
     if (trimmedExtraNotes) {
       detailLines.push(`Additional Notes: ${trimmedExtraNotes}`);
@@ -339,7 +282,6 @@ export default function InstallationRequestScreen({ navigation }: any) {
       const createdServiceRequest = response?.data;
       if (createdServiceRequest?.id) {
         resetForm();
-        setIsQuotationDropdownOpen(false);
         navigation.replace('ServiceRequestDetail', {
           serviceRequestId: createdServiceRequest.id,
           initialServiceRequest: createdServiceRequest,
@@ -350,7 +292,6 @@ export default function InstallationRequestScreen({ navigation }: any) {
       }
 
       resetForm();
-      setIsQuotationDropdownOpen(false);
       setSuccessMessage(
         response.message ||
           'Your installation request has been submitted successfully.',
@@ -460,9 +401,8 @@ export default function InstallationRequestScreen({ navigation }: any) {
 
           <Text style={styles.title}>Installation Request</Text>
           <Text style={styles.subtitle}>
-            Explore the mobile installation flow with quotation reference,
-            installation details, and preferred scheduling in the app’s existing
-            soft-card style.
+            Explore the mobile installation flow with installation details and
+            your preferred date in the app’s existing soft-card style.
           </Text>
 
           {errorMessage ? (
@@ -478,115 +418,6 @@ export default function InstallationRequestScreen({ navigation }: any) {
               <Text style={styles.successBannerText}>{successMessage}</Text>
             </View>
           ) : null}
-
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Quotation Reference</Text>
-            <Text style={styles.cardSubtitle}>
-              Link this installation request to one of your quotations.
-            </Text>
-
-            <Text style={styles.fieldLabel}>Selected Quotation</Text>
-            <Pressable
-              disabled={quotationsLoading}
-              onPress={() =>
-                quotations.length > 0 &&
-                setIsQuotationDropdownOpen(current => !current)
-              }
-              style={({ pressed }) => [
-                styles.referenceBox,
-                styles.dropdownTrigger,
-                pressed && !quotationsLoading && !submitting && styles.pressed,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.referenceText,
-                  !selectedQuotation && styles.referencePlaceholder,
-                ]}
-              >
-                {selectedQuotation
-                  ? formatQuotationReference(selectedQuotation)
-                  : 'Select a quotation'}
-              </Text>
-              <Text style={styles.dropdownChevron}>
-                {isQuotationDropdownOpen ? '▲' : '▼'}
-              </Text>
-            </Pressable>
-
-            {quotationsLoading ? (
-              <View style={styles.loadingRow}>
-                <ActivityIndicator color={GOLD} size="small" />
-                <Text style={styles.loadingText}>Loading your quotations…</Text>
-              </View>
-            ) : quotations.length > 0 && isQuotationDropdownOpen ? (
-              <View style={styles.dropdownMenu}>
-                <Pressable
-                  onPress={() => {
-                    setSelectedQuotationId(null);
-                    setIsQuotationDropdownOpen(false);
-                  }}
-                  style={({ pressed }) => [
-                    styles.dropdownOption,
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.dropdownOptionText,
-                      styles.referencePlaceholder,
-                    ]}
-                  >
-                    Select a quotation
-                  </Text>
-                </Pressable>
-
-                {quotations.map((item, index) => (
-                  <Pressable
-                    key={item.id}
-                    onPress={() => {
-                      setSelectedQuotationId(item.id);
-                      setIsQuotationDropdownOpen(false);
-                      clearStatusMessages();
-                    }}
-                    style={({ pressed }) => [
-                      styles.dropdownOption,
-                      selectedQuotationId === item.id &&
-                        styles.dropdownOptionSelected,
-                      index === quotations.length - 1 &&
-                        styles.dropdownOptionLast,
-                      pressed && styles.pressed,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.dropdownOptionText,
-                        selectedQuotationId === item.id &&
-                          styles.dropdownOptionTextSelected,
-                      ]}
-                    >
-                      {formatQuotationReference(item)}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            ) : (
-              <Text style={styles.helperText}>
-                {quotationMessage || 'Select a quotation'}
-              </Text>
-            )}
-
-            {selectedQuotation ? (
-              <Pressable
-                onPress={() => setSelectedQuotationId(null)}
-                style={({ pressed }) => [
-                  styles.clearSelectionBtn,
-                  pressed && styles.pressed,
-                ]}
-              >
-                <Text style={styles.clearSelectionText}>Clear selection</Text>
-              </Pressable>
-            ) : null}
-          </View>
 
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Installation Details</Text>
@@ -762,21 +593,6 @@ export default function InstallationRequestScreen({ navigation }: any) {
               selectedDate={preferredDate}
               unavailableDates={unavailableDates}
             />
-
-            <Text style={styles.fieldLabel}>Preferred Time</Text>
-            <View style={styles.choiceList}>
-              {TIME_OPTIONS.map(option => (
-                <ChoiceChip
-                  key={option}
-                  label={option}
-                  onPress={() => {
-                    setPreferredTime(option);
-                    clearStatusMessages();
-                  }}
-                  selected={preferredTime === option}
-                />
-              ))}
-            </View>
 
             <Text style={styles.fieldLabel}>Extra Notes</Text>
             <TextInput

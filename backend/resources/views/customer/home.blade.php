@@ -386,11 +386,11 @@
             Welcome back,<br>
             <span>{{ auth()->user()->name }}</span>
         </h1>
-        <p class="ch-hero-sub">Manage your solar installation from quotation to completion — track requests, view quotes, and stay updated on every step.</p>
+        <p class="ch-hero-sub">Manage your solar installation from request to completion — track services and stay updated on every step.</p>
         <div class="ch-hero-actions">
-            <a href="{{ route('customer.quotation') }}" class="ch-btn-hero-primary">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                Get a Quotation
+            <a href="{{ route('customer.inspection') }}" class="ch-btn-hero-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Request Inspection
             </a>
             <a href="{{ route('customer.tracking') }}" class="ch-btn-hero-ghost">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -441,22 +441,7 @@
 
     <div class="ch-actions-grid">
 
-        {{-- 1. Solar Quotation --}}
-        <a href="{{ route('customer.quotation') }}" class="ch-action-card">
-            <div class="ch-action-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2" aria-hidden="true">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                </svg>
-            </div>
-            <p class="ch-action-title">Solar Quotation</p>
-            <p class="ch-action-desc">Get instant solar system sizing and ROI estimate based on your bill</p>
-            <span class="ch-action-cta">
-                Open
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </span>
-        </a>
-
-        {{-- 2. Site Inspection --}}
+        {{-- 1. Site Inspection --}}
         <a href="{{ route('customer.inspection') }}" class="ch-action-card">
             <div class="ch-action-icon">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2" aria-hidden="true">
@@ -472,26 +457,7 @@
             </span>
         </a>
 
-        {{-- 3. Inspection-Based Quotation --}}
-        <a href="{{ route('customer.quotation.index') }}" class="ch-action-card">
-            <div class="ch-action-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2" aria-hidden="true">
-                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="16" y1="13" x2="8" y2="13"/>
-                    <line x1="16" y1="17" x2="8" y2="17"/>
-                    <polyline points="10 9 9 9 8 9"/>
-                </svg>
-            </div>
-            <p class="ch-action-title">Inspection-Based Quotation</p>
-            <p class="ch-action-desc">View your custom solar quotation after the technician completes the site inspection</p>
-            <span class="ch-action-cta">
-                View
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </span>
-        </a>
-
-        {{-- 4. Job Tracking --}}
+        {{-- 2. Job Tracking --}}
         <a href="{{ route('customer.tracking') }}" class="ch-action-card">
             <div class="ch-action-icon">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2" aria-hidden="true">
@@ -506,7 +472,7 @@
             </span>
         </a>
 
-        {{-- 5. My Dashboard --}}
+        {{-- 3. My Dashboard --}}
         <a href="{{ route('dashboard') }}" class="ch-action-card">
             <div class="ch-action-icon">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2" aria-hidden="true">
@@ -515,14 +481,14 @@
                 </svg>
             </div>
             <p class="ch-action-title">My Dashboard</p>
-            <p class="ch-action-desc">Manage your profile, review quotation history, and update account details</p>
+            <p class="ch-action-desc">Manage your profile and update account details</p>
             <span class="ch-action-cta">
                 Open
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </span>
         </a>
 
-        {{-- 6. My Feedback --}}
+        {{-- 4. My Feedback --}}
         <a href="{{ route('customer.testimonies') }}" class="ch-action-card">
             <div class="ch-action-icon">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2" aria-hidden="true">
@@ -537,7 +503,7 @@
             </span>
         </a>
 
-        {{-- 7. Mobile App --}}
+        {{-- 5. Mobile App --}}
         <a href="{{ route('customer.mobile-app') }}" class="ch-action-card">
             <div class="ch-action-icon">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2" aria-hidden="true">
@@ -561,35 +527,10 @@
     <div class="ch-section-header">
         <p class="ch-section-eyebrow">Overview</p>
         <h2 class="ch-section-title">Recent Activity</h2>
-        <p class="ch-section-sub">Your latest quotations and service requests at a glance</p>
+        <p class="ch-section-sub">Your latest service requests at a glance</p>
     </div>
 
     <div class="ch-activity-grid">
-
-        {{-- Recent Quotations --}}
-        <div class="ch-act-card">
-            <div class="ch-act-card-header">
-                <div class="ch-act-card-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2" aria-hidden="true">
-                        <line x1="12" y1="1" x2="12" y2="23"/>
-                        <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
-                    </svg>
-                </div>
-                <div>
-                    <p class="ch-act-card-title">My Quotations</p>
-                    <p class="ch-act-card-sub">Latest solar quotation requests</p>
-                </div>
-            </div>
-            <div class="ch-act-card-body">
-                <div id="ch-qt-loading" class="ch-act-loading">Loading quotations&hellip;</div>
-                <div id="ch-qt-list"></div>
-                <div id="ch-qt-empty" class="ch-act-empty">No quotations yet. <a href="{{ route('customer.quotation.create') }}" style="color:#F4D000;font-weight:700;">Generate one now.</a></div>
-                <a href="{{ route('customer.quotation.index') }}" class="ch-act-view-link">
-                    View all quotations
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                </a>
-            </div>
-        </div>
 
         {{-- Recent Service Requests --}}
         <div class="ch-act-card">
@@ -746,34 +687,6 @@
 
         if (listEl) listEl.innerHTML = html;
     }
-
-    /* ── Load latest quotations ── */
-    (async function loadQuotations() {
-        try {
-            var resp  = await apiRequest('/api/quotations');
-            var items = resp.data || resp;
-            if (!Array.isArray(items)) items = [];
-            items = sortLatestFirst(items);
-            renderItems('ch-qt-list', 'ch-qt-loading', 'ch-qt-empty', items, function (q) {
-                var quotationType = String(q.quotation_type || 'initial').toLowerCase();
-                var quotationTypeLabel = quotationType === 'final'
-                    ? 'Inspection-Based Quotation'
-                    : 'Pre-Inspection Estimate';
-                return {
-                    label: 'Quotation #' + (q.id || '\u2014'),
-                    status: q.status || '',
-                    showStatus: quotationType !== 'initial',
-                    metaLines: [
-                        'Type: ' + quotationTypeLabel,
-                        'Submitted: ' + fmtDate(q.created_at)
-                    ]
-                };
-            });
-        } catch (e) {
-            var el = document.getElementById('ch-qt-loading');
-            if (el) { el.textContent = 'Could not load quotations.'; el.style.color = '#7F92A3'; }
-        }
-    })();
 
     /* ── Load latest service requests ── */
     (async function loadRequests() {

@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\DB;
 class QuotationLineItemSyncService
 {
     public function __construct(
-        private QuotationComputationService $quotationComputationService
+        private QuotationComputationService $quotationComputationService,
+        private PromotionDiscountService $promotionDiscountService
     ) {
     }
 
@@ -64,7 +65,14 @@ class QuotationLineItemSyncService
             $bosCost = round($totals['bos_cost'], 2);
             $materialsSubtotal = round($totals['materials_subtotal'], 2);
             $laborCost = round((float) ($quotation->labor_cost ?? 0), 2);
-            $projectCost = round($materialsSubtotal + $laborCost, 2);
+            $baseProjectCost = round($materialsSubtotal + $laborCost, 2);
+            $promoContext = $this->promotionDiscountService->buildContextFromLineItems($lineItems);
+            $promoDiscount = $this->promotionDiscountService->compute(
+                $quotation->appliedPromo,
+                $baseProjectCost,
+                $promoContext
+            );
+            $projectCost = round(max(0, $baseProjectCost - (float) ($promoDiscount ?? 0)), 2);
 
             $roiValues = $this->quotationComputationService->computeRoi(
                 $projectCost,
@@ -78,13 +86,14 @@ class QuotationLineItemSyncService
                 'bos_cost' => $bosCost,
                 'materials_subtotal' => $materialsSubtotal,
                 'labor_cost' => $laborCost,
+                'promo_discount' => $promoDiscount,
                 'project_cost' => $projectCost,
                 'estimated_monthly_savings' => $roiValues['estimated_monthly_savings'],
                 'estimated_annual_savings' => $roiValues['estimated_annual_savings'],
                 'roi_years' => $roiValues['roi_years'],
             ]);
 
-            return $quotation->fresh(['lineItems.pricingItem']);
+            return $quotation->fresh(['lineItems.pricingItem', 'appliedPromo']);
         });
     }
 }

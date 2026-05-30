@@ -434,7 +434,7 @@ export default function CustomerNotificationsScreen({navigation}: any) {
       <View style={s.introSection}>
         <Text style={s.pageTitle}>Notifications</Text>
         <Text style={s.pageSubtitle}>
-          Stay updated on your requests, schedules, and inspection-based quotations.
+          Stay updated on your requests, schedules, and service progress.
         </Text>
       </View>
 
@@ -521,7 +521,7 @@ export default function CustomerNotificationsScreen({navigation}: any) {
               </View>
               <Text style={s.emptyTitle}>No notifications yet</Text>
               <Text style={s.emptyText}>
-                Updates about your requests and quotations will appear here.
+                Updates about your requests and schedules will appear here.
               </Text>
             </View>
           }

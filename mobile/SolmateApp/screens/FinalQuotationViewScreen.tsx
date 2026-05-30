@@ -14,7 +14,6 @@ import {useFocusEffect} from '@react-navigation/native';
 import CustomerBottomNav from '../src/components/CustomerBottomNav';
 import {ApiError} from '../src/services/api';
 import {
-  completeQuotation,
   getCustomerFinalQuotation,
   Quotation,
   QuotationLineItem,
@@ -175,7 +174,6 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
 
   const [quotation, setQuotation] = useState<Quotation | null>(null);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   const loadQuotation = useCallback(
@@ -242,54 +240,6 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
 
   /* ── handlers ── */
 
-  const handleComplete = () => {
-    if (!quotation?.id || submitting) {
-      return;
-    }
-
-    Alert.alert(
-      'Mark as Completed',
-      'Mark this inspection-based quotation as completed?',
-      [
-        {text: 'Cancel', style: 'cancel'},
-        {
-          text: 'Mark as Completed',
-          onPress: async () => {
-            try {
-              setSubmitting(true);
-              const response = await completeQuotation(quotation.id);
-              const updatedQuotation = response.quotation;
-
-              setQuotation(current =>
-                current && updatedQuotation
-                  ? {
-                      ...current,
-                      ...updatedQuotation,
-                      status: updatedQuotation.status ?? 'completed',
-                    }
-                  : current,
-              );
-
-              Alert.alert(
-                'Success',
-                response.message || 'Inspection-based quotation marked as completed.',
-              );
-            } catch (error) {
-              Alert.alert(
-                'Update failed',
-                error instanceof ApiError
-                  ? error.message
-                  : 'Could not mark the inspection-based quotation as completed.',
-              );
-            } finally {
-              setSubmitting(false);
-            }
-          },
-        },
-      ],
-    );
-  };
-
   const handleCreateService = () => {
     navigation.navigate('InstallationRequest');
   };
@@ -297,9 +247,6 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
   const handleSave = () => {
     Alert.alert('Saved', 'Quotation saved to your history.');
   };
-
-  const normalizedStatus = String(quotation.status || '').toLowerCase();
-  const canMarkAsCompleted = normalizedStatus === 'pending';
 
   /* ── render ── */
 
@@ -524,21 +471,6 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
         </SectionCard>
 
         {/* ── action buttons ── */}
-        {canMarkAsCompleted ? (
-          <Pressable
-            disabled={submitting}
-            onPress={handleComplete}
-            style={({pressed}) => [
-              s.primaryBtn,
-              submitting && s.primaryBtnDisabled,
-              pressed && !submitting && s.pressed,
-            ]}>
-            <Text style={s.primaryBtnText}>
-              {submitting ? 'Marking as Completed...' : 'Mark as Completed'}
-            </Text>
-          </Pressable>
-        ) : null}
-
         <Pressable
           onPress={handleCreateService}
           style={({pressed}) => [s.secondaryBtn, pressed && s.pressed]}>

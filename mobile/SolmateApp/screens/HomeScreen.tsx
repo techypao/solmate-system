@@ -257,10 +257,10 @@ export default function HomeScreen({navigation}: any) {
         <Text style={s.sectionTitle}>Summary</Text>
         <View style={s.summaryRow}>
           <SummaryCard
-            icon={'\ud83d\udccb'}
-            label="Latest Quote"
-            value="View"
-            onPress={() => navigation.navigate('QuotationList')}
+            icon={'\u2705'}
+            label="Requests"
+            value="Track"
+            onPress={() => navigation.navigate('TrackingHub')}
           />
           <SummaryCard
             icon={'\ud83d\udcca'}
@@ -293,12 +293,6 @@ export default function HomeScreen({navigation}: any) {
         {/* ── quick actions ──────────────────────────── */}
         <Text style={s.sectionTitle}>Quick Actions</Text>
         <View style={s.actionGrid}>
-          <ActionCard
-            icon={'\ud83d\udcdd'}
-            title="Generate"
-            subtitle="Quotation"
-            onPress={() => navigation.navigate('Quotations')}
-          />
           <ActionCard
             icon={'\ud83e\uddf0'}
             title="Request"
@@ -333,9 +327,9 @@ export default function HomeScreen({navigation}: any) {
             <Text style={s.moreBtnText}>My Testimonies</Text>
           </Pressable>
           <Pressable
-            onPress={() => navigation.navigate('QuotationList')}
+            onPress={() => navigation.navigate('TrackingHub')}
             style={({pressed}) => [s.moreBtn, pressed && s.pressed]}>
-            <Text style={s.moreBtnText}>My Quotations</Text>
+            <Text style={s.moreBtnText}>My Requests</Text>
           </Pressable>
         </View>
 

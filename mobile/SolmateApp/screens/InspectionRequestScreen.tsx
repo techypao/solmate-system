@@ -117,7 +117,7 @@ export default function InspectionRequestScreen({ navigation }: any) {
 
   const loadUnavailableDates = useCallback(async () => {
     try {
-      const dates = await getUnavailablePreferredDates();
+      const dates = await getUnavailablePreferredDates('inspection');
       setUnavailableDates(dates);
       setAvailabilityMessage('');
     } catch {

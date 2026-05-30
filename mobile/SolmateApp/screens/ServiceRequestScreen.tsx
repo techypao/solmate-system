@@ -137,7 +137,7 @@ export default function ServiceRequestScreen({ navigation }: any) {
 
   const loadUnavailableDates = useCallback(async () => {
     try {
-      const dates = await getUnavailablePreferredDates();
+      const dates = await getUnavailablePreferredDates('maintenance');
       setUnavailableDates(dates);
       setAvailabilityMessage('');
     } catch {

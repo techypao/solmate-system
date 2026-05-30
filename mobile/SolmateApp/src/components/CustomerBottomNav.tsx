@@ -11,7 +11,6 @@ import {solmateColors} from '../theme/colors';
 
 export type CustomerBottomNavTab =
   | 'Home'
-  | 'Quotation'
   | 'Services'
   | 'Tracking'
   | 'Profile';
@@ -25,12 +24,6 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   {key: 'Home', label: 'Home', icon: '\uD83C\uDFE0', routeName: 'Home'},
-  {
-    key: 'Quotation',
-    label: 'Quotation',
-    icon: '\uD83D\uDCCB',
-    routeName: 'QuotationList',
-  },
   {
     key: 'Services',
     label: 'Services',

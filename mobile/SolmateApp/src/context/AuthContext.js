@@ -72,6 +72,16 @@ export const AuthProvider = ({children}) => {
     }
   };
 
+  const refreshUser = useCallback(async () => {
+    if (!token) return;
+    try {
+      const userData = await apiGet('/user');
+      setUser(userData);
+    } catch (error) {
+      console.log('Refresh user error:', error?.message || error);
+    }
+  }, [token]);
+
   const logout = async () => {
     try {
       setSessionToken(null);
@@ -102,6 +112,7 @@ export const AuthProvider = ({children}) => {
         login,
         logout,
         setUser,
+        refreshUser,
         clearAuthError,
       }}>
       {children}

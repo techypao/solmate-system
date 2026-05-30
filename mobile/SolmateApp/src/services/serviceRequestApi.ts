@@ -128,10 +128,19 @@ export async function cancelServiceRequestByCustomer(
   id: number,
   cancellationNote: string,
 ) {
-  const response = await apiPut<{message?: string; data?: ServiceRequest}>(
+  const response = await apiPut<{
+    message?: string;
+    data?: ServiceRequest;
+    cancellation_count?: number;
+    account_archived?: boolean;
+  }>(
     `/service-requests/${id}/cancel`,
     {cancellation_note: cancellationNote},
   );
 
-  return response?.data ?? ({} as ServiceRequest);
+  return {
+    ...(response?.data ?? ({} as ServiceRequest)),
+    cancellation_count: response?.cancellation_count,
+    account_archived: response?.account_archived,
+  };
 }

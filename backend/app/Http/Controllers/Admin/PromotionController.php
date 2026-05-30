@@ -36,6 +36,10 @@ class PromotionController extends Controller
             'start_date' => $validated['start_date'] ?? null,
             'end_date' => $validated['end_date'] ?? null,
             'is_active' => isset($validated['is_active']) ? (bool) $validated['is_active'] : true,
+            'promo_type' => $validated['promo_type'] ?? null,
+            'discount_value' => $validated['discount_value'] ?? null,
+            'free_item_description' => $validated['free_item_description'] ?? null,
+            'conditions' => $this->sanitizeConditions($validated['conditions'] ?? null, $validated['promo_type'] ?? null),
         ]);
 
         if ($promotion->is_active) {
@@ -62,10 +66,21 @@ class PromotionController extends Controller
             }
         }
 
-        foreach (['title', 'description', 'start_date', 'end_date'] as $field) {
+        foreach (['title', 'description', 'start_date', 'end_date', 'promo_type', 'free_item_description'] as $field) {
             if (array_key_exists($field, $validated)) {
                 $attributes[$field] = $validated[$field];
             }
+        }
+
+        if (array_key_exists('discount_value', $validated)) {
+            $attributes['discount_value'] = $validated['discount_value'];
+        }
+
+        if (array_key_exists('conditions', $validated)) {
+            $attributes['conditions'] = $this->sanitizeConditions(
+                $validated['conditions'],
+                $validated['promo_type'] ?? $promotion->promo_type
+            );
         }
 
         if (array_key_exists('is_active', $validated)) {
@@ -110,6 +125,10 @@ class PromotionController extends Controller
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'is_active' => ['sometimes', 'boolean'],
+            'promo_type' => ['nullable', 'string', 'in:percentage,fixed_amount,free_item,bundle'],
+            'discount_value' => ['nullable', 'numeric', 'min:0'],
+            'free_item_description' => ['nullable', 'string', 'max:255'],
+            'conditions' => ['nullable', 'array'],
         ];
     }
 
@@ -122,6 +141,10 @@ class PromotionController extends Controller
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'is_active' => ['sometimes', 'boolean'],
+            'promo_type' => ['nullable', 'string', 'in:percentage,fixed_amount,free_item,bundle'],
+            'discount_value' => ['nullable', 'numeric', 'min:0'],
+            'free_item_description' => ['nullable', 'string', 'max:255'],
+            'conditions' => ['nullable', 'array'],
         ];
     }
 
@@ -133,5 +156,33 @@ class PromotionController extends Controller
             'image.max' => 'The image may not exceed 4 MB.',
             'end_date.after_or_equal' => 'The end date must be on or after the start date.',
         ];
+    }
+
+    /**
+     * Keep only meaningful condition values; return null for non-free_item types
+     * or when no applies_to is set (the key field for item-based conditions).
+     */
+    private function sanitizeConditions(?array $conditions, ?string $promoType): ?array
+    {
+        if ($promoType !== 'free_item' || !is_array($conditions)) {
+            return null;
+        }
+
+        $appliesTo = trim((string) ($conditions['applies_to'] ?? ''));
+        if ($appliesTo === '') {
+            return null;
+        }
+
+        $result = ['applies_to' => $appliesTo];
+
+        if (isset($conditions['min_qty']) && $conditions['min_qty'] !== '') {
+            $result['min_qty'] = max(1, (int) $conditions['min_qty']);
+        }
+
+        if (isset($conditions['free_qty']) && $conditions['free_qty'] !== '') {
+            $result['free_qty'] = max(1, (int) $conditions['free_qty']);
+        }
+
+        return $result;
     }
 }

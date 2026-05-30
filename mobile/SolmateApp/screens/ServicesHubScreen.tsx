@@ -82,7 +82,7 @@ export default function ServicesHubScreen({navigation}: any) {
         <ServiceCard
           icon={'🧰'}
           title="Installation"
-          subtitle="Plan an installation request with quotation reference, site notes, and preferred schedule."
+          subtitle="Plan an installation request with site notes and your preferred date."
           onPress={() => navigation.navigate('InstallationRequest')}
         />
         <ServiceCard

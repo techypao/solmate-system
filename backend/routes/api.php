@@ -141,7 +141,6 @@ Route::middleware(['auth:sanctum', 'role:customer'])->group(function () {
     Route::post('/service-requests', [ServiceRequestController::class, 'store']);
     Route::get('/service-requests', [ServiceRequestController::class, 'index']);
     Route::put('/service-requests/{id}/cancel', [ServiceRequestController::class, 'cancelByCustomer']);
-    Route::post('/quotations/{quotation}/complete', [QuotationController::class, 'complete']);
     Route::get('/my-testimonies', [TestimonyController::class, 'myIndex']);
     Route::post('/testimonies', [TestimonyController::class, 'store']);
     Route::put('/testimonies/{id}', [TestimonyController::class, 'update']);
