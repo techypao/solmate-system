@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
+use Throwable;
 
 class ChatbotReplyService
 {
@@ -41,32 +42,45 @@ TEXT;
     {
         $apiKey = trim((string) config('services.gemini.api_key'));
         $model = trim((string) config('services.gemini.model', 'gemini-2.5-flash'));
+        $offlineReply = $this->buildOfflineReply($message);
 
         if ($apiKey === '') {
-            throw new RuntimeException('Gemini API key is not configured.');
+            return $offlineReply;
         }
 
-        $response = Http::timeout(20)
-            ->acceptJson()
-            ->withHeaders([
-                'x-goog-api-key' => $apiKey,
-            ])
-            ->post(
-                sprintf('https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent', $model),
-                $this->buildRequestBody($message),
-            );
+        try {
+            $response = Http::timeout(20)
+                ->acceptJson()
+                ->withHeaders([
+                    'x-goog-api-key' => $apiKey,
+                ])
+                ->post(
+                    sprintf('https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent', $model),
+                    $this->buildRequestBody($message),
+                );
 
-        if (! $response->successful()) {
-            throw new RuntimeException($response->json('error.message') ?: 'SolBot could not process the request.');
+            if (! $response->successful()) {
+                return $offlineReply['text'] !== ''
+                    ? $offlineReply
+                    : throw new RuntimeException($response->json('error.message') ?: 'SolBot could not process the request.');
+            }
+
+            $reply = $this->extractChatbotReply($response->json(), $message);
+
+            if ($reply['text'] === '') {
+                return $offlineReply['text'] !== ''
+                    ? $offlineReply
+                    : throw new RuntimeException('SolBot returned an empty response.');
+            }
+
+            return $reply;
+        } catch (Throwable $throwable) {
+            if ($offlineReply['text'] !== '') {
+                return $offlineReply;
+            }
+
+            throw $throwable;
         }
-
-        $reply = $this->extractChatbotReply($response->json(), $message);
-
-        if ($reply['text'] === '') {
-            throw new RuntimeException('SolBot returned an empty response.');
-        }
-
-        return $reply;
     }
 
     private function buildRequestBody(string $message): array
@@ -212,6 +226,28 @@ TEXT),
         return array_slice($normalizedSuggestions, 0, self::MAX_FOLLOW_UP_SUGGESTIONS);
     }
 
+    /**
+     * @return array{text: string, suggestions: array<int, string>, is_fallback: bool}
+     */
+    private function buildOfflineReply(string $message): array
+    {
+        $answer = $this->getSimpleSolMateFallbackAnswer($message);
+
+        if ($answer === '') {
+            $answer = $this->getBasicSolarFallbackAnswer($message);
+        }
+
+        if ($answer === '') {
+            $answer = self::SCOPE_FALLBACK;
+        }
+
+        return [
+            'text' => $answer,
+            'suggestions' => $this->buildFollowUpSuggestions($message, $answer, null),
+            'is_fallback' => $answer === self::SCOPE_FALLBACK,
+        ];
+    }
+
     private function getTopicFallbackSuggestions(string $message, string $answer): array
     {
         $context = strtolower($message.' '.$answer);
@@ -232,7 +268,31 @@ TEXT),
             return ['When should I use a service request?', 'How is it different from inspection?', 'What concerns can I report?', 'What happens after I submit one?'];
         }
 
+        if (str_contains($context, 'notification')) {
+            return ['What do notifications usually mean?', 'Where can I view updates?', 'Do notifications affect my requests?', 'Why am I getting app alerts?'];
+        }
+
+        if (str_contains($context, 'testimon')) {
+            return ['How do I submit a testimony?', 'Can I edit my testimony?', 'What should I write in it?', 'Who can see my testimony?'];
+        }
+
         return ['How do quotations work?', 'How do I request an inspection?', 'What do notifications mean?', 'What can SolMate help with?'];
+    }
+
+    private function getSimpleSolMateFallbackAnswer(string $message): string
+    {
+        $normalizedMessage = strtolower($message);
+
+        return match (true) {
+            str_contains($normalizedMessage, 'awaiting admin approval') || str_contains($normalizedMessage, 'admin approval') => 'Awaiting admin approval means an admin still needs to review or confirm that request before it moves to the next step.',
+            str_contains($normalizedMessage, 'quotation') || str_contains($normalizedMessage, 'quote') || str_contains($normalizedMessage, 'estimate') => 'Your pre-inspection estimate is only an early guide. The final quotation is prepared by the technician after inspection and technical assessment.',
+            str_contains($normalizedMessage, 'inspection') => 'You can request an inspection from the customer dashboard when you need a site check or technical assessment before final recommendations.',
+            str_contains($normalizedMessage, 'service request') => 'A service request is for support concerns or after-service issues, while an inspection request is for site checking and technical evaluation.',
+            str_contains($normalizedMessage, 'notification') || str_contains($normalizedMessage, 'alert') => 'Notifications are in-app updates about important account, request, or quotation activity. You can open the notifications section in the app to review them.',
+            str_contains($normalizedMessage, 'testimon') || str_contains($normalizedMessage, 'review') || str_contains($normalizedMessage, 'feedback') => 'Testimonies let customers share feedback about their SolMate experience. You can usually submit or edit them from the customer side of the app when that feature is available.',
+            str_contains($normalizedMessage, 'faq') || str_contains($normalizedMessage, 'help') || str_contains($normalizedMessage, 'what can solmate help with') => 'I can help explain SolMate quotations, inspection requests, service requests, testimonies, notifications, and basic solar terms.',
+            default => '',
+        };
     }
 
     private function getBasicSolarFallbackAnswer(string $message): string

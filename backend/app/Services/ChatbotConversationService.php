@@ -11,13 +11,29 @@ use Throwable;
 
 class ChatbotConversationService
 {
-    private const ADMIN_REQUEST_PATTERNS = [
-        '/\b(admin|agent|human|representative|staff)\b/i',
-        '/\b(real person|real admin|live agent|live support|customer service|human support)\b/i',
-        '/\b(need help|need support|can someone help|talk to someone|talk to support)\b/i',
+    private const AUTO_RESUME_ESCALATION_REASONS = [
+        'bot_error',
+        'repeated_bot_failures',
+        'repeated_fallback',
     ];
 
-    private const FALLBACK_ESCALATION_THRESHOLD = 2;
+    private const ADMIN_REQUEST_PATTERNS = [
+        '/\b(?:talk|speak|chat)\s+(?:to|with)\s+(?:a\s+)?(?:real\s+)?(?:person|human|admin|agent|representative|staff|support)\b/i',
+        '/\b(?:connect|transfer|route|escalat(?:e|ion)|put me through)\s+(?:me\s+)?(?:to|with)?\s*(?:a\s+)?(?:real\s+)?(?:person|human|admin|agent|representative|staff|support)\b/i',
+        '/\b(?:need|want|prefer)\s+(?:a\s+)?(?:real\s+)?(?:person|human|agent|representative|staff|support)\b/i',
+        '/\b(?:real person|real admin|live agent|live support|customer service|human support)\b/i',
+    ];
+
+    private const ADMIN_OFFER_CONFIRMATION_PATTERNS = [
+        '/^\s*(?:yes|yes please|please|sure|okay|ok|go ahead|do that|that works)\s*[!.?]*\s*$/i',
+        '/\b(?:connect|transfer|route|escalat(?:e|ion)|put me through)\s+(?:me\s+)?(?:to|with)?\s*(?:a\s+)?(?:real\s+)?(?:person|human|admin|agent|representative|staff|support)\b/i',
+    ];
+
+    private const BOT_FAILURE_ESCALATION_THRESHOLD = 3;
+
+    private const BOT_FALLBACK_MESSAGE = "I'm not sure about that, but I can connect you to an admin if you'd like.";
+
+    private const BOT_ERROR_MESSAGE = "I'm having trouble responding right now. You can try again, or I can connect you to an admin if you'd like.";
 
     public function __construct(
         private readonly ChatbotReplyService $replyService,
@@ -43,10 +59,19 @@ class ChatbotConversationService
             $this->appendMessage($conversation, ChatMessage::SENDER_USER, $body, $customer);
 
             if ($conversation->isUnderAdminControl()) {
+                if ($this->shouldAutoResumeBot($conversation)) {
+                    $this->resumeBotControl($conversation);
+                    $conversation->refresh();
+                } else {
+                    return $this->loadConversation($conversation);
+                }
+            }
+
+            if ($conversation->isUnderAdminControl()) {
                 return $this->loadConversation($conversation);
             }
 
-            if ($this->userRequestedAdmin($body)) {
+            if ($this->userRequestedAdmin($body) || $this->userConfirmedAdminOffer($conversation, $body)) {
                 $this->escalateToAdmin($conversation, 'user_requested_human', $customer);
 
                 return $this->loadConversation($conversation);
@@ -55,40 +80,33 @@ class ChatbotConversationService
             try {
                 $reply = $this->replyService->send($body);
             } catch (Throwable $throwable) {
-                $this->appendMessage(
-                    $conversation,
-                    ChatMessage::SENDER_BOT,
-                    'I ran into a problem while responding. A real admin can continue this conversation if needed.',
-                    null,
-                    ['status' => 'error']
-                );
-                $this->escalateToAdmin($conversation, 'bot_error', $customer);
+                $this->handleBotFailure($conversation, $customer, 'bot_error');
 
                 return $this->loadConversation($conversation);
             }
 
+            if (! $this->hasUsableReply($reply)) {
+                $this->handleBotFailure($conversation, $customer, 'empty_response');
+
+                return $this->loadConversation($conversation);
+            }
+
+            $replyText = trim((string) $reply['text']);
+            $isFallbackReply = (bool) ($reply['is_fallback'] ?? false);
+
             $this->appendMessage(
                 $conversation,
                 ChatMessage::SENDER_BOT,
-                $reply['text'],
+                $isFallbackReply ? self::BOT_FALLBACK_MESSAGE : $replyText,
                 null,
                 [
-                    'suggestions' => $reply['suggestions'],
-                    'status' => ($reply['is_fallback'] ?? false) ? 'fallback' : 'default',
+                    'suggestions' => $reply['suggestions'] ?? [],
+                    'status' => $isFallbackReply ? 'fallback' : 'default',
+                    'event' => $isFallbackReply ? 'admin_offer' : null,
                 ],
             );
 
-            if ($reply['is_fallback'] ?? false) {
-                $conversation->increment('bot_fallback_count');
-            } else {
-                $conversation->forceFill(['bot_fallback_count' => 0])->save();
-            }
-
-            $conversation->refresh();
-
-            if ($conversation->bot_fallback_count >= self::FALLBACK_ESCALATION_THRESHOLD) {
-                $this->escalateToAdmin($conversation, 'repeated_fallback', $customer);
-            }
+            $this->resetBotFailureCount($conversation);
 
             return $this->loadConversation($conversation);
         });
@@ -220,9 +238,94 @@ class ChatbotConversationService
         return $message;
     }
 
+    /**
+     * @param  array<string, mixed>  $reply
+     */
+    private function hasUsableReply(array $reply): bool
+    {
+        return trim((string) ($reply['text'] ?? '')) !== '';
+    }
+
+    private function handleBotFailure(ChatConversation $conversation, User $customer, string $reason): void
+    {
+        $conversation->increment('bot_fallback_count');
+        $conversation->refresh();
+
+        $this->appendMessage(
+            $conversation,
+            ChatMessage::SENDER_BOT,
+            self::BOT_ERROR_MESSAGE,
+            null,
+            [
+                'status' => 'fallback',
+                'event' => 'admin_offer',
+                'reason' => $reason,
+                'retry_count' => $conversation->bot_fallback_count,
+            ],
+        );
+
+        if ($conversation->bot_fallback_count >= self::BOT_FAILURE_ESCALATION_THRESHOLD) {
+            $this->escalateToAdmin($conversation, 'repeated_bot_failures', $customer);
+        }
+    }
+
+    private function resetBotFailureCount(ChatConversation $conversation): void
+    {
+        if ($conversation->bot_fallback_count === 0) {
+            return;
+        }
+
+        $conversation->forceFill(['bot_fallback_count' => 0])->save();
+    }
+
+    private function shouldAutoResumeBot(ChatConversation $conversation): bool
+    {
+        if (! $conversation->isAwaitingAdmin()) {
+            return false;
+        }
+
+        $latestSystemMessage = $conversation->messages()
+            ->where('sender_type', ChatMessage::SENDER_SYSTEM)
+            ->latest('id')
+            ->first();
+
+        $reason = $latestSystemMessage?->metadata['reason'] ?? null;
+
+        return is_string($reason) && in_array($reason, self::AUTO_RESUME_ESCALATION_REASONS, true);
+    }
+
+    private function resumeBotControl(ChatConversation $conversation): void
+    {
+        $conversation->forceFill([
+            'status' => ChatConversation::STATUS_BOT,
+            'admin_user_id' => null,
+            'admin_joined_at' => null,
+        ])->save();
+    }
+
     private function userRequestedAdmin(string $body): bool
     {
         foreach (self::ADMIN_REQUEST_PATTERNS as $pattern) {
+            if (preg_match($pattern, $body) === 1) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function userConfirmedAdminOffer(ChatConversation $conversation, string $body): bool
+    {
+        $latestBotMessage = $conversation->messages()
+            ->where('sender_type', ChatMessage::SENDER_BOT)
+            ->latest('id')
+            ->first();
+
+        if (($latestBotMessage?->metadata['event'] ?? null) !== 'admin_offer') {
+            return false;
+        }
+
+        foreach (self::ADMIN_OFFER_CONFIRMATION_PATTERNS as $pattern) {
             if (preg_match($pattern, $body) === 1) {
                 return true;
             }

@@ -1,8 +1,25 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Platform} from 'react-native';
 import Config from 'react-native-config';
 
-export const API_BASE_URL =
-  Config.API_BASE_URL?.trim() || 'http://127.0.0.1:8000/api';
+const DEFAULT_API_BASE_URL = 'http://localhost:8000/api';
+
+function resolveApiBaseUrl(rawBaseUrl) {
+  const baseUrl = rawBaseUrl?.trim() || DEFAULT_API_BASE_URL;
+
+  if (Platform.OS !== 'android') {
+    return baseUrl;
+  }
+
+  return baseUrl.replace(
+    /\/\/(localhost|127\.0\.0\.1)(?=[:/]|$)/i,
+    '//10.0.2.2',
+  );
+}
+
+export const API_BASE_URL = resolveApiBaseUrl(
+  Config.API_BASE_URL || DEFAULT_API_BASE_URL,
+);
 export const BASE_URL = API_BASE_URL;
 export const TOKEN_STORAGE_KEY = 'token';
 

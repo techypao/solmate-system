@@ -56,6 +56,28 @@ class ChatConversationApiTest extends TestCase
             ->assertJsonPath('messages.1.body', 'You can request an inspection from the customer dashboard.');
     }
 
+    public function test_simple_questions_use_local_fallback_when_backend_gemini_key_is_missing(): void
+    {
+        config()->set('services.gemini.api_key', '');
+        Http::fake();
+
+        $customer = $this->createUser(User::ROLE_CUSTOMER, 'chat_customer_offline_roi@example.com');
+        Sanctum::actingAs($customer);
+
+        $response = $this->postJson('/api/chat/conversation/messages', [
+            'message' => 'What is ROI?',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('conversation.status', ChatConversation::STATUS_BOT)
+            ->assertJsonPath('conversation.is_awaiting_admin', false)
+            ->assertJsonPath('conversation.bot_fallback_count', 0)
+            ->assertJsonPath('messages.1.sender_type', 'bot')
+            ->assertJsonPath('messages.1.body', 'ROI means the value you get back from solar through bill savings compared with the system cost. In simple terms, it shows whether the long-term savings can make the installation worth it.');
+
+        Http::assertNothingSent();
+    }
+
     public function test_customer_can_trigger_admin_escalation_with_human_keywords(): void
     {
         Notification::fake();
@@ -77,7 +99,37 @@ class ChatConversationApiTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_repeated_fallback_responses_escalate_the_conversation(): void
+    public function test_mentions_of_admin_do_not_trigger_takeover_without_explicit_request(): void
+    {
+        config()->set('services.gemini.api_key', 'test-key');
+
+        Http::fake([
+            'https://generativelanguage.googleapis.com/*' => Http::response([
+                'candidates' => [[
+                    'content' => [
+                        'parts' => [[
+                            'text' => '{"answer":"Awaiting admin approval means an admin still needs to review the request before it moves forward.","suggestions":["What happens after admin approval?","How long does admin review usually take?"]}',
+                        ]],
+                    ],
+                ]],
+            ]),
+        ]);
+
+        $customer = $this->createUser(User::ROLE_CUSTOMER, 'chat_customer_admin_question@example.com');
+        Sanctum::actingAs($customer);
+
+        $response = $this->postJson('/api/chat/conversation/messages', [
+            'message' => 'What does awaiting admin approval mean?',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('conversation.status', ChatConversation::STATUS_BOT)
+            ->assertJsonPath('conversation.is_awaiting_admin', false)
+            ->assertJsonPath('messages.1.sender_type', 'bot')
+            ->assertJsonPath('messages.1.body', 'Awaiting admin approval means an admin still needs to review the request before it moves forward.');
+    }
+
+    public function test_scope_fallback_reply_offers_admin_without_escalating(): void
     {
         Notification::fake();
         config()->set('services.gemini.api_key', 'test-key');
@@ -98,12 +150,56 @@ class ChatConversationApiTest extends TestCase
         $admin = $this->createUser(User::ROLE_ADMIN, 'chat_admin_fallback@example.com');
         Sanctum::actingAs($customer);
 
+        $firstResponse = $this->postJson('/api/chat/conversation/messages', [
+            'message' => 'Tell me a joke.',
+        ]);
+
+        $firstResponse->assertOk()
+            ->assertJsonPath('conversation.status', ChatConversation::STATUS_BOT)
+            ->assertJsonPath('conversation.is_awaiting_admin', false)
+            ->assertJsonPath('conversation.bot_fallback_count', 0)
+            ->assertJsonPath('messages.1.sender_type', 'bot')
+            ->assertJsonPath('messages.1.body', "I'm not sure about that, but I can connect you to an admin if you'd like.");
+
+        $response = $this->postJson('/api/chat/conversation/messages', [
+            'message' => 'Tell me another joke.',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('conversation.status', ChatConversation::STATUS_BOT)
+            ->assertJsonPath('conversation.is_awaiting_admin', false)
+            ->assertJsonPath('conversation.bot_fallback_count', 0);
+
+        Notification::assertNothingSent();
+    }
+
+    public function test_user_can_confirm_admin_offer_after_fallback_message(): void
+    {
+        Notification::fake();
+        config()->set('services.gemini.api_key', 'test-key');
+
+        Http::fake([
+            'https://generativelanguage.googleapis.com/*' => Http::response([
+                'candidates' => [[
+                    'content' => [
+                        'parts' => [[
+                            'text' => '{"answer":"'.ChatbotReplyService::SCOPE_FALLBACK.'","suggestions":["How do quotations work?","How do I request an inspection?"]}',
+                        ]],
+                    ],
+                ]],
+            ]),
+        ]);
+
+        $customer = $this->createUser(User::ROLE_CUSTOMER, 'chat_customer_confirm_offer@example.com');
+        $admin = $this->createUser(User::ROLE_ADMIN, 'chat_admin_confirm_offer@example.com');
+        Sanctum::actingAs($customer);
+
         $this->postJson('/api/chat/conversation/messages', [
             'message' => 'Tell me a joke.',
         ])->assertOk()->assertJsonPath('conversation.status', ChatConversation::STATUS_BOT);
 
         $response = $this->postJson('/api/chat/conversation/messages', [
-            'message' => 'Tell me another joke.',
+            'message' => 'Yes please.',
         ]);
 
         $response->assertOk()
@@ -111,6 +207,108 @@ class ChatConversationApiTest extends TestCase
             ->assertJsonPath('conversation.is_awaiting_admin', true);
 
         Notification::assertSentTo($admin, AdminChatEscalationRequestedNotification::class);
+    }
+
+    public function test_upstream_errors_use_local_simple_answers_without_escalating(): void
+    {
+        Notification::fake();
+        config()->set('services.gemini.api_key', 'test-key');
+
+        Http::fake([
+            'https://generativelanguage.googleapis.com/*' => Http::response([
+                'error' => [
+                    'message' => 'Temporary upstream failure.',
+                ],
+            ], 500),
+        ]);
+
+        $customer = $this->createUser(User::ROLE_CUSTOMER, 'chat_customer_bot_errors@example.com');
+        $this->createUser(User::ROLE_ADMIN, 'chat_admin_bot_errors@example.com');
+        Sanctum::actingAs($customer);
+
+        $this->postJson('/api/chat/conversation/messages', [
+            'message' => 'How do I request an inspection?',
+        ])->assertOk()
+            ->assertJsonPath('conversation.status', ChatConversation::STATUS_BOT)
+            ->assertJsonPath('conversation.bot_fallback_count', 0)
+            ->assertJsonPath('messages.1.body', 'You can request an inspection from the customer dashboard when you need a site check or technical assessment before final recommendations.');
+
+        $this->postJson('/api/chat/conversation/messages', [
+            'message' => 'How do I request an inspection?',
+        ])->assertOk()
+            ->assertJsonPath('conversation.status', ChatConversation::STATUS_BOT)
+            ->assertJsonPath('conversation.bot_fallback_count', 0);
+
+        $response = $this->postJson('/api/chat/conversation/messages', [
+            'message' => 'How do I request an inspection?',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('conversation.status', ChatConversation::STATUS_BOT)
+            ->assertJsonPath('conversation.is_awaiting_admin', false)
+            ->assertJsonPath('conversation.bot_fallback_count', 0);
+
+        Notification::assertNothingSent();
+    }
+
+    public function test_auto_escalated_conversation_can_resume_bot_replies_for_simple_questions(): void
+    {
+        config()->set('services.gemini.api_key', '');
+        Http::fake();
+
+        $customer = $this->createUser(User::ROLE_CUSTOMER, 'chat_customer_resume_bot@example.com');
+        $conversation = ChatConversation::query()->create([
+            'customer_user_id' => $customer->id,
+            'status' => ChatConversation::STATUS_ADMIN,
+            'bot_fallback_count' => 3,
+            'takeover_requested_at' => now(),
+            'escalated_at' => now(),
+            'last_message_at' => now(),
+        ]);
+
+        $conversation->messages()->create([
+            'sender_user_id' => $customer->id,
+            'sender_type' => 'user',
+            'body' => 'What is ROI?',
+        ]);
+
+        $conversation->messages()->create([
+            'sender_type' => 'bot',
+            'body' => "I'm having trouble responding right now. You can try again, or I can connect you to an admin if you'd like.",
+            'metadata' => [
+                'status' => 'fallback',
+                'event' => 'admin_offer',
+                'reason' => 'bot_error',
+                'retry_count' => 3,
+            ],
+        ]);
+
+        $conversation->messages()->create([
+            'sender_user_id' => $customer->id,
+            'sender_type' => 'system',
+            'body' => 'This conversation has been escalated. A real admin will continue the chat shortly.',
+            'metadata' => [
+                'event' => 'escalated',
+                'reason' => 'repeated_bot_failures',
+            ],
+        ]);
+
+        Sanctum::actingAs($customer);
+
+        $response = $this->postJson('/api/chat/conversation/messages', [
+            'message' => 'What is ROI?',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('conversation.status', ChatConversation::STATUS_BOT)
+            ->assertJsonPath('conversation.is_awaiting_admin', false)
+            ->assertJsonPath('conversation.bot_fallback_count', 0);
+
+        $messages = $response->json('messages');
+
+        $this->assertSame('bot', $messages[array_key_last($messages)]['sender_type']);
+        $this->assertSame('ROI means the value you get back from solar through bill savings compared with the system cost. In simple terms, it shows whether the long-term savings can make the installation worth it.', $messages[array_key_last($messages)]['body']);
+        Http::assertNothingSent();
     }
 
     public function test_admin_can_take_over_and_reply_in_same_thread(): void
