@@ -34,6 +34,7 @@ type ApiRequestOptions = {
   body?: unknown;
   requiresAuth?: boolean;
   isMultipart?: boolean;
+  authToken?: string | null;
 };
 
 export class ApiError extends Error {
@@ -128,7 +129,13 @@ async function apiRequest<T>(
   endpoint: string,
   options: ApiRequestOptions = {},
 ): Promise<T> {
-  const {method = 'GET', body, requiresAuth = true, isMultipart = false} = options;
+  const {
+    method = 'GET',
+    body,
+    requiresAuth = true,
+    isMultipart = false,
+    authToken = null,
+  } = options;
 
   const headers: Record<string, string> = {
     Accept: 'application/json',
@@ -139,7 +146,7 @@ async function apiRequest<T>(
   }
 
   if (requiresAuth) {
-    const token = getSessionToken() ?? (await getStoredToken());
+    const token = authToken ?? getSessionToken() ?? (await getStoredToken());
 
     if (!token) {
       throw new ApiError('No login token found. Please log in again.', 401);
@@ -197,11 +204,13 @@ export function apiPost<T>(
   endpoint: string,
   body?: unknown,
   requiresAuth = true,
+  authToken?: string | null,
 ) {
   return apiRequest<T>(endpoint, {
     method: 'POST',
     body,
     requiresAuth,
+    authToken,
   });
 }
 

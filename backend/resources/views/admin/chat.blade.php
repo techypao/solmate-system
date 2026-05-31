@@ -34,32 +34,53 @@
             min-height: 0;
             overflow-y: auto;
             display: grid;
+            align-content: start;
+            gap: 12px;
+            padding: 14px;
+            background: linear-gradient(180deg, #f8fbff 0%, #f3f7fb 100%);
         }
 
         .support-chat-thread-button {
             width: 100%;
             display: grid;
-            gap: 8px;
+            gap: 10px;
             text-align: left;
-            border: 0;
-            border-bottom: 1px solid #edf2f7;
-            background: transparent;
-            padding: 16px 18px;
+            border: 1px solid #e2eaf3;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 10px 20px rgba(18, 58, 90, 0.04);
+            padding: 18px 18px 20px;
             cursor: pointer;
+            transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        .support-chat-thread-button:hover {
+            border-color: #c9d9ea;
+            box-shadow: 0 14px 28px rgba(18, 58, 90, 0.08);
+            transform: translateY(-1px);
         }
 
         .support-chat-thread-button.active {
-            background: #eff6ff;
+            background: linear-gradient(180deg, #eef6ff 0%, #e5f0fb 100%);
+            border-color: #bed3e6;
+            box-shadow: 0 16px 30px rgba(49, 111, 173, 0.12);
         }
 
         .support-chat-thread-button.waiting {
-            background: #fff7ed;
+            background: linear-gradient(180deg, #fff9ef 0%, #fff2dc 100%);
+            border-color: #f3d3a2;
+            box-shadow: 0 16px 30px rgba(191, 124, 40, 0.1);
+        }
+
+        .support-chat-thread-button.active.waiting {
+            background: linear-gradient(180deg, #fff6e8 0%, #ffeccf 100%);
+            border-color: #efc783;
         }
 
         .support-chat-thread-top {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
+            align-items: center;
             gap: 12px;
             min-width: 0;
         }
@@ -67,7 +88,7 @@
         .support-chat-thread-name {
             color: #123a5a;
             font-weight: 800;
-            font-size: 18px;
+            font-size: 17px;
             line-height: 1.15;
             flex: 1;
             min-width: 0;
@@ -76,15 +97,26 @@
 
         .support-chat-thread-meta,
         .support-chat-thread-preview {
-            color: #5e7288;
+            color: #61768d;
             font-size: 13px;
             line-height: 1.5;
             min-width: 0;
             overflow-wrap: anywhere;
         }
 
+        .support-chat-thread-meta {
+            font-weight: 600;
+        }
+
         .support-chat-thread-preview {
-            color: #41566d;
+            color: #425972;
+            font-size: 14px;
+            font-weight: 700;
+            display: -webkit-box;
+            line-clamp: 2;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .support-chat-badge {
@@ -115,11 +147,18 @@
             color: #1d4ed8;
         }
 
+        @media (max-width: 980px) {
+            .support-chat-list {
+                padding: 12px;
+            }
+        }
+
         .support-chat-main {
-            display: grid;
-            grid-template-rows: auto auto minmax(0, 1fr) auto;
+            display: flex;
+            flex-direction: column;
             min-height: 0;
             height: 100%;
+            overflow: hidden;
         }
 
         .support-chat-banner {
@@ -142,6 +181,7 @@
         }
 
         .support-chat-message-list {
+            flex: 1 1 auto;
             min-height: 0;
             overflow-y: auto;
             padding: 18px 20px;
@@ -211,51 +251,80 @@
             line-height: 1.6;
         }
 
-        .support-chat-controls {
-            display: grid;
-            gap: 12px;
-            padding: 16px 20px 12px;
-            border-top: 1px solid #dde7ee;
-            background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
-        }
-
         .support-chat-actions {
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
             align-items: center;
+            justify-content: flex-start;
         }
 
-        .support-chat-controls-note {
-            color: #5e7288;
-            font-size: 13px;
-            line-height: 1.5;
+        .support-chat-actions button {
+            flex: 0 1 auto;
+            min-width: 180px;
+            min-height: 44px;
+            padding-inline: 16px;
+            white-space: nowrap;
+            border-radius: 14px;
         }
 
         .support-chat-composer {
-            padding: 0 20px 20px;
+            flex: 0 0 auto;
+            padding: 14px 20px 20px;
             display: grid;
-            gap: 12px;
+            gap: 10px;
+            border-top: 1px solid #e7eef6;
+            background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+        }
+
+        .support-chat-composer-shell {
+            display: grid;
+            gap: 14px;
+            padding: 16px;
+            border: 1px solid #d8e3f0;
+            border-radius: 20px;
+            background: #ffffff;
+            box-shadow: 0 8px 20px rgba(18, 58, 90, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8);
         }
 
         .support-chat-composer-row {
-            display: flex;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 116px;
             gap: 12px;
-            align-items: stretch;
+            align-items: center;
         }
 
         .support-chat-textarea {
-            flex: 1;
             width: 100%;
             display: block;
-            min-height: 96px;
-            resize: vertical;
+            min-width: 0;
+            height: 56px;
+            min-height: 56px;
+            max-height: 144px;
+            resize: none;
+            overflow-y: auto;
             border-radius: 16px;
             border: 1px solid #d8e3f0;
-            padding: 14px 16px;
+            padding: 16px 18px;
             font: inherit;
             color: #123a5a;
             background: #ffffff;
+            box-sizing: border-box;
+            line-height: 1.5;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .support-chat-textarea:focus {
+            outline: none;
+            border-color: #8bb8d9;
+            box-shadow: 0 0 0 4px rgba(136, 196, 230, 0.18);
+        }
+
+        .support-chat-send-button {
+            width: 116px;
+            min-height: 56px;
+            align-self: stretch;
+            border-radius: 16px;
         }
 
         @media (max-width: 980px) {
@@ -266,8 +335,20 @@
                 min-height: 0;
             }
 
-            .support-chat-composer-row {
+            .support-chat-actions {
                 flex-direction: column;
+                align-items: stretch;
+            }
+
+            .support-chat-actions button {
+                width: 100%;
+                min-width: 0;
+            }
+        }
+
+        @media (max-width: 680px) {
+            .support-chat-composer-row {
+                grid-template-columns: 1fr;
             }
 
             .support-chat-composer-row button {
@@ -316,18 +397,16 @@
                     <div class="support-chat-empty">No conversation selected yet.</div>
                 </div>
 
-                <div class="support-chat-controls">
-                    <div class="support-chat-actions">
-                        <button id="admin-chat-takeover-button" type="button" class="secondary" disabled>Take over chat</button>
-                        <button id="admin-chat-return-button" type="button" class="secondary" disabled>Switch to chatbot</button>
-                    </div>
-                    <div class="support-chat-controls-note">Customer and admin messages stay in the same thread.</div>
-                </div>
-
                 <div class="support-chat-composer">
-                    <div class="support-chat-composer-row">
-                        <textarea id="admin-chat-message-input" class="support-chat-textarea" placeholder="Reply as admin..." disabled></textarea>
-                        <button id="admin-chat-send-button" type="button" class="primary" disabled>Send</button>
+                    <div class="support-chat-composer-shell">
+                        <div class="support-chat-actions">
+                            <button id="admin-chat-takeover-button" type="button" class="secondary" disabled>Take over chat</button>
+                            <button id="admin-chat-return-button" type="button" class="secondary" disabled>Switch to chatbot</button>
+                        </div>
+                        <div class="support-chat-composer-row">
+                            <textarea id="admin-chat-message-input" class="support-chat-textarea" placeholder="Reply as admin..." disabled></textarea>
+                            <button id="admin-chat-send-button" type="button" class="primary support-chat-send-button" disabled>Send</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -350,6 +429,15 @@
         const adminChatRefreshButton = document.getElementById('admin-chat-refresh-button');
         let adminChatState = {conversations: [], selectedConversation: null, selectedConversationId: null};
         let adminSubmitting = false;
+
+        function syncAdminComposerHeight() {
+            if (!adminChatMessageInput) {
+                return;
+            }
+
+            adminChatMessageInput.style.height = '56px';
+            adminChatMessageInput.style.height = `${Math.min(adminChatMessageInput.scrollHeight, 144)}px`;
+        }
 
         function setVisible(element, visible, displayValue = 'block') {
             if (!element) {
@@ -444,6 +532,8 @@
                 adminChatReturnButton.disabled = true;
                 adminChatMessageInput.disabled = true;
                 adminChatSendButton.disabled = true;
+                adminChatMessageInput.value = '';
+                syncAdminComposerHeight();
                 setVisible(adminChatBanner, false);
                 return;
             }
@@ -467,6 +557,7 @@
             adminChatReturnButton.disabled = adminSubmitting || !conversation.is_admin_active;
             adminChatMessageInput.disabled = false;
             adminChatSendButton.disabled = adminSubmitting;
+            syncAdminComposerHeight();
 
             adminMessageList.innerHTML = messages.map((message) => {
                 const rowClass = message.sender_type === 'admin'
@@ -644,6 +735,7 @@
                 renderSelectedConversation();
                 adminChatState.selectedConversation = await postJson(`/api/admin/chat/conversations/${adminChatState.selectedConversationId}/messages`, {message});
                 adminChatMessageInput.value = '';
+                syncAdminComposerHeight();
                 await loadConversationList();
                 renderSelectedConversation();
             } catch (error) {
@@ -665,7 +757,9 @@
                 sendAdminMessage();
             }
         });
+        adminChatMessageInput.addEventListener('input', syncAdminComposerHeight);
 
+        syncAdminComposerHeight();
         refreshAdminChat();
         window.setInterval(refreshAdminChat, 5000);
     </script>

@@ -34,6 +34,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'fcm_token',
         'archived_at',
         'is_archived',
         'last_login_at',
@@ -88,6 +89,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'fcm_token',
     ];
 
     protected $appends = [

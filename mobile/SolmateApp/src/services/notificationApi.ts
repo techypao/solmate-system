@@ -1,4 +1,4 @@
-import {apiDelete, apiGet, apiPatch} from './api';
+import {API_BASE_URL, apiDelete, apiGet, apiPatch, apiPost} from './api';
 
 export type AppNotification = {
   id: string;
@@ -41,6 +41,11 @@ type MarkAllReadResponse = {
 
 type DeleteNotificationResponse = {
   message?: string;
+};
+
+type SaveDeviceTokenResponse = {
+  message?: string;
+  user_id?: number;
 };
 
 function toBoolean(value: unknown) {
@@ -166,4 +171,20 @@ export async function deleteAllNotifications() {
   );
 
   return response?.message || 'All notifications deleted successfully.';
+}
+
+export async function saveDeviceToken(fcmToken: string, authToken: string) {
+  console.log('[FCM] Sending device token to backend:', {
+    apiBaseUrl: API_BASE_URL,
+    tokenPreview: `${fcmToken.slice(0, 12)}...`,
+    hasAuthToken: authToken.length > 0,
+  });
+
+  const response = await apiPost<SaveDeviceTokenResponse>('/save-device-token', {
+    fcm_token: fcmToken,
+  }, true, authToken);
+
+  console.log('[FCM] Save device token response:', response);
+
+  return response;
 }

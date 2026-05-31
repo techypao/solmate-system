@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Channels\FirebasePushChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Carbon;
@@ -16,7 +17,12 @@ abstract class BaseDatabaseNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return $this->databaseAndPushChannels();
+    }
+
+    protected function databaseAndPushChannels(): array
+    {
+        return ['database', FirebasePushChannel::class];
     }
 
     protected function buildPayload(array $payload): array

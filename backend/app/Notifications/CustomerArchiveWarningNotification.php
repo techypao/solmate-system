@@ -18,7 +18,7 @@ class CustomerArchiveWarningNotification extends BaseDatabaseNotification implem
 
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        return [...$this->databaseAndPushChannels(), 'mail'];
     }
 
     public function toArray(object $notifiable): array

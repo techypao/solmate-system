@@ -112,6 +112,7 @@ async function apiRequest(endpoint, options = {}) {
     body,
     requiresAuth = true,
     isMultipart = false,
+    authToken = null,
   } = options;
 
   const headers = {
@@ -123,7 +124,7 @@ async function apiRequest(endpoint, options = {}) {
   }
 
   if (requiresAuth) {
-    const token = getSessionToken() ?? (await getStoredToken());
+    const token = authToken ?? getSessionToken() ?? (await getStoredToken());
 
     if (!token) {
       throw new ApiError('No login token found. Please log in again.', 401);
@@ -177,11 +178,17 @@ export async function apiGet(endpoint, requiresAuth = true) {
   });
 }
 
-export async function apiPost(endpoint, body = undefined, requiresAuth = true) {
+export async function apiPost(
+  endpoint,
+  body = undefined,
+  requiresAuth = true,
+  authToken = null,
+) {
   return apiRequest(endpoint, {
     method: 'POST',
     body,
     requiresAuth,
+    authToken,
   });
 }
 

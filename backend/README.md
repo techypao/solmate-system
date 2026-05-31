@@ -57,3 +57,26 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Firebase Cloud Messaging
+
+Install the Firebase service account JSON from your Firebase project settings into `storage/app/firebase/firebase-service-account.json` and set `FIREBASE_CREDENTIALS` in `.env`.
+
+The backend push notification service lives in `app/Services/FirebaseNotificationService.php` and can be injected into controllers or services used by booking, chatbot, and admin flows:
+
+```php
+use App\Services\FirebaseNotificationService;
+
+public function __construct(
+	private readonly FirebaseNotificationService $pushNotifications,
+) {}
+
+public function sendBookingUpdate(string $token): void
+{
+	$this->pushNotifications->sendNotification(
+		$token,
+		'Booking Confirmed',
+		'Your inspection is scheduled'
+	);
+}
+```

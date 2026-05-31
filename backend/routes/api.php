@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminChatConversationController;
 use App\Http\Controllers\Api\ChatConversationController;
 use App\Http\Controllers\Api\CustomerAccountController;
+use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\TechnicianAccountController;
 use App\Http\Controllers\CompletionReportController;
 use App\Http\Controllers\ContactMessageController;
@@ -37,6 +38,7 @@ Route::post('/contact-messages', [ContactMessageController::class, 'store']);
 Route::middleware(['auth:sanctum', 'active.user'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/user/profile-picture', [AuthController::class, 'updateProfilePicture']);
+    Route::post('/save-device-token', [DeviceTokenController::class, 'store']);
 
     Route::get('/user', function (Request $request) {
         return response()->json($request->user());
