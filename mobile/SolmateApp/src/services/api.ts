@@ -2,10 +2,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Platform} from 'react-native';
 import Config from 'react-native-config';
 
-const DEFAULT_API_BASE_URL = 'http://187.77.136.151:8000/api';
+const DEFAULT_API_BASE_URL = 'http://187.77.136.151';
+const API_PATH_PREFIX = '/api';
+
+function normalizeApiBaseUrl(rawBaseUrl: string) {
+  const normalizedBaseUrl = rawBaseUrl.trim().replace(/\/+$/, '');
+
+  if (!normalizedBaseUrl) {
+    return DEFAULT_API_BASE_URL;
+  }
+
+  return normalizedBaseUrl.replace(/\/api$/i, '');
+}
 
 function resolveApiBaseUrl(rawBaseUrl: string) {
-  const baseUrl = rawBaseUrl.trim() || DEFAULT_API_BASE_URL;
+  const baseUrl = normalizeApiBaseUrl(rawBaseUrl || DEFAULT_API_BASE_URL);
 
   if (Platform.OS !== 'android') {
     return baseUrl;
@@ -21,6 +32,7 @@ function resolveApiBaseUrl(rawBaseUrl: string) {
 export const API_BASE_URL = resolveApiBaseUrl(
   Config.API_BASE_URL || DEFAULT_API_BASE_URL,
 );
+export const BASE_URL = API_BASE_URL;
 export const TOKEN_STORAGE_KEY = 'token';
 
 let sessionToken: string | null = null;
@@ -78,7 +90,7 @@ export async function removeStoredToken() {
 
 function buildUrl(endpoint: string) {
   const cleanEndpoint = endpoint.replace(/^\/+/, '');
-  return `${API_BASE_URL}/${cleanEndpoint}`;
+  return `${BASE_URL}${API_PATH_PREFIX}/${cleanEndpoint}`;
 }
 
 function getFirstValidationError(errors?: ValidationErrors) {
