@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CompletionReport;
 use App\Models\ServiceRequest;
 use App\Models\User;
+use App\Services\CustomerRequestEligibilityService;
 use App\Services\InAppNotificationService;
 use App\Services\PreferredDateLockService;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ use Illuminate\Validation\Rule;
 class ServiceRequestController extends Controller
 {
     public function __construct(
+        private CustomerRequestEligibilityService $customerRequestEligibilityService,
         private InAppNotificationService $notificationService,
         private PreferredDateLockService $preferredDateLockService
     ) {}
@@ -60,6 +62,8 @@ class ServiceRequestController extends Controller
             [$validated['date_needed'] ?? null],
             function () use ($request, $validated, $resolvedAddress, $resolvedAddressDetails) {
                 return DB::transaction(function () use ($request, $validated, $resolvedAddress, $resolvedAddressDetails) {
+                    $this->customerRequestEligibilityService->ensureCustomerCanCreateRequest($request->user()->id);
+
                     $this->preferredDateLockService->ensureDateIsAvailable(
                         $validated['date_needed'] ?? null,
                         null,
@@ -92,7 +96,7 @@ class ServiceRequestController extends Controller
         ], 201);
     }
 
-    public function assignTechnician(Request $request, $id)
+    public function assignTechnician(Request $request, int $id)
     {
         $request->validate([
             'technician_id' => 'required|exists:users,id',
@@ -140,7 +144,7 @@ class ServiceRequestController extends Controller
         ], 200);
     }
 
-    public function updatePreferredDate(Request $request, $id)
+    public function updatePreferredDate(Request $request, int $id)
     {
         $validated = $request->validate([
             'date_needed' => 'required|date',
@@ -219,7 +223,7 @@ class ServiceRequestController extends Controller
         ], 200);
     }
 
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request, int $id)
     {
         $request->validate([
             'status' => 'required|in:assigned,in_progress',
@@ -282,7 +286,7 @@ class ServiceRequestController extends Controller
         ], 410);
     }
 
-    public function cancelByCustomer(Request $request, $id)
+    public function cancelByCustomer(Request $request, int $id)
     {
         $validated = $request->validate([
             'cancellation_note' => 'required|string|min:5|max:1000',
@@ -331,7 +335,7 @@ class ServiceRequestController extends Controller
         ], 200);
     }
 
-    public function updateAdminStatus(Request $request, $id)
+    public function updateAdminStatus(Request $request, int $id)
     {
         $request->validate([
             'status' => 'required|in:pending,approved,scheduled,assigned,in_progress,cancelled,declined,completed',

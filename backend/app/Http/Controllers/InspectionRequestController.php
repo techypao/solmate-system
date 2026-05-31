@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CompletionReport;
 use App\Models\InspectionRequest;
 use App\Models\User;
+use App\Services\CustomerRequestEligibilityService;
 use App\Services\InAppNotificationService;
 use App\Services\PreferredDateLockService;
 use Illuminate\Http\Request;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 class InspectionRequestController extends Controller
 {
     public function __construct(
+        private CustomerRequestEligibilityService $customerRequestEligibilityService,
         private InAppNotificationService $notificationService,
         private PreferredDateLockService $preferredDateLockService
     ) {}
@@ -47,6 +49,8 @@ class InspectionRequestController extends Controller
             [$validated['date_needed'] ?? null],
             function () use ($request, $validated, $resolvedAddress, $resolvedAddressDetails) {
                 return DB::transaction(function () use ($request, $validated, $resolvedAddress, $resolvedAddressDetails) {
+                    $this->customerRequestEligibilityService->ensureCustomerCanCreateRequest($request->user()->id);
+
                     $this->preferredDateLockService->ensureDateIsAvailable(
                         $validated['date_needed'] ?? null,
                         null,

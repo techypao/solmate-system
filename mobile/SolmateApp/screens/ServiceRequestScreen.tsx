@@ -16,6 +16,7 @@ import { MapLocationPickerModal, PreferredDateCalendar } from '../components';
 import CustomerBottomNav from '../src/components/CustomerBottomNav';
 import { AuthContext } from '../src/context/AuthContext';
 import { ApiError } from '../src/services/api';
+import { getCustomerRequestBlockMessage } from '../src/services/customerRequestEligibility';
 import { getUnavailablePreferredDates } from '../src/services/preferredDateAvailabilityApi';
 import { createServiceRequest } from '../src/services/serviceRequestApi';
 import { getDefaultContactNumber } from '../src/utils/contactNumber';
@@ -106,7 +107,9 @@ export default function ServiceRequestScreen({ navigation }: any) {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [addressNote, setAddressNote] = useState<AddressNote>(null);
   const [isMapModalVisible, setIsMapModalVisible] = useState(false);
+  const [checkingEligibility, setCheckingEligibility] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [requestBlockMessage, setRequestBlockMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -147,10 +150,27 @@ export default function ServiceRequestScreen({ navigation }: any) {
     }
   }, []);
 
+  const refreshRequestEligibility = useCallback(async () => {
+    try {
+      setCheckingEligibility(true);
+
+      const blockMessage = await getCustomerRequestBlockMessage();
+      setRequestBlockMessage(blockMessage || '');
+
+      return blockMessage;
+    } catch {
+      setRequestBlockMessage('');
+      return null;
+    } finally {
+      setCheckingEligibility(false);
+    }
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       loadUnavailableDates();
-    }, [loadUnavailableDates]),
+      refreshRequestEligibility();
+    }, [loadUnavailableDates, refreshRequestEligibility]),
   );
 
   useEffect(() => {
@@ -257,7 +277,15 @@ export default function ServiceRequestScreen({ navigation }: any) {
   };
 
   const handleSubmit = async () => {
-    if (submitting) return;
+    if (submitting || checkingEligibility) return;
+
+    const blockMessage = await refreshRequestEligibility();
+    if (blockMessage) {
+      setErrorMessage('');
+      setSuccessMessage('');
+      return;
+    }
+
     if (!validateForm()) return;
 
     if (dateNeeded && unavailableDates.includes(dateNeeded)) {
@@ -337,6 +365,17 @@ export default function ServiceRequestScreen({ navigation }: any) {
     }
   };
 
+  const submitDisabled =
+    submitting || checkingEligibility || Boolean(requestBlockMessage);
+
+  const submitLabel = checkingEligibility
+    ? 'Checking...'
+    : submitting
+      ? 'Submitting...'
+      : requestBlockMessage
+        ? 'Request Unavailable'
+        : 'Submit Maintenance Request';
+
   const handleMapLocationConfirm = ({
     latitude: selectedLatitude,
     longitude: selectedLongitude,
@@ -366,6 +405,12 @@ export default function ServiceRequestScreen({ navigation }: any) {
 
     clearStatusMessages();
     setIsMapModalVisible(false);
+  };
+
+  const handleViewActiveRequests = () => {
+    navigation.navigate('ServiceRequestList', {
+      requestCategory: 'maintenance',
+    });
   };
 
   const selectedRequestType = requestType.trim();
@@ -409,6 +454,27 @@ export default function ServiceRequestScreen({ navigation }: any) {
           </Text>
 
           {/* ── banners ── */}
+          {requestBlockMessage ? (
+            <View style={s.errorBanner}>
+              <Text style={s.errorBannerTitle}>New request unavailable</Text>
+              <Text style={s.errorBannerText}>{requestBlockMessage}</Text>
+              <Pressable
+                hitSlop={10}
+                onPress={handleViewActiveRequests}
+                style={({ pressed }) => [
+                  { alignSelf: 'flex-start', marginTop: 10, paddingVertical: 4 },
+                  pressed && s.pressed,
+                ]}
+              >
+                <Text
+                  style={{ color: NAVY, fontSize: 13, fontWeight: '800' }}
+                >
+                  View My Active Maintenance Requests
+                </Text>
+              </Pressable>
+            </View>
+          ) : null}
+
           {errorMessage ? (
             <View style={s.errorBanner}>
               <Text style={s.errorBannerTitle}>Unable to submit</Text>
@@ -611,17 +677,15 @@ export default function ServiceRequestScreen({ navigation }: any) {
             </Text>
 
             <Pressable
-              disabled={submitting}
+              disabled={submitDisabled}
               onPress={handleSubmit}
               style={({ pressed }) => [
                 s.primaryBtn,
-                submitting && s.btnDisabled,
+                submitDisabled && s.btnDisabled,
                 pressed && s.pressed,
               ]}
             >
-              <Text style={s.primaryBtnText}>
-                {submitting ? 'Submitting...' : 'Submit Maintenance Request'}
-              </Text>
+              <Text style={s.primaryBtnText}>{submitLabel}</Text>
             </Pressable>
 
             <Pressable

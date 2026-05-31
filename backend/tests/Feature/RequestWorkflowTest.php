@@ -621,4 +621,52 @@ class RequestWorkflowTest extends TestCase
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['contact_number']);
     }
+
+    public function test_customer_cannot_create_another_request_while_an_existing_request_is_ongoing(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Customer User',
+            'email' => 'customer_existing_request_guard@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+            'address' => '88 Aurora Boulevard, Quezon City',
+        ]);
+
+        InspectionRequest::query()->create([
+            'user_id' => $customer->id,
+            'details' => 'Initial inspection request',
+            'contact_number' => '0917-111-2222',
+            'address' => '88 Aurora Boulevard, Quezon City',
+            'date_needed' => '2026-05-31',
+            'status' => 'pending',
+        ]);
+
+        $expectedMessage = 'You already have an ongoing inspection, installation, or maintenance request. Please wait until it is completed, cancelled, or declined before submitting another request.';
+
+        $this->actingAs($customer)
+            ->postJson('/api/service-requests', [
+                'request_type' => 'Maintenance',
+                'details' => 'Follow-up maintenance request',
+                'contact_number' => '0917-111-2222',
+                'address' => '88 Aurora Boulevard, Quezon City',
+                'date_needed' => '2026-06-02',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['request'])
+            ->assertJsonPath('errors.request.0', $expectedMessage);
+
+        $this->actingAs($customer)
+            ->postJson('/api/inspection-requests', [
+                'details' => 'Second inspection request should be blocked',
+                'contact_number' => '0917-111-2222',
+                'address' => '88 Aurora Boulevard, Quezon City',
+                'date_needed' => '2026-06-03',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['request'])
+            ->assertJsonPath('errors.request.0', $expectedMessage);
+
+        $this->assertDatabaseCount('inspection_requests', 1);
+        $this->assertDatabaseCount('service_requests', 0);
+    }
 }

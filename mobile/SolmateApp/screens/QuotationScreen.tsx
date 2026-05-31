@@ -231,7 +231,7 @@ export default function QuotationScreen({ navigation }: any) {
           </Pressable>
 
           {/* ── bottom nav ── */}
-          <CustomerBottomNav activeTab="Quotation" />
+          <CustomerBottomNav activeTab="Services" />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

@@ -172,7 +172,7 @@ export default function TechnicianNotificationsScreen({navigation}: any) {
       }
 
       const availableRouteNames = navigation.getState?.()?.routeNames;
-      const allowedRouteNames = Array.isArray(availableRouteNames)
+      const allowedRouteNames: readonly string[] = Array.isArray(availableRouteNames)
         ? availableRouteNames
         : TECHNICIAN_NOTIFICATION_ROUTE_NAMES;
 

@@ -378,7 +378,7 @@ export default function QuotationListScreen({navigation}: any) {
       </View>
 
       {/* ── bottom nav ── */}
-      <CustomerBottomNav activeTab="Quotation" />
+      <CustomerBottomNav activeTab="Services" />
     </SafeAreaView>
   );
 }

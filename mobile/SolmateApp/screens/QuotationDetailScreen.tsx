@@ -277,7 +277,7 @@ export default function QuotationDetailScreen({route, navigation}: any) {
         <View style={s.spacer} />
 
         {/* ── bottom nav ── */}
-        <CustomerBottomNav activeTab="Quotation" />
+        <CustomerBottomNav activeTab="Services" />
       </ScrollView>
     </SafeAreaView>
   );

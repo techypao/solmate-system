@@ -344,9 +344,14 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
       });
     }
 
-    if ((inspectionRequest.completion_report?.status || '').toLowerCase() === 'approved') {
+    const approvedAt = inspectionRequest.completion_report?.approved_at;
+
+    if (
+      (inspectionRequest.completion_report?.status || '').toLowerCase() === 'approved' &&
+      approvedAt
+    ) {
       events.push({
-        datetime: formatDateTime(inspectionRequest.completion_report.approved_at),
+        datetime: formatDateTime(approvedAt),
         status: 'approved',
         description: 'Completion report approved',
       });
