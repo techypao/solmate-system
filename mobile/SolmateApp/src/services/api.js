@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Platform} from 'react-native';
 import Config from 'react-native-config';
 
-const DEFAULT_API_BASE_URL = 'http://localhost:8000/api';
+const DEFAULT_API_BASE_URL = 'http://187.77.136.151:8000/api';
 
 function resolveApiBaseUrl(rawBaseUrl) {
   const baseUrl = rawBaseUrl?.trim() || DEFAULT_API_BASE_URL;
