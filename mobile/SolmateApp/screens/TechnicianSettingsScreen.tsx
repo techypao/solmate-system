@@ -10,6 +10,8 @@ import {
   View,
 } from 'react-native';
 import {Asset, launchImageLibrary} from 'react-native-image-picker';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import TechnicianBottomNav from '../src/components/TechnicianBottomNav';
 
 import {AppInput} from '../components';
 import {AuthContext} from '../src/context/AuthContext';
@@ -25,82 +27,15 @@ import {
 } from '../src/utils/passwordValidation';
 
 /* ── design tokens ── */
-const NAVY    = '#123A5A';
-const GOLD    = '#F4D000';
-const BG      = '#F8FAFC';
+const NAVY = '#1A2B55';
+const GOLD = '#F5C000';
+const BG = '#C8D8F0';
 const CARD    = '#ffffff';
-const MUTED   = '#5E7288';
-const DIVIDER = '#DDE7EE';
+const MUTED = '#6B7A99';
+const DIVIDER = '#D4E0F2';
 const RED     = '#dc2626';
 const SOFT_YELLOW = '#FFF7CC';
-
-/* ── icons ── */
-function AvatarIcon() {
-  return (
-    <View style={styles.avatarIconWrap}>
-      <View style={styles.avatarHead} />
-      <View style={styles.avatarBody} />
-    </View>
-  );
-}
-
-function PersonIcon() {
-  return (
-    <View style={styles.menuIconWrap}>
-      <View style={styles.menuPersonHead} />
-      <View style={styles.menuPersonBody} />
-    </View>
-  );
-}
-
-function LockIcon() {
-  return (
-    <View style={styles.menuIconWrap}>
-      <View style={styles.lockShackle} />
-      <View style={styles.lockBody} />
-    </View>
-  );
-}
-
-function HomeIcon({active}: {active?: boolean}) {
-  const c = active ? NAVY : MUTED;
-  return (
-    <Text style={{fontSize: 20, color: c, lineHeight: 22, textAlign: 'center'}}>{'\u2302'}</Text>
-  );
-}
-
-function InspectIcon({active}: {active?: boolean}) {
-  return (
-    <View style={nav.iconWrap}>
-      <View style={[nav.listBox, active && nav.activeShape]}>
-        <View style={[nav.listLine, active && nav.activeLine]} />
-        <View style={[nav.listLine, {width: 12}, active && nav.activeLine]} />
-        <View style={[nav.listLine, active && nav.activeLine]} />
-      </View>
-    </View>
-  );
-}
-
-function ServicesIcon({active}: {active?: boolean}) {
-  return (
-    <View style={nav.iconWrap}>
-      <View style={[nav.gear, active && nav.activeShape]}>
-        <View style={[nav.gearInner, active && nav.activeShape]} />
-      </View>
-    </View>
-  );
-}
-
-function ProfileNavIcon({active}: {active?: boolean}) {
-  return (
-    <View style={nav.iconWrap}>
-      <View style={[nav.profileHead, active && nav.activeShape]} />
-      <View style={[nav.profileBody, active && nav.activeShape]} />
-    </View>
-  );
-}
-
-type Tab = 'Home' | 'Inspections' | 'Services' | 'Profile';
+const ICON_COLOR = '#1d2f6d';
 
 type LocalProfileImageAsset = {
   uri: string;
@@ -123,29 +58,6 @@ function normalizePickedProfileAsset(
     name: firstAsset.fileName || null,
   };
 }
-
-function BottomNav({active, onPress}: {active: Tab; onPress: (t: Tab) => void}) {
-  const tabs: {key: Tab; label: string; Icon: React.FC<{active?: boolean}>}[] = [
-    {key: 'Home',        label: 'Home',        Icon: HomeIcon},
-    {key: 'Inspections', label: 'Inspections', Icon: InspectIcon},
-    {key: 'Services',    label: 'Services',    Icon: ServicesIcon},
-    {key: 'Profile',     label: 'Profile',     Icon: ProfileNavIcon},
-  ];
-  return (
-    <View style={nav.bar}>
-      {tabs.map(({key, label, Icon}) => {
-        const isActive = active === key;
-        return (
-          <Pressable key={key} style={[nav.tab, isActive && nav.tabActive]} onPress={() => onPress(key)}>
-            <Icon active={isActive} />
-            <Text style={[nav.label, isActive && nav.labelActive]}>{label}</Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
 /* ── main screen ── */
 export default function TechnicianSettingsScreen({navigation}: any) {
   const {logout, setUser, user} = useContext(AuthContext);
@@ -294,11 +206,7 @@ export default function TechnicianSettingsScreen({navigation}: any) {
     }
   };
 
-  function handleTabPress(tab: Tab) {
-    if (tab === 'Home')        {navigation.navigate('TechnicianDashboard');}
-    if (tab === 'Inspections') {navigation.navigate('AssignedInspectionRequests');}
-    if (tab === 'Services')    {navigation.navigate('TechnicianServiceRequests');}
-  }
+
 
   return (
     <View style={styles.root}>
@@ -326,7 +234,7 @@ export default function TechnicianSettingsScreen({navigation}: any) {
                 {profilePictureUrl ? (
                   <Image source={{uri: profilePictureUrl}} style={styles.avatarImage} />
                 ) : (
-                  <AvatarIcon />
+                  <Icon name="account-circle-outline" size={36} color="#6B7A99" />
                 )}
               </View>
 
@@ -369,7 +277,7 @@ export default function TechnicianSettingsScreen({navigation}: any) {
             onPress={() => togglePanel('info')}>
             <View style={styles.menuLeft}>
               <View style={styles.menuIconBox}>
-                <PersonIcon />
+                <Icon name="account-outline" size={20} color={ICON_COLOR} />
               </View>
               <Text style={styles.menuLabel}>Personal Information</Text>
             </View>
@@ -404,7 +312,7 @@ export default function TechnicianSettingsScreen({navigation}: any) {
             onPress={() => togglePanel('password')}>
             <View style={styles.menuLeft}>
               <View style={styles.menuIconBox}>
-                <LockIcon />
+                <Icon name="lock-outline" size={20} color={ICON_COLOR} />
               </View>
               <Text style={styles.menuLabel}>Change Password</Text>
             </View>
@@ -463,105 +371,11 @@ export default function TechnicianSettingsScreen({navigation}: any) {
         </ScrollView>
       </SafeAreaView>
 
-      {/* ── bottom nav ── */}
-      <BottomNav active="Profile" onPress={handleTabPress} />
+      <TechnicianBottomNav activeTab="Profile" />
     </View>
   );
 }
-
-/* ── bottom nav styles ── */
-const nav = StyleSheet.create({
-  bar: {
-    flexDirection: 'row',
-    backgroundColor: CARD,
-    borderTopWidth: 1,
-    borderTopColor: DIVIDER,
-    paddingBottom: 6,
-    paddingTop: 8,
-    paddingHorizontal: 6,
-  },
-  tab: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    borderRadius: 16,
-  },
-  tabActive: {
-    backgroundColor: SOFT_YELLOW,
-    borderWidth: 1,
-    borderColor: 'rgba(244, 208, 0, 0.34)',
-  },
-  label: {
-    fontSize: 11,
-    color: MUTED,
-    marginTop: 3,
-    fontWeight: '500',
-  },
-  labelActive: {
-    color: NAVY,
-    fontWeight: '700',
-  },
-  iconWrap: {
-    width: 24,
-    height: 22,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  listBox: {
-    width: 18,
-    height: 20,
-    backgroundColor: MUTED,
-    borderRadius: 3,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
-    gap: 3,
-  },
-  listLine: {
-    height: 2,
-    width: 10,
-    backgroundColor: CARD,
-    borderRadius: 1,
-  },
-  gear: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 3,
-    borderColor: MUTED,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  gearInner: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: MUTED,
-  },
-  profileHead: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: MUTED,
-    marginBottom: 2,
-  },
-  profileBody: {
-    width: 16,
-    height: 8,
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-    backgroundColor: MUTED,
-  },
-  activeShape: {
-    borderColor: NAVY,
-    backgroundColor: NAVY,
-    borderBottomColor: NAVY,
-  },
-  activeLine: {
-    backgroundColor: CARD,
-  },
-});
+;
 
 /* ── screen styles ── */
 const styles = StyleSheet.create({
@@ -576,7 +390,7 @@ const styles = StyleSheet.create({
   scroll: {
     paddingHorizontal: 18,
     paddingTop: 16,
-    paddingBottom: 24,
+    paddingBottom: 90,
   },
 
   /* brand */
@@ -645,7 +459,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     backgroundColor: '#EAF9FD',
     borderWidth: 1,
-    borderColor: '#DDE7EE',
+    borderColor: '#D4E0F2',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -751,10 +565,12 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   menuIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: '#eef2fa',
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    backgroundColor: '#E2EBF8',
+    borderWidth: 1,
+    borderColor: '#C4D4EC',
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -23,12 +23,12 @@ import { createInspectionRequest } from '../src/services/inspectionRequestApi';
 
 /* ── design tokens ── */
 
-const NAVY = '#123A5A';
-const GOLD = '#F4D000';
-const MUTED = '#5E7288';
-const BG = '#F8FAFC';
+const NAVY = '#1A2B55';
+const GOLD = '#F5C000';
+const MUTED = '#6B7A99';
+const BG = '#C8D8F0';
 const CARD = '#ffffff';
-const DIVIDER = '#DDE7EE';
+const DIVIDER = '#D4E0F2';
 
 /* ── constants (preserved) ── */
 
@@ -678,8 +678,9 @@ export default function InspectionRequestScreen({ navigation }: any) {
           <View style={s.spacer} />
 
           {/* ── bottom nav ── */}
-          <CustomerBottomNav activeTab="Tracking" />
         </ScrollView>
+
+        <CustomerBottomNav activeTab="Tracking" />
       </KeyboardAvoidingView>
 
       <MapLocationPickerModal
@@ -698,7 +699,7 @@ export default function InspectionRequestScreen({ navigation }: any) {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG },
   flex: { flex: 1 },
-  scroll: { paddingHorizontal: 22, paddingTop: 20, paddingBottom: 30 },
+  scroll: { paddingHorizontal: 22, paddingTop: 20, paddingBottom: 90 },
   pressed: { opacity: 0.85 },
 
   /* brand */

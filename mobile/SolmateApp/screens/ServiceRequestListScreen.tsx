@@ -21,12 +21,12 @@ import {
 
 /* ── design tokens ── */
 
-const NAVY = '#123A5A';
-const GOLD = '#F4D000';
-const MUTED = '#5E7288';
-const BG = '#F8FAFC';
+const NAVY = '#1A2B55';
+const GOLD = '#F5C000';
+const MUTED = '#6B7A99';
+const BG = '#C8D8F0';
 const CARD = '#ffffff';
-const DIVIDER = '#DDE7EE';
+const DIVIDER = '#D4E0F2';
 
 /* ── helpers (preserved) ── */
 
@@ -504,7 +504,7 @@ const s = StyleSheet.create({
   /* list */
   listContent: {
     paddingHorizontal: 22,
-    paddingBottom: 12,
+    paddingBottom: 90,
   },
   emptyListContent: {
     flexGrow: 1,

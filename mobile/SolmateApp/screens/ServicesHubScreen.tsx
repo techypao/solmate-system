@@ -9,13 +9,15 @@ import {
 } from 'react-native';
 
 import CustomerBottomNav from '../src/components/CustomerBottomNav';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const NAVY = '#123A5A';
-const GOLD = '#F4D000';
-const MUTED = '#5E7288';
-const BG = '#F8FAFC';
+const ICON_COLOR = '#1d2f6d';
+const NAVY = '#1A2B55';
+const GOLD = '#F5C000';
+const MUTED = '#6B7A99';
+const BG = '#C8D8F0';
 const CARD = '#ffffff';
-const DIVIDER = '#DDE7EE';
+const DIVIDER = '#D4E0F2';
 
 function ServiceCard({
   icon,
@@ -34,7 +36,7 @@ function ServiceCard({
       style={({pressed}) => [styles.serviceCard, pressed && styles.pressed]}>
       <View style={styles.serviceCardTop}>
         <View style={styles.serviceIconWrap}>
-          <Text style={styles.serviceIcon}>{icon}</Text>
+          <Icon name={icon} size={22} color={ICON_COLOR} />
         </View>
       </View>
       <Text style={styles.serviceTitle}>{title}</Text>
@@ -80,13 +82,13 @@ export default function ServicesHubScreen({navigation}: any) {
         <Text style={styles.title}>Request Service</Text>
 
         <ServiceCard
-          icon={'🧰'}
+          icon="home-plus-outline"
           title="Installation"
           subtitle="Plan an installation request with site notes and your preferred date."
           onPress={() => navigation.navigate('InstallationRequest')}
         />
         <ServiceCard
-          icon={'🔧'}
+          icon="wrench-outline"
           title="Maintenance"
           subtitle="Open the maintenance request flow with concern types adapted from the website."
           onPress={() => navigation.navigate('ServiceRequest')}
@@ -123,7 +125,7 @@ export default function ServicesHubScreen({navigation}: any) {
 const styles = StyleSheet.create({
   safe: {flex: 1, backgroundColor: BG},
   scrollView: {flex: 1},
-  scroll: {paddingHorizontal: 20, paddingTop: 18, paddingBottom: 16},
+  scroll: {paddingHorizontal: 20, paddingTop: 18, paddingBottom: 90},
   pressed: {opacity: 0.85},
 
   brand: {fontSize: 22, fontWeight: '800', color: NAVY, marginBottom: 14},
@@ -154,11 +156,13 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: '#eaf0fb',
+    backgroundColor: '#E2EBF8',
+    borderWidth: 1,
+    borderColor: '#C4D4EC',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  serviceIcon: {fontSize: 20},
+  serviceIcon: {},
   serviceTitle: {
     fontSize: 17,
     fontWeight: '900',

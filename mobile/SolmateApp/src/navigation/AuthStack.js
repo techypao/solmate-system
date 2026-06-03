@@ -3,7 +3,7 @@ import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
 import LoginScreen from '../../screens/LoginScreen';
-import RegisterScreen from '../../screens/RegisterScreen';
+import SignupScreen from '../../screens/SignupScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -13,7 +13,8 @@ export default function AuthStack() {
       initialRouteName="Login"
       screenOptions={{headerShown: false}}>
       <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="Signup" component={SignupScreen} />
+      <Stack.Screen name="Register" component={SignupScreen} />
     </Stack.Navigator>
   );
 }

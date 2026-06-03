@@ -10,6 +10,8 @@ import {
   View,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import TechnicianBottomNav from '../src/components/TechnicianBottomNav';
 
 import {AppButton} from '../components';
 import StatusBadge from '../components/StatusBadge';
@@ -20,13 +22,13 @@ import {
 } from '../src/services/technicianApi';
 
 // ─── colour tokens (match dashboard) ─────────────────────────────────────────
-const NAVY   = '#123A5A';
-const GOLD   = '#F4D000';
-const BG     = '#F8FAFC';
+const NAVY = '#1A2B55';
+const GOLD = '#F5C000';
+const BG = '#C8D8F0';
 const CARD   = '#ffffff';
-const MUTED  = '#5E7288';
+const MUTED = '#6B7A99';
 const SHADOW = '#8a9bbd';
-const BORDER = '#DDE7EE';
+const BORDER = '#D4E0F2';
 const SOFT_YELLOW = '#FFF7CC';
 
 // ─── filter chips ─────────────────────────────────────────────────────────────
@@ -71,68 +73,6 @@ function getCustomerName(item: TechnicianInspectionRequest) {
 }
 
 // ─── bottom nav icons ─────────────────────────────────────────────────────────
-type Tab = 'Home' | 'Inspections' | 'Services' | 'Profile';
-
-function HomeIcon({active}: {active?: boolean}) {
-  const c = active ? NAVY : MUTED;
-  return (
-    <Text style={{fontSize: 20, color: c, lineHeight: 22, textAlign: 'center'}}>{'\u2302'}</Text>
-  );
-}
-function InspectIcon({active}: {active?: boolean}) {
-  const c = active ? NAVY : MUTED;
-  return (
-    <View style={nav.iconWrap}>
-      <View style={[nav.listBox, {backgroundColor: c}]}>
-        <View style={nav.listLine} />
-        <View style={[nav.listLine, {width: 12}]} />
-        <View style={nav.listLine} />
-      </View>
-    </View>
-  );
-}
-function ServicesIcon({active}: {active?: boolean}) {
-  const c = active ? NAVY : MUTED;
-  return (
-    <View style={nav.iconWrap}>
-      <View style={[nav.gear, {borderColor: c}]}>
-        <View style={[nav.gearInner, {backgroundColor: c}]} />
-      </View>
-    </View>
-  );
-}
-function ProfileIcon({active}: {active?: boolean}) {
-  const c = active ? NAVY : MUTED;
-  return (
-    <View style={nav.iconWrap}>
-      <View style={[nav.profileHead, {backgroundColor: c}]} />
-      <View style={[nav.profileBody, {backgroundColor: c}]} />
-    </View>
-  );
-}
-
-function BottomNav({onPress, activeTab}: {onPress: (t: Tab) => void; activeTab: Tab}) {
-  const tabs: {key: Tab; label: string; Icon: React.FC<{active?: boolean}>}[] = [
-    {key: 'Home',        label: 'Home',        Icon: HomeIcon},
-    {key: 'Inspections', label: 'Inspections', Icon: InspectIcon},
-    {key: 'Services',    label: 'Services',    Icon: ServicesIcon},
-    {key: 'Profile',     label: 'Profile',     Icon: ProfileIcon},
-  ];
-  return (
-    <View style={nav.bar}>
-      {tabs.map(({key, label, Icon}) => (
-        <Pressable key={key} style={[nav.tab, key === activeTab && nav.tabActive]} onPress={() => onPress(key)}>
-          <Icon active={key === activeTab} />
-          <Text style={[nav.label, key === activeTab && nav.labelActive]}>
-            {label}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
-// ─── inspection request card ──────────────────────────────────────────────────
 function InspectionCard({
   item,
   onPress,
@@ -171,13 +111,12 @@ function InspectionCard({
       {/* view details row */}
       <View style={s.viewDetailsRow}>
         <Text style={s.viewDetailsText}>View Details</Text>
-        <Text style={s.chevron}>›</Text>
+        <Text style={s.chevron}>{'›'}</Text>
       </View>
     </Pressable>
   );
 }
 
-// ─── main screen ──────────────────────────────────────────────────────────────
 export default function AssignedTasksScreen({navigation}: any) {
   const [all, setAll] = useState<TechnicianInspectionRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -205,12 +144,6 @@ export default function AssignedTasksScreen({navigation}: any) {
   const filtered = filter === 'all'
     ? all
     : all.filter(r => (r.status ?? '').toLowerCase() === filter);
-
-  function handleTabPress(tab: Tab) {
-    if (tab === 'Home')      {navigation.navigate('TechnicianDashboard');}
-    if (tab === 'Services')  {navigation.navigate('TechnicianServiceRequests');}
-    if (tab === 'Profile')   {navigation.navigate('TechnicianSettings');}
-  }
 
   function openDetails(item: TechnicianInspectionRequest) {
     navigation.navigate('InspectionDetails', {
@@ -302,48 +235,12 @@ export default function AssignedTasksScreen({navigation}: any) {
       </SafeAreaView>
 
       {/* ── bottom nav ── */}
-      <BottomNav onPress={handleTabPress} activeTab="Inspections" />
+      <TechnicianBottomNav activeTab="Inspections" />
     </View>
   );
 }
 
-// ─── nav styles ────────────────────────────────────────────────────────────────
-const nav = StyleSheet.create({
-  bar: {
-    flexDirection: 'row',
-    backgroundColor: CARD,
-    borderTopWidth: 1,
-    borderTopColor: BORDER,
-    paddingBottom: 8,
-    paddingTop: 8,
-    paddingHorizontal: 6,
-  },
-  tab:        {flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, paddingVertical: 8, borderRadius: 16},
-  tabActive:  {backgroundColor: SOFT_YELLOW, borderWidth: 1, borderColor: 'rgba(244, 208, 0, 0.34)'},
-  label:      {fontSize: 10, color: MUTED, fontWeight: '500'},
-  labelActive:{color: NAVY, fontWeight: '700'},
-  iconWrap:   {width: 24, height: 22, alignItems: 'center', justifyContent: 'flex-end'},
-  roof: {
-    width: 0, height: 0,
-    borderLeftWidth: 8, borderRightWidth: 8, borderBottomWidth: 10,
-    borderLeftColor: 'transparent', borderRightColor: 'transparent',
-    borderBottomColor: MUTED,
-  },
-  houseBody:   {width: 14, height: 9, backgroundColor: MUTED, borderRadius: 1},
-  listBox: {
-    width: 18, height: 20, borderRadius: 3,
-    alignItems: 'flex-start', justifyContent: 'center',
-    paddingHorizontal: 3, gap: 3,
-  },
-  listLine:    {height: 2, width: 10, backgroundColor: CARD, borderRadius: 1},
-  gear: {
-    width: 20, height: 20, borderRadius: 10,
-    borderWidth: 3, alignItems: 'center', justifyContent: 'center',
-  },
-  gearInner:   {width: 8, height: 8, borderRadius: 4},
-  profileHead: {width: 10, height: 10, borderRadius: 5, marginBottom: 2},
-  profileBody: {width: 16, height: 8, borderTopLeftRadius: 8, borderTopRightRadius: 8},
-});
+// ─── nav styles ────────────────────────────────────────────────────────────────;
 
 // ─── screen styles ─────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
@@ -431,7 +328,7 @@ const s = StyleSheet.create({
   retryBtn:   {marginTop: 16},
 
   // list
-  listContent:      {paddingHorizontal: 18, paddingBottom: 24, paddingTop: 2},
+  listContent:      {paddingHorizontal: 18, paddingBottom: 90, paddingTop: 2},
   emptyListContent: {flexGrow: 1},
   emptyState: {
     alignItems: 'center',
@@ -496,7 +393,7 @@ const s = StyleSheet.create({
 
   divider: {
     height: 1,
-    backgroundColor: '#DDE7EE',
+    backgroundColor: '#D4E0F2',
     marginVertical: 10,
   },
 

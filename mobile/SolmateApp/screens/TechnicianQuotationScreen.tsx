@@ -487,26 +487,26 @@ export default function TechnicianQuotationScreen({ route }: any) {
 
 const styles = StyleSheet.create({
   safe: {
-    backgroundColor: '#f4f7fb',
+    backgroundColor: '#C8D8F0',
     flex: 1,
   },
   flex: {
     flex: 1,
   },
   container: {
-    backgroundColor: '#f4f7fb',
+    backgroundColor: '#C8D8F0',
     padding: 20,
     paddingBottom: 32,
   },
   centeredContainer: {
     alignItems: 'center',
-    backgroundColor: '#f4f7fb',
+    backgroundColor: '#C8D8F0',
     flex: 1,
     justifyContent: 'center',
     padding: 24,
   },
   loadingText: {
-    color: '#5E7288',
+    color: '#6B7A99',
     fontSize: 14,
     marginTop: 12,
   },
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   subtitle: {
-    color: '#5E7288',
+    color: '#6B7A99',
     fontSize: 14,
     lineHeight: 21,
   },
@@ -558,18 +558,18 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   sectionSubtitle: {
-    color: '#5E7288',
+    color: '#6B7A99',
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 16,
   },
   readOnlyRow: {
-    borderTopColor: '#DDE7EE',
+    borderTopColor: '#D4E0F2',
     borderTopWidth: 1,
     paddingVertical: 12,
   },
   readOnlyLabel: {
-    color: '#5E7288',
+    color: '#6B7A99',
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 4,
@@ -591,8 +591,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#DDE7EE',
+    backgroundColor: '#EEF4FC',
+    borderColor: '#D4E0F2',
     borderRadius: 14,
     borderWidth: 1,
     color: '#0f172a',
@@ -605,7 +605,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   helpText: {
-    color: '#5E7288',
+    color: '#6B7A99',
     fontSize: 13,
     lineHeight: 18,
     marginTop: 6,

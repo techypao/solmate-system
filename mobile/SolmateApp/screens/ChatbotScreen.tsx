@@ -33,10 +33,10 @@ type ChatMessage = {
   suggestionsEnabled?: boolean;
 };
 
-const NAVY = '#123A5A';
-const GOLD = '#F4D000';
-const MUTED = '#5E7288';
-const BG = '#F8FAFC';
+const NAVY = '#1A2B55';
+const GOLD = '#F5C000';
+const MUTED = '#6B7A99';
+const BG = '#C8D8F0';
 const CARD = '#ffffff';
 
 const QUICK_HELP = [
@@ -555,7 +555,7 @@ const cs = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#DDE7EE',
+    borderBottomColor: '#D4E0F2',
   },
   headerLeft: {flexDirection: 'row', alignItems: 'center'},
   headerIcon: {
@@ -736,7 +736,7 @@ const cs = StyleSheet.create({
     paddingBottom: 16,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#DDE7EE',
+    borderTopColor: '#D4E0F2',
     backgroundColor: CARD,
   },
   escalateBtn: {

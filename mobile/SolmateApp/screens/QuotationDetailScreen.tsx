@@ -46,10 +46,10 @@ type QuotationDetail = {
 
 /* ── constants ── */
 
-const NAVY = '#123A5A';
-const GOLD = '#F4D000';
-const MUTED = '#5E7288';
-const BG = '#F8FAFC';
+const NAVY = '#1A2B55';
+const GOLD = '#F5C000';
+const MUTED = '#6B7A99';
+const BG = '#C8D8F0';
 const CARD = '#ffffff';
 
 /* ── format helpers (preserved) ── */
@@ -277,8 +277,9 @@ export default function QuotationDetailScreen({route, navigation}: any) {
         <View style={s.spacer} />
 
         {/* ── bottom nav ── */}
-        <CustomerBottomNav activeTab="Services" />
       </ScrollView>
+
+      <CustomerBottomNav activeTab="Services" />
     </SafeAreaView>
   );
 }
@@ -287,7 +288,7 @@ export default function QuotationDetailScreen({route, navigation}: any) {
 
 const s = StyleSheet.create({
   safe: {flex: 1, backgroundColor: BG},
-  scroll: {paddingHorizontal: 22, paddingTop: 20, paddingBottom: 30},
+  scroll: {paddingHorizontal: 22, paddingTop: 20, paddingBottom: 90},
   pressed: {opacity: 0.85},
   center: {flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: BG},
 
@@ -358,7 +359,7 @@ const s = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#DDE7EE',
+    borderTopColor: '#D4E0F2',
     paddingVertical: 12,
   },
   infoLabel: {fontSize: 14, color: MUTED},

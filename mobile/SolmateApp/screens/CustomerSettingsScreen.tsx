@@ -17,6 +17,7 @@ import { Asset, launchImageLibrary } from 'react-native-image-picker';
 
 import { AuthContext } from '../src/context/AuthContext';
 import CustomerBottomNav from '../src/components/CustomerBottomNav';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
   updateCustomerAccount,
   updateCustomerPassword,
@@ -33,12 +34,13 @@ import {
 
 /* \u2500\u2500 design tokens \u2500\u2500 */
 
-const NAVY = '#123A5A';
-const GOLD = '#F4D000';
-const MUTED = '#5E7288';
-const BG = '#F8FAFC';
+const ICON_COLOR = '#1d2f6d';
+const NAVY = '#1A2B55';
+const GOLD = '#F5C000';
+const MUTED = '#6B7A99';
+const BG = '#C8D8F0';
 const CARD = '#ffffff';
-const DIVIDER = '#DDE7EE';
+const DIVIDER = '#D4E0F2';
 
 /* \u2500\u2500 helpers \u2500\u2500 */
 
@@ -100,7 +102,7 @@ function MenuRow({
       style={({ pressed }) => [s.menuRow, pressed && s.pressed]}
     >
       <View style={s.menuIconWrap}>
-        <Text style={s.menuIcon}>{icon}</Text>
+        <Icon name={icon} size={20} color={ICON_COLOR} />
       </View>
       <Text style={s.menuLabel}>{label}</Text>
       <Text style={s.menuChevron}>{expanded ? '\u2304' : '\u203A'}</Text>
@@ -462,32 +464,32 @@ export default function CustomerSettingsScreen() {
 
           {/* \u2500\u2500 menu rows \u2500\u2500 */}
           <MenuRow
-            icon={'\ud83d\udc64'}
+            icon={'account-outline'}
             label="Personal Information"
             onPress={() => setEditExpanded(!editExpanded)}
             expanded={editExpanded}
           />
 
           <MenuRow
-            icon={'\u23f1\ufe0f'}
+            icon={'clock-outline'}
             label="My Maintenance History"
             onPress={() => navigation.navigate('ServiceRequestList')}
           />
 
           <MenuRow
-            icon={'\ud83d\udd0d'}
+            icon={'magnify'}
             label="My Inspection History"
             onPress={() => navigation.navigate('InspectionRequestList')}
           />
 
           <MenuRow
-            icon={'\u2b50'}
+            icon={'star-outline'}
             label="My Testimonies"
             onPress={() => navigation.navigate('MyTestimonies')}
           />
 
           <MenuRow
-            icon={'\ud83d\udd12'}
+            icon={'lock-outline'}
             label="Change Password"
             onPress={() => setPasswordExpanded(!passwordExpanded)}
             expanded={passwordExpanded}
@@ -564,8 +566,9 @@ export default function CustomerSettingsScreen() {
           </Pressable>
 
           {/* \u2500\u2500 bottom nav \u2500\u2500 */}
-          <CustomerBottomNav activeTab="Profile" />
         </ScrollView>
+
+        <CustomerBottomNav activeTab="Profile" />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -576,7 +579,7 @@ export default function CustomerSettingsScreen() {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG },
   flex: { flex: 1 },
-  scroll: { paddingHorizontal: 22, paddingTop: 20, paddingBottom: 30 },
+  scroll: { paddingHorizontal: 22, paddingTop: 20, paddingBottom: 90 },
   pressed: { opacity: 0.85 },
 
   /* brand */
@@ -673,12 +676,14 @@ const s = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 14,
-    backgroundColor: '#eaf0fb',
+    backgroundColor: '#E2EBF8',
+    borderWidth: 1,
+    borderColor: '#C4D4EC',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
   },
-  menuIcon: { fontSize: 18 },
+  menuIcon: {},
   menuLabel: { flex: 1, fontSize: 15, fontWeight: '800', color: NAVY },
   menuChevron: { fontSize: 22, color: '#bcc5d3', fontWeight: '600' },
 

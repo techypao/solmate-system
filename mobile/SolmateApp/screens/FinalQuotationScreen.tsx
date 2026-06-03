@@ -124,11 +124,11 @@ type SizingPreview = {
 };
 
 /* ── design tokens (matches newer technician theme) ── */
-const NAVY = '#123A5A';
-const GOLD = '#F4D000';
-const MUTED = '#5E7288';
-const BG = '#F8FAFC';
-const DIVIDER = '#DDE7EE';
+const NAVY = '#1A2B55';
+const GOLD = '#F5C000';
+const MUTED = '#6B7A99';
+const BG = '#C8D8F0';
+const DIVIDER = '#D4E0F2';
 
 const CATEGORY_ORDER = [
   'panel',
@@ -1656,8 +1656,8 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         </View>
         <Switch
           disabled={form.pv_system_type === 'on-grid'}
-          trackColor={{false: '#DDE7EE', true: '#fde68a'}}
-          thumbColor={form.with_battery ? '#F4D000' : '#f8fafc'}
+          trackColor={{false: '#D4E0F2', true: '#fde68a'}}
+          thumbColor={form.with_battery ? '#F5C000' : '#f8fafc'}
           value={form.with_battery}
           onValueChange={handleBatteryToggle}
         />
@@ -1680,8 +1680,8 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           </Text>
         </View>
         <Switch
-          trackColor={{false: '#DDE7EE', true: '#fde68a'}}
-          thumbColor={form.include_net_metering ? '#F4D000' : '#f8fafc'}
+          trackColor={{false: '#D4E0F2', true: '#fde68a'}}
+          thumbColor={form.include_net_metering ? '#F5C000' : '#f8fafc'}
           value={form.include_net_metering}
           onValueChange={value => updateField('include_net_metering', value)}
         />
@@ -2805,8 +2805,8 @@ const styles = StyleSheet.create({
     flexWrap: 'nowrap',
   },
   stepPill: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#DDE7EE',
+    backgroundColor: '#EEF4FC',
+    borderColor: '#D4E0F2',
     borderRadius: 18,
     borderWidth: 1,
     minWidth: '47%',
@@ -2831,7 +2831,7 @@ const styles = StyleSheet.create({
     color: '#7a5700',
   },
   stepPillLabel: {
-    color: '#5E7288',
+    color: '#6B7A99',
     fontSize: 14,
     fontWeight: '700',
   },
@@ -2964,7 +2964,7 @@ const styles = StyleSheet.create({
     borderColor: GOLD,
   },
   selectTriggerDisabled: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#EEF4FC',
     opacity: 0.7,
   },
   selectTriggerPressed: {
@@ -3073,7 +3073,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   optionalItemCard: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#EEF4FC',
     borderColor: DIVIDER,
     borderRadius: 18,
     borderWidth: 1,
@@ -3126,7 +3126,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   selectedItemCard: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#EEF4FC',
     borderColor: DIVIDER,
     borderRadius: 18,
     borderWidth: 1,
@@ -3206,7 +3206,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   catalogItemCard: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#EEF4FC',
     borderColor: DIVIDER,
     borderRadius: 18,
     borderWidth: 1,
@@ -3277,7 +3277,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   outputTile: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#EEF4FC',
     borderColor: DIVIDER,
     borderRadius: 20,
     borderWidth: 1,
@@ -3291,7 +3291,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   outputTileWide: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#EEF4FC',
     borderColor: DIVIDER,
     borderRadius: 20,
     borderWidth: 1,
@@ -3323,7 +3323,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     backgroundColor: '#ffffff',
-    borderColor: '#DDE7EE',
+    borderColor: '#D4E0F2',
     borderRadius: 28,
     shadowColor: '#8a9bbd',
     shadowOffset: {width: 0, height: 2},
@@ -3332,7 +3332,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   backButtonText: {
-    color: '#5E7288',
+    color: '#6B7A99',
     fontWeight: '700',
   },
   /* cost breakdown grid (Step 3) */
@@ -3342,7 +3342,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   totalCard: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#EEF4FC',
     borderColor: DIVIDER,
     borderRadius: 18,
     borderWidth: 1,
@@ -3439,7 +3439,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   promoCard: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#EEF4FC',
     borderColor: DIVIDER,
     borderRadius: 10,
     borderWidth: 1.5,

@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import {Pressable, StyleSheet, Text, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -12,48 +7,53 @@ import {solmateColors} from '../theme/colors';
 
 const ICON_COLOR = '#1d2f6d';
 
-export type CustomerBottomNavTab =
+export type TechnicianBottomNavTab =
   | 'Home'
+  | 'Inspections'
   | 'Services'
-  | 'Tracking'
   | 'Profile';
 
 type NavItem = {
-  key: CustomerBottomNavTab;
+  key: TechnicianBottomNavTab;
   label: string;
   icon: string;
   routeName: string;
 };
 
 const NAV_ITEMS: NavItem[] = [
-  {key: 'Home', label: 'Home', icon: 'home-outline', routeName: 'Home'},
+  {
+    key: 'Home',
+    label: 'Home',
+    icon: 'home-outline',
+    routeName: 'TechnicianDashboard',
+  },
+  {
+    key: 'Inspections',
+    label: 'Inspections',
+    icon: 'clipboard-search-outline',
+    routeName: 'AssignedInspectionRequests',
+  },
   {
     key: 'Services',
     label: 'Services',
     icon: 'hammer-wrench',
-    routeName: 'ServicesHome',
-  },
-  {
-    key: 'Tracking',
-    label: 'Tracking',
-    icon: 'map-marker-outline',
-    routeName: 'TrackingHub',
+    routeName: 'TechnicianServiceRequests',
   },
   {
     key: 'Profile',
     label: 'Profile',
     icon: 'account-outline',
-    routeName: 'CustomerSettings',
+    routeName: 'TechnicianSettings',
   },
 ];
 
-type CustomerBottomNavProps = {
-  activeTab: CustomerBottomNavTab;
+type TechnicianBottomNavProps = {
+  activeTab: TechnicianBottomNavTab;
 };
 
-export default function CustomerBottomNav({
+export default function TechnicianBottomNav({
   activeTab,
-}: CustomerBottomNavProps) {
+}: TechnicianBottomNavProps) {
   const navigation = useNavigation<any>();
 
   return (
@@ -117,8 +117,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(245, 192, 0, 0.38)',
   },
-  navIcon: {},
-  navIconActive: {},
   navLabel: {
     fontSize: 11,
     color: solmateColors.muted,

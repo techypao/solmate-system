@@ -269,41 +269,9 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
     }
   };
 
-  if (loading) {
-    return (
-      <SafeAreaView style={s.safe}>
-        <View style={s.centered}>
-          <ActivityIndicator size="large" color={GOLD} />
-          <Text style={s.loadingText}>Loading inspection request...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (errorMessage || !inspectionRequest) {
-    return (
-      <SafeAreaView style={s.safe}>
-        <View style={s.centered}>
-          <Text style={s.errorTitle}>Inspection request unavailable</Text>
-          <Text style={s.errorText}>
-            {errorMessage || 'No inspection request details were found.'}
-          </Text>
-          <Pressable
-            onPress={() => loadInspectionRequest(true)}
-            style={({pressed}) => [s.goldBtn, pressed && s.pressed]}>
-            <Text style={s.goldBtnText}>Try Again</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => navigation.navigate('InspectionRequestList')}
-            style={({pressed}) => [s.outlineBtn, pressed && s.pressed]}>
-            <Text style={s.outlineBtnText}>Back to Requests</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   const timelineEvents = useMemo(() => {
+    if (!inspectionRequest) return [];
+
     const events: Array<{
       datetime: string;
       status: string;
@@ -367,6 +335,40 @@ export default function InspectionRequestDetailScreen({navigation, route}: any) 
 
     return events;
   }, [inspectionRequest]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={s.safe}>
+        <View style={s.centered}>
+          <ActivityIndicator size="large" color={GOLD} />
+          <Text style={s.loadingText}>Loading inspection request...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (errorMessage || !inspectionRequest) {
+    return (
+      <SafeAreaView style={s.safe}>
+        <View style={s.centered}>
+          <Text style={s.errorTitle}>Inspection request unavailable</Text>
+          <Text style={s.errorText}>
+            {errorMessage || 'No inspection request details were found.'}
+          </Text>
+          <Pressable
+            onPress={() => loadInspectionRequest(true)}
+            style={({pressed}) => [s.goldBtn, pressed && s.pressed]}>
+            <Text style={s.goldBtnText}>Try Again</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => navigation.navigate('InspectionRequestList')}
+            style={({pressed}) => [s.outlineBtn, pressed && s.pressed]}>
+            <Text style={s.outlineBtnText}>Back to Requests</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={s.safe}>

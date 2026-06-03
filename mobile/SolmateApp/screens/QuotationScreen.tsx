@@ -18,10 +18,10 @@ import { createQuotation } from '../src/services/quotationApi';
 
 /* ── constants ───────────────────────────────────── */
 
-const NAVY = '#123A5A';
-const GOLD = '#F4D000';
-const MUTED = '#5E7288';
-const BG = '#F8FAFC';
+const NAVY = '#1A2B55';
+const GOLD = '#F5C000';
+const MUTED = '#6B7A99';
+const BG = '#C8D8F0';
 const CARD = '#ffffff';
 
 /* ── helpers (unchanged) ───────────────────────────── */
@@ -231,8 +231,9 @@ export default function QuotationScreen({ navigation }: any) {
           </Pressable>
 
           {/* ── bottom nav ── */}
-          <CustomerBottomNav activeTab="Services" />
         </ScrollView>
+
+        <CustomerBottomNav activeTab="Services" />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -243,7 +244,7 @@ export default function QuotationScreen({ navigation }: any) {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG },
   flex: { flex: 1 },
-  scroll: { paddingHorizontal: 22, paddingTop: 20, paddingBottom: 30 },
+  scroll: { paddingHorizontal: 22, paddingTop: 20, paddingBottom: 90 },
   pressed: { opacity: 0.85 },
 
   /* brand */

@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {AuthContext} from '../src/context/AuthContext';
 import {getUnreadNotificationCount} from '../src/services/notificationApi';
 import {
@@ -22,6 +23,7 @@ import {
 } from '../src/services/serviceRequestApi';
 import {getProfilePictureUrl, getUserInitial} from '../src/utils/profilePicture';
 import {getSolmateStatusColors, solmateColors} from '../src/theme/colors';
+import TechnicianBottomNav from '../src/components/TechnicianBottomNav';
 
 // ─── colour tokens that mirror the design ────────────────────────────────────
 const NAVY = solmateColors.navy;
@@ -30,62 +32,8 @@ const BG = solmateColors.background;
 const CARD = solmateColors.white;
 const MUTED = solmateColors.muted;
 const SHADOW = solmateColors.shadow;
+const ICON_COLOR = '#1d2f6d';
 
-// ─── small icon stand-ins (unicode shapes) ───────────────────────────────────
-// The design shows a tiny box-chart icon for Pending Reports and a calendar
-// grid icon for Today's Schedule. We approximate with View-drawn shapes since
-// react-native-vector-icons requires extra native linking steps.
-function BellIcon() {
-  return (
-    <View style={icon.bellWrap}>
-      {/* bell body */}
-      <View style={icon.bellBody} />
-      {/* bell clapper */}
-      <View style={icon.bellClapper} />
-    </View>
-  );
-}
-
-function HomeIcon({active}: {active?: boolean}) {
-  const c = active ? NAVY : MUTED;
-  return (
-    <Text style={{fontSize: 20, color: c, lineHeight: 22, textAlign: 'center'}}>{'\u2302'}</Text>
-  );
-}
-
-function InspectIcon({active}: {active?: boolean}) {
-  return (
-    <View style={nav.iconWrap}>
-      <View style={[nav.listBox, active && nav.activeShape]}>
-        <View style={[nav.listLine, active && nav.activeLine]} />
-        <View style={[nav.listLine, {width: 12}, active && nav.activeLine]} />
-        <View style={[nav.listLine, active && nav.activeLine]} />
-      </View>
-    </View>
-  );
-}
-
-function ServicesIcon({active}: {active?: boolean}) {
-  return (
-    <View style={nav.iconWrap}>
-      <View style={[nav.gear, active && nav.activeShape]}>
-        <View style={[nav.gearInner, active && nav.activeShape]} />
-      </View>
-    </View>
-  );
-}
-
-function ProfileIcon({active}: {active?: boolean}) {
-  return (
-    <View style={nav.iconWrap}>
-      <View style={[nav.profileHead, active && nav.activeShape]} />
-      <View style={[nav.profileBody, active && nav.activeShape]} />
-    </View>
-  );
-}
-
-// ─── bottom nav bar ──────────────────────────────────────────────────────────
-type Tab = 'Home' | 'Inspections' | 'Services' | 'Profile';
 
 type DashboardTask = {
   id: number;
@@ -278,32 +226,6 @@ function EmptyTaskState({message}: {message: string}) {
   );
 }
 
-function BottomNav({active, onPress}: {active: Tab; onPress: (t: Tab) => void}) {
-  const tabs: {key: Tab; label: string; Icon: React.FC<{active?: boolean}>}[] = [
-    {key: 'Home',        label: 'Home',        Icon: HomeIcon},
-    {key: 'Inspections', label: 'Inspections', Icon: InspectIcon},
-    {key: 'Services',    label: 'Services',    Icon: ServicesIcon},
-    {key: 'Profile',     label: 'Profile',     Icon: ProfileIcon},
-  ];
-
-  return (
-    <View style={nav.bar}>
-      {tabs.map(({key, label, Icon}) => {
-        const isActive = active === key;
-        return (
-          <Pressable
-            key={key}
-            style={[nav.tab, isActive && nav.tabActive]}
-            onPress={() => onPress(key)}>
-            <Icon active={isActive} />
-            <Text style={[nav.label, isActive && nav.labelActive]}>{label}</Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
 // ─── main screen ─────────────────────────────────────────────────────────────
 export default function TechnicianDashboardScreen({navigation}: any) {
   const {user} = useContext(AuthContext);
@@ -312,7 +234,6 @@ export default function TechnicianDashboardScreen({navigation}: any) {
 
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [activeTab, setActiveTab] = useState<Tab>('Home');
   const [inspectionTasks, setInspectionTasks] = useState<
     TechnicianInspectionRequest[]
   >([]);
@@ -373,13 +294,6 @@ export default function TechnicianDashboardScreen({navigation}: any) {
     task.scheduledAt ? startOfDay(task.scheduledAt).getTime() > today.getTime() : false,
   );
 
-  function handleTabPress(tab: Tab) {
-    setActiveTab(tab);
-    if (tab === 'Inspections') {navigation.navigate('AssignedInspectionRequests');}
-    if (tab === 'Services')    {navigation.navigate('TechnicianServiceRequests');}
-    if (tab === 'Profile')     {navigation.navigate('TechnicianSettings');}
-  }
-
   function openTask(task: DashboardTask) {
     if (task.kind === 'inspection' && task.rawInspection) {
       navigation.navigate('InspectionDetails', {
@@ -416,7 +330,7 @@ export default function TechnicianDashboardScreen({navigation}: any) {
               <Pressable
                 onPress={() => navigation.navigate('TechnicianNotifications')}
                 style={s.bellBtn}>
-                <BellIcon />
+                <Icon name="bell-outline" size={22} color={ICON_COLOR} />
                 {unreadCount > 0 && (
                   <View style={s.badge}>
                     <Text style={s.badgeText}>
@@ -475,7 +389,7 @@ export default function TechnicianDashboardScreen({navigation}: any) {
             onPress={() => navigation.navigate('TechnicianNotifications')}>
             <View style={s.infoCardLeft}>
               <View style={[s.iconBox, s.bellIconBox]}>
-                <BellIcon />
+                <Icon name="bell-outline" size={22} color={ICON_COLOR} />
                 {unreadCount > 0 && (
                   <View style={s.inlineBadge}>
                     <Text style={s.inlineBadgeText}>
@@ -559,188 +473,14 @@ export default function TechnicianDashboardScreen({navigation}: any) {
         </ScrollView>
       </SafeAreaView>
 
-      {/* ── bottom nav ── */}
-      <BottomNav active={activeTab} onPress={handleTabPress} />
+      <TechnicianBottomNav activeTab="Home" />
     </View>
   );
 }
 
-// ─── icon styles ─────────────────────────────────────────────────────────────
-const icon = StyleSheet.create({
-  bellWrap: {
-    width: 20,
-    height: 22,
-    alignItems: 'center',
-  },
-  bellBody: {
-    width: 16,
-    height: 14,
-    borderRadius: 8,
-    borderWidth: 2.5,
-    borderColor: NAVY,
-    marginTop: 2,
-  },
-  bellClapper: {
-    width: 6,
-    height: 3,
-    borderBottomLeftRadius: 4,
-    borderBottomRightRadius: 4,
-    backgroundColor: NAVY,
-    marginTop: 1,
-  },
-  wrap: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    height: 20,
-    width: 20,
-    gap: 2,
-  },
-  bar: {
-    width: 5,
-    backgroundColor: NAVY,
-    borderRadius: 2,
-  },
-  calWrap: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: NAVY,
-    overflow: 'hidden',
-  },
-  calHeader: {
-    height: 5,
-    backgroundColor: NAVY,
-  },
-  calGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: 2,
-    gap: 2,
-  },
-  calDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 1,
-    backgroundColor: NAVY,
-    opacity: 0.55,
-  },
-});
+// ─── icon styles ─────────────────────────────────────────────────────────────;
 
-// ─── bottom nav styles ────────────────────────────────────────────────────────
-const nav = StyleSheet.create({
-  bar: {
-    flexDirection: 'row',
-    backgroundColor: solmateColors.white,
-    borderTopWidth: 1,
-    borderTopColor: solmateColors.border,
-    paddingBottom: 8,
-    paddingTop: 8,
-    paddingHorizontal: 6,
-  },
-  tab: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 3,
-    paddingVertical: 8,
-    borderRadius: 16,
-  },
-  tabActive: {
-    backgroundColor: '#FFF7CC',
-    borderWidth: 1,
-    borderColor: 'rgba(244, 208, 0, 0.34)',
-  },
-  label: {
-    fontSize: 10,
-    color: MUTED,
-    fontWeight: '500',
-  },
-  labelActive: {
-    color: NAVY,
-    fontWeight: '700',
-  },
-  iconWrap: {
-    width: 24,
-    height: 22,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  // house
-  roof: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 8,
-    borderRightWidth: 8,
-    borderBottomWidth: 10,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderBottomColor: MUTED,
-    marginBottom: 0,
-  },
-  houseBody: {
-    width: 14,
-    height: 9,
-    backgroundColor: MUTED,
-    borderRadius: 1,
-  },
-  // list
-  listBox: {
-    width: 18,
-    height: 20,
-    backgroundColor: MUTED,
-    borderRadius: 3,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
-    gap: 3,
-  },
-  listLine: {
-    height: 2,
-    width: 10,
-    backgroundColor: solmateColors.white,
-    borderRadius: 1,
-  },
-  // gear
-  gear: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 3,
-    borderColor: MUTED,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  gearInner: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: MUTED,
-  },
-  // profile
-  profileHead: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: MUTED,
-    marginBottom: 2,
-  },
-  profileBody: {
-    width: 16,
-    height: 8,
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-    backgroundColor: MUTED,
-  },
-  activeShape: {
-    borderColor: NAVY,
-    backgroundColor: NAVY,
-    borderBottomColor: NAVY,
-  },
-  activeLine: {
-    backgroundColor: solmateColors.white,
-  },
-});
+// ─── bottom nav styles ────────────────────────────────────────────────────────;
 
 // ─── main styles ─────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
@@ -755,7 +495,7 @@ const s = StyleSheet.create({
   scroll: {
     paddingHorizontal: 18,
     paddingTop: 10,
-    paddingBottom: 20,
+    paddingBottom: 90,
   },
 
   // header
@@ -1074,7 +814,7 @@ const s = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#DDE7EE',
+    borderTopColor: '#D4E0F2',
   },
   taskFooterText: {
     color: NAVY,

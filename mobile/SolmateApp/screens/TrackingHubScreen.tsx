@@ -9,19 +9,22 @@ import {
 } from 'react-native';
 
 import CustomerBottomNav from '../src/components/CustomerBottomNav';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
+const ICON_COLOR = '#1d2f6d';
 
 /* ── design tokens ── */
-const NAVY = '#123A5A';
-const GOLD = '#F4D000';
-const MUTED = '#5E7288';
-const BG = '#F8FAFC';
+const NAVY = '#1A2B55';
+const GOLD = '#F5C000';
+const MUTED = '#6B7A99';
+const BG = '#C8D8F0';
 const CARD = '#ffffff';
 
 /* ── tracking categories ── */
 const CATEGORIES = [
   {
     key: 'inspection',
-    icon: '🔍',
+    icon: 'magnify',
     title: 'Inspection Requests',
     subtitle: 'Track site inspection visits and status updates.',
     route: 'InspectionRequestList',
@@ -29,7 +32,7 @@ const CATEGORIES = [
   },
   {
     key: 'installation',
-    icon: '🔧',
+    icon: 'wrench-outline',
     title: 'Installation Requests',
     subtitle: 'Monitor your solar panel installation progress.',
     route: 'ServiceRequestList',
@@ -37,7 +40,7 @@ const CATEGORIES = [
   },
   {
     key: 'maintenance',
-    icon: '⚙️',
+    icon: 'cog-outline',
     title: 'Maintenance Requests',
     subtitle: 'Check status updates for maintenance and repair jobs.',
     route: 'ServiceRequestList',
@@ -82,7 +85,7 @@ export default function TrackingHubScreen({navigation}: any) {
             <View style={s.cardAccent} />
             <View style={s.cardInner}>
               <View style={s.iconWrap}>
-                <Text style={s.iconText}>{cat.icon}</Text>
+                <Icon name={cat.icon} size={26} color={ICON_COLOR} />
               </View>
               <View style={s.cardText}>
                 <Text style={s.cardTitle}>{cat.title}</Text>
@@ -102,7 +105,7 @@ export default function TrackingHubScreen({navigation}: any) {
 /* ── styles ── */
 const s = StyleSheet.create({
   safe: {flex: 1, backgroundColor: BG},
-  scroll: {paddingHorizontal: 22, paddingBottom: 24, paddingTop: 8},
+  scroll: {paddingHorizontal: 22, paddingBottom: 90, paddingTop: 8},
 
   /* top bar */
   topBar: {marginBottom: 10},
@@ -146,11 +149,11 @@ const s = StyleSheet.create({
   iconWrap: {
     width: 52, height: 52,
     borderRadius: 16,
-    backgroundColor: '#f0f4fc',
+    backgroundColor: '#E2EBF8',
     alignItems: 'center', justifyContent: 'center',
     flexShrink: 0,
   },
-  iconText: {fontSize: 26},
+  iconText: {},
   cardText: {flex: 1},
   cardTitle: {fontSize: 16, fontWeight: '800', color: NAVY, marginBottom: 4},
   cardSub: {fontSize: 13, color: MUTED, lineHeight: 18},

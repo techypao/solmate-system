@@ -22,12 +22,12 @@ import {formatQuotationCurrency} from '../src/utils/currency';
 
 /* ── design tokens (matches app-wide system) ── */
 
-const NAVY = '#123A5A';
-const GOLD = '#F4D000';
-const MUTED = '#5E7288';
-const BG = '#F8FAFC';
+const NAVY = '#1A2B55';
+const GOLD = '#F5C000';
+const MUTED = '#6B7A99';
+const BG = '#C8D8F0';
 const CARD = '#ffffff';
-const DIVIDER = '#DDE7EE';
+const DIVIDER = '#D4E0F2';
 
 /* ── format helpers (preserved from original) ── */
 
@@ -504,8 +504,9 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
         </Pressable>
 
         {/* ── bottom nav ── */}
-        <CustomerBottomNav activeTab="Tracking" />
       </ScrollView>
+
+      <CustomerBottomNav activeTab="Tracking" />
     </SafeAreaView>
   );
 }
@@ -514,7 +515,7 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
 
 const s = StyleSheet.create({
   safe: {flex: 1, backgroundColor: BG},
-  scroll: {paddingHorizontal: 22, paddingTop: 20, paddingBottom: 30},
+  scroll: {paddingHorizontal: 22, paddingTop: 20, paddingBottom: 90},
   pressed: {opacity: 0.85},
   center: {
     flex: 1,
@@ -595,7 +596,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: '#DDE7EE',
+    backgroundColor: '#D4E0F2',
   },
   badgeGreen: {backgroundColor: '#dcfce7'},
   badgeText: {fontSize: 12, fontWeight: '700', color: MUTED, textTransform: 'capitalize'},

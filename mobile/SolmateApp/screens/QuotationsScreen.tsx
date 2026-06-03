@@ -175,13 +175,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   subtitle: {
-    color: '#5E7288',
+    color: '#6B7A99',
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 16,
   },
   infoText: {
-    color: '#5E7288',
+    color: '#6B7A99',
     fontSize: 14,
     marginBottom: 12,
   },
@@ -191,8 +191,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   emptyState: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#DDE7EE',
+    backgroundColor: '#EEF4FC',
+    borderColor: '#D4E0F2',
     borderRadius: 16,
     borderWidth: 1,
     marginBottom: 16,
@@ -205,13 +205,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   emptyText: {
-    color: '#5E7288',
+    color: '#6B7A99',
     fontSize: 14,
     lineHeight: 20,
   },
   quotationCard: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#DDE7EE',
+    backgroundColor: '#EEF4FC',
+    borderColor: '#D4E0F2',
     borderRadius: 16,
     borderWidth: 1,
     marginBottom: 12,
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   quotationMeta: {
-    color: '#5E7288',
+    color: '#6B7A99',
     fontSize: 14,
     lineHeight: 20,
   },

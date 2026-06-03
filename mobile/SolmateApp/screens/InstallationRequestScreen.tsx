@@ -21,12 +21,12 @@ import { getUnavailablePreferredDates } from '../src/services/preferredDateAvail
 import { getDefaultContactNumber } from '../src/utils/contactNumber';
 import { createServiceRequest } from '../src/services/serviceRequestApi';
 
-const NAVY = '#123A5A';
-const GOLD = '#F4D000';
-const MUTED = '#5E7288';
-const BG = '#F8FAFC';
+const NAVY = '#1A2B55';
+const GOLD = '#F5C000';
+const MUTED = '#6B7A99';
+const BG = '#C8D8F0';
 const CARD = '#ffffff';
-const DIVIDER = '#DDE7EE';
+const DIVIDER = '#D4E0F2';
 
 const INSTALLATION_TYPE_OPTIONS = [
   'Residential rooftop installation',
@@ -705,8 +705,9 @@ export default function InstallationRequestScreen({ navigation }: any) {
             </Pressable>
           </View>
 
-          <CustomerBottomNav activeTab="Services" />
         </ScrollView>
+
+        <CustomerBottomNav activeTab="Services" />
       </KeyboardAvoidingView>
 
       <MapLocationPickerModal
@@ -726,7 +727,7 @@ export default function InstallationRequestScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG },
   flex: { flex: 1 },
-  scroll: { paddingHorizontal: 22, paddingTop: 20, paddingBottom: 30 },
+  scroll: { paddingHorizontal: 22, paddingTop: 20, paddingBottom: 90 },
   pressed: { opacity: 0.85 },
 
   brand: { fontSize: 22, fontWeight: '800', color: NAVY, marginBottom: 10 },
@@ -976,7 +977,7 @@ const styles = StyleSheet.create({
     borderColor: DIVIDER,
     paddingVertical: 14,
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#EEF4FC',
   },
   secondaryBtnText: { fontSize: 14, fontWeight: '700', color: NAVY },
 

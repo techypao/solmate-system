@@ -21,14 +21,17 @@ import {
   type Promotion,
 } from '../src/services/promotionApi';
 import {getProfilePictureUrl, getUserInitial} from '../src/utils/profilePicture';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const NAVY = '#123A5A';
-const GOLD = '#F4D000';
-const MUTED = '#5E7288';
-const BG = '#F8FAFC';
+const NAVY = '#1A2B55';
+const GOLD = '#F5C000';
+const MUTED = '#6B7A99';
+const BG = '#C8D8F0';
 const CARD = '#ffffff';
-const BORDER = '#DDE7EE';
-const CYAN = '#20A7C9';
+const BORDER = '#D4E0F2';
+const CYAN = '#3B8ED4';
+const ICON_BG = '#E2EBF8';
+const ICON_COLOR = '#1d2f6d';
 const R = 18;
 
 /* ── tiny presentational helpers ────────────────────────────── */
@@ -48,7 +51,7 @@ function SummaryCard({
     <Pressable
       onPress={onPress}
       style={({pressed}) => [s.summaryCard, pressed && onPress && s.pressed]}>
-      <Text style={s.summaryIcon}>{icon}</Text>
+      <Icon name={icon} size={22} color={ICON_COLOR} style={s.summaryIcon} />
       <Text style={s.summaryLabel}>{label}</Text>
       <Text style={s.summaryValue}>{value}</Text>
     </Pressable>
@@ -71,7 +74,7 @@ function InfoCard({
       onPress={onPress}
       style={({pressed}) => [s.infoCard, pressed && onPress && s.pressed]}>
       <View style={s.infoIconWrap}>
-        <Text style={s.infoIcon}>{icon}</Text>
+        <Icon name={icon} size={22} color={ICON_COLOR} />
       </View>
       <View style={s.infoTextWrap}>
         <Text style={s.infoTitle}>{title}</Text>
@@ -98,7 +101,7 @@ function ActionCard({
       onPress={onPress}
       style={({pressed}) => [s.actionCard, pressed && s.pressed]}>
       <View style={s.actionIconWrap}>
-        <Text style={s.actionIcon}>{icon}</Text>
+        <Icon name={icon} size={22} color={ICON_COLOR} />
       </View>
       <Text style={s.actionTitle}>{title}</Text>
       <Text style={s.actionSub}>{subtitle}</Text>
@@ -257,13 +260,13 @@ export default function HomeScreen({navigation}: any) {
         <Text style={s.sectionTitle}>Summary</Text>
         <View style={s.summaryRow}>
           <SummaryCard
-            icon={'\u2705'}
+            icon="clipboard-list-outline"
             label="Requests"
             value="Track"
             onPress={() => navigation.navigate('TrackingHub')}
           />
           <SummaryCard
-            icon={'\ud83d\udcca'}
+            icon="bell-outline"
             label="Notifications"
             value={
               notificationsLoading
@@ -278,13 +281,13 @@ export default function HomeScreen({navigation}: any) {
 
         {/* ── info cards ─────────────────────────────── */}
         <InfoCard
-          icon={'\ud83d\udee0'}
+          icon="hammer-wrench"
           title="Services"
           subtitle={'Installation \u2022 Maintenance'}
           onPress={() => navigation.navigate('ServicesHome')}
         />
         <InfoCard
-          icon={'\u2705'}
+          icon="clipboard-check-outline"
           title="Inspection"
           subtitle="Request or view inspections"
           onPress={() => navigation.navigate('InspectionHome')}
@@ -294,25 +297,25 @@ export default function HomeScreen({navigation}: any) {
         <Text style={s.sectionTitle}>Quick Actions</Text>
         <View style={s.actionGrid}>
           <ActionCard
-            icon={'\ud83e\uddf0'}
+            icon="home-plus-outline"
             title="Request"
             subtitle="Installation"
             onPress={() => navigation.navigate('InstallationRequest')}
           />
           <ActionCard
-            icon={'\u2705'}
+            icon="clipboard-search-outline"
             title="Request"
             subtitle="Inspection"
             onPress={() => navigation.navigate('InspectionRequest')}
           />
           <ActionCard
-            icon={'\ud83d\udee0'}
+            icon="wrench-outline"
             title="Request"
             subtitle="Maintenance"
             onPress={() => navigation.navigate('ServiceRequest')}
           />
           <ActionCard
-            icon={'\u2b50'}
+            icon="star-outline"
             title="Create"
             subtitle="Testimony"
             onPress={() => navigation.navigate('CreateTestimony')}
@@ -339,13 +342,14 @@ export default function HomeScreen({navigation}: any) {
           style={({pressed}) => [s.chatRow, pressed && s.pressed]}>
           <Text style={s.chatText}>Need help? Chat with SolBot</Text>
           <View style={s.chatBtn}>
-            <Text style={s.chatBtnIcon}>{'\ud83e\udd16'}</Text>
+            <Icon name="robot-outline" size={24} color="#FFFFFF" />
           </View>
         </Pressable>
 
         {/* ── bottom nav row ─────────────────────────── */}
-        <CustomerBottomNav activeTab="Home" />
       </ScrollView>
+
+      <CustomerBottomNav activeTab="Home" />
     </SafeAreaView>
   );
 }
@@ -354,7 +358,7 @@ export default function HomeScreen({navigation}: any) {
 
 const s = StyleSheet.create({
   safe: {flex: 1, backgroundColor: BG},
-  scroll: {paddingHorizontal: 20, paddingTop: 18, paddingBottom: 30},
+  scroll: {paddingHorizontal: 20, paddingTop: 18, paddingBottom: 90, backgroundColor: BG},
   pressed: {opacity: 0.85},
 
   /* header */
@@ -379,22 +383,27 @@ const s = StyleSheet.create({
   brandSol: {fontSize: 22, fontWeight: '800', color: NAVY},
   brandMate: {fontSize: 22, fontWeight: '800', color: GOLD},
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: CARD,
-    borderWidth: 1.5,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: NAVY,
+    borderWidth: 2,
     borderColor: CYAN,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+    shadowColor: NAVY,
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
   },
   avatarImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 20,
+    borderRadius: 21,
   },
-  avatarText: {color: NAVY, fontSize: 17, fontWeight: '700'},
+  avatarText: {color: '#FFFFFF', fontSize: 17, fontWeight: '700'},
 
   /* welcome */
   welcomeTitle: {
@@ -426,13 +435,15 @@ const s = StyleSheet.create({
     borderRadius: R,
     padding: 16,
     marginHorizontal: 4,
-    shadowColor: '#8a9bbd',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
+    borderLeftWidth: 3,
+    borderLeftColor: NAVY,
+    shadowColor: '#7A9BBD',
+    shadowOffset: {width: 0, height: 5},
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 5,
   },
-  summaryIcon: {fontSize: 18, marginBottom: 8},
+  summaryIcon: {marginBottom: 8},
   summaryLabel: {fontSize: 13, color: MUTED, marginBottom: 4},
   summaryValue: {fontSize: 16, fontWeight: '800', color: NAVY},
 
@@ -451,19 +462,21 @@ const s = StyleSheet.create({
     elevation: 3,
   },
   infoIconWrap: {
-    width: 42,
-    height: 42,
+    width: 44,
+    height: 44,
     borderRadius: 14,
-    backgroundColor: '#eaf0fb',
+    backgroundColor: ICON_BG,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
+    borderWidth: 1,
+    borderColor: '#C4D4EC',
   },
-  infoIcon: {fontSize: 20},
+  infoIcon: {},
   infoTextWrap: {flex: 1},
   infoTitle: {fontSize: 15, fontWeight: '800', color: NAVY, marginBottom: 3},
   infoSub: {fontSize: 13, color: MUTED},
-  chevron: {fontSize: 18, color: '#bcc5d3', fontWeight: '600'},
+  chevron: {fontSize: 18, color: CYAN, fontWeight: '700'},
 
   /* action grid */
   actionGrid: {
@@ -485,15 +498,17 @@ const s = StyleSheet.create({
     elevation: 3,
   },
   actionIconWrap: {
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     borderRadius: 12,
-    backgroundColor: '#eaf0fb',
+    backgroundColor: ICON_BG,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#C4D4EC',
   },
-  actionIcon: {fontSize: 18},
+  actionIcon: {},
   actionTitle: {fontSize: 15, fontWeight: '800', color: NAVY, marginBottom: 2},
   actionSub: {fontSize: 13, color: MUTED},
 
@@ -528,19 +543,21 @@ const s = StyleSheet.create({
   },
   chatText: {fontSize: 13, color: MUTED, marginRight: 10},
   chatBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: NAVY,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: CYAN,
     shadowColor: NAVY,
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOffset: {width: 0, height: 5},
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 7,
   },
-  chatBtnIcon: {fontSize: 22},
+  chatBtnIcon: {},
 
   /* promotion cards */
   promoHeaderRow: {
@@ -591,7 +608,7 @@ const s = StyleSheet.create({
   promoBanner: {
     width: '100%',
     aspectRatio: 16 / 7,
-    backgroundColor: '#DDE7EE',
+    backgroundColor: '#D4E0F2',
   },
   promoBannerPlaceholder: {
     width: '100%',
@@ -606,8 +623,8 @@ const s = StyleSheet.create({
   promoTag: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#92400e',
-    backgroundColor: '#FFF7CC',
+    color: '#7A4F00',
+    backgroundColor: '#FFF0A0',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,

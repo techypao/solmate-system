@@ -476,19 +476,19 @@ export default function TechnicianNotificationsScreen({navigation}: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fb',
+    backgroundColor: '#C8D8F0',
     padding: 20,
   },
   centeredContainer: {
     flex: 1,
-    backgroundColor: '#f5f7fb',
+    backgroundColor: '#C8D8F0',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   loadingText: {
     marginTop: 12,
-    color: '#5E7288',
+    color: '#6B7A99',
     fontSize: 14,
   },
   title: {
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   subtitle: {
-    color: '#5E7288',
+    color: '#6B7A99',
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 18,
@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   summaryLabel: {
-    color: '#5E7288',
+    color: '#6B7A99',
     fontSize: 13,
     fontWeight: '600',
     marginBottom: 4,
@@ -540,7 +540,7 @@ const styles = StyleSheet.create({
     color: '#b91c1c',
   },
   deleteAllButtonTextDisabled: {
-    color: '#5E7288',
+    color: '#6B7A99',
   },
   errorCard: {
     backgroundColor: '#ffffff',
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   emptyText: {
-    color: '#5E7288',
+    color: '#6B7A99',
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',
@@ -630,7 +630,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   notificationDate: {
-    color: '#5E7288',
+    color: '#6B7A99',
     fontSize: 12,
     fontWeight: '500',
   },
@@ -668,10 +668,10 @@ const styles = StyleSheet.create({
     color: '#0f766e',
   },
   readState: {
-    color: '#5E7288',
+    color: '#6B7A99',
   },
   notificationType: {
-    color: '#5E7288',
+    color: '#6B7A99',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -686,8 +686,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   deleteButtonDisabled: {
-    borderColor: '#DDE7EE',
-    backgroundColor: '#f8fafc',
+    borderColor: '#D4E0F2',
+    backgroundColor: '#EEF4FC',
   },
   deleteButtonPressed: {
     opacity: 0.72,
@@ -698,6 +698,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   deleteButtonTextDisabled: {
-    color: '#5E7288',
+    color: '#6B7A99',
   },
 });
