@@ -68,6 +68,16 @@
             padding: 28px 18px 56px;
         }
 
+        .solmate-site-shell .shell {
+            position: relative;
+            isolation: isolate;
+            padding-top: 26px;
+        }
+
+        .solmate-site-shell .shell::before {
+            display: none;
+        }
+
         .solmate-admin-shell .shell {
             max-width: 1280px;
             padding-top: 30px;
@@ -803,28 +813,30 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 28px;
-            height: 68px;
-            background: linear-gradient(135deg, #0F2F4A 0%, #1C5476 48%, #2D6F94 100%);
-            border-radius: 18px;
-            margin-bottom: 24px;
-            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28), 0 2px 0 rgba(125, 223, 242, 0.18) inset;
-            border: 1px solid rgba(125, 223, 242, 0.22);
+            gap: 24px;
+            padding: 0 26px;
+            min-height: 96px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, #ffffff 100%);
+            border-radius: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 12px 32px rgba(18, 58, 90, 0.08), 0 0 0 1px rgba(32, 167, 201, 0.12);
+            border: 1px solid rgba(32, 167, 201, 0.16);
         }
 
         .solmate-nav-left {
             display: flex;
             align-items: center;
             gap: 10px;
-            min-width: 160px;
+            min-width: 180px;
+            flex: 0 0 auto;
         }
 
         .solmate-hamburger {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: #f8fafc;
+            border: 1px solid rgba(203, 219, 229, 0.9);
             padding: 7px 8px;
             cursor: pointer;
-            color: rgba(255, 255, 255, 0.9);
+            color: #1E293B;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -834,9 +846,9 @@
         }
 
         .solmate-hamburger:hover {
-            background: rgba(125, 223, 242, 0.18);
-            border-color: rgba(125, 223, 242, 0.4);
-            color: #ffffff;
+            background: #eef6ff;
+            border-color: rgba(18, 58, 90, 0.24);
+            color: #123A5A;
         }
 
         .solmate-brand-link {
@@ -851,14 +863,15 @@
         }
 
         .solmate-nav .solmate-brand-link {
-            background: rgba(255, 255, 255, 0.96);
-            padding: 5px 10px;
-            border-radius: 12px;
-            transition: background 0.15s;
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+            border: none;
+            transition: transform 0.15s ease;
         }
 
         .solmate-nav .solmate-brand-link:hover {
-            background: #ffffff;
+            transform: translateY(-1px);
         }
 
         .solmate-logo {
@@ -869,7 +882,7 @@
         }
 
         .solmate-logo--nav {
-            height: 40px;
+            height: 52px;
         }
 
         .solmate-logo--sidebar {
@@ -883,7 +896,10 @@
         .solmate-nav-center {
             display: flex;
             align-items: center;
-            gap: 36px;
+            justify-content: center;
+            gap: clamp(18px, 2.3vw, 42px);
+            flex: 1 1 auto;
+            min-width: 0;
         }
 
         .solmate-nav-center--admin {
@@ -948,14 +964,16 @@
         }
 
         .solmate-nav-link {
-            font-size: 14px;
-            font-weight: 500;
-            color: rgba(255, 255, 255, 0.82);
+            position: relative;
+            font-size: 15px;
+            font-weight: 700;
+            color: #647b92;
             text-decoration: none;
-            padding: 4px 0;
-            border-bottom: 2px solid transparent;
-            transition: color 0.15s, border-color 0.15s;
+            padding: 10px 0 14px;
+            border-bottom: none;
+            transition: color 0.15s ease, transform 0.15s ease;
             white-space: nowrap;
+            letter-spacing: -0.01em;
         }
 
         .solmate-nav--admin .solmate-nav-link {
@@ -969,9 +987,9 @@
         }
 
         .solmate-nav-link:hover {
-            color: #ffffff;
+            color: #123A5A;
             text-decoration: none;
-            border-bottom-color: rgba(125, 223, 242, 0.7);
+            transform: translateY(-1px);
         }
 
         .solmate-nav--admin .solmate-nav-link:hover {
@@ -981,9 +999,26 @@
         }
 
         .solmate-nav-link.active {
-            color: #ffffff;
-            font-weight: 700;
-            border-bottom-color: #F4D000;
+            color: #123A5A;
+            font-weight: 800;
+            text-shadow: none;
+        }
+
+        .solmate-nav-link::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: 0;
+            width: 0;
+            height: 3px;
+            border-radius: 999px;
+            background: #F4D000;
+            transform: translateX(-50%);
+            transition: width 0.18s ease;
+        }
+
+        .solmate-nav-link.active::after {
+            width: 58px;
         }
 
         .solmate-nav--admin .solmate-nav-link.active {
@@ -996,9 +1031,10 @@
         .solmate-nav-right {
             display: flex;
             align-items: center;
-            min-width: 160px;
+            min-width: 92px;
             justify-content: flex-end;
-            gap: 10px;
+            gap: 12px;
+            flex: 0 0 auto;
         }
 
         .solmate-admin-nav-actions {
@@ -1037,11 +1073,11 @@
         }
 
         .solmate-profile-btn {
-            width: 40px;
-            height: 40px;
+            width: 72px;
+            height: 72px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.14);
-            border: 2px solid rgba(244, 208, 0, 0.72);
+            background: linear-gradient(135deg, #123A5A, #1C5476);
+            border: 4px solid rgba(230, 194, 0, 0.72);
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -1051,17 +1087,18 @@
             color: #ffffff;
             line-height: 0;
             overflow: hidden;
+            box-shadow: 0 10px 22px rgba(18, 58, 90, 0.16), 0 0 0 6px rgba(244, 208, 0, 0.08);
         }
 
         .solmate-profile-btn:hover {
-            background: rgba(244, 208, 0, 0.22);
+            background: linear-gradient(135deg, #0F2F4A, #205E83);
             border-color: #F4D000;
-            transform: scale(1.04);
+            transform: translateY(-1px) scale(1.02);
         }
 
         .solmate-profile-btn.has-image {
             background: #ffffff;
-            border: 2px solid var(--solmate-cyan-400);
+            border: 4px solid var(--solmate-cyan-400);
         }
 
         .solmate-profile-btn-image {
@@ -1077,6 +1114,11 @@
             justify-content: center;
             width: 100%;
             height: 100%;
+        }
+
+        .solmate-profile-btn-icon svg {
+            width: 30px;
+            height: 30px;
         }
 
         .solmate-profile-dropdown {
@@ -1147,18 +1189,35 @@
         .solmate-services-trigger {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            font-size: 14px;
-            font-weight: 500;
-            color: rgba(255, 255, 255, 0.82);
-            background: none;
+            gap: 7px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #647b92;
+            background: transparent;
             border: none;
-            padding: 4px 0;
-            border-bottom: 2px solid transparent;
+            padding: 12px 18px;
+            border-radius: 22px;
             cursor: pointer;
-            transition: color 0.15s, border-color 0.15s;
+            transition: color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
             white-space: nowrap;
             line-height: inherit;
+        }
+
+        .solmate-services-trigger:hover {
+            color: #123A5A;
+            background: rgba(255, 255, 255, 0.82);
+            box-shadow: 0 10px 24px rgba(18, 58, 90, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .solmate-services-trigger.active {
+            color: #123A5A;
+            background: linear-gradient(180deg, #ffffff 0%, #f5f9ff 100%);
+            box-shadow: 0 12px 28px rgba(244, 208, 0, 0.2);
+        }
+
+        .solmate-services-chevron {
+            opacity: 0.7;
         }
 
         .solmate-services-trigger:hover {
@@ -1257,13 +1316,71 @@
             text-transform: uppercase;
         }
 
+        @media (max-width: 1180px) {
+            .solmate-nav {
+                padding: 0 20px;
+                min-height: 88px;
+            }
+
+            .solmate-nav-left {
+                min-width: 150px;
+            }
+
+            .solmate-nav-center {
+                gap: 18px;
+            }
+
+            .solmate-nav-link,
+            .solmate-services-trigger {
+                font-size: 14px;
+            }
+
+            .solmate-profile-btn {
+                width: 62px;
+                height: 62px;
+            }
+
+            .solmate-profile-btn-icon svg {
+                width: 26px;
+                height: 26px;
+            }
+        }
+
         @media (max-width: 680px) {
+            .solmate-site-shell .shell {
+                padding-top: 30px;
+            }
+
+            .solmate-site-shell .shell::before {
+                left: -10px;
+                right: -10px;
+                height: 156px;
+                border-radius: 0 0 20px 20px;
+            }
+
             .solmate-nav-center {
                 display: none;
             }
 
             .solmate-nav {
                 padding: 0 16px;
+                min-height: 78px;
+                border-radius: 24px;
+            }
+
+            .solmate-logo--nav {
+                height: 46px;
+            }
+
+            .solmate-profile-btn {
+                width: 54px;
+                height: 54px;
+                border-width: 3px;
+            }
+
+            .solmate-profile-btn-icon svg {
+                width: 24px;
+                height: 24px;
             }
 
             .solmate-admin-nav-actions {
@@ -2171,8 +2288,6 @@
                         </div>{{-- /.solmate-services-wrapper --}}
                         <a href="{{ route('customer.tracking') }}"
                            class="solmate-nav-link {{ request()->routeIs('customer.tracking') ? 'active' : '' }}">Tracking</a>
-                                <a href="{{ route('customer.chat') }}"
-                                    class="solmate-nav-link {{ request()->routeIs('customer.chat') ? 'active' : '' }}">Chat</a>
                                 <a href="{{ route('customer.mobile-app') }}"
                                     class="solmate-nav-link {{ request()->routeIs('customer.mobile-app') ? 'active' : '' }}">Download App</a>
                         <a href="{{ route('customer.testimonies') }}"

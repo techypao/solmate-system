@@ -198,7 +198,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/customer/chat', function (\Illuminate\Http\Request $request) {
             abort_unless($request->user()?->role === User::ROLE_CUSTOMER, 403);
 
-            return view('customer.chat');
+            return redirect()
+                ->route('customer.mobile-app')
+                ->with('status', 'Support chat is available in the SolMate mobile app only.');
         })->name('customer.chat');
 
         Route::get('/customer/mobile-app', function () {
