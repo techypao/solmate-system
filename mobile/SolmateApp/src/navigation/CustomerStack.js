@@ -19,6 +19,10 @@ import ServiceRequestDetailScreen from '../../screens/ServiceRequestDetailScreen
 import ServiceRequestListScreen from '../../screens/ServiceRequestListScreen';
 import ServiceRequestScreen from '../../screens/ServiceRequestScreen';
 import TrackingHubScreen from '../../screens/TrackingHubScreen';
+import QuotationScreen from '../../screens/QuotationScreen';
+import QuotationListScreen from '../../screens/QuotationListScreen';
+import QuotationDetailScreen from '../../screens/QuotationDetailScreen';
+import FinalQuotationViewScreen from '../../screens/FinalQuotationViewScreen';
 import {solmateColors} from '../theme/colors';
 
 const Stack = createNativeStackNavigator();
@@ -147,6 +151,30 @@ export default function CustomerStack() {
         name="ServiceRequestDetail"
         component={ServiceRequestDetailScreen}
         initialParams={{ mode: 'customer' }}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="QuotationEstimate"
+        component={QuotationScreen}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="QuotationList"
+        component={QuotationListScreen}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="QuotationDetail"
+        component={QuotationDetailScreen}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="FinalQuotationView"
+        component={FinalQuotationViewScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

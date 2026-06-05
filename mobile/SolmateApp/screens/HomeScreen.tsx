@@ -292,6 +292,12 @@ export default function HomeScreen({navigation}: any) {
           subtitle="Request or view inspections"
           onPress={() => navigation.navigate('InspectionHome')}
         />
+        <InfoCard
+          icon="file-document-outline"
+          title="Quotations"
+          subtitle={'Pre-Inspection Estimates \u2022 Inspection-Based'}
+          onPress={() => navigation.navigate('QuotationList')}
+        />
 
         {/* ── quick actions ──────────────────────────── */}
         <Text style={s.sectionTitle}>Quick Actions</Text>
@@ -320,6 +326,12 @@ export default function HomeScreen({navigation}: any) {
             subtitle="Testimony"
             onPress={() => navigation.navigate('CreateTestimony')}
           />
+          <ActionCard
+            icon="calculator-variant-outline"
+            title="Get"
+            subtitle="Estimate"
+            onPress={() => navigation.navigate('QuotationEstimate')}
+          />
         </View>
 
         {/* ── more actions ───────────────────────────── */}
@@ -333,6 +345,11 @@ export default function HomeScreen({navigation}: any) {
             onPress={() => navigation.navigate('TrackingHub')}
             style={({pressed}) => [s.moreBtn, pressed && s.pressed]}>
             <Text style={s.moreBtnText}>My Requests</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => navigation.navigate('QuotationList')}
+            style={({pressed}) => [s.moreBtn, pressed && s.pressed]}>
+            <Text style={s.moreBtnText}>My Quotations</Text>
           </Pressable>
         </View>
 

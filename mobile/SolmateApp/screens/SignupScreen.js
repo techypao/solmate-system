@@ -90,21 +90,14 @@ function Field({
   );
 }
 
-function splitName(fullName) {
-  const parts = fullName.trim().split(/\s+/);
-  if (parts.length === 1) {
-    return {firstName: parts[0], lastName: ''};
-  }
-  const lastName = parts.pop();
-  return {firstName: parts.join(' '), lastName};
-}
-
 // ─── Screen ───────────────────────────────────────────────────────────────────
 export default function SignupScreen({navigation}) {
-  const [name, setName]               = useState('');
+  const [firstName, setFirstName]     = useState('');
+  const [lastName, setLastName]       = useState('');
   const [email, setEmail]             = useState('');
   const [address, setAddress]         = useState('');
   const [contact, setContact]         = useState('');
+  const [landline, setLandline]       = useState('');
   const [password, setPassword]       = useState('');
   const [confirmPw, setConfirmPw]     = useState('');
   const [showPw, setShowPw]           = useState(false);
@@ -115,13 +108,14 @@ export default function SignupScreen({navigation}) {
 
   const canSubmit = useMemo(
     () =>
-      name.trim().length > 0 &&
+      firstName.trim().length > 0 &&
+      lastName.trim().length > 0 &&
       email.trim().length > 0 &&
       address.trim().length > 0 &&
       contact.trim().length > 0 &&
       password.trim().length > 0 &&
       confirmPw.trim().length > 0,
-    [name, email, address, contact, password, confirmPw],
+    [firstName, lastName, email, address, contact, password, confirmPw],
   );
 
   const clearError = () => {
@@ -153,17 +147,18 @@ export default function SignupScreen({navigation}) {
       return;
     }
     setError('');
-    const {firstName, lastName} = splitName(name);
+    const trimmedLandline = landline.replace(/[^0-9()+\-\s]/g, '').trim();
     try {
       setSubmitting(true);
       await apiPost(
         '/register',
         {
-          first_name: firstName,
-          last_name: lastName,
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
           email: email.trim(),
           address: address.trim(),
           contact_number: contactDigits,
+          landline_number: trimmedLandline || null,
           password,
           password_confirmation: confirmPw,
         },
@@ -218,12 +213,21 @@ export default function SignupScreen({navigation}) {
             ) : null}
 
             <Field
-              label="Fullname"
-              placeholder="Juan Dela Cruz"
-              value={name}
-              onChangeText={v => { clearError(); setName(v); }}
+              label="First Name"
+              placeholder="Juan"
+              value={firstName}
+              onChangeText={v => { clearError(); setFirstName(v); }}
               autoCapitalize="words"
-              textContentType="name"
+              textContentType="givenName"
+            />
+
+            <Field
+              label="Last Name"
+              placeholder="Dela Cruz"
+              value={lastName}
+              onChangeText={v => { clearError(); setLastName(v); }}
+              autoCapitalize="words"
+              textContentType="familyName"
             />
 
             <Field
@@ -231,6 +235,15 @@ export default function SignupScreen({navigation}) {
               placeholder="+63 963 645 6543"
               value={contact}
               onChangeText={v => { clearError(); setContact(v.replace(/[^0-9+\s-]/g, '')); }}
+              keyboardType="phone-pad"
+              textContentType="telephoneNumber"
+            />
+
+            <Field
+              label="Landline Number (Optional)"
+              placeholder="(02) 8123-4567"
+              value={landline}
+              onChangeText={v => { clearError(); setLandline(v.replace(/[^0-9()+\-\s]/g, '')); }}
               keyboardType="phone-pad"
               textContentType="telephoneNumber"
             />
@@ -287,7 +300,7 @@ export default function SignupScreen({navigation}) {
                   <Text style={s.btnText}>Creating...</Text>
                 </View>
               ) : (
-                <Text style={s.btnText}>Login</Text>
+                <Text style={s.btnText}>Create Account</Text>
               )}
             </TouchableOpacity>
           </View>
