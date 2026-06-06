@@ -60,6 +60,10 @@ Route::get('/contact', function () {
     return view('public.contact');
 })->name('public.contact');
 
+Route::get('/email/verify/{id}/{hash}', [\App\Http\Controllers\Api\VerificationController::class, 'verify'])
+    ->middleware(['signed'])
+    ->name('verification.verify');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
