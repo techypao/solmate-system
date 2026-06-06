@@ -1,8 +1,13 @@
 <?php
 
+use App\Http\Middleware\CheckSessionTimeout;
+use App\Http\Middleware\EnsureFrontendApiRequestsAreStateful;
+use App\Http\Middleware\EnsureUserIsNotArchived;
+use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\TrustProxies;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,23 +17,28 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->replace(
+            TrustProxies::class,
+            App\Http\Middleware\TrustProxies::class,
+        );
+
         $middleware->statefulApi();
         $middleware->validateCsrfTokens(except: [
             'api/register',
         ]);
 
         $middleware->api(prepend: [
-            \App\Http\Middleware\EnsureFrontendApiRequestsAreStateful::class,
+            EnsureFrontendApiRequestsAreStateful::class,
         ]);
 
         $middleware->web(append: [
-            \App\Http\Middleware\CheckSessionTimeout::class,
-            \App\Http\Middleware\EnsureUserIsNotArchived::class,
+            CheckSessionTimeout::class,
+            EnsureUserIsNotArchived::class,
         ]);
 
         $middleware->alias([
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
-            'active.user' => \App\Http\Middleware\EnsureUserIsNotArchived::class,
+            'role' => RoleMiddleware::class,
+            'active.user' => EnsureUserIsNotArchived::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
