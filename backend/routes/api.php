@@ -1,12 +1,12 @@
 <?php
 
+use App\Http\Controllers\Admin\NewsArticleController as AdminNewsArticleController;
 use App\Http\Controllers\Admin\PricingItemController;
 use App\Http\Controllers\Admin\PromotionController as AdminPromotionController;
 use App\Http\Controllers\Admin\QuotationSettingsController;
-use App\Http\Controllers\Admin\NewsArticleController as AdminNewsArticleController;
 use App\Http\Controllers\Admin\VisualHighlightController as AdminVisualHighlightController;
-use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminChatConversationController;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChatConversationController;
 use App\Http\Controllers\Api\CustomerAccountController;
 use App\Http\Controllers\Api\DeviceTokenController;
@@ -15,9 +15,9 @@ use App\Http\Controllers\CompletionReportController;
 use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\InspectionRequestController;
 use App\Http\Controllers\NewsArticleController;
-use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PreferredDateAvailabilityController;
+use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\QuotationLineItemController;
 use App\Http\Controllers\ServiceRequestController;
@@ -38,6 +38,8 @@ Route::post('/contact-messages', [ContactMessageController::class, 'store']);
 Route::middleware(['auth:sanctum', 'active.user'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/user/profile-picture', [AuthController::class, 'updateProfilePicture']);
+    Route::post('/save-fcm-token', [DeviceTokenController::class, 'store']);
+    Route::post('/remove-fcm-token', [DeviceTokenController::class, 'destroy']);
     Route::post('/save-device-token', [DeviceTokenController::class, 'store']);
 
     Route::get('/user', function (Request $request) {

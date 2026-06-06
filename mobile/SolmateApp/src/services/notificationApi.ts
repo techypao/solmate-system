@@ -1,4 +1,4 @@
-import {API_BASE_URL, apiDelete, apiGet, apiPatch, apiPost} from './api';
+import { API_BASE_URL, apiDelete, apiGet, apiPatch, apiPost } from './api';
 
 export type AppNotification = {
   id: string;
@@ -94,7 +94,9 @@ function normalizeNotification(value: any): AppNotification | null {
     entity_type:
       typeof value.entity_type === 'string' ? value.entity_type : null,
     entity_id:
-      typeof value.entity_id === 'number' ? value.entity_id : Number(value.entity_id) || null,
+      typeof value.entity_id === 'number'
+        ? value.entity_id
+        : Number(value.entity_id) || null,
     target_screen:
       typeof value.target_screen === 'string' ? value.target_screen : null,
     target_params: rawTargetParams,
@@ -113,12 +115,14 @@ function normalizeNotification(value: any): AppNotification | null {
   };
 }
 
-function extractNotifications(response: NotificationsResponse | AppNotification[]) {
+function extractNotifications(
+  response: NotificationsResponse | AppNotification[],
+) {
   const rawItems = Array.isArray(response)
     ? response
     : Array.isArray(response?.data)
-      ? response.data
-      : [];
+    ? response.data
+    : [];
 
   return rawItems
     .map(normalizeNotification)
@@ -134,7 +138,9 @@ export async function getNotifications() {
 }
 
 export async function getUnreadNotificationCount() {
-  const response = await apiGet<UnreadCountResponse>('/notifications/unread-count');
+  const response = await apiGet<UnreadCountResponse>(
+    '/notifications/unread-count',
+  );
 
   return typeof response?.unread_count === 'number' ? response.unread_count : 0;
 }
@@ -180,11 +186,25 @@ export async function saveDeviceToken(fcmToken: string, authToken: string) {
     hasAuthToken: authToken.length > 0,
   });
 
-  const response = await apiPost<SaveDeviceTokenResponse>('/save-device-token', {
-    fcm_token: fcmToken,
-  }, true, authToken);
+  const response = await apiPost<SaveDeviceTokenResponse>(
+    '/save-fcm-token',
+    {
+      token: fcmToken,
+    },
+    true,
+    authToken,
+  );
 
   console.log('[FCM] Save device token response:', response);
 
   return response;
+}
+
+export async function removeDeviceToken(authToken: string) {
+  return apiPost<SaveDeviceTokenResponse>(
+    '/remove-fcm-token',
+    undefined,
+    true,
+    authToken,
+  );
 }
