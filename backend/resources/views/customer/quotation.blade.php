@@ -221,17 +221,76 @@
     }
 
     .cqc-disclaimer {
-        margin: 0 0 20px;
-        padding: 12px 14px;
-        border-radius: 12px;
-        background: #f8fafc;
-        border: 1px solid #EAF9FD;
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr);
+        gap: 14px;
+        margin: 0 0 22px;
+        padding: 18px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #fffdf0 0%, #f8fafc 100%);
+        border: 1px solid #fde68a;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+        color: #5E7288;
+    }
+    .cqc-disclaimer-icon {
+        width: 42px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        background: rgba(244, 208, 0, 0.16);
+        color: #123A5A;
+        flex-shrink: 0;
+    }
+    .cqc-disclaimer-title {
+        margin: 0 0 8px;
+        color: #123A5A;
+        font-size: 16px;
+        font-weight: 800;
+    }
+    .cqc-disclaimer-copy,
+    .cqc-disclaimer-final {
+        margin: 0;
         color: #5E7288;
         font-size: 13px;
-        line-height: 1.6;
+        line-height: 1.65;
     }
-    .cqc-disclaimer strong {
+    .cqc-disclaimer-list-intro {
+        margin: 12px 0 8px;
         color: #123A5A;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.5;
+    }
+    .cqc-disclaimer-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 16px;
+        margin: 0 0 12px;
+        padding: 0;
+        list-style: none;
+    }
+    .cqc-disclaimer-list li {
+        position: relative;
+        padding-left: 16px;
+        color: #5E7288;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+    .cqc-disclaimer-list li::before {
+        content: "";
+        position: absolute;
+        top: 8px;
+        left: 0;
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: #F4D000;
+    }
+    .cqc-disclaimer-final {
+        color: #123A5A;
+        font-weight: 700;
     }
 
     .cqc-submit {
@@ -378,6 +437,12 @@
             padding-left: 18px;
             padding-right: 18px;
         }
+        .cqc-disclaimer {
+            grid-template-columns: 1fr;
+        }
+        .cqc-disclaimer-list {
+            grid-template-columns: 1fr;
+        }
         .cqc-result-grid {
             grid-template-columns: 1fr;
         }
@@ -434,8 +499,30 @@
                     <div id="cqc-bill-error" class="cqc-field-error"></div>
                 </div>
 
-                <div class="cqc-disclaimer">
-                    <strong>Disclaimer:</strong> Tax is not yet included in the estimate.
+                <div class="cqc-disclaimer" role="note" aria-label="Important notice about pre-inspection quotation accuracy">
+                    <div class="cqc-disclaimer-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 16v-4"/>
+                            <path d="M12 8h.01"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="cqc-disclaimer-title">Important Notice</p>
+                        <p class="cqc-disclaimer-copy">This pre-inspection quotation is an automated estimate based primarily on your submitted electricity consumption and current system assumptions. The actual system recommendation, pricing, projected savings, and return on investment may change after an on-site inspection.</p>
+                        <p class="cqc-disclaimer-list-intro">During the inspection, our technician will evaluate additional factors including, but not limited to:</p>
+                        <ul class="cqc-disclaimer-list">
+                            <li>Roof type, size, and usable installation area</li>
+                            <li>Roof orientation and house facing direction</li>
+                            <li>Shading from trees, nearby structures, or other obstructions</li>
+                            <li>Roof condition and structural considerations</li>
+                            <li>Available mounting locations and equipment placement</li>
+                            <li>Electrical panel and wiring conditions</li>
+                            <li>Site accessibility and installation complexity</li>
+                            <li>Local environmental and sunlight conditions</li>
+                        </ul>
+                        <p class="cqc-disclaimer-final">The final inspection-based quotation prepared after the technician's assessment should be considered the most accurate recommendation and pricing proposal.</p>
+                    </div>
                 </div>
 
                 <button type="submit" class="cqc-submit" id="cqc-submit-btn">

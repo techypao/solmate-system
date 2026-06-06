@@ -88,6 +88,18 @@ export default function App() {
     const unsubscribeForegroundMessages = messaging().onMessage(
       async remoteMessage => {
         console.log('[FCM] Foreground message received:', remoteMessage);
+
+        const title =
+          remoteMessage.notification?.title ||
+          remoteMessage.data?.title?.toString() ||
+          'New notification';
+        const body =
+          remoteMessage.notification?.body ||
+          remoteMessage.data?.body?.toString() ||
+          remoteMessage.data?.message?.toString() ||
+          'You have a new update.';
+
+        Alert.alert(title, body);
       },
     );
 

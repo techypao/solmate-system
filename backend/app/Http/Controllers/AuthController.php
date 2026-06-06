@@ -113,7 +113,7 @@ class AuthController extends Controller
         $firstName = trim($validated['first_name']);
         $lastName = trim($validated['last_name']);
 
-        User::create([
+        $user = User::create([
             'name' => trim($firstName.' '.$lastName),
             'first_name' => $firstName,
             'last_name' => $lastName,
@@ -126,6 +126,8 @@ class AuthController extends Controller
                 ? trim($validated['landline_number'])
                 : null,
         ]);
+
+        $user->sendEmailVerificationNotification();
 
         return redirect()
             ->route('register')

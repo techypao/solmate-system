@@ -19,6 +19,7 @@ import {
   SupportChatConversationPayload,
   SupportChatMessage,
 } from '../src/services/supportChatService';
+import {filterChatSuggestions} from '../src/utils/chatSuggestions';
 
 type ChatSender = 'user' | 'bot' | 'admin' | 'system';
 
@@ -203,7 +204,7 @@ export default function ChatbotScreen({navigation}: any) {
 
   const applyConversationPayload = useCallback((payload: SupportChatConversationPayload) => {
     setConversation(payload.conversation);
-    setMessages(payload.messages.map(mapServerMessage));
+    setMessages(mapServerMessages(payload.messages));
   }, []);
 
   const loadConversation = useCallback(async () => {
@@ -501,10 +502,37 @@ function createMessage(
   };
 }
 
-function mapServerMessage(message: SupportChatMessage): ChatMessage {
-  const suggestions = Array.isArray(message.metadata?.suggestions)
-    ? message.metadata.suggestions
-    : [];
+function mapServerMessages(serverMessages: SupportChatMessage[]) {
+  const askedQuestions = serverMessages
+    .filter(message => message.sender_type === 'user')
+    .map(message => message.body);
+  let latestUserQuestion = '';
+
+  return serverMessages.map(message => {
+    const chatMessage = mapServerMessage(
+      message,
+      askedQuestions,
+      message.sender_type === 'bot' ? latestUserQuestion : '',
+    );
+
+    if (message.sender_type === 'user') {
+      latestUserQuestion = message.body;
+    }
+
+    return chatMessage;
+  });
+}
+
+function mapServerMessage(
+  message: SupportChatMessage,
+  askedQuestions: string[] = [],
+  currentQuestion = '',
+): ChatMessage {
+  const suggestions = filterChatSuggestions(
+    message.metadata?.suggestions,
+    askedQuestions,
+    currentQuestion,
+  );
 
   return createMessage(
     message.body,

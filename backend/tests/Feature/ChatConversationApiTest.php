@@ -46,7 +46,7 @@ class ChatConversationApiTest extends TestCase
         Sanctum::actingAs($customer);
 
         $response = $this->postJson('/api/chat/conversation/messages', [
-            'message' => 'How do I request an inspection?',
+            'message' => 'How do I track an inspection?',
         ]);
 
         $response->assertOk()
@@ -54,6 +54,38 @@ class ChatConversationApiTest extends TestCase
             ->assertJsonPath('messages.0.sender_type', 'user')
             ->assertJsonPath('messages.1.sender_type', 'bot')
             ->assertJsonPath('messages.1.body', 'You can request an inspection from the customer dashboard.');
+    }
+
+    public function test_known_quotation_question_uses_exact_faq_mapping_before_gemini(): void
+    {
+        config()->set('services.gemini.api_key', 'test-key');
+
+        Http::fake([
+            'https://generativelanguage.googleapis.com/*' => Http::response([
+                'candidates' => [[
+                    'content' => [
+                        'parts' => [[
+                            'text' => '{"answer":"Your pre-inspection estimate is only an early guide.","suggestions":["What is a pre-inspection estimate?","Who prepares the final quotation?"]}',
+                        ]],
+                    ],
+                ]],
+            ]),
+        ]);
+
+        $customer = $this->createUser(User::ROLE_CUSTOMER, 'chat_customer_exact_quotation@example.com');
+        Sanctum::actingAs($customer);
+
+        $response = $this->postJson('/api/chat/conversation/messages', [
+            'message' => '  HOW DO I REQUEST A QUOTATION?  ',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('conversation.status', ChatConversation::STATUS_BOT)
+            ->assertJsonPath('messages.1.sender_type', 'bot')
+            ->assertJsonPath('messages.1.body', 'You can request a quotation by creating a pre-inspection estimate in the customer app. After inspection, the technician prepares the inspection-based quotation with the final technical details.')
+            ->assertJsonPath('messages.1.metadata.suggestions.0', 'What is a pre-inspection estimate?');
+
+        Http::assertNothingSent();
     }
 
     public function test_simple_questions_use_local_fallback_when_backend_gemini_key_is_missing(): void

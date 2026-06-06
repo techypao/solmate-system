@@ -11,6 +11,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { ApiError } from '../src/services/api';
 import CustomerBottomNav from '../src/components/CustomerBottomNav';
@@ -23,6 +24,19 @@ const GOLD = '#F5C000';
 const MUTED = '#6B7A99';
 const BG = '#C8D8F0';
 const CARD = '#ffffff';
+const BORDER = '#D4E0F2';
+const WARNING = '#7A4F00';
+
+const INSPECTION_FACTORS = [
+  'Roof type, size, and usable installation area',
+  'Roof orientation and house facing direction',
+  'Shading from trees, nearby structures, or other obstructions',
+  'Roof condition and structural considerations',
+  'Available mounting locations and equipment placement',
+  'Electrical panel and wiring conditions',
+  'Site accessibility and installation complexity',
+  'Local environmental and sunlight conditions',
+];
 
 /* ── helpers (unchanged) ───────────────────────────── */
 
@@ -160,6 +174,43 @@ export default function QuotationScreen({ navigation }: any) {
           <Text style={s.title}>Pre-Inspection Estimate</Text>
           <Text style={s.subtitle}>Input only: Monthly Electricity Bill</Text>
 
+          <View style={s.noticeCard}>
+            <View style={s.noticeHeader}>
+              <View style={s.noticeIconWrap}>
+                <Icon name="information-outline" size={24} color={NAVY} />
+              </View>
+              <Text style={s.noticeTitle}>Important Notice</Text>
+            </View>
+
+            <Text style={s.noticeText}>
+              This pre-inspection quotation is an automated estimate based
+              primarily on your submitted electricity consumption and current
+              system assumptions. The actual system recommendation, pricing,
+              projected savings, and return on investment may change after an
+              on-site inspection.
+            </Text>
+
+            <Text style={s.noticeIntro}>
+              During the inspection, our technician will evaluate additional
+              factors including, but not limited to:
+            </Text>
+
+            <View style={s.noticeList}>
+              {INSPECTION_FACTORS.map(factor => (
+                <View key={factor} style={s.noticeListItem}>
+                  <View style={s.noticeBullet} />
+                  <Text style={s.noticeListText}>{factor}</Text>
+                </View>
+              ))}
+            </View>
+
+            <Text style={s.noticeFinal}>
+              The final inspection-based quotation prepared after the
+              technician's assessment should be considered the most accurate
+              recommendation and pricing proposal.
+            </Text>
+          </View>
+
           {/* ── input card ── */}
           <View style={s.card}>
             <Text style={s.inputLabel}>{'Monthly Electricity Bill (₱)'}</Text>
@@ -211,10 +262,6 @@ export default function QuotationScreen({ navigation }: any) {
           >
             <Text style={s.secondaryBtnText}>Clear</Text>
           </Pressable>
-
-          <Text style={s.footerHint}>
-            The pre-inspection estimate is only a guide and may change after the technician's actual inspection.
-          </Text>
 
           {/* ── spacer before bottom area ── */}
           <View style={s.spacer} />
@@ -281,6 +328,82 @@ const s = StyleSheet.create({
     marginBottom: 22,
   },
 
+  /* notice card */
+  noticeCard: {
+    backgroundColor: '#fffdf0',
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: '#F3D76B',
+    padding: 18,
+    marginBottom: 22,
+    shadowColor: '#8a9bbd',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    elevation: 4,
+  },
+  noticeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  noticeIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: 'rgba(245, 192, 0, 0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  noticeTitle: {
+    flex: 1,
+    fontSize: 17,
+    fontWeight: '900',
+    color: NAVY,
+  },
+  noticeText: {
+    fontSize: 13,
+    color: MUTED,
+    lineHeight: 20,
+  },
+  noticeIntro: {
+    fontSize: 13,
+    color: NAVY,
+    fontWeight: '800',
+    lineHeight: 19,
+    marginTop: 14,
+    marginBottom: 10,
+  },
+  noticeList: {
+    marginBottom: 12,
+  },
+  noticeListItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  noticeBullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: GOLD,
+    marginTop: 7,
+    marginRight: 10,
+  },
+  noticeListText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 18,
+    color: MUTED,
+  },
+  noticeFinal: {
+    fontSize: 13,
+    color: WARNING,
+    lineHeight: 20,
+    fontWeight: '800',
+  },
+
   /* input card */
   card: {
     backgroundColor: CARD,
@@ -305,7 +428,7 @@ const s = StyleSheet.create({
     backgroundColor: '#f4f7fb',
     borderRadius: 28,
     borderWidth: 1,
-    borderColor: '#dfe6f0',
+    borderColor: BORDER,
     paddingHorizontal: 16,
     paddingVertical: 4,
   },
@@ -375,20 +498,12 @@ const s = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#dfe6f0',
+    borderColor: BORDER,
   },
   secondaryBtnText: {
     fontSize: 16,
     fontWeight: '800',
     color: NAVY,
-  },
-
-  /* footer hint */
-  footerHint: {
-    fontSize: 12,
-    color: MUTED,
-    fontStyle: 'italic',
-    marginBottom: 8,
   },
 
   /* spacer */

@@ -3,6 +3,7 @@
 @section('content')
     <script type="application/json" id="__data_requestAssignmentsUrl">@json($requestAssignmentsUrl)</script>
     <script type="application/json" id="__data_testimoniesUrl">@json($testimoniesUrl)</script>
+    <script type="application/json" id="__data_adminChatUrl">@json($adminChatUrl)</script>
     <style>
         .notification-summary-card {
             display: flex;
@@ -241,6 +242,7 @@
         const deleteAllButton = document.getElementById('delete-all-button');
         const requestAssignmentsUrl = JSON.parse(document.getElementById('__data_requestAssignmentsUrl').textContent);
         const testimoniesUrl = JSON.parse(document.getElementById('__data_testimoniesUrl').textContent);
+        const adminChatUrl = JSON.parse(document.getElementById('__data_adminChatUrl').textContent);
         let notificationsState = [];
         let deletingAllNotifications = false;
         let deletingNotificationId = null;
@@ -370,10 +372,22 @@
             deleteAllButton.disabled = notifications.length === 0 || deletingAllNotifications;
         }
 
+        function isChatNotification(notification) {
+            return notification?.type === 'chat_escalation'
+                || notification?.type === 'chat'
+                || notification?.type === 'admin_chat_escalation_requested'
+                || notification?.target_screen === 'AdminChat'
+                || notification?.entity_type === 'chat_conversation';
+        }
+
         function getNotificationTargetUrl(notification) {
             const targetParams = notification?.target_params || {};
             const requestId = Number(targetParams.requestId ?? targetParams.serviceRequestId ?? notification?.entity_id);
             const inspectionRequestId = Number(targetParams.inspectionRequestId ?? notification?.entity_id);
+
+            if (isChatNotification(notification)) {
+                return adminChatUrl;
+            }
 
             if (notification?.target_screen === 'AdminServiceRequestDetails' || notification?.entity_type === 'service_request') {
                 return Number.isFinite(requestId) && requestId > 0
