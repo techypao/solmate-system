@@ -45,6 +45,8 @@ class AuthController extends Controller
                 : null,
         ]);
 
+        \Log::info('REGISTER USER', ['email' => $user->email]);
+
         $user->sendEmailVerificationNotification();
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -65,21 +67,33 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        \Log::info('LOGIN ATTEMPT', [
+            'email' => $request->email,
+            'verified' => $user ? $user->hasVerifiedEmail() : null,
+        ]);
+
+        if (! $user) {
             return response()->json([
                 'message' => 'Invalid credentials',
             ], 401);
         }
 
-        if ($user->isArchivedCustomer()) {
+        if (! Hash::check($request->password, $user->password)) {
             return response()->json([
-                'message' => User::archivedAccountMessage(),
-            ], 403);
+                'message' => 'Invalid credentials',
+            ], 401);
         }
 
         if (! $user->hasVerifiedEmail()) {
             return response()->json([
-                'message' => 'Please verify your email before logging in.',
+                'message' => 'EMAIL_NOT_VERIFIED',
+                'error' => 'Please verify your email before logging in.',
+            ], 403);
+        }
+
+        if ($user->isArchivedCustomer()) {
+            return response()->json([
+                'message' => User::archivedAccountMessage(),
             ], 403);
         }
 
