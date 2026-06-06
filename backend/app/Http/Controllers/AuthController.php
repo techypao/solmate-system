@@ -168,9 +168,40 @@ class AuthController extends Controller
             ]
         );
 
-        Mail::raw('Click this link to verify your email: '.$verificationUrl, function ($message) use ($user): void {
+        Mail::send([], [], function ($message) use ($user, $verificationUrl): void {
             $message->to($user->email)
-                ->subject('Verify Your Email - SolMate');
+                ->subject('Verify Your Email - SolMate')
+                ->html('
+            <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 40px;">
+                
+                <div style="max-width: 500px; margin: auto; background: #ffffff; padding: 30px; border-radius: 10px; text-align: center;">
+                    
+                    <h2 style="color: #333;">Verify Your Email ✅</h2>
+
+                    <p style="color: #555;">
+                        Please click the button below to verify your account.
+                    </p>
+
+                    <a href="'.$verificationUrl.'" style="
+                        display: inline-block;
+                        padding: 12px 25px;
+                        font-size: 16px;
+                        color: white;
+                        background-color: #f4b400;
+                        border-radius: 6px;
+                        text-decoration: none;
+                        margin-top: 20px;
+                    ">
+                        Verify Email
+                    </a>
+
+                    <p style="margin-top: 20px; font-size: 12px; color: #888;">
+                        If you did not create this account, you can ignore this email.
+                    </p>
+
+                </div>
+            </div>
+        ');
         });
 
         \Log::info('EMAIL SENT MANUALLY', [
