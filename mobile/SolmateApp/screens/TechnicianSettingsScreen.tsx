@@ -19,6 +19,7 @@ import {
   updateTechnicianAccount,
   updateTechnicianPassword,
 } from '../src/services/technicianAccountApi';
+import {ApiError} from '../src/services/api';
 import {uploadProfilePicture} from '../src/services/profilePictureApi';
 import {getProfilePictureUrl} from '../src/utils/profilePicture';
 import {
@@ -58,6 +59,15 @@ function normalizePickedProfileAsset(
     name: firstAsset.fileName || null,
   };
 }
+
+function isForceLogoutEmailChanged(error: unknown) {
+  return (
+    error instanceof ApiError &&
+    error.status === 403 &&
+    (error.data as any)?.message === 'FORCE_LOGOUT_EMAIL_CHANGED'
+  );
+}
+
 /* ── main screen ── */
 export default function TechnicianSettingsScreen({navigation}: any) {
   const {logout, setUser, user} = useContext(AuthContext);
@@ -114,6 +124,15 @@ export default function TechnicianSettingsScreen({navigation}: any) {
       Alert.alert('Success', response.message);
       setExpandedPanel(null);
     } catch (error: any) {
+      if (isForceLogoutEmailChanged(error)) {
+        await logout();
+        navigation.reset({
+          index: 0,
+          routes: [{name: 'Login'}],
+        });
+        return;
+      }
+
       Alert.alert('Update failed', error?.message || 'Could not update your account information.');
     } finally {
       setProfileSubmitting(false);

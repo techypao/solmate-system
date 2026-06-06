@@ -115,6 +115,9 @@ export default function LoginScreen({navigation}) {
     }
   };
 
+  const isVerificationError =
+    error === 'Please verify your email before logging in.';
+
   const handleLogin = async () => {
     if (submitting) {
       return;
@@ -164,7 +167,19 @@ export default function LoginScreen({navigation}) {
           <View style={s.card}>
             {error ? (
               <View style={s.errorBox}>
-                <Text style={s.errorText}>{error}</Text>
+                <View style={s.errorIcon}>
+                  <MaterialCommunityIcons
+                    name="email-alert-outline"
+                    size={20}
+                    color={C.danger}
+                  />
+                </View>
+                <View style={s.errorCopy}>
+                  <Text style={s.errorTitle}>
+                    {isVerificationError ? 'Email not verified' : 'Login failed'}
+                  </Text>
+                  <Text style={s.errorText}>{error}</Text>
+                </View>
               </View>
             ) : null}
 
@@ -300,18 +315,39 @@ const s = StyleSheet.create({
 
   // Error
   errorBox: {
-    backgroundColor: C.dangerBg,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FFF7F7',
     borderWidth: 1,
     borderColor: C.dangerBdr,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    marginBottom: 12,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 16,
+  },
+  errorIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#FFE6E6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  errorCopy: {
+    flex: 1,
+    paddingTop: 1,
+  },
+  errorTitle: {
+    color: C.danger,
+    fontSize: 14,
+    fontWeight: '800',
+    marginBottom: 2,
   },
   errorText: {
-    color: C.danger,
-    fontSize: 13,
-    lineHeight: 18,
+    color: '#8F2D2D',
+    fontSize: 12,
+    lineHeight: 17,
   },
 
   // Field

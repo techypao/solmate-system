@@ -81,6 +81,14 @@ function getErrorMessage(data, fallbackMessage) {
     return validationMessage;
   }
 
+  if (typeof data?.error === 'string' && data.error.trim()) {
+    return data.error;
+  }
+
+  if (data?.message === 'EMAIL_NOT_VERIFIED') {
+    return 'Please verify your email before logging in.';
+  }
+
   if (typeof data?.message === 'string' && data.message.trim()) {
     return data.message;
   }

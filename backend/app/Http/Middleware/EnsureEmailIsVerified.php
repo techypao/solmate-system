@@ -21,9 +21,8 @@ class EnsureEmailIsVerified
         $user->tokens()->delete();
         DB::table('sessions')->where('user_id', $user->id)->delete();
 
-        Auth::logout();
-
         if ($request->hasSession()) {
+            Auth::guard('web')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
         }

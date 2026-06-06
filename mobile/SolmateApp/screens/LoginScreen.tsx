@@ -81,6 +81,9 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     navigation?.navigate?.('Register');
   };
 
+  const isVerificationError =
+    errorMessage === 'Please verify your email before logging in.';
+
   return (
     <KeyboardAvoidingView
       style={authStyles.screenContainer}
@@ -102,7 +105,17 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
         <View style={authStyles.card}>
           {errorMessage ? (
-            <Text style={authStyles.errorText}>{errorMessage}</Text>
+            <View style={authStyles.errorBox}>
+              <View style={authStyles.errorIcon}>
+                <Text style={authStyles.errorIconText}>!</Text>
+              </View>
+              <View style={authStyles.errorCopy}>
+                <Text style={authStyles.errorTitle}>
+                  {isVerificationError ? 'Email not verified' : 'Login failed'}
+                </Text>
+                <Text style={authStyles.errorText}>{errorMessage}</Text>
+              </View>
+            </View>
           ) : null}
 
           <Text style={authStyles.label}>Email</Text>

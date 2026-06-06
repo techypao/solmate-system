@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\PasswordValidation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 
 class TechnicianRegistrationController extends Controller
@@ -36,7 +38,7 @@ class TechnicianRegistrationController extends Controller
         $firstName = trim($validated['first_name']);
         $lastName = trim($validated['last_name']);
 
-        User::query()->create([
+        $user = User::query()->create([
             'name' => trim($firstName.' '.$lastName),
             'first_name' => $firstName,
             'last_name' => $lastName,
@@ -45,6 +47,37 @@ class TechnicianRegistrationController extends Controller
             'password' => $validated['password'],
             'role' => User::ROLE_TECHNICIAN,
         ]);
+
+        $user->email_verified_at = null;
+        $user->save();
+
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            [
+                'id' => $user->id,
+                'hash' => sha1($user->email),
+            ]
+        );
+
+        Mail::send([], [], function ($message) use ($user, $verificationUrl): void {
+            $message->to($user->email)
+                ->subject('Verify Your Email - SolMate')
+                ->html('
+            <div style="text-align:center; padding:20px;">
+                <h2>Verify Your Account</h2>
+                <p>An account was created for you. Please verify your email.</p>
+
+                <a href="'.$verificationUrl.'" style="padding:12px 20px; background:#facc15; color:#000; text-decoration:none; border-radius:6px;">
+                    Verify Email
+                </a>
+
+                <p style="font-size:12px; color:#888;">
+                    If you did not expect this, contact admin.
+                </p>
+            </div>
+        ');
+        });
 
         return redirect()
             ->route('admin.technicians.create')

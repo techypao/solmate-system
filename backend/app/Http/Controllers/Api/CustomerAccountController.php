@@ -53,7 +53,8 @@ class CustomerAccountController extends Controller
             DB::table('sessions')->where('user_id', $user->id)->delete();
 
             return response()->json([
-                'message' => 'Email updated. Please verify your new email and log in again.',
+                'message' => 'FORCE_LOGOUT_EMAIL_CHANGED',
+                'error' => 'You changed your email. Please verify and log in again.',
             ], 403);
         }
 

@@ -22,6 +22,7 @@ import {
   updateCustomerAccount,
   updateCustomerPassword,
 } from '../src/services/accountApi';
+import { ApiError } from '../src/services/api';
 import { uploadProfilePicture } from '../src/services/profilePictureApi';
 import {
   getProfilePictureUrl,
@@ -59,6 +60,14 @@ function formatProfileValue(value?: string | null) {
 
 function isValidLandlineNumber(value: string) {
   return /^(?=(?:.*\d){7,})[0-9()+\-\s]+$/.test(value);
+}
+
+function isForceLogoutEmailChanged(error: unknown) {
+  return (
+    error instanceof ApiError &&
+    error.status === 403 &&
+    (error.data as any)?.message === 'FORCE_LOGOUT_EMAIL_CHANGED'
+  );
 }
 
 type LocalProfileImageAsset = {
@@ -206,6 +215,15 @@ export default function CustomerSettingsScreen() {
       );
       Alert.alert('Success', response.message);
     } catch (error: any) {
+      if (isForceLogoutEmailChanged(error)) {
+        await logout();
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        });
+        return;
+      }
+
       Alert.alert(
         'Update failed',
         error?.message || 'Could not update your account information.',
