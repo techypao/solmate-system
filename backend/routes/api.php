@@ -35,7 +35,7 @@ Route::get('/public/promotions', [PromotionController::class, 'index']);
 Route::post('/contact-messages', [ContactMessageController::class, 'store']);
 
 // PROTECTED GENERAL ROUTES
-Route::middleware(['auth:sanctum', 'active.user'])->group(function () {
+Route::middleware(['auth:sanctum', 'active.user', 'verified.email'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/user/profile-picture', [AuthController::class, 'updateProfilePicture']);
     Route::post('/save-fcm-token', [DeviceTokenController::class, 'store']);
@@ -62,7 +62,7 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function () {
 });
 
 // ADMIN ROUTES
-Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+Route::middleware(['auth:sanctum', 'verified.email', 'role:admin'])->group(function () {
     Route::get('/admin-only', function () {
         return response()->json(['message' => 'Welcome Admin']);
     });
@@ -112,7 +112,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 });
 
 // TECHNICIAN ROUTES
-Route::middleware(['auth:sanctum', 'role:technician'])->group(function () {
+Route::middleware(['auth:sanctum', 'verified.email', 'role:technician'])->group(function () {
     Route::get('/technician-only', function () {
         return response()->json(['message' => 'Welcome Technician']);
     });
@@ -133,7 +133,7 @@ Route::middleware(['auth:sanctum', 'role:technician'])->group(function () {
 });
 
 // CUSTOMER ROUTES
-Route::middleware(['auth:sanctum', 'role:customer'])->group(function () {
+Route::middleware(['auth:sanctum', 'verified.email', 'role:customer'])->group(function () {
     Route::get('/customer-only', function () {
         return response()->json(['message' => 'Welcome Customer']);
     });
