@@ -279,7 +279,7 @@ export default function QuotationDetailScreen({route, navigation}: any) {
         {/* ── bottom nav ── */}
       </ScrollView>
 
-      <CustomerBottomNav activeTab="Services" />
+      <CustomerBottomNav activeTab="Quotations" />
     </SafeAreaView>
   );
 }

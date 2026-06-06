@@ -86,6 +86,9 @@
         var availabilityMessage = '';
         var visibleMonth = formatMonthStart(selectedDate || todayKey);
         var open = false;
+        var viewportPadding = 16;
+        var popoverGap = 10;
+        var pickerId = 'sdp-' + Math.random().toString(36).slice(2);
 
         mount.classList.add('sdp-field-host');
         mount.addEventListener('click', function (event) {
@@ -134,6 +137,97 @@
             mount.classList.toggle('has-error', !!hasError);
         }
 
+        function clamp(value, min, max) {
+            if (max < min) {
+                return min;
+            }
+
+            return Math.min(Math.max(value, min), max);
+        }
+
+        function positionPopover() {
+            if (!open) {
+                return;
+            }
+
+            var trigger = mount.querySelector('[data-sdp-trigger]');
+            var popover = getPopover();
+
+            if (!trigger || !popover || popover.hidden) {
+                return;
+            }
+
+            popover.classList.add('is-fixed');
+            popover.classList.remove('is-compact');
+            popover.style.removeProperty('--sdp-popover-left');
+            popover.style.removeProperty('--sdp-popover-top');
+
+            var viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+            var viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+            var maxLeft = Math.max(viewportPadding, viewportWidth - viewportPadding);
+            var maxTop = Math.max(viewportPadding, viewportHeight - viewportPadding);
+            var triggerRect = trigger.getBoundingClientRect();
+            var popoverRect = popover.getBoundingClientRect();
+            var popoverWidth = Math.min(popoverRect.width || 360, viewportWidth - (viewportPadding * 2));
+            var popoverHeight = Math.min(popoverRect.height || 0, viewportHeight - (viewportPadding * 2));
+            var spaceRight = viewportWidth - viewportPadding - triggerRect.left;
+            var spaceBelow = viewportHeight - viewportPadding - triggerRect.bottom;
+            var spaceAbove = triggerRect.top - viewportPadding;
+            var left = triggerRect.left;
+            var top = triggerRect.bottom + popoverGap;
+
+            if (popoverWidth > spaceRight && triggerRect.right - popoverWidth >= viewportPadding) {
+                left = triggerRect.right - popoverWidth;
+            }
+
+            if (spaceBelow < popoverHeight && spaceAbove > spaceBelow) {
+                top = triggerRect.top - popoverHeight - popoverGap;
+            }
+
+            if (
+                popoverWidth > viewportWidth - (viewportPadding * 2)
+                || popoverHeight > viewportHeight - (viewportPadding * 2)
+            ) {
+                left = (viewportWidth - popoverWidth) / 2;
+                top = (viewportHeight - popoverHeight) / 2;
+                popover.classList.add('is-compact');
+            }
+
+            left = clamp(left, viewportPadding, maxLeft - popoverWidth);
+            top = clamp(top, viewportPadding, maxTop - popoverHeight);
+
+            popover.style.setProperty('--sdp-popover-left', left + 'px');
+            popover.style.setProperty('--sdp-popover-top', top + 'px');
+        }
+
+        function schedulePopoverPosition() {
+            if (!open) {
+                return;
+            }
+
+            window.requestAnimationFrame(positionPopover);
+        }
+
+        function getPopover() {
+            return document.querySelector('[data-sdp-popover][data-sdp-owner="' + pickerId + '"]');
+        }
+
+        function removeDetachedPopover() {
+            var existingPopover = getPopover();
+
+            if (existingPopover && existingPopover.parentNode !== mount) {
+                existingPopover.parentNode.removeChild(existingPopover);
+            }
+        }
+
+        function portalPopover(popover) {
+            if (!open || !popover || popover.parentNode === document.body) {
+                return;
+            }
+
+            document.body.appendChild(popover);
+        }
+
         function getDayCells(monthKey) {
             var monthDate = parseMonthKey(monthKey);
             var year = monthDate.getFullYear();
@@ -162,6 +256,8 @@
         }
 
         function render() {
+            removeDetachedPopover();
+
             var cells = getDayCells(visibleMonth);
             var canGoPrev = visibleMonth > formatMonthStart(todayKey);
             var selectedIsUnavailable = Boolean(selectedDate && isUnavailable(selectedDate));
@@ -212,7 +308,7 @@
                 +   '</span>'
                 + '</button>'
                 + '<p class="sdp-help-text ' + (availabilityMessage ? 'is-warning' : '') + '">' + escapeHtml(helperMessage) + '</p>'
-                + '<div class="sdp-popover" data-sdp-popover' + (open ? '' : ' hidden') + '>'
+                + '<div class="sdp-popover" data-sdp-popover data-sdp-owner="' + escapeHtml(pickerId) + '"' + (open ? '' : ' hidden') + '>'
                 +   '<div class="sdp-selected-row">'
                 +     '<div>'
                 +       '<p class="sdp-selected-label">Selected Date</p>'
@@ -244,9 +340,10 @@
             setErrorState(selectedIsUnavailable);
 
             var trigger = mount.querySelector('[data-sdp-trigger]');
-            var prevBtn = mount.querySelector('[data-sdp-prev]');
-            var nextBtn = mount.querySelector('[data-sdp-next]');
-            var clearBtn = mount.querySelector('[data-sdp-clear]');
+            var popover = mount.querySelector('[data-sdp-popover]');
+            var prevBtn = popover ? popover.querySelector('[data-sdp-prev]') : null;
+            var nextBtn = popover ? popover.querySelector('[data-sdp-next]') : null;
+            var clearBtn = popover ? popover.querySelector('[data-sdp-clear]') : null;
 
             if (trigger) {
                 trigger.addEventListener('click', function (event) {
@@ -278,7 +375,7 @@
                 });
             }
 
-            Array.prototype.slice.call(mount.querySelectorAll('[data-sdp-date]')).forEach(function (button) {
+            Array.prototype.slice.call(popover ? popover.querySelectorAll('[data-sdp-date]') : []).forEach(function (button) {
                 button.addEventListener('click', function (event) {
                     event.preventDefault();
                     var value = button.getAttribute('data-sdp-date');
@@ -290,6 +387,11 @@
                     setOpen(false);
                 });
             });
+
+            if (open && popover) {
+                portalPopover(popover);
+                schedulePopoverPosition();
+            }
         }
 
         async function refreshAvailability() {
@@ -328,12 +430,17 @@
                 return;
             }
 
-            if (mount.contains(event.target)) {
+            var popover = getPopover();
+
+            if (mount.contains(event.target) || (popover && popover.contains(event.target))) {
                 return;
             }
 
             setOpen(false);
         });
+
+        window.addEventListener('resize', schedulePopoverPosition);
+        window.addEventListener('scroll', schedulePopoverPosition, true);
 
         syncInput();
         render();

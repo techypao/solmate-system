@@ -506,7 +506,7 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
         {/* ── bottom nav ── */}
       </ScrollView>
 
-      <CustomerBottomNav activeTab="Tracking" />
+      <CustomerBottomNav activeTab="Quotations" />
     </SafeAreaView>
   );
 }

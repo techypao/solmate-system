@@ -233,7 +233,7 @@ export default function QuotationScreen({ navigation }: any) {
           {/* ── bottom nav ── */}
         </ScrollView>
 
-        <CustomerBottomNav activeTab="Services" />
+        <CustomerBottomNav activeTab="Quotations" />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

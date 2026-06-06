@@ -9,6 +9,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import {ApiError} from '../src/services/api';
 import CustomerBottomNav from '../src/components/CustomerBottomNav';
@@ -41,6 +42,10 @@ type Quotation = {
 };
 
 type FilterKey = 'all' | 'initial' | 'final' | 'completed';
+type QuotationListRouteParams = {
+  initialFilter?: FilterKey;
+  lockFilter?: boolean;
+};
 
 /* ── format helpers (preserved) ── */
 
@@ -134,17 +139,26 @@ const FILTERS: {key: FilterKey; label: string}[] = [
   {key: 'final', label: 'Inspection-Based'},
 ];
 
+function normalizeFilter(value?: string): FilterKey {
+  return FILTERS.some(filter => filter.key === value)
+    ? (value as FilterKey)
+    : 'all';
+}
+
 /* ══════════════════════════════════════════
    Main screen
    ══════════════════════════════════════════ */
 
-export default function QuotationListScreen({navigation}: any) {
+export default function QuotationListScreen({navigation, route}: any) {
   const {width} = useWindowDimensions();
+  const routeParams = (route?.params ?? {}) as QuotationListRouteParams;
+  const initialRouteFilter = normalizeFilter(routeParams.initialFilter);
+  const lockFilter = routeParams.lockFilter === true && initialRouteFilter !== 'all';
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
+  const [activeFilter, setActiveFilter] = useState<FilterKey>(initialRouteFilter);
   const isCompactLayout = width < 390;
 
   /* ── fetch (preserved) ── */
@@ -155,7 +169,11 @@ export default function QuotationListScreen({navigation}: any) {
         if (showLoadingState) setLoading(true);
         setErrorMessage('');
         const data = await getQuotations();
-        setQuotations(Array.isArray(data) ? data : []);
+        setQuotations(
+          Array.isArray(data)
+            ? data.filter(item => item && typeof item.id === 'number')
+            : [],
+        );
       } catch (error) {
         if (error instanceof ApiError) {
           setErrorMessage(error.message);
@@ -176,6 +194,10 @@ export default function QuotationListScreen({navigation}: any) {
     fetchQuotations(true);
   }, [fetchQuotations]);
 
+  useEffect(() => {
+    setActiveFilter(initialRouteFilter);
+  }, [initialRouteFilter]);
+
   const handleRefresh = () => {
     setRefreshing(true);
     fetchQuotations(false);
@@ -194,6 +216,26 @@ export default function QuotationListScreen({navigation}: any) {
       q => (q.quotation_type || '').toLowerCase() === activeFilter,
     );
   }, [quotations, activeFilter]);
+
+  const visibleFilters = lockFilter
+    ? FILTERS.filter(filter => filter.key === activeFilter)
+    : FILTERS;
+  const screenTitle =
+    lockFilter && activeFilter === 'final'
+      ? 'Inspection-Based Quotations'
+      : 'My Quotations';
+  const isInspectionOnly = lockFilter && activeFilter === 'final';
+  const emptyIconName = isInspectionOnly
+    ? 'clipboard-text-search-outline'
+    : 'file-document-outline';
+  const emptyTitle =
+    isInspectionOnly
+      ? 'No inspection-based quotations yet'
+      : 'No quotations yet';
+  const emptyText =
+    isInspectionOnly
+      ? 'Quotations prepared by technicians after property inspections will appear here.'
+      : 'Your pre-inspection estimates and inspection-based quotations will appear here once they are created.';
 
   /* ── navigation helpers (preserved) ── */
 
@@ -299,8 +341,8 @@ export default function QuotationListScreen({navigation}: any) {
   /* ── main render ── */
 
   return (
-    <SafeAreaView style={s.safe}>
-      <View style={s.headerBar}>
+    <SafeAreaView style={[s.safe, isInspectionOnly && s.safeInspectionOnly]}>
+      <View style={[s.headerBar, isInspectionOnly && s.headerBarCompact]}>
         {/* back */}
         <Pressable
           hitSlop={14}
@@ -309,42 +351,44 @@ export default function QuotationListScreen({navigation}: any) {
           <Text style={s.backIcon}>{'\u2039'}</Text>
         </Pressable>
 
-        <Text style={s.headerTitle}>My Quotations</Text>
+        <Text style={s.headerTitle}>{screenTitle}</Text>
 
         {/* placeholder for symmetry */}
         <View style={s.headerSpacer} />
       </View>
 
       {/* content area */}
-      <View style={s.contentArea}>
+      <View style={[s.contentArea, isInspectionOnly && s.contentAreaCompact]}>
         {/* filter chips */}
-        <View style={s.filterSection}>
-          <View style={s.filterRow}>
-            {FILTERS.map(f => {
-              const active = activeFilter === f.key;
-              return (
-                <Pressable
-                  key={f.key}
-                  onPress={() => setActiveFilter(f.key)}
-                  style={({pressed}) => [
-                    s.chip,
-                    isCompactLayout && s.chipCompact,
-                    active && s.chipActive,
-                    pressed && s.pressed,
-                  ]}>
-                  <Text
-                    style={[
-                      s.chipText,
-                      isCompactLayout && s.chipTextCompact,
-                      active && s.chipTextActive,
+        {!lockFilter ? (
+          <View style={s.filterSection}>
+            <View style={s.filterRow}>
+              {visibleFilters.map(f => {
+                const active = activeFilter === f.key;
+                return (
+                  <Pressable
+                    key={f.key}
+                    onPress={() => setActiveFilter(f.key)}
+                    style={({pressed}) => [
+                      s.chip,
+                      isCompactLayout && s.chipCompact,
+                      active && s.chipActive,
+                      pressed && s.pressed,
                     ]}>
-                    {f.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
+                    <Text
+                      style={[
+                        s.chipText,
+                        isCompactLayout && s.chipTextCompact,
+                        active && s.chipTextActive,
+                      ]}>
+                      {f.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
-        </View>
+        ) : null}
 
         {/* error */}
         {errorMessage ? (
@@ -353,13 +397,12 @@ export default function QuotationListScreen({navigation}: any) {
 
         {/* empty */}
         {!errorMessage && filteredQuotations.length === 0 ? (
-          <View style={s.emptyState}>
-            <View style={s.emptyIcon} />
-            <Text style={s.emptyTitle}>No quotations yet</Text>
-            <Text style={s.emptyText}>
-              Your pre-inspection estimates and inspection-based quotations will appear here once they are
-              created.
-            </Text>
+          <View style={[s.emptyState, isInspectionOnly && s.emptyStateCompact]}>
+            <View style={s.emptyIcon}>
+              <Icon name={emptyIconName} size={28} color={NAVY} />
+            </View>
+            <Text style={s.emptyTitle}>{emptyTitle}</Text>
+            <Text style={s.emptyText}>{emptyText}</Text>
           </View>
         ) : null}
 
@@ -378,7 +421,7 @@ export default function QuotationListScreen({navigation}: any) {
       </View>
 
       {/* ── bottom nav ── */}
-      <CustomerBottomNav activeTab="Services" />
+      <CustomerBottomNav activeTab="Quotations" />
     </SafeAreaView>
   );
 }
@@ -387,6 +430,7 @@ export default function QuotationListScreen({navigation}: any) {
 
 const s = StyleSheet.create({
   safe: {flex: 1, backgroundColor: CARD},
+  safeInspectionOnly: {backgroundColor: BG},
   pressed: {opacity: 0.85},
   center: {
     flex: 1,
@@ -404,6 +448,11 @@ const s = StyleSheet.create({
     paddingTop: 14,
     paddingBottom: 90,
     backgroundColor: CARD,
+  },
+  headerBarCompact: {
+    backgroundColor: BG,
+    paddingTop: 18,
+    paddingBottom: 22,
   },
   backBtn: {
     width: 36,
@@ -431,6 +480,11 @@ const s = StyleSheet.create({
     borderTopRightRadius: 26,
     paddingTop: 16,
     paddingHorizontal: 18,
+  },
+  contentAreaCompact: {
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    paddingTop: 8,
   },
 
   /* filter row */
@@ -498,9 +552,17 @@ const s = StyleSheet.create({
     shadowRadius: 12,
     elevation: 3,
   },
+  emptyStateCompact: {
+    borderRadius: 22,
+    marginTop: 6,
+    paddingHorizontal: 26,
+    paddingVertical: 34,
+  },
   emptyIcon: {
+    alignItems: 'center',
     backgroundColor: BG,
     borderRadius: 999,
+    justifyContent: 'center',
     height: 52,
     marginBottom: 14,
     width: 52,

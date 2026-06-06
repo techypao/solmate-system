@@ -19,6 +19,7 @@ import ServiceRequestDetailScreen from '../../screens/ServiceRequestDetailScreen
 import ServiceRequestListScreen from '../../screens/ServiceRequestListScreen';
 import ServiceRequestScreen from '../../screens/ServiceRequestScreen';
 import TrackingHubScreen from '../../screens/TrackingHubScreen';
+import QuotationHubScreen from '../../screens/QuotationHubScreen';
 import QuotationScreen from '../../screens/QuotationScreen';
 import QuotationListScreen from '../../screens/QuotationListScreen';
 import QuotationDetailScreen from '../../screens/QuotationDetailScreen';
@@ -151,6 +152,12 @@ export default function CustomerStack() {
         name="ServiceRequestDetail"
         component={ServiceRequestDetailScreen}
         initialParams={{ mode: 'customer' }}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="QuotationHub"
+        component={QuotationHubScreen}
         options={{ headerShown: false }}
       />
 

@@ -74,14 +74,44 @@
         top: calc(100% + 10px);
         left: 0;
         z-index: 40;
-        width: min(360px, 100%);
-        max-width: 100%;
+        width: min(360px, calc(100vw - 32px));
+        max-width: calc(100vw - 32px);
         background: #fff;
         border: 1px solid #DDE7EE;
         border-radius: 18px;
         box-shadow: 0 24px 44px rgba(15, 23, 42, .16);
         padding: 14px;
         box-sizing: border-box;
+    }
+
+    .sdp-popover.is-fixed {
+        position: fixed;
+        top: var(--sdp-popover-top, auto);
+        right: auto;
+        bottom: auto;
+        left: var(--sdp-popover-left, 16px);
+        z-index: 10000;
+        width: min(360px, calc(100vw - 32px));
+        max-height: calc(100vh - 32px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .sdp-popover.is-compact {
+        padding: 12px;
+    }
+
+    .sdp-popover.is-compact .sdp-selected-row {
+        margin-bottom: 10px;
+    }
+
+    .sdp-popover.is-compact .sdp-legend {
+        margin-bottom: 10px;
+    }
+
+    .sdp-popover.is-compact .sdp-day,
+    .sdp-popover.is-compact .sdp-day-spacer {
+        min-height: 36px;
     }
 
     .sdp-popover[hidden] {
@@ -209,6 +239,7 @@
         display: grid;
         grid-template-columns: repeat(7, minmax(0, 1fr));
         gap: 6px;
+        min-width: 0;
     }
 
     .sdp-weekday {
@@ -219,6 +250,8 @@
         letter-spacing: .04em;
         text-transform: uppercase;
         padding-bottom: 2px;
+        min-width: 0;
+        overflow: hidden;
     }
 
     .sdp-day-spacer {
@@ -226,10 +259,13 @@
     }
 
     .sdp-day {
+        width: 100%;
+        min-width: 0;
         min-height: 42px;
         border: 1px solid #edf2f7;
         border-radius: 12px;
         background: #fff;
+        padding: 0;
         color: #123A5A;
         font-size: 13px;
         font-weight: 700;
@@ -299,7 +335,43 @@
 
     @media (max-width: 640px) {
         .sdp-popover {
-            width: 100%;
+            width: min(100%, calc(100vw - 32px));
+            max-width: calc(100vw - 32px);
+        }
+
+        .sdp-popover.is-fixed {
+            width: calc(100vw - 32px);
+            max-width: calc(100vw - 32px);
+            max-height: calc(100vh - 32px);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .sdp-popover.is-fixed {
+            padding: 10px;
+        }
+
+        .sdp-calendar-head {
+            gap: 8px;
+        }
+
+        .sdp-weekdays,
+        .sdp-grid {
+            gap: 4px;
+        }
+
+        .sdp-nav-btn {
+            width: 32px;
+            height: 32px;
+        }
+
+        .sdp-day,
+        .sdp-day-spacer {
+            min-height: 36px;
+        }
+
+        .sdp-weekday {
+            font-size: 10px;
         }
     }
 </style>

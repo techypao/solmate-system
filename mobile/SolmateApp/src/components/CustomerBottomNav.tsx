@@ -14,6 +14,7 @@ const ICON_COLOR = '#1d2f6d';
 
 export type CustomerBottomNavTab =
   | 'Home'
+  | 'Quotations'
   | 'Services'
   | 'Tracking'
   | 'Profile';
@@ -27,6 +28,12 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   {key: 'Home', label: 'Home', icon: 'home-outline', routeName: 'Home'},
+  {
+    key: 'Quotations',
+    label: 'Quotations',
+    icon: 'file-document-outline',
+    routeName: 'QuotationHub',
+  },
   {
     key: 'Services',
     label: 'Services',
@@ -74,7 +81,7 @@ export default function CustomerBottomNav({
               name={item.icon}
               size={22}
               color={isActive ? ICON_COLOR : '#9AAABE'}
-              style={{marginBottom: 2}}
+              style={styles.navIcon}
             />
             <Text style={isActive ? styles.navLabelActive : styles.navLabel}>
               {item.label}
@@ -107,8 +114,9 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   navItem: {
+    flex: 1,
     alignItems: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: 4,
     paddingVertical: 8,
     borderRadius: 16,
   },
@@ -117,7 +125,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(245, 192, 0, 0.38)',
   },
-  navIcon: {},
+  navIcon: {
+    marginBottom: 2,
+  },
   navIconActive: {},
   navLabel: {
     fontSize: 11,
