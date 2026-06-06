@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Support\PasswordValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
@@ -45,16 +46,12 @@ class AuthController extends Controller
                 : null,
         ]);
 
-        \Log::info('REGISTER USER', ['email' => $user->email]);
-
         $user->sendEmailVerificationNotification();
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        Log::info('REGISTER USER', ['email' => $user->email]);
 
         return response()->json([
-            'message' => 'User registered successfully',
-            'token' => $token,
-            'user' => $user,
+            'message' => 'Registered successfully. Please verify your email.',
         ], 201);
     }
 
@@ -67,8 +64,9 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        \Log::info('LOGIN ATTEMPT', [
+        Log::info('LOGIN ATTEMPT START', [
             'email' => $request->email,
+            'user_found' => !! $user,
             'verified' => $user ? $user->hasVerifiedEmail() : null,
         ]);
 
@@ -99,13 +97,16 @@ class AuthController extends Controller
 
         $user->markLoginRecorded();
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('authToken')->plainTextToken;
+
+        Log::info('LOGIN SUCCESS', [
+            'email' => $user->email,
+        ]);
 
         return response()->json([
-            'message' => 'Login successful',
             'token' => $token,
             'user' => $user,
-        ], 200);
+        ]);
     }
 
     public function logout(Request $request)

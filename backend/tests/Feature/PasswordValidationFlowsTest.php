@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -19,6 +20,7 @@ class PasswordValidationFlowsTest extends TestCase
         parent::setUp();
 
         $this->withoutMiddleware(ValidateCsrfToken::class);
+        Notification::fake();
     }
 
     public static function invalidPasswordProvider(): array
@@ -87,7 +89,7 @@ class PasswordValidationFlowsTest extends TestCase
             'password_confirmation' => 'Password123!',
         ])
             ->assertCreated()
-            ->assertJsonPath('message', 'User registered successfully');
+            ->assertJsonPath('message', 'Registered successfully. Please verify your email.');
 
         $this->assertDatabaseHas('users', [
             'email' => 'api_customer_valid@example.com',
@@ -126,7 +128,7 @@ class PasswordValidationFlowsTest extends TestCase
             'password_confirmation' => 'Password123!',
         ])
             ->assertCreated()
-            ->assertJsonPath('message', 'User registered successfully');
+            ->assertJsonPath('message', 'Registered successfully. Please verify your email.');
     }
 
     public function test_api_registration_allows_an_empty_landline_number(): void
@@ -142,7 +144,7 @@ class PasswordValidationFlowsTest extends TestCase
             'password_confirmation' => 'Password123!',
         ])
             ->assertCreated()
-            ->assertJsonPath('message', 'User registered successfully');
+            ->assertJsonPath('message', 'Registered successfully. Please verify your email.');
 
         $this->assertDatabaseHas('users', [
             'email' => 'api_customer_landline_optional@example.com',

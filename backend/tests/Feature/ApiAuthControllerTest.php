@@ -22,6 +22,7 @@ class ApiAuthControllerTest extends TestCase
             'role' => User::ROLE_CUSTOMER,
             'archived_at' => now(),
         ]);
+        $customer->forceFill(['email_verified_at' => now()])->save();
 
         $response = $this->postJson('/api/login', [
             'email' => $customer->email,
@@ -42,6 +43,7 @@ class ApiAuthControllerTest extends TestCase
             'password' => 'Password123!',
             'role' => User::ROLE_CUSTOMER,
         ]);
+        $customer->forceFill(['email_verified_at' => now()])->save();
 
         $this->postJson('/api/login', [
             'email' => $customer->email,
@@ -49,6 +51,27 @@ class ApiAuthControllerTest extends TestCase
         ])->assertOk();
 
         $this->assertNotNull($customer->fresh()->last_login_at);
+    }
+
+    public function test_unverified_customer_cannot_log_in_via_api(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Unverified API Customer',
+            'email' => 'unverified_api_customer@example.com',
+            'password' => 'Password123!',
+            'role' => User::ROLE_CUSTOMER,
+            'email_verified_at' => null,
+        ]);
+
+        $this->postJson('/api/login', [
+            'email' => $customer->email,
+            'password' => 'Password123!',
+        ])
+            ->assertStatus(403)
+            ->assertJson([
+                'message' => 'EMAIL_NOT_VERIFIED',
+                'error' => 'Please verify your email before logging in.',
+            ]);
     }
 
     public function test_archived_customer_with_existing_token_is_blocked_from_authenticated_api_routes(): void
