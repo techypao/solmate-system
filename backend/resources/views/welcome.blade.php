@@ -122,8 +122,9 @@
         .gst-app-panel-tag { display: inline-flex; align-items: center; width: fit-content; padding: 6px 11px; border-radius: 999px; background: #FFF7CC; color: #92400e; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
         .gst-app-panel-title { margin: 14px 0 8px; font-size: 22px; font-weight: 700; color: #123A5A; line-height: 1.2; }
         .gst-app-panel-copy { margin: 0; font-size: 14px; line-height: 1.75; color: #5E7288; }
+        .gst-app-qr-frame { width: min(220px, 100%); margin: 22px auto 18px; padding: 14px; border-radius: 20px; background: #ffffff; border: 1px solid #DDE7EE; box-shadow: 0 12px 28px rgba(15,23,42,0.09); }
+        .gst-app-qr-frame img { display: block; width: 100%; height: auto; border-radius: 14px; }
         .gst-app-panel-note { margin-top: 18px; padding: 14px 16px; border-radius: 14px; background: #F8FAFC; border: 1px dashed #DDE7EE; color: #5E7288; font-size: 13px; line-height: 1.65; }
-        .gst-app-panel-btn { margin-top: 20px; min-height: 48px; border: 1.5px dashed #CBDDE8; border-radius: 12px; background: #F8FAFC; color: #94A3B8; font-size: 13px; font-weight: 700; cursor: not-allowed; }
 
         /* NEWS */
         .gst-news { background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%); padding: 80px 32px; }
@@ -801,44 +802,26 @@
     <div class="gst-app-inner">
         <div class="gst-section-heading">
             <span class="gst-section-eyebrow">Mobile App</span>
-            <h2 class="gst-section-title">Download the SolMate app</h2>
-            <p class="gst-section-sub">This download area now lives directly on the homepage, so visitors can view it without being redirected to login.</p>
+            <h2 class="gst-section-title">Download Our Mobile App</h2>
+            <p class="gst-section-sub">Install the app using one of the methods below:</p>
         </div>
         <div class="gst-app-shell">
             <article class="gst-app-card">
-                <span class="gst-app-badge">Android APK</span>
-                <h3 class="gst-app-title">The public app-download section is ready on the landing page.</h3>
-                <p class="gst-app-copy">Once your Android build is ready for release, this section can display the current APK version, release notes, file size, and installation instructions directly on the homepage.</p>
-                <div class="gst-app-points">
-                    <div class="gst-app-point">
-                        <span class="gst-app-point-dot" aria-hidden="true"></span>
-                        <div>
-                            <strong>Latest APK slot</strong>
-                            <span>Prepared for the version name, build date, and download size.</span>
-                        </div>
-                    </div>
-                    <div class="gst-app-point">
-                        <span class="gst-app-point-dot" aria-hidden="true"></span>
-                        <div>
-                            <strong>Install guide area</strong>
-                            <span>Ready for the steps customers need before installing from Android.</span>
-                        </div>
-                    </div>
-                    <div class="gst-app-point">
-                        <span class="gst-app-point-dot" aria-hidden="true"></span>
-                        <div>
-                            <strong>Release notes block</strong>
-                            <span>Reserved for feature highlights, fixes, and important update reminders.</span>
-                        </div>
-                    </div>
+                <span class="gst-app-badge">Method 1</span>
+                <h3 class="gst-app-title">QR Code</h3>
+                <p class="gst-app-copy">Scan this QR code using your phone to download the app.</p>
+                <div class="gst-app-qr-frame">
+                    <img src="{{ asset('images/app-qr.png') }}" alt="QR code to download the SolMate mobile app APK">
                 </div>
             </article>
             <aside class="gst-app-panel">
-                <span class="gst-app-panel-tag">Coming Soon</span>
-                <h3 class="gst-app-panel-title">Download will appear here</h3>
-                <p class="gst-app-panel-copy">The APK is not published yet, but the public-facing download area is already in place on the homepage.</p>
-                <div class="gst-app-panel-note">When you are ready, I can replace this placeholder with a live APK button and version details.</div>
-                <button type="button" class="gst-app-panel-btn" disabled>APK Download Unavailable</button>
+                <span class="gst-app-panel-tag">Method 2</span>
+                <h3 class="gst-app-panel-title">Direct Download</h3>
+                <p class="gst-app-panel-copy">Use this option if you are already browsing on your Android phone.</p>
+                <div class="gst-app-panel-note">After downloading, open the APK file on your phone to install the SolMate app.</div>
+                <div class="gst-hero-actions">
+                    <a href="https://drive.google.com/file/d/1AZnWwNtpJDn7MQWgTo4BKrHEams2B_mh/view?usp=sharing" class="gst-cta-primary" target="_blank" rel="noopener">Download APK</a>
+                </div>
             </aside>
         </div>
     </div>

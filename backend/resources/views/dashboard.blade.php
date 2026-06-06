@@ -111,6 +111,29 @@
     }
     .dash-banner-meta-item svg { color: #5E7288; }
 
+    /* App download */
+    .dash-app-download-grid {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 20px;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+    .dash-app-download-qr {
+        background: #ffffff;
+        border: 1px solid #DDE7EE;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(15,23,42,0.08);
+        padding: 10px;
+        width: 138px;
+    }
+    .dash-app-download-qr img {
+        border-radius: 8px;
+        display: block;
+        height: auto;
+        width: 100%;
+    }
+
     /* Tab Nav */
     .dash-tabs {
         display: flex;
@@ -531,6 +554,7 @@
         .dash-info-row { grid-template-columns: 1fr; gap: 2px; }
         .dash-form-row { grid-template-columns: 1fr; }
         .dash-profile-picture-panel { grid-template-columns: 1fr; justify-items: flex-start; }
+        .dash-app-download-grid { grid-template-columns: 1fr; justify-items: center; text-align: center; }
         .dash-tab-btn { padding: 12px 14px; font-size: 13px; }
         .adm-hero { padding: 28px 22px; }
         .adm-title { font-size: 25px; }
@@ -573,6 +597,21 @@
                     <span id="dash-banner-email">{{ $user->email }}</span>
                 </span>
             </div>
+        </div>
+    </div>
+
+    {{-- App Download --}}
+    <div class="card dash-app-download-grid">
+        <div>
+            <h2 class="dash-section-title">Download Our Mobile App</h2>
+            <p class="dash-form-helper">Install the app using one of the methods below:</p>
+            <p class="dash-form-helper">Scan this QR code using your phone to download the app.</p>
+            <div class="dash-action-row">
+                <a href="https://drive.google.com/file/d/1AZnWwNtpJDn7MQWgTo4BKrHEams2B_mh/view?usp=sharing" class="dash-btn dash-btn-gold" target="_blank" rel="noopener">Download APK</a>
+            </div>
+        </div>
+        <div class="dash-app-download-qr">
+            <img src="{{ asset('images/app-qr.png') }}" alt="QR code to download the SolMate mobile app APK">
         </div>
     </div>
 
