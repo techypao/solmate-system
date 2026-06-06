@@ -10,7 +10,6 @@ import {
   View,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import TechnicianBottomNav from '../src/components/TechnicianBottomNav';
 
 import {AppButton, StatusBadge} from '../components';
@@ -25,9 +24,11 @@ import {
 } from '../src/services/technicianApi';
 import {
   canCreateFinalQuotation,
+  formatDisplayValue,
   formatDateTime,
   getCustomerName,
   formatServiceRequestStatus,
+  normalizeRequestStatus,
 } from '../src/utils/technicianRequests';
 import {getSolmateStatusColors} from '../src/theme/colors';
 
@@ -39,7 +40,6 @@ const CARD   = '#ffffff';
 const MUTED = '#6B7A99';
 const SHADOW = '#8a9bbd';
 const BORDER = '#D4E0F2';
-const SOFT_YELLOW = '#FFF7CC';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 function getFriendlyErrorMessage(error: unknown) {
@@ -47,14 +47,15 @@ function getFriendlyErrorMessage(error: unknown) {
   return 'Could not load the inspection request details.';
 }
 
-function formatIRQId(id: number) {
-  return `IRQ-${String(id).padStart(4, '0')}`;
+function formatIRQId(id: unknown) {
+  return `IRQ-${formatDisplayValue(id, '0').padStart(4, '0')}`;
 }
 
-function formatSchedule(dateNeeded?: string | null) {
-  if (!dateNeeded) {return 'Not specified';}
-  const d = new Date(dateNeeded);
-  if (isNaN(d.getTime())) {return dateNeeded;}
+function formatSchedule(dateNeeded?: unknown) {
+  const dateValue = formatDisplayValue(dateNeeded, '');
+  if (!dateValue) {return 'Not specified';}
+  const d = new Date(dateValue);
+  if (isNaN(d.getTime())) {return dateValue;}
   return (
     d.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'}) +
     ' • ' +
@@ -62,12 +63,14 @@ function formatSchedule(dateNeeded?: string | null) {
   );
 }
 
-function isScheduledForToday(dateNeeded?: string | null) {
-  if (!dateNeeded) {
+function isScheduledForToday(dateNeeded?: unknown) {
+  const dateValue = formatDisplayValue(dateNeeded, '');
+
+  if (!dateValue) {
     return false;
   }
 
-  const scheduledDate = new Date(dateNeeded);
+  const scheduledDate = new Date(dateValue);
   if (isNaN(scheduledDate.getTime())) {
     return false;
   }
@@ -122,12 +125,28 @@ function TimelineItem({
   );
 }
 
+const STATUS_OPTIONS: Array<{
+  label: string;
+  value: TechnicianUpdatableStatus;
+  currentStatuses: string[];
+  successMessage: string;
+}> = [
+  {
+    label: 'Mark In Progress',
+    value: 'in_progress',
+    currentStatuses: ['assigned'],
+    successMessage: 'The inspection request is now in progress.',
+  },
+];
+
 // ─── InfoRow ──────────────────────────────────────────────────────────────────
-function InfoRow({label, value}: {label: string; value?: string | null}) {
+function InfoRow({label, value}: {label: string; value?: unknown}) {
   return (
     <View style={s.infoRow}>
       <Text style={s.infoLabel}>{label}</Text>
-      <Text style={s.infoValue}>{value || 'Not available'}</Text>
+      <Text style={s.infoValue}>
+        {formatDisplayValue(value, 'Not available')}
+      </Text>
     </View>
   );
 }
@@ -332,7 +351,7 @@ export default function RequestDetailsScreen({navigation, route}: any) {
       });
     }
 
-    const normalizedStatus = (inspectionRequest.status || '').toLowerCase();
+    const normalizedStatus = normalizeRequestStatus(inspectionRequest.status);
 
     if (['assigned', 'in_progress', 'completed'].includes(normalizedStatus)) {
       events.push({
@@ -359,7 +378,8 @@ export default function RequestDetailsScreen({navigation, route}: any) {
     }
 
     if (
-      (inspectionRequest.completion_report?.status || '').toLowerCase() === 'approved'
+      normalizeRequestStatus(inspectionRequest.completion_report?.status) ===
+      'approved'
     ) {
       events.push({
         datetime: formatDateTime(inspectionRequest.completion_report?.approved_at),
@@ -425,20 +445,20 @@ export default function RequestDetailsScreen({navigation, route}: any) {
 
   const canCreateQuote = canCreateFinalQuotation(inspectionRequest.status);
   const hasFinalQuotation = !!inspectionRequest.has_final_quotation;
+  const normalizedStatus = normalizeRequestStatus(inspectionRequest.status);
   const canNotifyAdminDone =
     hasFinalQuotation &&
-    (inspectionRequest.status || '').toLowerCase() === 'in_progress' &&
+    normalizedStatus === 'in_progress' &&
     !inspectionRequest.completion_report &&
     !showCompletionReportForm;
   const pendingAdminReview =
     !!inspectionRequest.completion_report &&
-    (inspectionRequest.completion_report.status || '').toLowerCase() !==
+    normalizeRequestStatus(inspectionRequest.completion_report.status) !==
       'approved' &&
-    (inspectionRequest.status || '').toLowerCase() !== 'completed';
+    normalizedStatus !== 'completed';
   const displayStatusLabel = pendingAdminReview
     ? 'Pending Admin Review'
-    : ((inspectionRequest.status || '').charAt(0).toUpperCase() +
-        (inspectionRequest.status || '').slice(1).replace(/_/g, ' '));
+    : formatInspectionStatus(inspectionRequest.status);
   const displayStatusColors = pendingAdminReview
     ? {
         backgroundColor: '#FFF7CC',
@@ -448,7 +468,7 @@ export default function RequestDetailsScreen({navigation, route}: any) {
   const canUpdateStatusToday = isScheduledForToday(inspectionRequest.date_needed);
   const availableActions = canUpdateStatusToday
     ? STATUS_OPTIONS.filter(option =>
-        option.currentStatuses.includes((inspectionRequest.status || '').toLowerCase()),
+        option.currentStatuses.includes(normalizedStatus),
       )
     : [];
 
@@ -476,7 +496,10 @@ export default function RequestDetailsScreen({navigation, route}: any) {
             <Text style={s.cardTitle}>Customer Information</Text>
             <InfoRow label="Name"       value={getCustomerName(inspectionRequest)} />
             <InfoRow label="Contact No." value={inspectionRequest.contact_number} />
-            <InfoRow label="Address"    value={inspectionRequest.address || 'Not provided'} />
+            <InfoRow
+              label="Address"
+              value={formatDisplayValue(inspectionRequest.address, 'Not provided')}
+            />
           </View>
 
           {/* ── Request Information ── */}
@@ -504,8 +527,10 @@ export default function RequestDetailsScreen({navigation, route}: any) {
           <View style={s.card}>
             <Text style={s.cardTitle}>Notes</Text>
             <Text style={s.notesText}>
-              {inspectionRequest.details ||
-                'No notes provided for this inspection request.'}
+              {formatDisplayValue(
+                inspectionRequest.details,
+                'No notes provided for this inspection request.',
+              )}
             </Text>
           </View>
 
@@ -527,7 +552,7 @@ export default function RequestDetailsScreen({navigation, route}: any) {
           </View>
 
           {!hasFinalQuotation &&
-          (inspectionRequest.status || '').toLowerCase() === 'in_progress' &&
+          normalizedStatus === 'in_progress' &&
           !inspectionRequest.completion_report ? (
             <View style={s.card}>
               <Text style={s.cardTitle}>Quotation Required</Text>
@@ -556,7 +581,7 @@ export default function RequestDetailsScreen({navigation, route}: any) {
               report={inspectionRequest.completion_report}
               canSubmit={
                 hasFinalQuotation &&
-                (inspectionRequest.status || '').toLowerCase() === 'in_progress' &&
+                normalizedStatus === 'in_progress' &&
                 !inspectionRequest.completion_report
               }
               blockedSubtitle={

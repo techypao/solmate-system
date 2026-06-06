@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Platform} from 'react-native';
 import Config from 'react-native-config';
 
-const DEFAULT_API_BASE_URL = 'http://187.77.136.151';
+const DEFAULT_API_BASE_URL = 'https://solmatebyrdy.com';
 const API_PATH_PREFIX = '/api';
 
 function normalizeApiBaseUrl(rawBaseUrl) {
@@ -29,7 +29,7 @@ function resolveApiBaseUrl(rawBaseUrl) {
 }
 
 export const API_BASE_URL = resolveApiBaseUrl(
-  Config.API_BASE_URL || DEFAULT_API_BASE_URL,
+   DEFAULT_API_BASE_URL
 );
 export const BASE_URL = API_BASE_URL;
 export const TOKEN_STORAGE_KEY = 'token';

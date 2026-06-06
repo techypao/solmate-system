@@ -26,19 +26,23 @@ import {
   updateTechnicianServiceRequestStatus,
 } from '../src/services/serviceRequestApi';
 import {
+  formatDisplayValue,
   formatServiceRequestStatus,
   getServiceRequestStatusColors,
+  normalizeRequestStatus,
 } from '../src/utils/technicianRequests';
 import {getSolmateStatusColors, solmateColors} from '../src/theme/colors';
 import {AuthContext} from '../src/context/AuthContext';
 
-function formatDate(value?: string | null, fallback = 'Flexible') {
-  if (!value) {
+function formatDate(value?: unknown, fallback = 'Flexible') {
+  const dateValue = formatDisplayValue(value, '');
+
+  if (!dateValue) {
     return fallback;
   }
-  const parsedDate = new Date(value);
+  const parsedDate = new Date(dateValue);
   if (Number.isNaN(parsedDate.getTime())) {
-    return value;
+    return dateValue;
   }
   return parsedDate.toLocaleDateString('en-US', {
     month: 'short',
@@ -47,13 +51,15 @@ function formatDate(value?: string | null, fallback = 'Flexible') {
   });
 }
 
-function formatDateTime(value?: string | null, fallback = 'Not available') {
-  if (!value) {
+function formatDateTime(value?: unknown, fallback = 'Not available') {
+  const dateValue = formatDisplayValue(value, '');
+
+  if (!dateValue) {
     return fallback;
   }
-  const parsedDate = new Date(value);
+  const parsedDate = new Date(dateValue);
   if (Number.isNaN(parsedDate.getTime())) {
-    return value;
+    return dateValue;
   }
   const datePart = parsedDate.toLocaleDateString('en-US', {
     month: 'short',
@@ -67,12 +73,14 @@ function formatDateTime(value?: string | null, fallback = 'Not available') {
   return `${datePart} • ${timePart}`;
 }
 
-function isScheduledForToday(value?: string | null) {
-  if (!value) {
+function isScheduledForToday(value?: unknown) {
+  const dateValue = formatDisplayValue(value, '');
+
+  if (!dateValue) {
     return false;
   }
 
-  const scheduledDate = new Date(value);
+  const scheduledDate = new Date(dateValue);
   if (Number.isNaN(scheduledDate.getTime())) {
     return false;
   }
@@ -93,30 +101,32 @@ function getFriendlyErrorMessage(error: unknown) {
 }
 
 function getInstallationType(serviceRequest: ServiceRequest) {
-  const details = serviceRequest.details || '';
+  const details = formatDisplayValue(serviceRequest.details, '');
   const match = details.match(/Installation Type:\s*(.+)/i);
   if (match?.[1]) {
     return match[1].trim();
   }
 
-  return serviceRequest.request_type;
+  return formatDisplayValue(serviceRequest.request_type, 'Installation');
 }
 
 function getMaintenanceConcern(serviceRequest: ServiceRequest) {
-  const details = serviceRequest.details || '';
+  const details = formatDisplayValue(serviceRequest.details, '');
   const match = details.match(/Maintenance Concern:\s*(.+)/i);
   if (match?.[1]) {
     return match[1].trim();
   }
 
-  return serviceRequest.request_type;
+  return formatDisplayValue(serviceRequest.request_type, 'Maintenance');
 }
 
-function InlineRow({label, value}: {label: string; value?: string | null}) {
+function InlineRow({label, value}: {label: string; value?: unknown}) {
   return (
     <View style={styles.inlineRow}>
       <Text style={styles.inlineLabel}>{label}</Text>
-      <Text style={styles.inlineValue}>{value || 'Not available'}</Text>
+      <Text style={styles.inlineValue}>
+        {formatDisplayValue(value, 'Not available')}
+      </Text>
     </View>
   );
 }
@@ -195,7 +205,10 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
       !!initialServiceRequest?.technician_marked_done_at,
   );
   const customerRequestCategory =
-    (serviceRequest?.request_type || route?.params?.requestCategory || '').toLowerCase() ===
+    formatDisplayValue(
+      serviceRequest?.request_type || route?.params?.requestCategory,
+      '',
+    ).toLowerCase() ===
     'installation'
       ? 'installation'
       : 'maintenance';
@@ -218,7 +231,7 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
   const customerCanCancel =
     mode === 'customer' &&
     !['completed', 'cancelled', 'declined'].includes(
-      (serviceRequest?.status || '').toLowerCase(),
+      normalizeRequestStatus(serviceRequest?.status),
     );
 
   const loadServiceRequest = useCallback(
@@ -268,7 +281,7 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
   );
 
   const availableActions = useMemo(() => {
-    const currentStatus = (serviceRequest?.status || '').toLowerCase();
+    const currentStatus = normalizeRequestStatus(serviceRequest?.status);
     const canUpdateToday = isScheduledForToday(serviceRequest?.date_needed);
 
     if (mode !== 'technician' || !canUpdateToday) {
@@ -278,7 +291,7 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
     return TECHNICIAN_STATUS_ACTIONS.filter(action => {
       return action.currentStatuses.includes(currentStatus);
     });
-  }, [mode, serviceRequest?.status]);
+  }, [mode, serviceRequest?.date_needed, serviceRequest?.status]);
 
   const handleStatusUpdate = async (
     nextStatus: TechnicianServiceRequestStatus,
@@ -411,7 +424,7 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
         description: 'Request submitted',
       });
     }
-    const s = (serviceRequest.status || '').toLowerCase();
+    const s = normalizeRequestStatus(serviceRequest.status);
     if (['assigned', 'in_progress', 'completed'].includes(s)) {
       events.push({
         datetime: formatDateTime(serviceRequest.updated_at),
@@ -620,9 +633,9 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
   const pendingAdminReview =
     mode === 'technician' &&
     !!serviceRequest.completion_report &&
-    (serviceRequest.completion_report.status || '').toLowerCase() !==
+    normalizeRequestStatus(serviceRequest.completion_report.status) !==
       'approved' &&
-    (serviceRequest.status || '').toLowerCase() !== 'completed';
+    normalizeRequestStatus(serviceRequest.status) !== 'completed';
   const displayStatusLabel = pendingAdminReview
     ? 'Pending Admin Review'
     : formatServiceRequestStatus(serviceRequest.status);
@@ -634,7 +647,7 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
       ? getMaintenanceConcern(serviceRequest)
       : mode === 'customer' && customerRequestCategory === 'installation'
         ? getInstallationType(serviceRequest)
-        : serviceRequest.request_type;
+        : formatDisplayValue(serviceRequest.request_type, 'Service');
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -695,15 +708,21 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
           />
           <InlineRow
             label="Address"
-            value={serviceRequest.address || 'Not provided'}
+            value={formatDisplayValue(serviceRequest.address, 'Not provided')}
           />
           <InlineRow
             label="Address Additional Details"
-            value={serviceRequest.address_details || 'Not provided'}
+            value={formatDisplayValue(
+              serviceRequest.address_details,
+              'Not provided',
+            )}
           />
           <InlineRow
             label="Technician Assigned"
-            value={serviceRequest.technician?.name || 'Not assigned'}
+            value={formatDisplayValue(
+              serviceRequest.technician?.name,
+              'Not assigned',
+            )}
           />
           {serviceRequest.cancellation_note ? (
             <InlineRow
@@ -733,7 +752,7 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
 
         {mode === 'technician' ? (
           <>
-            {(serviceRequest.status || '').toLowerCase() === 'in_progress' &&
+            {normalizeRequestStatus(serviceRequest.status) === 'in_progress' &&
             !serviceRequest.completion_report &&
             !showCompletionReportForm ? (
               <View style={styles.actionsBlock}>
@@ -756,7 +775,7 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
                 subtitle="Submit the completion report after finishing the on-site work. Admin approval is required before this request becomes completed."
                 report={serviceRequest.completion_report}
                 canSubmit={
-                  (serviceRequest.status || '').toLowerCase() === 'in_progress' &&
+                  normalizeRequestStatus(serviceRequest.status) === 'in_progress' &&
                   !serviceRequest.completion_report
                 }
                 submitting={actionLoading}

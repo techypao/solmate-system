@@ -10,7 +10,6 @@ import {
   View,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import TechnicianBottomNav from '../src/components/TechnicianBottomNav';
 
 import {AppButton} from '../components';
@@ -19,6 +18,10 @@ import {
   getTechnicianServiceRequests,
   ServiceRequest,
 } from '../src/services/serviceRequestApi';
+import {
+  formatDisplayValue,
+  normalizeRequestStatus,
+} from '../src/utils/technicianRequests';
 
 /* ── design tokens ─────────────────────────────────────────── */
 
@@ -29,7 +32,6 @@ const BG = '#C8D8F0';
 const CARD    = '#ffffff';
 const SHADOW  = '#8a9bbd';
 const BORDER = '#D4E0F2';
-const SOFT_YELLOW = '#FFF7CC';
 
 /* ── filter config ─────────────────────────────────────────── */
 
@@ -43,10 +45,11 @@ const FILTERS: {label: string; value: FilterValue}[] = [
 
 /* ── helpers ────────────────────────────────────────────────── */
 
-function formatSchedule(value?: string | null): string {
-  if (!value) return 'Not scheduled';
-  const d = new Date(value);
-  if (isNaN(d.getTime())) return value;
+function formatSchedule(value?: unknown): string {
+  const dateValue = formatDisplayValue(value, '');
+  if (!dateValue) return 'Not scheduled';
+  const d = new Date(dateValue);
+  if (isNaN(d.getTime())) return dateValue;
   return d.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -54,8 +57,8 @@ function formatSchedule(value?: string | null): string {
   });
 }
 
-function formatStatusLabel(status?: string | null): string {
-  switch ((status ?? '').toLowerCase()) {
+function formatStatusLabel(status?: unknown): string {
+  switch (normalizeRequestStatus(status)) {
     case 'assigned':    return 'Assigned';
     case 'in_progress': return 'In Progress';
     case 'completed':   return 'Completed';
@@ -63,8 +66,8 @@ function formatStatusLabel(status?: string | null): string {
   }
 }
 
-function getStatusColors(status?: string | null) {
-  switch ((status ?? '').toLowerCase()) {
+function getStatusColors(status?: unknown) {
+  switch (normalizeRequestStatus(status)) {
     case 'assigned':    return {bg: '#FFF7CC', text: '#b45309'};
     case 'in_progress': return {bg: '#EAF9FD', text: '#1d4ed8'};
     case 'completed':   return {bg: '#dcfce7', text: '#166534'};
@@ -72,8 +75,8 @@ function getStatusColors(status?: string | null) {
   }
 }
 
-function getTypePillColors(type: string) {
-  const t = (type ?? '').toLowerCase();
+function getTypePillColors(type: unknown) {
+  const t = formatDisplayValue(type, '').toLowerCase();
   if (t.includes('maintenance'))  return {bg: '#fffbeb', text: '#b45309', border: '#fde68a'};
   if (t.includes('installation')) return {bg: '#f0f9ff', text: '#0369a1', border: '#bae6fd'};
   return {bg: '#f1f5f9', text: MUTED, border: BORDER};
@@ -86,11 +89,15 @@ function applyFilter(
   switch (filter) {
     case 'installation':
       return items.filter(i =>
-        i.request_type?.toLowerCase().includes('installation'),
+        formatDisplayValue(i.request_type, '')
+          .toLowerCase()
+          .includes('installation'),
       );
     case 'maintenance':
       return items.filter(i =>
-        i.request_type?.toLowerCase().includes('maintenance'),
+        formatDisplayValue(i.request_type, '')
+          .toLowerCase()
+          .includes('maintenance'),
       );
     default:
       return items;
@@ -115,8 +122,9 @@ function ServiceRequestCard({
   navigation: any;
 }) {
   const statusColors = getStatusColors(item.status);
-  const typeColors   = getTypePillColors(item.request_type ?? '');
-  const customerName = item.customer?.name ?? 'Unknown customer';
+  const requestType = formatDisplayValue(item.request_type, 'Service');
+  const typeColors   = getTypePillColors(requestType);
+  const customerName = formatDisplayValue(item.customer?.name, 'Unknown customer');
 
   return (
     <Pressable
@@ -136,7 +144,7 @@ function ServiceRequestCard({
             {backgroundColor: typeColors.bg, borderColor: typeColors.border},
           ]}>
           <Text style={[s.typePillText, {color: typeColors.text}]}>
-            {item.request_type ?? 'Service'}
+            {requestType}
           </Text>
         </View>
         <View style={[s.statusBadge, {backgroundColor: statusColors.bg}]}>
@@ -151,7 +159,9 @@ function ServiceRequestCard({
 
       {/* customer */}
       <Text style={s.cardMeta}>Customer Name: {customerName}</Text>
-      <Text style={s.cardMeta}>Address: {item.address || 'Not provided'}</Text>
+      <Text style={s.cardMeta}>
+        Address: {formatDisplayValue(item.address, 'Not provided')}
+      </Text>
 
       {/* schedule */}
       <Text style={s.cardMeta}>
@@ -284,7 +294,9 @@ export default function TechnicianServiceRequestListScreen({
               filtered.length === 0 && s.emptyListContent,
             ]}
             data={filtered}
-            keyExtractor={item => item.id.toString()}
+            keyExtractor={(item, index) =>
+              `${formatDisplayValue(item.id, 'service')}-${index}`
+            }
             renderItem={({item}) => (
               <ServiceRequestCard item={item} navigation={navigation} />
             )}

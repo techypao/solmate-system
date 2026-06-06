@@ -17,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/register',
         ]);
 
+        $middleware->api(prepend: [
+            \App\Http\Middleware\EnsureFrontendApiRequestsAreStateful::class,
+        ]);
+
         $middleware->web(append: [
             \App\Http\Middleware\CheckSessionTimeout::class,
             \App\Http\Middleware\EnsureUserIsNotArchived::class,

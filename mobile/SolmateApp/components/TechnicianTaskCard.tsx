@@ -3,6 +3,7 @@ import {Pressable, StyleSheet, Text, View} from 'react-native';
 
 import {TechnicianInspectionRequest} from '../src/services/technicianApi';
 import {
+  formatDisplayValue,
   formatDate,
   formatDateTime,
   getCustomerName,
@@ -31,7 +32,7 @@ export default function TechnicianTaskCard({
       <View style={styles.headerRow}>
         <View style={styles.titleWrap}>
           <Text style={styles.eyebrow}>
-            Inspection request #{inspectionRequest.id}
+            Inspection request #{formatDisplayValue(inspectionRequest.id, '0')}
           </Text>
           <Text style={styles.title}>{getCustomerName(inspectionRequest)}</Text>
         </View>
@@ -41,7 +42,12 @@ export default function TechnicianTaskCard({
 
       <View style={styles.detailsCard}>
         <Text style={styles.detailsLabel}>Request details</Text>
-        <Text style={styles.detailsText}>{inspectionRequest.details}</Text>
+        <Text style={styles.detailsText}>
+          {formatDisplayValue(
+            inspectionRequest.details,
+            'No details provided.',
+          )}
+        </Text>
       </View>
 
       <View style={styles.metaRow}>

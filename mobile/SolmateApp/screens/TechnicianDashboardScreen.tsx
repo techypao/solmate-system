@@ -24,6 +24,11 @@ import {
 import {getProfilePictureUrl, getUserInitial} from '../src/utils/profilePicture';
 import {getSolmateStatusColors, solmateColors} from '../src/theme/colors';
 import TechnicianBottomNav from '../src/components/TechnicianBottomNav';
+import {
+  formatDisplayValue,
+  formatServiceRequestStatus,
+  normalizeRequestStatus,
+} from '../src/utils/technicianRequests';
 
 // ─── colour tokens that mirror the design ────────────────────────────────────
 const NAVY = solmateColors.navy;
@@ -54,12 +59,14 @@ function startOfDay(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
-function parseTaskDate(value?: string | null) {
-  if (!value) {
+function parseTaskDate(value?: unknown) {
+  const dateValue = formatDisplayValue(value, '');
+
+  if (!dateValue) {
     return null;
   }
 
-  const parsedDate = new Date(value);
+  const parsedDate = new Date(dateValue);
 
   if (Number.isNaN(parsedDate.getTime())) {
     return null;
@@ -76,15 +83,17 @@ function isSameDay(a: Date, b: Date) {
   );
 }
 
-function formatTaskSchedule(value?: string | null) {
-  if (!value) {
+function formatTaskSchedule(value?: unknown) {
+  const dateValue = formatDisplayValue(value, '');
+
+  if (!dateValue) {
     return 'Schedule not set';
   }
 
-  const parsedDate = parseTaskDate(value);
+  const parsedDate = parseTaskDate(dateValue);
 
   if (!parsedDate) {
-    return value;
+    return dateValue;
   }
 
   return parsedDate.toLocaleDateString('en-US', {
@@ -94,27 +103,16 @@ function formatTaskSchedule(value?: string | null) {
   });
 }
 
-function formatTaskStatus(status?: string | null) {
-  switch ((status || '').toLowerCase()) {
-    case 'assigned':
-      return 'Assigned';
-    case 'in_progress':
-      return 'In Progress';
-    case 'completed':
-      return 'Completed';
-    case 'pending':
-      return 'Pending';
-    default:
-      return 'Pending';
-  }
+function formatTaskStatus(status?: unknown) {
+  return formatServiceRequestStatus(status);
 }
 
-function getTaskStatusColors(status?: string | null) {
-  return getSolmateStatusColors(status);
+function getTaskStatusColors(status?: unknown) {
+  return getSolmateStatusColors(normalizeRequestStatus(status));
 }
 
-function getTaskShortDetails(value?: string | null, fallback = 'No details provided.') {
-  const trimmedValue = String(value || '').trim();
+function getTaskShortDetails(value?: unknown, fallback = 'No details provided.') {
+  const trimmedValue = formatDisplayValue(value, '').trim();
 
   if (!trimmedValue) {
     return fallback;
@@ -129,12 +127,12 @@ function buildInspectionTask(item: TechnicianInspectionRequest): DashboardTask {
   return {
     id: item.id,
     kind: 'inspection',
-    customerName: item.customer?.name || 'Unknown customer',
-    address: item.address || 'Not provided',
+    customerName: formatDisplayValue(item.customer?.name, 'Unknown customer'),
+    address: formatDisplayValue(item.address, 'Not provided'),
     taskType: 'Inspection Request',
     scheduleLabel: formatTaskSchedule(item.date_needed),
     statusLabel: formatTaskStatus(item.status),
-    statusValue: String(item.status || 'pending'),
+    statusValue: normalizeRequestStatus(item.status) || 'pending',
     shortDetails: getTaskShortDetails(item.details, 'No inspection details provided.'),
     scheduledAt: parseTaskDate(item.date_needed),
     rawInspection: item,
@@ -142,18 +140,18 @@ function buildInspectionTask(item: TechnicianInspectionRequest): DashboardTask {
 }
 
 function buildServiceTask(item: ServiceRequest): DashboardTask {
-  const rawType = String(item.request_type || 'Service').trim();
+  const rawType = formatDisplayValue(item.request_type, 'Service');
   const hasInstallation = rawType.toLowerCase().includes('installation');
 
   return {
     id: item.id,
     kind: 'service',
-    customerName: item.customer?.name || 'Unknown customer',
-    address: item.address || 'Not provided',
+    customerName: formatDisplayValue(item.customer?.name, 'Unknown customer'),
+    address: formatDisplayValue(item.address, 'Not provided'),
     taskType: hasInstallation ? 'Installation Request' : 'Maintenance Request',
     scheduleLabel: formatTaskSchedule(item.date_needed),
     statusLabel: formatTaskStatus(item.status),
-    statusValue: String(item.status || 'pending'),
+    statusValue: normalizeRequestStatus(item.status) || 'pending',
     shortDetails: getTaskShortDetails(item.details, 'No service details provided.'),
     scheduledAt: parseTaskDate(item.date_needed),
     rawService: item,
@@ -253,13 +251,31 @@ export default function TechnicianDashboardScreen({navigation}: any) {
         getAssignedInspectionRequests(),
         getTechnicianServiceRequests(),
       ]);
-      setInspectionTasks(Array.isArray(requests) ? requests : []);
-      setServiceTasks(Array.isArray(serviceRequests) ? serviceRequests : []);
-      const assigned   = requests.filter(r => r.status === 'assigned').length;
-      const inProgress = requests.filter(r => r.status === 'in_progress').length;
-      const completed  = requests.filter(r => r.status === 'completed').length;
-      setRequestCounts({total: requests.length, assigned, inProgress, completed});
-      setServiceTotal(serviceRequests.length);
+      const assignedRequests = Array.isArray(requests) ? requests : [];
+      const assignedServiceRequests = Array.isArray(serviceRequests)
+        ? serviceRequests
+        : [];
+
+      setInspectionTasks(assignedRequests);
+      setServiceTasks(assignedServiceRequests);
+
+      const assigned = assignedRequests.filter(
+        request => normalizeRequestStatus(request.status) === 'assigned',
+      ).length;
+      const inProgress = assignedRequests.filter(
+        request => normalizeRequestStatus(request.status) === 'in_progress',
+      ).length;
+      const completed = assignedRequests.filter(
+        request => normalizeRequestStatus(request.status) === 'completed',
+      ).length;
+
+      setRequestCounts({
+        total: assignedRequests.length,
+        assigned,
+        inProgress,
+        completed,
+      });
+      setServiceTotal(assignedServiceRequests.length);
     } catch {
       setInspectionTasks([]);
       setServiceTasks([]);
@@ -433,11 +449,11 @@ export default function TechnicianDashboardScreen({navigation}: any) {
             <Text style={s.chevron}>›</Text>
           </Pressable>
 
-          <Text style={s.sectionTitle}>Today&apos;s Tasks</Text>
+          <Text style={s.sectionTitle}>Today's Tasks</Text>
           {loading ? (
             <View style={s.sectionLoadingCard}>
               <ActivityIndicator color={NAVY} size="small" />
-              <Text style={s.sectionLoadingText}>Loading today&apos;s tasks...</Text>
+              <Text style={s.sectionLoadingText}>Loading today's tasks...</Text>
             </View>
           ) : todaysTasks.length > 0 ? (
             todaysTasks.map(task => (

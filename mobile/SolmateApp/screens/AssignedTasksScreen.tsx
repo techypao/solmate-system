@@ -10,7 +10,6 @@ import {
   View,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import TechnicianBottomNav from '../src/components/TechnicianBottomNav';
 
 import {AppButton} from '../components';
@@ -20,6 +19,10 @@ import {
   getAssignedInspectionRequests,
   TechnicianInspectionRequest,
 } from '../src/services/technicianApi';
+import {
+  formatDisplayValue,
+  normalizeRequestStatus,
+} from '../src/utils/technicianRequests';
 
 // ─── colour tokens (match dashboard) ─────────────────────────────────────────
 const NAVY = '#1A2B55';
@@ -29,7 +32,6 @@ const CARD   = '#ffffff';
 const MUTED = '#6B7A99';
 const SHADOW = '#8a9bbd';
 const BORDER = '#D4E0F2';
-const SOFT_YELLOW = '#FFF7CC';
 
 // ─── filter chips ─────────────────────────────────────────────────────────────
 type FilterValue = 'all' | 'pending' | 'assigned' | 'completed';
@@ -49,15 +51,16 @@ function getFriendlyErrorMessage(error: unknown) {
   return 'Could not load inspection requests right now.';
 }
 
-function formatIRQId(id: number) {
+function formatIRQId(id: unknown) {
   // zero-pad to at least 4 digits to produce IRQ-1024 style IDs
-  return `IRQ-${String(id).padStart(4, '0')}`;
+  return `IRQ-${formatDisplayValue(id, '0').padStart(4, '0')}`;
 }
 
-function formatSchedule(dateNeeded?: string | null) {
-  if (!dateNeeded) {return 'Schedule not set';}
-  const d = new Date(dateNeeded);
-  if (isNaN(d.getTime())) {return dateNeeded;}
+function formatSchedule(dateNeeded?: unknown) {
+  const dateValue = formatDisplayValue(dateNeeded, '');
+  if (!dateValue) {return 'Schedule not set';}
+  const d = new Date(dateValue);
+  if (isNaN(d.getTime())) {return dateValue;}
   return d.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -69,7 +72,7 @@ function formatSchedule(dateNeeded?: string | null) {
 }
 
 function getCustomerName(item: TechnicianInspectionRequest) {
-  return item.customer?.name ?? 'Unknown customer';
+  return formatDisplayValue(item.customer?.name, 'Unknown customer');
 }
 
 // ─── bottom nav icons ─────────────────────────────────────────────────────────
@@ -99,7 +102,9 @@ function InspectionCard({
 
       {/* customer */}
       <Text style={s.cardMeta}>Customer Name: {getCustomerName(item)}</Text>
-      <Text style={s.cardMeta}>Address: {item.address || 'Not provided'}</Text>
+      <Text style={s.cardMeta}>
+        Address: {formatDisplayValue(item.address, 'Not provided')}
+      </Text>
 
       {/* schedule */}
       <Text style={s.cardMeta}>
@@ -143,7 +148,7 @@ export default function AssignedTasksScreen({navigation}: any) {
 
   const filtered = filter === 'all'
     ? all
-    : all.filter(r => (r.status ?? '').toLowerCase() === filter);
+    : all.filter(r => normalizeRequestStatus(r.status) === filter);
 
   function openDetails(item: TechnicianInspectionRequest) {
     navigation.navigate('InspectionDetails', {
@@ -208,7 +213,9 @@ export default function AssignedTasksScreen({navigation}: any) {
               filtered.length === 0 && s.emptyListContent,
             ]}
             data={filtered}
-            keyExtractor={item => item.id.toString()}
+            keyExtractor={(item, index) =>
+              `${formatDisplayValue(item.id, 'inspection')}-${index}`
+            }
             renderItem={({item}) => (
               <InspectionCard item={item} onPress={() => openDetails(item)} />
             )}
