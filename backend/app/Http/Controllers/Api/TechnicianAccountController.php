@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Support\PasswordValidation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 
 class TechnicianAccountController extends Controller
@@ -24,15 +27,65 @@ class TechnicianAccountController extends Controller
             ],
         ]);
 
-        $user->fill([
-            'email' => $validated['email'],
-        ]);
+        $emailChanged = $user->email !== $validated['email'];
+
+        if ($emailChanged) {
+            $user->email = $validated['email'];
+            $user->email_verified_at = null;
+        }
+
         $user->save();
+
+        if ($emailChanged) {
+            $this->sendNewEmailVerification($user);
+            $user->tokens()->delete();
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+
+            return response()->json([
+                'message' => 'Email updated. Please verify your new email and log in again.',
+            ], 403);
+        }
 
         return response()->json([
             'message' => 'Technician account information updated successfully.',
             'user' => $user->fresh(),
         ], 200);
+    }
+
+    private function sendNewEmailVerification($user): void
+    {
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            [
+                'id' => $user->id,
+                'hash' => sha1($user->email),
+            ]
+        );
+
+        Mail::send([], [], function ($message) use ($user, $verificationUrl): void {
+            $message->to($user->email)
+                ->subject('Verify Your New Email - SolMate')
+                ->html('
+            <div style="font-family: Arial; text-align:center; padding:30px;">
+                <h2>Verify Your New Email</h2>
+                <p>You changed your email. Please verify it.</p>
+
+                <a href="'.$verificationUrl.'" style="
+                    display: inline-block;
+                    padding: 12px 25px;
+                    font-size: 16px;
+                    color: white;
+                    background-color: #f4b400;
+                    border-radius: 6px;
+                    text-decoration: none;
+                    margin-top: 20px;
+                ">
+                    Verify Email
+                </a>
+            </div>
+        ');
+        });
     }
 
     public function updatePassword(Request $request)

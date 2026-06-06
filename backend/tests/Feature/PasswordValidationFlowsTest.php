@@ -165,6 +165,8 @@ class PasswordValidationFlowsTest extends TestCase
             'contact_number' => '09171234567',
             'landline_number' => null,
         ]);
+        $customer->forceFill(['email_verified_at' => now()])->save();
+        $customer->createToken('auth_token');
 
         Sanctum::actingAs($customer);
 
@@ -177,15 +179,8 @@ class PasswordValidationFlowsTest extends TestCase
             'contact_number' => '09991234567',
             'landline_number' => '(02) 8123-4567',
         ])
-            ->assertOk()
-            ->assertJsonPath('message', 'Account information updated successfully.')
-            ->assertJsonPath('user.name', 'Original Customer')
-            ->assertJsonPath('user.first_name', 'Original')
-            ->assertJsonPath('user.last_name', 'Customer')
-            ->assertJsonPath('user.email', 'customer_profile_updated@example.com')
-            ->assertJsonPath('user.address', '456 Updated Avenue')
-            ->assertJsonPath('user.contact_number', '09991234567')
-            ->assertJsonPath('user.landline_number', '(02) 8123-4567');
+            ->assertForbidden()
+            ->assertJsonPath('message', 'Email updated. Please verify your new email and log in again.');
 
         $customer->refresh();
 
@@ -196,6 +191,11 @@ class PasswordValidationFlowsTest extends TestCase
         $this->assertSame('456 Updated Avenue', $customer->address);
         $this->assertSame('09991234567', $customer->contact_number);
         $this->assertSame('(02) 8123-4567', $customer->landline_number);
+        $this->assertNull($customer->email_verified_at);
+        $this->assertDatabaseMissing('personal_access_tokens', [
+            'tokenable_id' => $customer->id,
+            'tokenable_type' => User::class,
+        ]);
     }
 
     public function test_technician_profile_update_ignores_name_fields_and_updates_email(): void
@@ -208,6 +208,8 @@ class PasswordValidationFlowsTest extends TestCase
             'password' => 'Current123!',
             'role' => User::ROLE_TECHNICIAN,
         ]);
+        $technician->forceFill(['email_verified_at' => now()])->save();
+        $technician->createToken('auth_token');
 
         Sanctum::actingAs($technician);
 
@@ -217,12 +219,8 @@ class PasswordValidationFlowsTest extends TestCase
             'last_name' => 'Person',
             'email' => 'technician_profile_updated@example.com',
         ])
-            ->assertOk()
-            ->assertJsonPath('message', 'Technician account information updated successfully.')
-            ->assertJsonPath('user.name', 'Original Technician')
-            ->assertJsonPath('user.first_name', 'Original')
-            ->assertJsonPath('user.last_name', 'Technician')
-            ->assertJsonPath('user.email', 'technician_profile_updated@example.com');
+            ->assertForbidden()
+            ->assertJsonPath('message', 'Email updated. Please verify your new email and log in again.');
 
         $technician->refresh();
 
@@ -230,6 +228,11 @@ class PasswordValidationFlowsTest extends TestCase
         $this->assertSame('Original', $technician->first_name);
         $this->assertSame('Technician', $technician->last_name);
         $this->assertSame('technician_profile_updated@example.com', $technician->email);
+        $this->assertNull($technician->email_verified_at);
+        $this->assertDatabaseMissing('personal_access_tokens', [
+            'tokenable_id' => $technician->id,
+            'tokenable_type' => User::class,
+        ]);
     }
 
     #[DataProvider('invalidPasswordProvider')]
