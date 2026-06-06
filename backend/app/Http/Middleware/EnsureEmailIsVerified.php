@@ -14,7 +14,7 @@ class EnsureEmailIsVerified
     {
         $user = $request->user();
 
-        if (! $user || $user->hasVerifiedEmail()) {
+        if (! $user || $user->hasVerifiedEmail() || $user->role === 'admin') {
             return $next($request);
         }
 

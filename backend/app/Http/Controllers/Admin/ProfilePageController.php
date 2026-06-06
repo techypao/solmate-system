@@ -56,15 +56,18 @@ class ProfilePageController extends Controller
 
         if ($emailChanged) {
             $this->sendNewEmailVerification($user);
-            $user->tokens()->delete();
 
-            Auth::logout();
-            DB::table('sessions')->where('user_id', $user->id)->delete();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+            if ($user->role !== User::ROLE_ADMIN) {
+                $user->tokens()->delete();
 
-            return redirect('/login')
-                ->with('message', 'Please verify your new email before logging in.');
+                Auth::logout();
+                DB::table('sessions')->where('user_id', $user->id)->delete();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect('/login')
+                    ->with('message', 'Please verify your new email before logging in.');
+            }
         }
 
         return back()->with('status', 'Admin profile updated successfully.');
