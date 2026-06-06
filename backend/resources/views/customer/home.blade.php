@@ -511,8 +511,8 @@
                     <line x1="11" y1="18" x2="13" y2="18"/>
                 </svg>
             </div>
-            <p class="ch-action-title">Mobile App</p>
-            <p class="ch-action-desc">Open our app page for Android download details and future APK releases</p>
+            <p class="ch-action-title">Download App</p>
+            <p class="ch-action-desc">Scan the QR code or download the Android APK for SolMate</p>
             <span class="ch-action-cta">
                 Visit
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>

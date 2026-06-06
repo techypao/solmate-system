@@ -74,13 +74,17 @@
         /* APP DOWNLOAD */
         .gst-app { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); padding: 80px 32px; }
         .gst-app-inner { max-width: 1200px; margin: 0 auto; }
-        .gst-app-shell { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr); gap: 24px; align-items: stretch; }
+        .gst-app-shell { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; align-items: stretch; }
         .gst-app-card,
         .gst-app-panel { background: #ffffff; border: 1px solid #DDE7EE; border-radius: 22px; box-shadow: 0 14px 36px rgba(15,23,42,0.07); }
         .gst-app-card {
             position: relative;
             overflow: hidden;
-            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 360px;
+            padding: 28px;
             background:
                 radial-gradient(circle at top right, rgba(244,208,0,0.18), transparent 34%),
                 linear-gradient(135deg, #123A5A 0%, #123A5A 56%, #1f4d76 100%);
@@ -111,20 +115,20 @@
             letter-spacing: 0.08em;
             text-transform: uppercase;
         }
-        .gst-app-title { margin: 18px 0 10px; font-size: 32px; font-weight: 700; line-height: 1.15; letter-spacing: -0.03em; }
+        .gst-app-title { margin: 18px 0 10px; font-size: 28px; font-weight: 700; line-height: 1.15; letter-spacing: -0.03em; }
         .gst-app-copy { margin: 0; max-width: 620px; font-size: 15px; line-height: 1.8; color: rgba(255,255,255,0.84); }
         .gst-app-points { display: grid; gap: 12px; margin: 24px 0 0; }
         .gst-app-point { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); }
         .gst-app-point-dot { width: 10px; height: 10px; border-radius: 50%; background: #F4D000; margin-top: 5px; flex-shrink: 0; }
         .gst-app-point strong { display: block; font-size: 14px; margin-bottom: 4px; color: #ffffff; }
         .gst-app-point span { display: block; font-size: 13px; line-height: 1.65; color: rgba(255,255,255,0.78); }
-        .gst-app-panel { padding: 26px 24px; display: flex; flex-direction: column; justify-content: center; }
+        .gst-app-panel { padding: 30px; display: flex; flex-direction: column; justify-content: center; }
         .gst-app-panel-tag { display: inline-flex; align-items: center; width: fit-content; padding: 6px 11px; border-radius: 999px; background: #FFF7CC; color: #92400e; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
         .gst-app-panel-title { margin: 14px 0 8px; font-size: 22px; font-weight: 700; color: #123A5A; line-height: 1.2; }
         .gst-app-panel-copy { margin: 0; font-size: 14px; line-height: 1.75; color: #5E7288; }
-        .gst-app-qr-frame { width: min(220px, 100%); margin: 22px auto 18px; padding: 14px; border-radius: 20px; background: #ffffff; border: 1px solid #DDE7EE; box-shadow: 0 12px 28px rgba(15,23,42,0.09); }
+        .gst-app-qr-frame { position: relative; z-index: 1; width: min(178px, 100%); margin: 24px auto 0; padding: 12px; border-radius: 20px; background: #ffffff; border: 1px solid #DDE7EE; box-shadow: 0 12px 28px rgba(15,23,42,0.09); }
         .gst-app-qr-frame img { display: block; width: 100%; height: auto; border-radius: 14px; }
-        .gst-app-panel-note { margin-top: 18px; padding: 14px 16px; border-radius: 14px; background: #F8FAFC; border: 1px dashed #DDE7EE; color: #5E7288; font-size: 13px; line-height: 1.65; }
+        .gst-app-panel-note { margin-top: 18px; margin-bottom: 18px; padding: 14px 16px; border-radius: 14px; background: #F8FAFC; border: 1px dashed #DDE7EE; color: #5E7288; font-size: 13px; line-height: 1.65; }
 
         /* NEWS */
         .gst-news { background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%); padding: 80px 32px; }
