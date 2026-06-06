@@ -101,7 +101,7 @@ class AuthController extends Controller
             ], 401);
         }
 
-        if (! $user->hasVerifiedEmail()) {
+        if (! $user->hasVerifiedEmail() && $user->role !== User::ROLE_ADMIN) {
             return response()->json([
                 'message' => 'EMAIL_NOT_VERIFIED',
                 'error' => 'Please verify your email before logging in.',

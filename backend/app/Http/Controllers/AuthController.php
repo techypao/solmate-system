@@ -58,7 +58,7 @@ class AuthController extends Controller
                 ->onlyInput('email');
         }
 
-        if (! $user->hasVerifiedEmail()) {
+        if (! $user->hasVerifiedEmail() && $user->role !== User::ROLE_ADMIN) {
             return back()
                 ->withErrors([
                     'email' => 'Please verify your email before logging in.',
