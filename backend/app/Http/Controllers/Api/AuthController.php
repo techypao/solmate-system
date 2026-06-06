@@ -77,6 +77,12 @@ class AuthController extends Controller
             ], 403);
         }
 
+        if (! $user->hasVerifiedEmail()) {
+            return response()->json([
+                'message' => 'Please verify your email before logging in.',
+            ], 403);
+        }
+
         $user->markLoginRecorded();
 
         $token = $user->createToken('auth_token')->plainTextToken;
