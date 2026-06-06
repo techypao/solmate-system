@@ -32,25 +32,55 @@ class AuthController extends Controller
             'password' => $validated['password'],
         ];
 
-        try {
-            $authenticated = Auth::attempt($credentials, $request->boolean('remember'));
-        } catch (RuntimeException) {
-            $authenticated = false;
+        $user = User::query()
+            ->where('email', $credentials['email'])
+            ->first();
+
+        $passwordMatches = false;
+        $legacyPasswordMatches = false;
+
+        if ($user) {
+            try {
+                $passwordMatches = Hash::check($credentials['password'], (string) $user->getAuthPassword());
+            } catch (RuntimeException) {
+                $passwordMatches = false;
+            }
+
+            if (! $passwordMatches && hash_equals((string) $user->getAuthPassword(), $credentials['password'])) {
+                $passwordMatches = true;
+                $legacyPasswordMatches = true;
+            }
         }
 
-        if (!$authenticated) {
-            $legacyUser = User::query()
-                ->where('email', $credentials['email'])
-                ->first();
+        if (! $user || ! $passwordMatches) {
+            return back()
+                ->withErrors(['email' => 'Invalid email or password.'])
+                ->onlyInput('email');
+        }
 
-            if ($legacyUser && hash_equals((string) $legacyUser->getAuthPassword(), $credentials['password'])) {
-                // Upgrade legacy plain-text passwords to hashed passwords after a verified login.
-                $legacyUser->forceFill([
-                    'password' => Hash::make($credentials['password']),
-                ])->save();
+        if (! $user->hasVerifiedEmail()) {
+            return back()
+                ->withErrors([
+                    'email' => 'Please verify your email before logging in.',
+                ])
+                ->onlyInput('email');
+        }
 
-                Auth::login($legacyUser, $request->boolean('remember'));
-            } else {
+        if ($legacyPasswordMatches) {
+            // Upgrade legacy plain-text passwords to hashed passwords after a verified login.
+            $user->forceFill([
+                'password' => Hash::make($credentials['password']),
+            ])->save();
+
+            Auth::login($user, $request->boolean('remember'));
+        } else {
+            try {
+                $authenticated = Auth::attempt($credentials, $request->boolean('remember'));
+            } catch (RuntimeException) {
+                $authenticated = false;
+            }
+
+            if (! $authenticated) {
                 return back()
                     ->withErrors(['email' => 'Invalid email or password.'])
                     ->onlyInput('email');
