@@ -7,6 +7,8 @@ use App\Support\PasswordValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use RuntimeException;
 
 class AuthController extends Controller
@@ -127,7 +129,24 @@ class AuthController extends Controller
                 : null,
         ]);
 
-        $user->sendEmailVerificationNotification();
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            [
+                'id' => $user->id,
+                'hash' => sha1($user->email),
+            ]
+        );
+
+        Mail::raw('Click this link to verify your email: '.$verificationUrl, function ($message) use ($user): void {
+            $message->to($user->email)
+                ->subject('Verify Your Email - SolMate');
+        });
+
+        \Log::info('EMAIL SENT MANUALLY', [
+            'email' => $user->email,
+            'url' => $verificationUrl,
+        ]);
 
         return redirect()
             ->route('register')

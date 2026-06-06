@@ -656,7 +656,8 @@
                 const successBox = document.getElementById('register-success-box');
                 const errorBox = document.getElementById('register-error-box');
                 const submitButton = document.getElementById('register-submit-button');
-                const registerApiUrl = '/api/register';
+                const apiBaseUrl = 'https://solmatebyrdy.com/api';
+                const registerApiUrl = `${apiBaseUrl}/register`;
                 const loginPageUrl = form.dataset.loginPageUrl || '/login';
                 const flashedSuccessMessage = form.dataset.registrationSuccessMessage || '';
 

@@ -1,9 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {Platform} from 'react-native';
 import Config from 'react-native-config';
 
-const DEFAULT_API_BASE_URL = 'https://solmatebyrdy.com';
-const API_PATH_PREFIX = '/api';
+const DEFAULT_API_BASE_URL = 'https://solmatebyrdy.com/api';
 
 function normalizeApiBaseUrl(rawBaseUrl: string) {
   const normalizedBaseUrl = rawBaseUrl.trim().replace(/\/+$/, '');
@@ -12,25 +10,12 @@ function normalizeApiBaseUrl(rawBaseUrl: string) {
     return DEFAULT_API_BASE_URL;
   }
 
-  return normalizedBaseUrl.replace(/\/api$/i, '');
-}
-
-function resolveApiBaseUrl(rawBaseUrl: string) {
-  const baseUrl = normalizeApiBaseUrl(rawBaseUrl || DEFAULT_API_BASE_URL);
-
-  if (Platform.OS !== 'android') {
-    return baseUrl;
-  }
-
-  return baseUrl.replace(
-    /\/\/(localhost|127\.0\.0\.1)(?=[:/]|$)/i,
-    '//10.0.2.2',
-  );
+  return normalizedBaseUrl.replace(/\/api$/i, '') + '/api';
 }
 
 // Change this in one place when your Laravel API URL changes.
-export const API_BASE_URL = resolveApiBaseUrl(
-  DEFAULT_API_BASE_URL
+export const API_BASE_URL = normalizeApiBaseUrl(
+  Config.API_BASE_URL || DEFAULT_API_BASE_URL,
 );
 export const BASE_URL = API_BASE_URL;
 export const TOKEN_STORAGE_KEY = 'token';
@@ -90,7 +75,7 @@ export async function removeStoredToken() {
 
 function buildUrl(endpoint: string) {
   const cleanEndpoint = endpoint.replace(/^\/+/, '');
-  return `${BASE_URL}${API_PATH_PREFIX}/${cleanEndpoint}`;
+  return `${BASE_URL}/${cleanEndpoint}`;
 }
 
 function getFirstValidationError(errors?: ValidationErrors) {

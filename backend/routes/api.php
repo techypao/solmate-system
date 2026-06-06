@@ -11,7 +11,6 @@ use App\Http\Controllers\Api\ChatConversationController;
 use App\Http\Controllers\Api\CustomerAccountController;
 use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\TechnicianAccountController;
-use App\Http\Controllers\Api\VerificationController;
 use App\Http\Controllers\CompletionReportController;
 use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\InspectionRequestController;
@@ -29,9 +28,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
-    ->middleware(['signed'])
-    ->name('verification.verify');
 Route::get('/public/testimonies', [TestimonyController::class, 'publicIndex']);
 Route::get('/public/visual-highlights', [VisualHighlightController::class, 'index']);
 Route::get('/public/news-articles', [NewsArticleController::class, 'index']);
