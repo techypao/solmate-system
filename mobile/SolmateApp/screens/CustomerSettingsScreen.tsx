@@ -174,6 +174,48 @@ export default function CustomerSettingsScreen() {
 
   /* \u2500\u2500 handlers (100 % preserved) \u2500\u2500 */
 
+  const submitProfileUpdate = async (
+    trimmedEmail: string,
+    trimmedLandlineNumber: string,
+  ) => {
+    try {
+      setProfileSubmitting(true);
+      const response = await updateCustomerAccount({
+        email: trimmedEmail,
+        address: address.trim(),
+        contact_number: contactNumber.trim(),
+        landline_number: trimmedLandlineNumber,
+      });
+      setUser((currentUser: typeof user) =>
+        currentUser ? { ...currentUser, ...response.user } : response.user,
+      );
+      Alert.alert('Success', response.message);
+    } catch (error: any) {
+      if (isForceLogoutEmailChanged(error)) {
+        await logout();
+        Alert.alert('Email verification required', error.message, [
+          {
+            text: 'OK',
+            onPress: () => {
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+              });
+            },
+          },
+        ]);
+        return;
+      }
+
+      Alert.alert(
+        'Update failed',
+        error?.message || 'Could not update your account information.',
+      );
+    } finally {
+      setProfileSubmitting(false);
+    }
+  };
+
   const handleSaveProfile = async () => {
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedLandlineNumber = landlineNumber.trim();
@@ -202,35 +244,27 @@ export default function CustomerSettingsScreen() {
       return;
     }
 
-    try {
-      setProfileSubmitting(true);
-      const response = await updateCustomerAccount({
-        email: trimmedEmail,
-        address: address.trim(),
-        contact_number: contactNumber.trim(),
-        landline_number: trimmedLandlineNumber,
-      });
-      setUser((currentUser: typeof user) =>
-        currentUser ? { ...currentUser, ...response.user } : response.user,
-      );
-      Alert.alert('Success', response.message);
-    } catch (error: any) {
-      if (isForceLogoutEmailChanged(error)) {
-        await logout();
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Login' }],
-        });
-        return;
-      }
+    const currentEmail = String(user?.email || '').trim().toLowerCase();
 
+    if (trimmedEmail !== currentEmail) {
       Alert.alert(
-        'Update failed',
-        error?.message || 'Could not update your account information.',
+        'Confirm Email Change',
+        'Changing your email will log you out and require verification. Do you want to continue?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Continue',
+            style: 'destructive',
+            onPress: () => {
+              void submitProfileUpdate(trimmedEmail, trimmedLandlineNumber);
+            },
+          },
+        ],
       );
-    } finally {
-      setProfileSubmitting(false);
+      return;
     }
+
+    await submitProfileUpdate(trimmedEmail, trimmedLandlineNumber);
   };
 
   const handleChangePassword = async () => {

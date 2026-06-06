@@ -101,6 +101,38 @@ export default function TechnicianSettingsScreen({navigation}: any) {
     : 'T-—';
   const profilePictureUrl = getProfilePictureUrl(user?.profile_picture);
 
+  const submitProfileUpdate = async (trimmedEmail: string) => {
+    try {
+      setProfileSubmitting(true);
+      const response = await updateTechnicianAccount({email: trimmedEmail});
+      setUser((currentUser: typeof user) =>
+        currentUser ? {...currentUser, ...response.user} : response.user,
+      );
+      Alert.alert('Success', response.message);
+      setExpandedPanel(null);
+    } catch (error: any) {
+      if (isForceLogoutEmailChanged(error)) {
+        await logout();
+        Alert.alert('Email verification required', error.message, [
+          {
+            text: 'OK',
+            onPress: () => {
+              navigation.reset({
+                index: 0,
+                routes: [{name: 'Login'}],
+              });
+            },
+          },
+        ]);
+        return;
+      }
+
+      Alert.alert('Update failed', error?.message || 'Could not update your account information.');
+    } finally {
+      setProfileSubmitting(false);
+    }
+  };
+
   const handleSaveProfile = async () => {
     const trimmedEmail = email.trim().toLowerCase();
 
@@ -115,28 +147,27 @@ export default function TechnicianSettingsScreen({navigation}: any) {
       return;
     }
 
-    try {
-      setProfileSubmitting(true);
-      const response = await updateTechnicianAccount({email: trimmedEmail});
-      setUser((currentUser: typeof user) =>
-        currentUser ? {...currentUser, ...response.user} : response.user,
-      );
-      Alert.alert('Success', response.message);
-      setExpandedPanel(null);
-    } catch (error: any) {
-      if (isForceLogoutEmailChanged(error)) {
-        await logout();
-        navigation.reset({
-          index: 0,
-          routes: [{name: 'Login'}],
-        });
-        return;
-      }
+    const currentEmail = String(user?.email || '').trim().toLowerCase();
 
-      Alert.alert('Update failed', error?.message || 'Could not update your account information.');
-    } finally {
-      setProfileSubmitting(false);
+    if (trimmedEmail !== currentEmail) {
+      Alert.alert(
+        'Confirm Email Change',
+        'Changing your email will log you out and require verification. Do you want to continue?',
+        [
+          {text: 'Cancel', style: 'cancel'},
+          {
+            text: 'Continue',
+            style: 'destructive',
+            onPress: () => {
+              void submitProfileUpdate(trimmedEmail);
+            },
+          },
+        ],
+      );
+      return;
     }
+
+    await submitProfileUpdate(trimmedEmail);
   };
 
   const handleChangePassword = async () => {
