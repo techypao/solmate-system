@@ -283,10 +283,10 @@
 <div class="section">
     <p class="section-title">Cost Breakdown</p>
     <table class="cost-table">
-        <tr><td class="label">Solar Panels</td><td class="value">{{ $fmtPeso($quotation->panel_cost) }}</td></tr>
-        <tr><td class="label">Inverter</td><td class="value">{{ $fmtPeso($quotation->inverter_cost) }}</td></tr>
-        <tr><td class="label">Battery Storage</td><td class="value">{{ $fmtPeso($quotation->battery_cost) }}</td></tr>
-        <tr><td class="label">Balance of System</td><td class="value">{{ $fmtPeso($quotation->bos_cost) }}</td></tr>
+        <tr><td class="label">Panel Cost</td><td class="value">{{ $fmtPeso($quotation->panel_cost) }}</td></tr>
+        <tr><td class="label">Inverter Cost</td><td class="value">{{ $fmtPeso($quotation->inverter_cost) }}</td></tr>
+        <tr><td class="label">Battery Cost</td><td class="value">{{ $fmtPeso($quotation->battery_cost) }}</td></tr>
+        <tr><td class="label">BOS Cost</td><td class="value">{{ $fmtPeso($quotation->bos_cost) }}</td></tr>
         <tr><td class="label">Materials Subtotal</td><td class="value">{{ $fmtPeso($quotation->materials_subtotal) }}</td></tr>
         <tr><td class="label">Labor Cost</td><td class="value">{{ $fmtPeso($quotation->labor_cost) }}</td></tr>
         @if($hasAppliedPromo)

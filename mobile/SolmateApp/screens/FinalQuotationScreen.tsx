@@ -1329,7 +1329,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         bos_cost: computedTotals.bosCost,
         materials_subtotal: computedTotals.materialsSubtotal,
         labor_cost: computedTotals.laborCost,
-        project_cost: computedTotals.finalProjectCost,
+        project_cost: computedTotals.projectCost,
         status: form.status,
         remarks: form.remarks.trim() || undefined,
         applied_promo_id: selectedPromoId ?? undefined,

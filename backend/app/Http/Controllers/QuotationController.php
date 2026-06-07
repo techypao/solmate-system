@@ -16,6 +16,7 @@ use App\Models\InspectionRequest;
 use App\Services\QuotationComputationService;
 use App\Services\InAppNotificationService;
 use App\Services\PromotionDiscountService;
+use App\Services\QuotationLineItemSyncService;
 use App\Services\QuotationSettingsService;
 
 class QuotationController extends Controller
@@ -23,18 +24,21 @@ class QuotationController extends Controller
     private QuotationComputationService $quotationComputationService;
     private InAppNotificationService $notificationService;
     private PromotionDiscountService $promotionDiscountService;
+    private QuotationLineItemSyncService $quotationLineItemSyncService;
     private QuotationSettingsService $quotationSettingsService;
 
     public function __construct(
         QuotationComputationService $quotationComputationService,
         InAppNotificationService $notificationService,
         PromotionDiscountService $promotionDiscountService,
+        QuotationLineItemSyncService $quotationLineItemSyncService,
         QuotationSettingsService $quotationSettingsService
     )
     {
         $this->quotationComputationService = $quotationComputationService;
         $this->notificationService = $notificationService;
         $this->promotionDiscountService = $promotionDiscountService;
+        $this->quotationLineItemSyncService = $quotationLineItemSyncService;
         $this->quotationSettingsService = $quotationSettingsService;
     }
 
@@ -484,8 +488,6 @@ public function getCustomerFinalQuotation(Request $request, int $inspectionReque
         ], 404);
     }
 
-    $this->loadLineItemsForFinalQuotation($quotation);
-
     return response()->json([
         'message' => 'Inspection-based quotation retrieved successfully.',
         'data' => $quotation
@@ -536,7 +538,25 @@ private function findCustomerFinalQuotation(int $customerId, int $inspectionRequ
 
     $this->loadLineItemsForFinalQuotation($quotation);
 
+    $quotation = $this->refreshFinalQuotationTotalsIfNeeded($quotation);
+    $quotation->loadMissing(['customer', 'inspectionRequest.technician']);
+
     return $quotation;
+}
+
+private function refreshFinalQuotationTotalsIfNeeded(Quotation $quotation): Quotation
+{
+    if ($quotation->quotation_type !== 'final') {
+        return $quotation;
+    }
+
+    $quotation->loadMissing(['lineItems', 'appliedPromo']);
+
+    if ($quotation->lineItems->isEmpty()) {
+        return $quotation;
+    }
+
+    return $this->quotationLineItemSyncService->refreshTotalsFromExistingLineItems($quotation);
 }
 
 private function finalQuotationPdfFilename(Quotation $quotation): string

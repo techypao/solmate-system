@@ -211,6 +211,15 @@
         font-weight: 700;
         color: #123A5A;
     }
+    .fq-cost-section td {
+        padding: 14px 0 6px;
+        border-bottom: 1.5px solid #DDE7EE;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .7px;
+        text-transform: uppercase;
+        color: #7F92A3;
+    }
 
     /* Final price highlight band */
     .fq-final-price {
@@ -540,7 +549,7 @@
             </div>
         </div>
 
-        {{-- ── CARD 2: Final Price ── --}}
+        {{-- ── CARD 2: Final Cost, Savings & ROI ── --}}
         <div class="fq-card">
             <div class="fq-card-header">
                 <div class="fq-card-icon">
@@ -550,8 +559,8 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="fq-card-title">Final Price</p>
-                    <p class="fq-card-subtitle">Itemised cost breakdown before your confirmation</p>
+                    <p class="fq-card-title">Final Cost, Savings &amp; ROI</p>
+                    <p class="fq-card-subtitle">Same inspection-based quotation totals shown in the mobile app</p>
                 </div>
             </div>
             <div class="fq-card-body">
@@ -560,7 +569,7 @@
                     <div>
                         <div class="fq-final-price-label">Total Project Cost</div>
                         <div class="fq-final-price-amount" id="fq-total-cost">—</div>
-                        <div class="fq-final-price-note">Inclusive of materials and labour</div>
+                        <div class="fq-final-price-note">Inclusive of materials, labour, and applied promo discount</div>
                     </div>
                     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#E6C200" stroke-width="1.5" opacity=".5">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
@@ -570,7 +579,7 @@
                 {{-- Line items section (only shown if line items exist) --}}
                 <div class="fq-li-section" id="fq-li-section" style="display:none;">
                     <div class="fq-divider">Itemised Components</div>
-                    <p class="fq-li-section-title">All installed components</p>
+                    <p class="fq-li-section-title">Itemized Line Items</p>
                     <table class="fq-li-table">
                         <thead>
                             <tr>
@@ -816,20 +825,29 @@
         return '<tr class="' + cls + '"><td class="fq-cost-label">' + escHtml(label) + '</td><td class="fq-cost-value">' + value + '</td></tr>';
     }
 
+    function costSection(label) {
+        return '<tr class="fq-cost-section"><td colspan="2">' + escHtml(label) + '</td></tr>';
+    }
+
     function renderCostTable(q) {
         var html = '';
-        if (q.panel_cost)        html += costRow('Solar Panels',        fmtPeso(q.panel_cost));
-        if (q.inverter_cost)     html += costRow('Inverter',            fmtPeso(q.inverter_cost));
-        if (q.battery_cost && q.with_battery) html += costRow('Battery Storage', fmtPeso(q.battery_cost));
-        if (q.bos_cost)          html += costRow('Balance of System (BOS)', fmtPeso(q.bos_cost));
+        if (q.panel_cost)        html += costRow('Panel Cost',        fmtPeso(q.panel_cost));
+        if (q.inverter_cost)     html += costRow('Inverter Cost',     fmtPeso(q.inverter_cost));
+        if (q.battery_cost && q.with_battery) html += costRow('Battery Cost', fmtPeso(q.battery_cost));
+        if (q.bos_cost)          html += costRow('BOS Cost', fmtPeso(q.bos_cost));
         if (q.materials_subtotal) html += costRow('Materials Subtotal', fmtPeso(q.materials_subtotal), true);
-        if (q.labor_cost)        html += costRow('Labour & Installation', fmtPeso(q.labor_cost));
+        html += costRow('Labor Cost', fmtPeso(q.labor_cost || 0));
         if (hasAppliedPromo(q)) {
             html += costRow('Applied Promo', escHtml(formatPromoRule(q)));
             if (Number(q.promo_discount || 0) > 0) {
                 html += costRow('Promo Discount', '-' + fmtPeso(q.promo_discount));
             }
         }
+        html += costRow('Total Project Cost', fmtPeso(q.project_cost), true);
+        html += costSection('Estimated Savings & ROI');
+        html += costRow('Est. Monthly Savings', fmtPeso(q.estimated_monthly_savings));
+        html += costRow('Est. Annual Savings', fmtPeso(q.estimated_annual_savings));
+        html += costRow('ROI / Payback Period', q.roi_years ? Number(q.roi_years).toFixed(1) + ' yrs' : '\u2014');
         costTable.innerHTML = html || '<tr class="fq-cost-row"><td colspan="2" style="color:#7F92A3;font-size:13px;">Cost breakdown not available.</td></tr>';
         totalCostEl.innerHTML = fmtPeso(q.project_cost);
     }

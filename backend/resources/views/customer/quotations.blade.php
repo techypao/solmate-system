@@ -658,10 +658,16 @@
         var detailItems = [
             ['Monthly Electric Bill', fmtPeso(quotation.monthly_electric_bill)],
             ['Estimated System Size', quotation.system_kw ? Number(quotation.system_kw).toFixed(2) + ' kW' : '-'],
-            ['Projected Cost', fmtPeso(quotation.project_cost)],
-            ['Estimated Monthly Savings', fmtPeso(quotation.estimated_monthly_savings)],
-            ['Estimated Annual Savings', fmtPeso(quotation.estimated_annual_savings)],
-            ['ROI', quotation.roi_years ? Number(quotation.roi_years).toFixed(1) + ' years' : '-'],
+            ['Panel Cost', fmtPeso(quotation.panel_cost)],
+            ['Inverter Cost', fmtPeso(quotation.inverter_cost)],
+            ['Battery Cost', fmtPeso(quotation.battery_cost)],
+            ['BOS Cost', fmtPeso(quotation.bos_cost)],
+            ['Materials Subtotal', fmtPeso(quotation.materials_subtotal)],
+            ['Labor Cost', fmtPeso(quotation.labor_cost || 0)],
+            ['Total Project Cost', fmtPeso(quotation.project_cost)],
+            ['Est. Monthly Savings', fmtPeso(quotation.estimated_monthly_savings)],
+            ['Est. Annual Savings', fmtPeso(quotation.estimated_annual_savings)],
+            ['ROI / Payback Period', quotation.roi_years ? Number(quotation.roi_years).toFixed(1) + ' years' : '-'],
             ['System Type', titleCase(quotation.pv_system_type)],
             ['Panel Quantity', quotation.panel_quantity || '-'],
             ['Panel Watts', quotation.panel_watts ? quotation.panel_watts + ' W' : '-'],
@@ -671,9 +677,9 @@
         ];
 
         if (hasAppliedPromo(quotation)) {
-            detailItems.splice(3, 0, ['Applied Promo', formatPromoRule(quotation)]);
+            detailItems.splice(8, 0, ['Applied Promo', formatPromoRule(quotation)]);
             if (Number(quotation.promo_discount || 0) > 0) {
-                detailItems.splice(4, 0, ['Promo Discount', '-' + fmtPeso(quotation.promo_discount)]);
+                detailItems.splice(9, 0, ['Promo Discount', '-' + fmtPeso(quotation.promo_discount)]);
             }
         }
 
