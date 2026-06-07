@@ -409,6 +409,30 @@
         .solmate-footer-contact-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: rgba(234,249,253,0.86); }
         .solmate-footer-contact-item svg { flex-shrink: 0; color: #7DDFF2; }
 
+        /* PRIVACY POLICY */
+        .gst-privacy-policy { padding: 80px 32px; background: linear-gradient(180deg, #ffffff 0%, #F8FAFC 100%); border-top: 1px solid #DDE7EE; }
+        .gst-privacy-policy-inner { max-width: 1080px; margin: 0 auto; }
+        .gst-privacy-policy-card { overflow: hidden; display: grid; grid-template-columns: minmax(280px, 0.88fr) minmax(0, 1.12fr); background: #ffffff; border: 1px solid #DDE7EE; border-radius: 22px; box-shadow: 0 18px 42px rgba(15,23,42,0.08); }
+        .gst-privacy-policy-summary { position: relative; padding: 34px; background: linear-gradient(135deg, #123A5A 0%, #1f4d76 64%, #20A7C9 100%); color: #ffffff; }
+        .gst-privacy-policy-summary::after { content: ""; position: absolute; right: -70px; bottom: -82px; width: 210px; height: 210px; border-radius: 50%; background: rgba(244,208,0,0.16); pointer-events: none; }
+        .gst-privacy-policy-badge { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); color: #f8d774; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+        .gst-privacy-policy-badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #F4D000; }
+        .gst-privacy-policy-title { position: relative; z-index: 1; margin: 18px 0 12px; font-size: 32px; font-weight: 700; line-height: 1.16; letter-spacing: -0.03em; color: #ffffff; }
+        .gst-privacy-policy-lead { position: relative; z-index: 1; margin: 0; color: rgba(255,255,255,0.84); font-size: 14.5px; line-height: 1.75; }
+        .gst-privacy-policy-contact { position: relative; z-index: 1; margin-top: 28px; padding: 16px 18px; border-radius: 16px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); }
+        .gst-privacy-policy-contact span { display: block; margin-bottom: 5px; color: #f8d774; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+        .gst-privacy-policy-contact a { color: #ffffff; font-size: 14px; font-weight: 700; word-break: break-word; }
+        .gst-privacy-policy-content { padding: 34px; }
+        .gst-privacy-policy-updated { display: inline-flex; align-items: center; width: fit-content; margin: 0 0 20px; padding: 6px 12px; border-radius: 999px; background: #FFF7CC; color: #92400e; font-size: 12px; font-weight: 700; }
+        .gst-privacy-policy-url { display: inline-flex; align-items: center; margin: 2px 0 22px; color: #123A5A; font-size: 14px; font-weight: 700; text-decoration: underline; text-decoration-color: rgba(32,167,201,0.45); text-underline-offset: 4px; word-break: break-word; }
+        .gst-privacy-policy-url:hover { color: #20A7C9; text-decoration-color: #20A7C9; }
+        .gst-privacy-policy-content h4 { margin: 28px 0 10px; font-size: 16px; color: #123A5A; }
+        .gst-privacy-policy-content h4:first-of-type { margin-top: 0; }
+        .gst-privacy-policy-content p { margin: 0 0 16px; color: #5E7288; line-height: 1.75; }
+        .gst-privacy-policy-content ul { margin: 0 0 18px; padding-left: 0; list-style: none; color: #5E7288; line-height: 1.75; }
+        .gst-privacy-policy-content li { position: relative; margin-bottom: 8px; padding-left: 20px; }
+        .gst-privacy-policy-content li::before { content: ""; position: absolute; left: 0; top: 0.72em; width: 7px; height: 7px; border-radius: 50%; background: #20A7C9; }
+
         /* RESPONSIVE */
         @media (max-width: 1000px) {
             .gst-hero-inner { gap: 40px; }
@@ -416,6 +440,7 @@
             .gst-app-shell { grid-template-columns: 1fr; }
             .gst-news-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .gst-promos-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .gst-privacy-policy-card { grid-template-columns: 1fr; }
             .solmate-footer-upper { grid-template-columns: 1fr 1fr; gap: 36px; }
         }
         @media (max-width: 720px) {
@@ -425,6 +450,7 @@
             .gst-hero-h1 { font-size: 34px; }
             .gst-hero { padding: 60px 20px 64px; }
             .gst-trust, .gst-app, .gst-news, .gst-promos, .gst-testimonies, .gst-about, .gst-cta-section { padding: 56px 20px; }
+            .gst-privacy-policy { padding: 56px 20px; }
             .gst-trust-grid { grid-template-columns: 1fr; }
             .gst-news-grid { grid-template-columns: 1fr; }
             .gst-promos-grid { grid-template-columns: 1fr; }
@@ -447,6 +473,8 @@
             .gst-app-card, .gst-app-panel { padding-left: 22px; padding-right: 22px; }
         }
         @media (max-width: 560px) {
+            .gst-privacy-policy-summary, .gst-privacy-policy-content { padding: 28px 22px; }
+            .gst-privacy-policy-title { font-size: 26px; }
             .solmate-footer-upper { grid-template-columns: 1fr; gap: 28px; }
             .solmate-footer-inner { padding: 40px 20px 0; }
             .solmate-footer-bottom { flex-direction: column; align-items: flex-start; padding: 20px; gap: 14px; }
@@ -831,6 +859,63 @@
     </div>
 </section>
 
+{{-- PRIVACY POLICY --}}
+<section class="gst-privacy-policy" id="privacy-policy" aria-label="Privacy Policy">
+    <div class="gst-privacy-policy-inner">
+        <div class="gst-section-heading">
+            <span class="gst-section-eyebrow">Privacy</span>
+            <h2 class="gst-section-title">Privacy Policy</h2>
+            <p class="gst-section-sub">A simple overview of how SolMate handles account, usage, and app information.</p>
+        </div>
+
+        <div class="gst-privacy-policy-card">
+            <div class="gst-privacy-policy-summary">
+                <span class="gst-privacy-policy-badge">SolMate by RDY</span>
+                <h3 class="gst-privacy-policy-title">Your data stays part of a cleaner, clearer solar experience.</h3>
+                <p class="gst-privacy-policy-lead">SolMate values your privacy and explains here how information is collected, used, and protected when you use our mobile and web application.</p>
+
+                <div class="gst-privacy-policy-contact">
+                    <span>Contact Us</span>
+                    <a href="mailto:solmate.innovit@gmail.com">solmate.innovit@gmail.com</a>
+                </div>
+            </div>
+
+            <div class="gst-privacy-policy-content">
+                <p class="gst-privacy-policy-updated">Last updated: May 2026</p>
+                <a href="https://solmatebyrdy.com/privacy-policy" class="gst-privacy-policy-url">https://solmatebyrdy.com/privacy-policy</a>
+
+                <p>SolMate (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) values your privacy. This Privacy Policy explains how we collect, use, and protect your information when you use our mobile and web application.</p>
+
+                <h4>1. Information We Collect</h4>
+                <ul>
+                    <li>Personal information such as name and email address</li>
+                    <li>Account login credentials</li>
+                    <li>Usage data and app interactions</li>
+                </ul>
+
+                <h4>2. How We Use Your Information</h4>
+                <ul>
+                    <li>To provide and manage our services</li>
+                    <li>To authenticate users and maintain account security</li>
+                    <li>To improve user experience</li>
+                </ul>
+
+                <h4>3. Data Protection</h4>
+                <p>We take appropriate measures to protect your personal data.</p>
+
+                <h4>4. Third-Party Services</h4>
+                <p>We may use services like Firebase for notifications and analytics.</p>
+
+                <h4>5. Changes to This Policy</h4>
+                <p>We may update this Privacy Policy anytime and will reflect changes here.</p>
+
+                <h4>6. Contact Us</h4>
+                <p>Email: solmate.innovit@gmail.com</p>
+            </div>
+        </div>
+    </div>
+</section>
+
 {{-- FOOTER --}}
 <footer class="solmate-footer" aria-label="Site footer">
     <div class="solmate-footer-inner">
@@ -852,6 +937,7 @@
                     <li><a href="{{ route('public.testimonies') }}">All Reviews</a></li>
                     <li><a href="{{ route('public.contact') }}">Contact Us</a></li>
                     <li><a href="#download-app">Download App</a></li>
+                    <li><a href="https://solmatebyrdy.com/privacy-policy">Privacy Policy</a></li>
                     <li><a href="{{ route('login') }}">Log In</a></li>
                 </ul>
             </div>
