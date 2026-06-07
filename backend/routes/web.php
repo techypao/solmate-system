@@ -60,6 +60,8 @@ Route::get('/contact', function () {
     return view('public.contact');
 })->name('public.contact');
 
+Route::view('/privacy-policy', 'privacy');
+
 Route::get('/email/verify/{id}/{hash}', [\App\Http\Controllers\Api\VerificationController::class, 'verify'])
     ->middleware(['signed'])
     ->name('verification.verify');
