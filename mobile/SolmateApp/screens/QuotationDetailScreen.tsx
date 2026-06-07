@@ -20,26 +20,26 @@ type QuotationDetail = {
   id: number;
   quotation_type?: string | null;
   status?: string | null;
-  monthly_electric_bill?: number | null;
+  monthly_electric_bill?: string | number | null;
   pv_system_type?: string | null;
-  monthly_kwh?: number | null;
-  daily_kwh?: number | null;
-  pv_kw_raw?: number | null;
-  pv_kw_safe?: number | null;
-  panel_quantity?: number | null;
-  system_kw?: number | null;
-  battery_required_kwh?: number | null;
-  battery_required_ah?: number | null;
-  panel_cost?: number | null;
-  inverter_cost?: number | null;
-  battery_cost?: number | null;
-  bos_cost?: number | null;
-  materials_subtotal?: number | null;
-  labor_cost?: number | null;
-  project_cost?: number | null;
-  estimated_monthly_savings?: number | null;
-  estimated_annual_savings?: number | null;
-  roi_years?: number | null;
+  monthly_kwh?: string | number | null;
+  daily_kwh?: string | number | null;
+  pv_kw_raw?: string | number | null;
+  pv_kw_safe?: string | number | null;
+  panel_quantity?: string | number | null;
+  system_kw?: string | number | null;
+  battery_required_kwh?: string | number | null;
+  battery_required_ah?: string | number | null;
+  panel_cost?: string | number | null;
+  inverter_cost?: string | number | null;
+  battery_cost?: string | number | null;
+  bos_cost?: string | number | null;
+  materials_subtotal?: string | number | null;
+  labor_cost?: string | number | null;
+  project_cost?: string | number | null;
+  estimated_monthly_savings?: string | number | null;
+  estimated_annual_savings?: string | number | null;
+  roi_years?: string | number | null;
   remarks?: string | null;
   created_at?: string | null;
 };
@@ -59,19 +59,29 @@ function fmtVal(value?: string | number | null) {
   return String(value);
 }
 
-function fmtYears(value?: number | null) {
-  if (value === null || value === undefined || Number.isNaN(value)) return 'N/A';
-  return value.toFixed(1) + ' yrs';
+function toFiniteNumber(value?: string | number | null) {
+  if (value === null || value === undefined || value === '') return null;
+  const numericValue =
+    typeof value === 'number' ? value : Number(String(value).trim());
+  return Number.isFinite(numericValue) ? numericValue : null;
 }
 
-function fmtKw(value?: number | null) {
-  if (value === null || value === undefined) return 'N/A';
-  return value + ' kWp';
+function fmtYears(value?: string | number | null) {
+  const numericValue = toFiniteNumber(value);
+  if (numericValue === null) return 'N/A';
+  return numericValue.toFixed(1) + ' yrs';
 }
 
-function fmtKwh(value?: number | null) {
-  if (value === null || value === undefined) return 'N/A';
-  return value + ' kWh';
+function fmtKw(value?: string | number | null) {
+  const numericValue = toFiniteNumber(value);
+  if (numericValue === null) return 'N/A';
+  return numericValue + ' kWp';
+}
+
+function fmtKwh(value?: string | number | null) {
+  const numericValue = toFiniteNumber(value);
+  if (numericValue === null) return 'N/A';
+  return numericValue + ' kWh';
 }
 
 function fmtSystemType(value?: string | null) {

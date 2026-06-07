@@ -34,6 +34,16 @@ export type QuotationLineItem = {
   pricing_item?: PricingItemSummary | null;
 };
 
+export type AppliedPromotionSummary = {
+  id: number;
+  title?: string | null;
+  description?: string | null;
+  promo_type?: 'percentage' | 'fixed_amount' | 'free_item' | 'bundle' | string | null;
+  discount_value?: number | string | null;
+  free_item_description?: string | null;
+  conditions?: Record<string, unknown> | null;
+};
+
 export type Quotation = {
   id: number;
   user_id?: number;
@@ -73,7 +83,8 @@ export type Quotation = {
   roi_years?: number | null;
   remarks?: string | null;
   applied_promo_id?: number | null;
-  promo_discount?: number | null;
+  promo_discount?: number | string | null;
+  applied_promo?: AppliedPromotionSummary | null;
   created_at?: string;
   updated_at?: string;
   customer?: UserSummary | null;

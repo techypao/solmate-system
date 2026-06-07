@@ -43,9 +43,9 @@ class QuotationController extends Controller
         $user = Auth::user();
 
         if (in_array($user->role, ['admin', 'technician'])) {
-            $quotations = Quotation::with('user')->latest()->get();
+            $quotations = Quotation::with(['user', 'appliedPromo'])->latest()->get();
         } else {
-            $quotations = Quotation::with('user')
+            $quotations = Quotation::with(['user', 'appliedPromo'])
                 ->where('user_id', $user->id)
                 ->latest()
                 ->get();

@@ -79,7 +79,7 @@ function formatQuantityWithUnit(
   return parts.length > 0 ? parts.join(' ') : 'N/A';
 }
 
-function fmtCurrency(value?: number | null) {
+function fmtCurrency(value?: string | number | null) {
   return formatQuotationCurrency(value, {
     currency: 'PHP',
     fallback: 'PHP 0.00',
@@ -87,19 +87,60 @@ function fmtCurrency(value?: number | null) {
   });
 }
 
-function fmtKw(value?: number | null) {
-  if (value === null || value === undefined) return 'N/A';
-  return value + ' kWp';
+function toFiniteNumber(value?: string | number | null) {
+  if (value === null || value === undefined || value === '') return null;
+  const numericValue =
+    typeof value === 'number' ? value : Number(String(value).trim());
+  return Number.isFinite(numericValue) ? numericValue : null;
 }
 
-function fmtKwh(value?: number | null) {
-  if (value === null || value === undefined) return 'N/A';
-  return value + ' kWh';
+function fmtKw(value?: string | number | null) {
+  const numericValue = toFiniteNumber(value);
+  if (numericValue === null) return 'N/A';
+  return numericValue + ' kWp';
 }
 
-function fmtYears(value?: number | null) {
-  if (value === null || value === undefined || Number.isNaN(value)) return 'N/A';
-  return value.toFixed(1) + ' yrs';
+function fmtKwh(value?: string | number | null) {
+  const numericValue = toFiniteNumber(value);
+  if (numericValue === null) return 'N/A';
+  return numericValue + ' kWh';
+}
+
+function fmtYears(value?: string | number | null) {
+  const numericValue = toFiniteNumber(value);
+  if (numericValue === null) return 'N/A';
+  return numericValue.toFixed(1) + ' yrs';
+}
+
+function formatPromoRule(quotation: Quotation) {
+  const promo = quotation.applied_promo;
+
+  if (!promo) {
+    return quotation.applied_promo_id
+      ? 'Promo #' + quotation.applied_promo_id
+      : 'N/A';
+  }
+
+  const title = formatReadableText(promo.title);
+  const conditions = promo.conditions;
+  const appliesTo = conditions?.applies_to ? String(conditions.applies_to) : '';
+  const minQty = toFiniteNumber(conditions?.min_qty as string | number | null);
+  const freeQty = toFiniteNumber(conditions?.free_qty as string | number | null) ?? 1;
+
+  if (promo.promo_type === 'free_item' && appliesTo && minQty !== null) {
+    return `${title} (${appliesTo}: buy ${minQty}, get ${freeQty} free)`;
+  }
+
+  if (promo.promo_type === 'free_item' && promo.free_item_description) {
+    return `${title} (${formatReadableText(promo.free_item_description)})`;
+  }
+
+  return title;
+}
+
+function hasAppliedPromo(quotation: Quotation) {
+  const promoDiscount = toFiniteNumber(quotation.promo_discount);
+  return Boolean(quotation.applied_promo || quotation.applied_promo_id || (promoDiscount && promoDiscount > 0));
 }
 
 function getFriendlyErrorMessage(error: unknown) {
@@ -412,6 +453,20 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
             bold
           />
           <InfoRow label="Labor Cost" value={fmtCurrency(quotation.labor_cost)} />
+          {hasAppliedPromo(quotation) ? (
+            <>
+              <InfoRow
+                label="Applied Promo"
+                value={formatPromoRule(quotation)}
+                bold
+              />
+              <InfoRow
+                label="Promo Discount"
+                value={'-' + fmtCurrency(quotation.promo_discount)}
+                bold
+              />
+            </>
+          ) : null}
           <InfoRow
             label="Total Project Cost"
             value={fmtCurrency(quotation.project_cost)}

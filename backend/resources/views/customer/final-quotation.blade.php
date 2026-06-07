@@ -670,6 +670,38 @@
         } catch (e) { return str; }
     }
 
+    function getAppliedPromo(q) {
+        return (q && (q.applied_promo || q.appliedPromo)) || null;
+    }
+
+    function hasAppliedPromo(q) {
+        var discount = q ? Number(q.promo_discount || 0) : 0;
+        return !!(getAppliedPromo(q) || (q && q.applied_promo_id) || discount > 0);
+    }
+
+    function formatPromoRule(q) {
+        var promo = getAppliedPromo(q);
+        if (!promo) {
+            return q && q.applied_promo_id ? 'Promo #' + q.applied_promo_id : '\u2014';
+        }
+
+        var title = promo.title || promo.free_item_description || ('Promo #' + promo.id);
+        var conditions = promo.conditions || {};
+        var appliesTo = conditions.applies_to ? String(conditions.applies_to).replace(/_/g, ' ') : '';
+        var minQty = Number(conditions.min_qty || 0);
+        var freeQty = Number(conditions.free_qty || 1);
+
+        if (promo.promo_type === 'free_item' && appliesTo && minQty > 0) {
+            return title + ' (' + appliesTo + ': buy ' + minQty + ', get ' + freeQty + ' free)';
+        }
+
+        if (promo.promo_type === 'free_item' && promo.free_item_description) {
+            return title + ' (' + promo.free_item_description + ')';
+        }
+
+        return title;
+    }
+
     function getCookie(name) {
         var m = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.*+?^=!:${}()|[\]\/\\])/g, '\\$1') + '=([^;]*)'));
         return m ? decodeURIComponent(m[1]) : null;
@@ -792,6 +824,12 @@
         if (q.bos_cost)          html += costRow('Balance of System (BOS)', fmtPeso(q.bos_cost));
         if (q.materials_subtotal) html += costRow('Materials Subtotal', fmtPeso(q.materials_subtotal), true);
         if (q.labor_cost)        html += costRow('Labour & Installation', fmtPeso(q.labor_cost));
+        if (hasAppliedPromo(q)) {
+            html += costRow('Applied Promo', escHtml(formatPromoRule(q)));
+            if (Number(q.promo_discount || 0) > 0) {
+                html += costRow('Promo Discount', '-' + fmtPeso(q.promo_discount));
+            }
+        }
         costTable.innerHTML = html || '<tr class="fq-cost-row"><td colspan="2" style="color:#7F92A3;font-size:13px;">Cost breakdown not available.</td></tr>';
         totalCostEl.innerHTML = fmtPeso(q.project_cost);
     }

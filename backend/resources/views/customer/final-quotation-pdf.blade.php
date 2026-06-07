@@ -200,6 +200,25 @@
     $fmtNumber = fn ($value, $suffix = '') => ($value === null || $value === '') ? '—' : number_format((float) $value, 2) . $suffix;
     $systemType = $quotation->pv_system_type ? ucwords(str_replace('_', ' ', $quotation->pv_system_type)) : '—';
     $inverterType = $quotation->inverter_type ? ucwords(str_replace('_', ' ', $quotation->inverter_type)) : '—';
+    $appliedPromo = $quotation->appliedPromo;
+    $hasAppliedPromo = $appliedPromo || $quotation->applied_promo_id || (float) ($quotation->promo_discount ?? 0) > 0;
+    $promoLabel = '—';
+
+    if ($appliedPromo) {
+        $promoLabel = $appliedPromo->title ?: ($appliedPromo->free_item_description ?: 'Promo #' . $appliedPromo->id);
+        $conditions = $appliedPromo->conditions ?? [];
+        $appliesTo = isset($conditions['applies_to']) ? ucwords(str_replace('_', ' ', (string) $conditions['applies_to'])) : '';
+        $minQty = (int) ($conditions['min_qty'] ?? 0);
+        $freeQty = (int) ($conditions['free_qty'] ?? 1);
+
+        if ($appliedPromo->promo_type === 'free_item' && $appliesTo !== '' && $minQty > 0) {
+            $promoLabel .= ' (' . $appliesTo . ': buy ' . $minQty . ', get ' . $freeQty . ' free)';
+        } elseif ($appliedPromo->promo_type === 'free_item' && $appliedPromo->free_item_description) {
+            $promoLabel .= ' (' . $appliedPromo->free_item_description . ')';
+        }
+    } elseif ($quotation->applied_promo_id) {
+        $promoLabel = 'Promo #' . $quotation->applied_promo_id;
+    }
 @endphp
 
 <div class="brand-header">
@@ -270,6 +289,12 @@
         <tr><td class="label">Balance of System</td><td class="value">{{ $fmtPeso($quotation->bos_cost) }}</td></tr>
         <tr><td class="label">Materials Subtotal</td><td class="value">{{ $fmtPeso($quotation->materials_subtotal) }}</td></tr>
         <tr><td class="label">Labor Cost</td><td class="value">{{ $fmtPeso($quotation->labor_cost) }}</td></tr>
+        @if($hasAppliedPromo)
+            <tr><td class="label">Applied Promo</td><td class="value">{{ $promoLabel }}</td></tr>
+            @if((float) ($quotation->promo_discount ?? 0) > 0)
+                <tr><td class="label">Promo Discount</td><td class="value">-{{ $fmtPeso($quotation->promo_discount) }}</td></tr>
+            @endif
+        @endif
         <tr><td class="label">Total Project Cost</td><td class="value">{{ $fmtPeso($quotation->project_cost) }}</td></tr>
     </table>
 

@@ -609,7 +609,14 @@
                             return 0;
                         }
 
-                        return Number(Math.min(freeQty * unitPrice, baseTotal).toFixed(2));
+                        const promoSetQty = minQty + freeQty;
+                        const eligibleFreeQty = Math.floor(actualQty / promoSetQty) * freeQty;
+
+                        if (eligibleFreeQty <= 0) {
+                            return 0;
+                        }
+
+                        return Number(Math.min(eligibleFreeQty * unitPrice, baseTotal).toFixed(2));
                     }
 
                     return value > 0 ? Number(Math.min(value, baseTotal).toFixed(2)) : 0;

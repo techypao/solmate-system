@@ -83,7 +83,14 @@ class PromotionDiscountService
                 return null;
             }
 
-            return round(min($freeQty * $unitPrice, $projectCost), 2);
+            $promoSetQty = $minQty + $freeQty;
+            $eligibleFreeQty = (int) floor($actualQty / $promoSetQty) * $freeQty;
+
+            if ($eligibleFreeQty <= 0) {
+                return null;
+            }
+
+            return round(min($eligibleFreeQty * $unitPrice, $projectCost), 2);
         }
 
         return $fallbackValue > 0 ? round(min($fallbackValue, $projectCost), 2) : null;

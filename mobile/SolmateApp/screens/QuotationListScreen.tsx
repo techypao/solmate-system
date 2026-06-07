@@ -32,12 +32,12 @@ type Quotation = {
   inspection_request_id?: number | null;
   quotation_type: string;
   status: string;
-  monthly_electric_bill?: number | null;
+  monthly_electric_bill?: string | number | null;
   pv_system_type?: string | null;
-  panel_quantity?: number | null;
-  system_kw?: number | null;
-  project_cost?: number | null;
-  roi_years?: number | null;
+  panel_quantity?: string | number | null;
+  system_kw?: string | number | null;
+  project_cost?: string | number | null;
+  roi_years?: string | number | null;
   created_at?: string;
 };
 
@@ -49,9 +49,17 @@ type QuotationListRouteParams = {
 
 /* ── format helpers (preserved) ── */
 
-function formatYears(value?: number | null) {
-  if (value === null || value === undefined || Number.isNaN(value)) return 'N/A';
-  return value.toFixed(1);
+function toFiniteNumber(value?: string | number | null) {
+  if (value === null || value === undefined || value === '') return null;
+  const numericValue =
+    typeof value === 'number' ? value : Number(String(value).trim());
+  return Number.isFinite(numericValue) ? numericValue : null;
+}
+
+function formatYears(value?: string | number | null) {
+  const numericValue = toFiniteNumber(value);
+  if (numericValue === null) return 'N/A';
+  return numericValue.toFixed(1);
 }
 
 function formatDate(value?: string) {
@@ -120,15 +128,6 @@ function getStatusBadgeColors(status?: string | null) {
     default:
       return {bg: '#FFF7CC', text: '#92400e'};
   }
-}
-
-/* ── primary CTA label based on status / type ── */
-
-function getPrimaryActionLabel(item: Quotation) {
-  if (item.quotation_type === 'final') {
-    return 'View Inspection-Based';
-  }
-  return 'View Estimate';
 }
 
 /* ── filter chips config ── */
@@ -249,15 +248,6 @@ export default function QuotationListScreen({navigation, route}: any) {
     }
   };
 
-  const handlePrimaryAction = (item: Quotation) => {
-    if (item.quotation_type === 'final') {
-      handleViewDetails(item);
-      return;
-    }
-
-    handleViewDetails(item);
-  };
-
   /* ── render card ── */
 
   const renderQuotationItem = ({item}: {item: Quotation}) => {
@@ -310,16 +300,6 @@ export default function QuotationListScreen({navigation, route}: any) {
             style={({pressed}) => [s.btnSecondary, pressed && s.pressed]}>
             <Text style={s.btnSecondaryText}>View Details</Text>
           </Pressable>
-
-          {isFinalQuotation ? (
-            <Pressable
-              onPress={() => handlePrimaryAction(item)}
-              style={({pressed}) => [s.btnPrimary, pressed && s.pressed]}>
-              <Text style={s.btnPrimaryText}>
-                {getPrimaryActionLabel(item)}
-              </Text>
-            </Pressable>
-          ) : null}
         </View>
       </View>
     );
@@ -662,25 +642,6 @@ const s = StyleSheet.create({
     fontWeight: '800',
     color: NAVY,
   },
-  btnPrimary: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 24,
-    backgroundColor: GOLD,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: GOLD,
-    shadowOffset: {width: 0, height: 3},
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  btnPrimaryText: {
-    fontSize: 14,
-    fontWeight: '900',
-    color: NAVY,
-  },
-
   /* loading */
   loadingText: {color: MUTED, fontSize: 14, marginTop: 12},
 

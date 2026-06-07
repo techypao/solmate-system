@@ -510,6 +510,38 @@
         });
     }
 
+    function getAppliedPromo(quotation) {
+        return (quotation && (quotation.applied_promo || quotation.appliedPromo)) || null;
+    }
+
+    function hasAppliedPromo(quotation) {
+        var discount = quotation ? Number(quotation.promo_discount || 0) : 0;
+        return !!(getAppliedPromo(quotation) || (quotation && quotation.applied_promo_id) || discount > 0);
+    }
+
+    function formatPromoRule(quotation) {
+        var promo = getAppliedPromo(quotation);
+        if (!promo) {
+            return quotation && quotation.applied_promo_id ? 'Promo #' + quotation.applied_promo_id : '-';
+        }
+
+        var title = promo.title || promo.free_item_description || ('Promo #' + promo.id);
+        var conditions = promo.conditions || {};
+        var appliesTo = conditions.applies_to ? titleCase(conditions.applies_to) : '';
+        var minQty = Number(conditions.min_qty || 0);
+        var freeQty = Number(conditions.free_qty || 1);
+
+        if (promo.promo_type === 'free_item' && appliesTo && minQty > 0) {
+            return title + ' (' + appliesTo + ': buy ' + minQty + ', get ' + freeQty + ' free)';
+        }
+
+        if (promo.promo_type === 'free_item' && promo.free_item_description) {
+            return title + ' (' + promo.free_item_description + ')';
+        }
+
+        return title;
+    }
+
     async function apiRequest(endpoint) {
         var response = await fetch(endpoint, {
             method: 'GET',
@@ -637,6 +669,13 @@
             ['Related Request', relatedRequestLabel(quotation)],
             ['Remarks', quotation.remarks || '-']
         ];
+
+        if (hasAppliedPromo(quotation)) {
+            detailItems.splice(3, 0, ['Applied Promo', formatPromoRule(quotation)]);
+            if (Number(quotation.promo_discount || 0) > 0) {
+                detailItems.splice(4, 0, ['Promo Discount', '-' + fmtPeso(quotation.promo_discount)]);
+            }
+        }
 
         return detailItems.map(function (item) {
             return '<div class="cql-detail-item">'

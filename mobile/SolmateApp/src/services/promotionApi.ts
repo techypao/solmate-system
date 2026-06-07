@@ -50,22 +50,25 @@ export function getPromoConditionStatus(
   const conditions = promo.conditions;
   const appliesTo = conditions?.applies_to as string | undefined;
   const minQty = Number(conditions?.min_qty ?? 0);
+  const freeQty = Number(conditions?.free_qty ?? 1);
 
-  if (!appliesTo || minQty <= 0) {
+  if (!appliesTo || minQty <= 0 || freeQty <= 0) {
     return {conditionRequired: false, conditionMet: true, message: null};
   }
 
   const totalQty = lineItems
     .filter(i => i.category === appliesTo)
     .reduce((sum, i) => sum + i.qty, 0);
-  const met = totalQty >= minQty;
+  const promoSetQty = minQty + freeQty;
+  const eligibleFreeQty = Math.floor(totalQty / promoSetQty) * freeQty;
+  const met = eligibleFreeQty > 0;
 
   return {
     conditionRequired: true,
     conditionMet: met,
     message: met
-      ? `Condition met (${totalQty} ${appliesTo}${totalQty !== 1 ? 's' : ''} selected)`
-      : `Requires at least ${minQty} ${appliesTo}${minQty !== 1 ? 's' : ''} — currently ${totalQty}`,
+      ? `Eligible for ${eligibleFreeQty} free ${appliesTo}${eligibleFreeQty !== 1 ? 's' : ''}`
+      : `Requires at least ${promoSetQty} total ${appliesTo}${promoSetQty !== 1 ? 's' : ''} - currently ${totalQty}`,
   };
 }
 
@@ -105,7 +108,15 @@ export function computePromoDiscount(
         if (totalQty < minQty || unitPrice <= 0) {
           return 0; // condition not met
         }
-        return Number(Math.min(freeQty * unitPrice, projectCost).toFixed(2));
+
+        const promoSetQty = minQty + freeQty;
+        const eligibleFreeQty = Math.floor(totalQty / promoSetQty) * freeQty;
+
+        if (eligibleFreeQty <= 0) {
+          return 0; // condition not met
+        }
+
+        return Number(Math.min(eligibleFreeQty * unitPrice, projectCost).toFixed(2));
       }
 
       return value > 0 ? Number(Math.min(value, projectCost).toFixed(2)) : 0;

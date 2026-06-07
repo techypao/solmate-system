@@ -386,12 +386,12 @@
                             <div id="promo-conditions-qty-wrap">
                                 <label for="promo_conditions_min_qty">Min. quantity required</label>
                                 <input id="promo_conditions_min_qty" name="conditions[min_qty]" type="number" min="1" step="1" placeholder="e.g. 5">
-                                <small class="muted" style="display:block; margin-top:4px;">Promo activates only when at least this many items are in the quotation.</small>
+                                <small class="muted" style="display:block; margin-top:4px;">Paid items required in each promo set, like 5 in buy 5 get 1.</small>
                             </div>
                             <div id="promo-conditions-free-qty-wrap">
                                 <label for="promo_conditions_free_qty">Free item count</label>
                                 <input id="promo_conditions_free_qty" name="conditions[free_qty]" type="number" min="1" step="1" placeholder="e.g. 1">
-                                <small class="muted" style="display:block; margin-top:4px;">Their catalog unit price will be auto-deducted.</small>
+                                <small class="muted" style="display:block; margin-top:4px;">Deducted once per complete promo set. Buy 5 get 1 means every 6 quoted items gives 1 free.</small>
                             </div>
                         </div>
                     </div>

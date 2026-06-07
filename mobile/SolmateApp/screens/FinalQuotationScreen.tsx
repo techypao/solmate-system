@@ -2194,7 +2194,9 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           } else if (promo.promo_type === 'free_item') {
             const conds = promo.conditions;
             if (conds?.applies_to && conds?.min_qty) {
-              discountLabel = `Buy ${conds.min_qty}+ ${conds.applies_to}(s), get ${conds.free_qty ?? 1} free`;
+              const minQty = Number(conds.min_qty);
+              const freeQty = Number(conds.free_qty ?? 1);
+              discountLabel = `Buy ${minQty}, get ${freeQty} free per ${minQty + freeQty} quoted`;
             } else {
               discountLabel = promo.free_item_description
                 ? `Free: ${promo.free_item_description}`

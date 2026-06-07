@@ -100,6 +100,14 @@ function getErrorMessage(data: any, fallbackMessage: string) {
   return fallbackMessage;
 }
 
+function getFallbackErrorMessageForStatus(status: number) {
+  if (status === 413) {
+    return 'The upload is too large. Please choose fewer or smaller photos and try again.';
+  }
+
+  return `Request failed with status code ${status}.`;
+}
+
 async function parseResponse(response: Response) {
   const responseText = await response.text();
 
@@ -162,7 +170,7 @@ async function apiRequest<T>(
       throw new ApiError(
         getErrorMessage(
           data,
-          `Request failed with status code ${response.status}.`,
+          getFallbackErrorMessageForStatus(response.status),
         ),
         response.status,
         data,

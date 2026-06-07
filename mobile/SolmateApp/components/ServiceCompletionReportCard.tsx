@@ -3,7 +3,6 @@ import {
   Alert,
   Image,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -24,6 +23,9 @@ const NAVY = solmateColors.navy;
 const GOLD = solmateColors.primary;
 const MUTED = solmateColors.muted;
 const SOFT = solmateColors.backgroundSoft;
+const MAX_COMPLETION_PHOTOS = 1;
+const COMPLETION_PHOTO_MAX_SIZE = 1024;
+const COMPLETION_PHOTO_QUALITY = 0.4;
 
 function formatDateTime(value?: string | null) {
   if (!value) {
@@ -128,10 +130,22 @@ export default function ServiceCompletionReportCard({
   const hasSubmittedReport = !!report;
 
   const handlePickPhotos = async () => {
+    const remainingSlots = MAX_COMPLETION_PHOTOS - photos.length;
+
+    if (remainingSlots <= 0) {
+      Alert.alert(
+        'Photo limit reached',
+        'You can attach one completion photo.',
+      );
+      return;
+    }
+
     const result = await launchImageLibrary({
       mediaType: 'photo',
-      selectionLimit: 0,
-      quality: 0.8,
+      selectionLimit: remainingSlots,
+      maxWidth: COMPLETION_PHOTO_MAX_SIZE,
+      maxHeight: COMPLETION_PHOTO_MAX_SIZE,
+      quality: COMPLETION_PHOTO_QUALITY,
     });
 
     if (result.didCancel) {
@@ -148,7 +162,9 @@ export default function ServiceCompletionReportCard({
       return;
     }
 
-    setPhotos(current => [...current, ...picked]);
+    setPhotos(current =>
+      [...current, ...picked].slice(0, MAX_COMPLETION_PHOTOS),
+    );
     setErrors(current => ({...current, photos: undefined}));
   };
 
@@ -332,8 +348,8 @@ export default function ServiceCompletionReportCard({
           </Text>
           <Text style={styles.photoSectionHint}>
             {photosRequired
-              ? 'Upload at least one photo as proof of completion.'
-              : 'Upload photos if you want to attach proof of completion.'}
+              ? 'Upload one photo as proof of completion.'
+              : 'Upload one photo if you want to attach proof of completion.'}
           </Text>
 
           <Pressable
@@ -349,7 +365,7 @@ export default function ServiceCompletionReportCard({
                 styles.photoPickerBtnText,
                 (!canSubmit || submitting) && styles.photoPickerBtnTextDisabled,
               ]}>
-              Add Photos
+              Add Photo
             </Text>
           </Pressable>
 
