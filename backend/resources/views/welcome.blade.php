@@ -827,7 +827,7 @@
                 <p class="gst-app-panel-copy">Use this option if you are already browsing on your Android phone.</p>
                 <div class="gst-app-panel-note">After downloading, open the APK file on your phone to install the SolMate app.</div>
                 <div class="gst-hero-actions">
-                    <a href="https://drive.google.com/file/d/1AZnWwNtpJDn7MQWgTo4BKrHEams2B_mh/view?usp=sharing" class="gst-cta-primary" target="_blank" rel="noopener">Download APK</a>
+                    <a href="https://drive.google.com/file/d/1But4_f2XMylhKfZG6fo_188jSbNdZ8sG/view?usp=sharing" class="gst-cta-primary" target="_blank" rel="noopener">Download APK</a>
                 </div>
             </aside>
         </div>
