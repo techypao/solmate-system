@@ -1,22 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Config from 'react-native-config';
 
-const DEFAULT_API_BASE_URL = 'https://solmatebyrdy.com/api';
-
-function normalizeApiBaseUrl(rawBaseUrl) {
-  const normalizedBaseUrl = rawBaseUrl?.trim().replace(/\/+$/, '');
-
-  if (!normalizedBaseUrl) {
-    return DEFAULT_API_BASE_URL;
-  }
-
-  return normalizedBaseUrl.replace(/\/api$/i, '') + '/api';
-}
-
-export const API_BASE_URL = normalizeApiBaseUrl(
-  Config.API_BASE_URL || DEFAULT_API_BASE_URL,
-);
-export const BASE_URL = API_BASE_URL;
+export const BASE_URL = 'https://solmatebyrdy.com/api';
+export const API_BASE_URL = BASE_URL;
 export const TOKEN_STORAGE_KEY = 'token';
 
 let sessionToken = null;

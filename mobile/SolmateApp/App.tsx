@@ -14,6 +14,7 @@ import { AuthProvider, AuthContext } from './src/context/AuthContext';
 import AuthStack from './src/navigation/AuthStack';
 import CustomerStack from './src/navigation/CustomerStack';
 import TechnicianStack from './src/navigation/TechnicianStack';
+import { canUseFirebaseMessaging } from './src/services/firebaseApp';
 import { solmateColors, solmateNavigationTheme } from './src/theme/colors';
 
 function AppNavigator() {
@@ -65,6 +66,10 @@ function AppNavigator() {
 }
 
 async function requestNotificationPermission() {
+  if (!canUseFirebaseMessaging()) {
+    return false;
+  }
+
   if (Platform.OS === 'android' && Platform.Version >= 33) {
     const permissionStatus = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
@@ -85,6 +90,10 @@ async function requestNotificationPermission() {
 
 export default function App() {
   useEffect(() => {
+    if (!canUseFirebaseMessaging()) {
+      return undefined;
+    }
+
     const unsubscribeForegroundMessages = messaging().onMessage(
       async remoteMessage => {
         console.log('[FCM] Foreground message received:', remoteMessage);

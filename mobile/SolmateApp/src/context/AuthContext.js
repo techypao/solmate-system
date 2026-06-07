@@ -13,10 +13,15 @@ import {
   removeDeviceToken,
   saveDeviceToken,
 } from '../services/notificationApi';
+import { canUseFirebaseMessaging } from '../services/firebaseApp';
 
 export const AuthContext = createContext();
 
 async function requestNotificationPermission() {
+  if (!canUseFirebaseMessaging()) {
+    return false;
+  }
+
   if (Platform.OS === 'android' && Platform.Version >= 33) {
     const permissionStatus = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
@@ -42,6 +47,10 @@ export const AuthProvider = ({ children }) => {
   const [authErrorMessage, setAuthErrorMessage] = useState('');
 
   const syncFcmToken = useCallback(async authToken => {
+    if (!canUseFirebaseMessaging()) {
+      return;
+    }
+
     try {
       await messaging().registerDeviceForRemoteMessages();
 
@@ -152,10 +161,12 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.log('Remote logout cleanup error:', error?.message || error);
     } finally {
-      try {
-        await messaging().deleteToken();
-      } catch (error) {
-        console.log('FCM token delete error:', error?.message || error);
+      if (canUseFirebaseMessaging()) {
+        try {
+          await messaging().deleteToken();
+        } catch (error) {
+          console.log('FCM token delete error:', error?.message || error);
+        }
       }
 
       setSessionToken(null);
@@ -176,6 +187,10 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (!token) {
+      return undefined;
+    }
+
+    if (!canUseFirebaseMessaging()) {
       return undefined;
     }
 
