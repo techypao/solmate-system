@@ -1402,7 +1402,7 @@
 
         .solmate-footer-upper {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr 0.6fr;
+            grid-template-columns: 2fr 1fr 1fr;
             gap: 48px;
             padding-bottom: 48px;
         }
@@ -1454,33 +1454,6 @@
 
         .solmate-footer-links a:hover {
             color: #7DDFF2;
-            text-decoration: none;
-        }
-
-        .solmate-footer-socials {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .solmate-footer-social-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.22);
-            color: #DDE7EE;
-            text-decoration: none;
-            transition: background 0.15s, color 0.15s;
-            line-height: 0;
-        }
-
-        .solmate-footer-social-btn:hover {
-            background: #F4D000;
-            color: #0F2F4A;
             text-decoration: none;
         }
 
@@ -2401,29 +2374,6 @@
                     </ul>
                 </div>
 
-                {{-- Socials --}}
-                <div>
-                    <p class="solmate-footer-col-heading">Socials</p>
-                    <div class="solmate-footer-socials">
-                        {{-- Facebook --}}
-                        <a href="#" class="solmate-footer-social-btn" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-                        </a>
-                        {{-- Instagram --}}
-                        <a href="#" class="solmate-footer-social-btn" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-                        </a>
-                        {{-- X (Twitter) --}}
-                        <a href="#" class="solmate-footer-social-btn" aria-label="X (Twitter)" target="_blank" rel="noopener noreferrer">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                        </a>
-                        {{-- TikTok --}}
-                        <a href="#" class="solmate-footer-social-btn" aria-label="TikTok" target="_blank" rel="noopener noreferrer">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z"/></svg>
-                        </a>
-                    </div>
-                </div>
-
             </div>
         </div>
 
@@ -2437,7 +2387,7 @@
             <div class="solmate-footer-contact-items">
                 <div class="solmate-footer-contact-item">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    <span>Address, Philippines</span>
+                    <span>3852 Gumamela, Pasig, 1611 Metro Manila</span>
                 </div>
                 <div class="solmate-footer-contact-item">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
