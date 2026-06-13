@@ -63,6 +63,12 @@ Route::get('/contact', function () {
 
 Route::view('/privacy-policy', 'privacy');
 
+Route::get('/delete-account', [CustomerDeleteRequestController::class, 'create'])
+    ->name('delete-account');
+
+Route::post('/delete-account', [CustomerDeleteRequestController::class, 'storePublic'])
+    ->name('delete-account.store');
+
 Route::get('/email/verify/{id}/{hash}', [\App\Http\Controllers\Api\VerificationController::class, 'verify'])
     ->middleware(['signed'])
     ->name('verification.verify');

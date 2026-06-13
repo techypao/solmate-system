@@ -547,6 +547,12 @@ export default function CustomerSettingsScreen() {
             expanded={passwordExpanded}
           />
 
+          <MenuRow
+            icon={'account-remove-outline'}
+            label="Delete Account"
+            onPress={() => navigation.navigate('CustomerDeleteAccount')}
+          />
+
           {/* \u2500\u2500 inline password form (expanded) \u2500\u2500 */}
           {passwordExpanded && (
             <View style={s.expandedCard}>

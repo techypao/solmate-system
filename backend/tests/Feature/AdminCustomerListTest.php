@@ -196,6 +196,45 @@ class AdminCustomerListTest extends TestCase
         );
     }
 
+    public function test_public_delete_account_page_accepts_optional_reason(): void
+    {
+        Notification::fake();
+
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_public_delete_request@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $customer = User::query()->create([
+            'name' => 'Public Delete Request Customer',
+            'email' => 'public_delete_request_customer@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        $this->get(route('delete-account'))
+            ->assertOk()
+            ->assertSee('Request deletion of your SolMate account')
+            ->assertSee('Reason for account deletion (optional)')
+            ->assertSee('Account deletion is permanent');
+
+        $this->post(route('delete-account.store'), [
+            'email' => 'PUBLIC_DELETE_REQUEST_CUSTOMER@example.com',
+            'reason' => '',
+        ])
+            ->assertRedirect(route('delete-account'))
+            ->assertSessionHas('status', 'Your account deletion request was successfully submitted. Our admin team will review it and process the request.');
+
+        $customer->refresh();
+
+        $this->assertNotNull($customer->delete_requested_at);
+        $this->assertNull($customer->delete_request_reason);
+
+        Notification::assertSentTo($admin, AdminCustomerDeleteRequestedNotification::class);
+    }
+
     public function test_admin_customer_list_shows_account_delete_requests(): void
     {
         $admin = User::query()->create([

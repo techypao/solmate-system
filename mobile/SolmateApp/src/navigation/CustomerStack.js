@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import HomeScreen from '../../screens/HomeScreen';
 import CustomerSettingsScreen from '../../screens/CustomerSettingsScreen';
+import CustomerDeleteAccountScreen from '../../screens/CustomerDeleteAccountScreen';
 import CreateTestimonyScreen from '../../screens/CreateTestimonyScreen';
 import CustomerNotificationsScreen from '../../screens/CustomerNotificationsScreen';
 import EditTestimonyScreen from '../../screens/EditTestimonyScreen';
@@ -61,6 +62,12 @@ export default function CustomerStack() {
       <Stack.Screen
         name="CustomerSettings"
         component={CustomerSettingsScreen}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="CustomerDeleteAccount"
+        component={CustomerDeleteAccountScreen}
         options={{ headerShown: false }}
       />
 

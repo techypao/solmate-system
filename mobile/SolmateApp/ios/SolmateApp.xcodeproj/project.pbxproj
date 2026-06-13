@@ -293,7 +293,7 @@
 				CODE_SIGN_ENTITLEMENTS = SolmateApp/SolmateApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 3CGC69XZ37;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = SolmateApp/Info.plist;
@@ -330,7 +330,7 @@
 				CODE_SIGN_ENTITLEMENTS = SolmateApp/SolmateApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 3CGC69XZ37;
 				INFOPLIST_FILE = SolmateApp/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Solmate;
