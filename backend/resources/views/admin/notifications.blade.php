@@ -4,6 +4,7 @@
     <script type="application/json" id="__data_requestAssignmentsUrl">@json($requestAssignmentsUrl)</script>
     <script type="application/json" id="__data_testimoniesUrl">@json($testimoniesUrl)</script>
     <script type="application/json" id="__data_adminChatUrl">@json($adminChatUrl)</script>
+    <script type="application/json" id="__data_customersUrl">@json($customersUrl)</script>
     <style>
         .notification-summary-card {
             display: flex;
@@ -243,6 +244,7 @@
         const requestAssignmentsUrl = JSON.parse(document.getElementById('__data_requestAssignmentsUrl').textContent);
         const testimoniesUrl = JSON.parse(document.getElementById('__data_testimoniesUrl').textContent);
         const adminChatUrl = JSON.parse(document.getElementById('__data_adminChatUrl').textContent);
+        const customersUrl = JSON.parse(document.getElementById('__data_customersUrl').textContent);
         let notificationsState = [];
         let deletingAllNotifications = false;
         let deletingNotificationId = null;
@@ -407,6 +409,14 @@
                 return Number.isFinite(testimonyId) && testimonyId > 0
                     ? `${testimoniesUrl}#testimony-${testimonyId}`
                     : testimoniesUrl;
+            }
+
+            if (notification?.target_screen === 'AdminCustomers' || notification?.entity_type === 'customer') {
+                const customerId = Number(targetParams.customerId ?? notification?.entity_id);
+
+                return Number.isFinite(customerId) && customerId > 0
+                    ? `${customersUrl}#customer-${customerId}`
+                    : customersUrl;
             }
 
             return requestAssignmentsUrl;

@@ -9,6 +9,7 @@ use App\Models\ServiceRequest;
 use App\Models\Testimony;
 use App\Models\User;
 use App\Notifications\AdminCompletionReportSubmittedNotification;
+use App\Notifications\AdminCustomerDeleteRequestedNotification;
 use App\Notifications\AdminInspectionRequestCancellationRequestedNotification;
 use App\Notifications\AdminNewInspectionRequestNotification;
 use App\Notifications\AdminNewServiceRequestNotification;
@@ -69,6 +70,17 @@ class InAppNotificationService
 
         $this->adminRecipients()->each(
             fn (User $admin) => $admin->notify(new AdminNewTestimonyNotification($testimony, $actorId))
+        );
+    }
+
+    public function notifyAdminsOfCustomerDeleteRequest(User $customer): void
+    {
+        $reason = (string) $customer->delete_request_reason;
+
+        $this->adminRecipients()->each(
+            fn (User $admin) => $admin->notify(
+                new AdminCustomerDeleteRequestedNotification($customer, $reason, $customer->id)
+            )
         );
     }
 

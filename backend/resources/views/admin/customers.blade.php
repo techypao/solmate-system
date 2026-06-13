@@ -26,6 +26,10 @@
                 <div class="summary-label">At cancellation limit</div>
                 <div class="summary-value">{{ $customers->where('cancellation_count', '>=', 2)->count() }}</div>
             </div>
+            <div class="summary-card">
+                <div class="summary-label">Delete requests</div>
+                <div class="summary-value">{{ $customers->whereNotNull('delete_requested_at')->count() }}</div>
+            </div>
         </div>
     </div>
 
@@ -43,10 +47,16 @@
         @else
             <div class="stack">
                 @foreach ($customers as $customer)
-                    <div class="list-row">
+                    <div class="list-row" id="customer-{{ $customer->id }}">
                         <div style="flex: 1; min-width: 0;">
                             <strong>{{ $customer->name }}</strong>
                             <div class="muted">{{ $customer->email }}</div>
+                            @if ($customer->delete_requested_at)
+                                <div style="margin-top:8px; padding:10px 12px; border-radius:10px; background:#fff1f2; border:1px solid #fecaca; color:#991b1b; font-size:13px; line-height:1.55;">
+                                    <strong>Requested account deletion {{ $customer->delete_requested_at->format('M d, Y h:i A') }}</strong>
+                                    <div>{{ $customer->delete_request_reason }}</div>
+                                </div>
+                            @endif
                         </div>
                         <div class="muted" style="font-size: 13px; white-space: nowrap;">
                             Last activity {{ optional($customer->last_login_at ?? $customer->created_at)->format('M d, Y') }}
@@ -54,6 +64,11 @@
                         @if ($customer->cancellation_count > 0)
                             <span class="badge" style="background:{{ $customer->cancellation_count >= 2 ? '#fee2e2' : '#fef3c7' }}; color:{{ $customer->cancellation_count >= 2 ? '#dc2626' : '#92400e' }}; border:1px solid {{ $customer->cancellation_count >= 2 ? '#fca5a5' : '#fde68a' }};">
                                 {{ $customer->cancellation_count }}/3 cancellations
+                            </span>
+                        @endif
+                        @if ($customer->delete_requested_at)
+                            <span class="badge" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;">
+                                Delete requested
                             </span>
                         @endif
                         <span class="badge badge-neutral">Customer</span>

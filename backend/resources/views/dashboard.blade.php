@@ -202,7 +202,25 @@
         box-sizing: border-box;
         transition: border-color .2s;
     }
+    .dash-form-group textarea {
+        width: 100%;
+        min-height: 120px;
+        padding: 12px 16px;
+        border: 1.5px solid #DDE7EE;
+        border-radius: 10px;
+        font-size: 14px;
+        color: #0F2F4A;
+        background: #fff;
+        box-sizing: border-box;
+        resize: vertical;
+        transition: border-color .2s;
+    }
     .dash-form-group input:focus {
+        outline: none;
+        border-color: #F4D000;
+        box-shadow: 0 0 0 3px rgba(212,160,23,.1);
+    }
+    .dash-form-group textarea:focus {
         outline: none;
         border-color: #F4D000;
         box-shadow: 0 0 0 3px rgba(212,160,23,.1);
@@ -291,9 +309,21 @@
     .dash-btn-gold:hover { background: #E6C200; }
     .dash-btn-outline { background: transparent; border: 1.5px solid #F4D000; color: #F4D000; }
     .dash-btn-outline:hover { background: rgba(212,160,23,.08); }
+    .dash-btn-danger { background: #fee2e2; border: 1.5px solid #fca5a5; color: #dc2626; }
+    .dash-btn-danger:hover { background: #fecaca; }
     .dash-btn-ghost { background: transparent; border: 1.5px solid #DDE7EE; color: #5E7288; }
     .dash-btn-ghost:hover { background: #f1f5f9; }
     .dash-btn:disabled { opacity: .6; cursor: not-allowed; }
+    .dash-delete-request-note {
+        margin-top: 18px;
+        padding: 14px 16px;
+        border: 1px solid #fecaca;
+        border-radius: 12px;
+        background: #fff1f2;
+        color: #991b1b;
+        font-size: 13px;
+        line-height: 1.6;
+    }
 
     /* Filter chips */
     .dash-filter-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
@@ -622,7 +652,14 @@
             <div class="dash-action-row">
                 <button class="dash-btn dash-btn-gold" id="toggle-edit-profile-btn">Edit Profile</button>
                 <button class="dash-btn dash-btn-ghost" id="toggle-change-pwd-btn">Change Password</button>
+                <button class="dash-btn dash-btn-danger" id="toggle-delete-request-btn">Request to Delete Account</button>
             </div>
+            @if ($user->delete_requested_at)
+                <div class="dash-delete-request-note">
+                    <strong>Deletion request sent {{ $user->delete_requested_at->format('M d, Y h:i A') }}.</strong>
+                    Admin will review your request. You can update your reason below if needed.
+                </div>
+            @endif
         </div>
 
         {{-- Edit Profile Form --}}
@@ -695,6 +732,33 @@
                 <div class="dash-form-actions">
                     <button type="submit" class="dash-btn dash-btn-gold" id="ep-submit-btn">Save Changes</button>
                     <button type="button" class="dash-btn dash-btn-ghost" id="ep-cancel-btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        {{-- Request Account Deletion Form --}}
+        <div class="dash-form-card" id="delete-request-form-card" @if (! $errors->has('reason')) style="display:none;" @endif>
+            <h3 class="dash-form-title">Request Account Deletion</h3>
+            <form method="POST" action="{{ route('customer.account.delete-request') }}">
+                @csrf
+                <div class="dash-form-row single">
+                    <div class="dash-form-group">
+                        <label for="delete-request-reason">Reason for deleting your account</label>
+                        <textarea
+                            id="delete-request-reason"
+                            name="reason"
+                            placeholder="Please tell the admin why you need your account deleted."
+                            required
+                        >{{ old('reason', $user->delete_request_reason) }}</textarea>
+                        <p class="dash-form-helper">Your request will be reviewed by an admin before any account deletion happens.</p>
+                        @error('reason')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="dash-form-actions">
+                    <button type="submit" class="dash-btn dash-btn-danger">Send Delete Request</button>
+                    <button type="button" class="dash-btn dash-btn-ghost" id="delete-request-cancel-btn">Cancel</button>
                 </div>
             </form>
         </div>
@@ -1617,19 +1681,38 @@
     /* ── Profile toggle ── */
     var editProfileCard = qs('#edit-profile-form-card');
     var changePwdCard   = qs('#change-pwd-form-card');
+    var deleteRequestCard = qs('#delete-request-form-card');
 
     qs('#toggle-edit-profile-btn').addEventListener('click', function() {
         var isHidden = editProfileCard.style.display === 'none';
         setVisible(editProfileCard, isHidden);
-        if (isHidden) { setVisible(changePwdCard, false); editProfileCard.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+        if (isHidden) {
+            setVisible(changePwdCard, false);
+            setVisible(deleteRequestCard, false);
+            editProfileCard.scrollIntoView({behavior:'smooth',block:'nearest'});
+        }
     });
     qs('#toggle-change-pwd-btn').addEventListener('click', function() {
         var isHidden = changePwdCard.style.display === 'none';
         setVisible(changePwdCard, isHidden);
-        if (isHidden) { setVisible(editProfileCard, false); changePwdCard.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+        if (isHidden) {
+            setVisible(editProfileCard, false);
+            setVisible(deleteRequestCard, false);
+            changePwdCard.scrollIntoView({behavior:'smooth',block:'nearest'});
+        }
+    });
+    qs('#toggle-delete-request-btn').addEventListener('click', function() {
+        var isHidden = deleteRequestCard.style.display === 'none';
+        setVisible(deleteRequestCard, isHidden);
+        if (isHidden) {
+            setVisible(editProfileCard, false);
+            setVisible(changePwdCard, false);
+            deleteRequestCard.scrollIntoView({behavior:'smooth',block:'nearest'});
+        }
     });
     qs('#ep-cancel-btn').addEventListener('click', function(){ setVisible(editProfileCard, false); });
     qs('#cp-cancel-btn').addEventListener('click', function(){ setVisible(changePwdCard, false); });
+    qs('#delete-request-cancel-btn').addEventListener('click', function(){ setVisible(deleteRequestCard, false); });
 
     /* ── Edit Profile ── */
     var editProfileForm = qs('#edit-profile-form');

@@ -26,6 +26,9 @@ use App\Http\Controllers\VisualHighlightController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+//Public routes located in the homeapage that does NOT require login
+//Route::method('/url-path', [ControllerName::class, 'methodName']); 
+// -> the structure of routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/public/testimonies', [TestimonyController::class, 'publicIndex']);
@@ -36,6 +39,9 @@ Route::post('/contact-messages', [ContactMessageController::class, 'store']);
 
 // PROTECTED GENERAL ROUTES
 Route::middleware(['auth:sanctum', 'active.user', 'verified.email'])->group(function () {
+    //auth:sanctum -> user must be logged in using laravel sanctum token authentication
+    //active.user -> user account must still be active
+    //verified. email -> user email must be verified
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/user/profile-picture', [AuthController::class, 'updateProfilePicture']);
     Route::post('/save-fcm-token', [DeviceTokenController::class, 'store']);

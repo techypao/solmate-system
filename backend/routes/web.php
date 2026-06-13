@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\TestimonyModerationPageController;
 use App\Http\Controllers\Admin\TechnicianRegistrationController;
 use App\Http\Controllers\Admin\VisualHighlightPageController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CustomerDeleteRequestController;
 use App\Http\Controllers\CustomerTestimonyPageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PublicTestimonyPageController;
@@ -212,5 +213,8 @@ Route::middleware(['auth', 'verified.email'])->group(function () {
         Route::get('/customer/mobile-app', function () {
             return view('customer.mobile-app');
         })->name('customer.mobile-app');
+
+        Route::post('/customer/account/delete-request', [CustomerDeleteRequestController::class, 'store'])
+            ->name('customer.account.delete-request');
     });
 });

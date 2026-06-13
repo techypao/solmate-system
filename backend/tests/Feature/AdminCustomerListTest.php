@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Notifications\AdminCustomerDeleteRequestedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class AdminCustomerListTest extends TestCase
@@ -144,5 +146,80 @@ class AdminCustomerListTest extends TestCase
             'user_id' => $customer->id,
             'action' => 'restored',
         ]);
+    }
+
+    public function test_customer_can_request_account_deletion_from_website(): void
+    {
+        Notification::fake();
+
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_delete_request@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $customer = User::query()->create([
+            'name' => 'Delete Request Customer',
+            'email' => 'delete_request_customer@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+        $customer->forceFill(['email_verified_at' => now()])->save();
+
+        $reason = 'I no longer need my SolMate customer account.';
+
+        $this->actingAs($customer)
+            ->post(route('customer.account.delete-request'), [
+                'reason' => $reason,
+            ])
+            ->assertRedirect(route('dashboard'))
+            ->assertSessionHas('status', 'Your account deletion request was sent to the admin for review.');
+
+        $customer->refresh();
+
+        $this->assertNotNull($customer->delete_requested_at);
+        $this->assertSame($reason, $customer->delete_request_reason);
+
+        Notification::assertSentTo(
+            $admin,
+            AdminCustomerDeleteRequestedNotification::class,
+            function (AdminCustomerDeleteRequestedNotification $notification) use ($admin, $customer, $reason): bool {
+                $payload = $notification->toArray($admin);
+
+                return $payload['type'] === 'admin_customer_delete_requested'
+                    && $payload['entity_type'] === 'customer'
+                    && $payload['entity_id'] === $customer->id
+                    && $payload['target_screen'] === 'AdminCustomers'
+                    && $payload['delete_request_reason'] === $reason;
+            }
+        );
+    }
+
+    public function test_admin_customer_list_shows_account_delete_requests(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_delete_request_list@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $customer = User::query()->create([
+            'name' => 'Visible Delete Request Customer',
+            'email' => 'visible_delete_request_customer@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+            'delete_requested_at' => now(),
+            'delete_request_reason' => 'Please remove my unused account.',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.customers'))
+            ->assertOk()
+            ->assertSee('Delete requests')
+            ->assertSee('Requested account deletion')
+            ->assertSee('Please remove my unused account.')
+            ->assertSee('customer-'.$customer->id);
     }
 }

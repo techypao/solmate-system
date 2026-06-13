@@ -41,6 +41,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'last_login_at',
         'archive_warning_sent_at',
         'cancellation_count',
+        'delete_requested_at',
+        'delete_request_reason',
         'address',
         'contact_number',
         'landline_number',
@@ -111,6 +113,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'last_login_at' => 'datetime',
             'archive_warning_sent_at' => 'datetime',
             'cancellation_count' => 'integer',
+            'delete_requested_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
