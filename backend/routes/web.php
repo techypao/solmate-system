@@ -114,6 +114,9 @@ Route::middleware(['auth', 'verified.email'])->group(function () {
         ->name('admin.request-assignments');
 
     Route::middleware('role:admin')->group(function () {
+        Route::get('/admin/walkin', [RequestAssignmentPageController::class, 'walkin'])
+            ->name('admin.walkin');
+
         Route::post('/admin/request-assignments/service-popup', [RequestAssignmentPageController::class, 'flashServicePopup'])
             ->name('admin.request-assignments.service-popup');
 

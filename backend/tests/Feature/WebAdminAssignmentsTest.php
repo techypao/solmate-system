@@ -63,6 +63,36 @@ class WebAdminAssignmentsTest extends TestCase
             ->assertSee('0917-333-2000');
     }
 
+    public function test_admin_can_open_walkin_page_for_manual_inspection_requests(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_walkin@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        ServiceRequest::query()->create([
+            'user_id' => null,
+            'customer_name' => 'Walkin Prospect',
+            'customer_email' => 'walkin@example.com',
+            'request_type' => ServiceRequest::MANUAL_INSPECTION_REQUEST_TYPE,
+            'details' => 'Manual inspection from a walk-in inquiry',
+            'contact_number' => '0917-222-3333',
+            'address_details' => '123 Walkin Street',
+            'date_needed' => '2026-04-23',
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.walkin'))
+            ->assertOk()
+            ->assertSee('Walkin')
+            ->assertSee('Create Walkin Request')
+            ->assertSee('Walkin Prospect')
+            ->assertSee('0917-222-3333');
+    }
+
     public function test_admin_can_assign_technician_to_service_request_using_existing_api_route(): void
     {
         $admin = User::query()->create([

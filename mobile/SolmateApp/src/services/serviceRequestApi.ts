@@ -11,6 +11,8 @@ export type UserSummary = {
 export type ServiceRequest = {
   id: number;
   user_id?: number;
+  customer_name?: string | null;
+  customer_email?: string | null;
   technician_id?: number | null;
   quotation_id?: number | null;
   request_type: string;

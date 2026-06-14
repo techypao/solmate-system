@@ -74,6 +74,7 @@ Route::middleware(['auth:sanctum', 'verified.email', 'role:admin'])->group(funct
     });
 
     Route::put('/service-requests/{id}/assign-technician', [ServiceRequestController::class, 'assignTechnician']);
+    Route::post('/admin/manual-inspection-requests', [ServiceRequestController::class, 'storeManualInspection']);
     Route::match(['put', 'patch'], '/admin/service-requests/{id}/preferred-date', [ServiceRequestController::class, 'updatePreferredDate']);
     Route::put('/admin/service-requests/{id}/status', [ServiceRequestController::class, 'updateAdminStatus']);
     Route::put('/inspection-requests/{id}/assign-technician', [InspectionRequestController::class, 'assignTechnician']);

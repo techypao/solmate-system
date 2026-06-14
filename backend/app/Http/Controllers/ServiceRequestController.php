@@ -96,6 +96,50 @@ class ServiceRequestController extends Controller
         ], 201);
     }
 
+    public function storeManualInspection(Request $request)
+    {
+        $validated = $request->validate([
+            'customer_name' => 'required|string|max:255',
+            'customer_email' => 'required|email|max:255',
+            'contact_number' => 'required|string|max:30',
+            'address_details' => 'required|string|max:255',
+            'details' => 'required|string',
+            'date_needed' => 'required|date',
+        ]);
+
+        $serviceRequest = $this->preferredDateLockService->withLockedDates(
+            [$validated['date_needed']],
+            function () use ($validated) {
+                return DB::transaction(function () use ($validated) {
+                    $this->preferredDateLockService->ensureDateIsAvailable(
+                        $validated['date_needed'],
+                        null,
+                        null,
+                        PreferredDateLockService::REQUEST_TYPE_INSPECTION
+                    );
+
+                    return ServiceRequest::query()->create([
+                        'user_id' => null,
+                        'customer_name' => trim($validated['customer_name']),
+                        'customer_email' => trim($validated['customer_email']),
+                        'request_type' => ServiceRequest::MANUAL_INSPECTION_REQUEST_TYPE,
+                        'details' => trim($validated['details']),
+                        'contact_number' => trim($validated['contact_number']),
+                        'address' => null,
+                        'address_details' => trim($validated['address_details']),
+                        'date_needed' => $validated['date_needed'],
+                        'status' => 'pending',
+                    ]);
+                });
+            }
+        );
+
+        return response()->json([
+            'message' => 'Manual inspection request created successfully.',
+            'data' => $serviceRequest,
+        ], 201);
+    }
+
     public function assignTechnician(Request $request, int $id)
     {
         $request->validate([
@@ -158,7 +202,9 @@ class ServiceRequestController extends Controller
 
         $currentRecord = ServiceRequest::query()->findOrFail($id);
         $currentDate = $currentRecord->date_needed;
-        $recordRequestType = strtolower((string) $currentRecord->request_type);
+        $recordRequestType = $currentRecord->isManualInspectionRequest()
+            ? PreferredDateLockService::REQUEST_TYPE_INSPECTION
+            : strtolower((string) $currentRecord->request_type);
 
         $result = $this->preferredDateLockService->withLockedDates(
             [$validated['date_needed'], $currentDate],

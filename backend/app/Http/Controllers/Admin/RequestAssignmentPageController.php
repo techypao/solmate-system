@@ -42,6 +42,19 @@ class RequestAssignmentPageController extends Controller
         ]);
     }
 
+    public function walkin(Request $request)
+    {
+        abort_unless($request->user()?->role === User::ROLE_ADMIN, 403);
+
+        return view('admin.walkin', [
+            'manualInspectionRequests' => ServiceRequest::query()
+                ->where('request_type', ServiceRequest::MANUAL_INSPECTION_REQUEST_TYPE)
+                ->with(['technician', 'completionReport'])
+                ->latest()
+                ->get(),
+        ]);
+    }
+
     public function flashServicePopup(Request $request)
     {
         abort_unless($request->user()?->role === User::ROLE_ADMIN, 403);

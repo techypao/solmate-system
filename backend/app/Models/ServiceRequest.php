@@ -10,8 +10,12 @@ class ServiceRequest extends Model
 {
     use HasFactory;
 
+    public const MANUAL_INSPECTION_REQUEST_TYPE = 'Manual Inspection Request';
+
     protected $fillable = [
         'user_id',
+        'customer_name',
+        'customer_email',
         'technician_id',
         'request_type',
         'details',
@@ -57,5 +61,22 @@ class ServiceRequest extends Model
     public function completionReport()
     {
         return $this->hasOne(CompletionReport::class);
+    }
+
+    public function isManualInspectionRequest(): bool
+    {
+        return strcasecmp((string) $this->request_type, self::MANUAL_INSPECTION_REQUEST_TYPE) === 0;
+    }
+
+    public function displayCustomerName(): string
+    {
+        return $this->customer?->name
+            ?: ($this->customer_name ?: 'Unknown customer');
+    }
+
+    public function displayCustomerEmail(): string
+    {
+        return $this->customer?->email
+            ?: ($this->customer_email ?: 'Not available');
     }
 }

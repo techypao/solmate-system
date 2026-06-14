@@ -648,6 +648,14 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
       : mode === 'customer' && customerRequestCategory === 'installation'
         ? getInstallationType(serviceRequest)
         : formatDisplayValue(serviceRequest.request_type, 'Service');
+  const displayCustomerName = formatDisplayValue(
+    serviceRequest.customer?.name || serviceRequest.customer_name,
+    'Unknown customer',
+  );
+  const displayCustomerEmail = formatDisplayValue(
+    serviceRequest.customer?.email || serviceRequest.customer_email,
+    'No email available',
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -694,6 +702,19 @@ export default function ServiceRequestDetailScreen({navigation, route}: any) {
             label={mode === 'technician' ? 'Type' : customerTypeLabel}
             value={displayType}
           />
+          {mode === 'technician' ? (
+            <>
+              <InlineRow label="Customer Name" value={displayCustomerName} />
+              <InlineRow label="Customer Email" value={displayCustomerEmail} />
+              <InlineRow
+                label="Contact Number"
+                value={formatDisplayValue(
+                  serviceRequest.contact_number,
+                  'Not provided',
+                )}
+              />
+            </>
+          ) : null}
           <InlineRow
             label="Status"
             value={displayStatusLabel}

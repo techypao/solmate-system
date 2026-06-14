@@ -111,6 +111,65 @@ class RequestWorkflowTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_create_manual_inspection_request_for_non_registered_customer(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_manual_inspection@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $technician = User::query()->create([
+            'name' => 'Technician User',
+            'email' => 'technician_manual_inspection@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_TECHNICIAN,
+        ]);
+        $technician->forceFill(['email_verified_at' => now()])->save();
+
+        $createResponse = $this->actingAs($admin)
+            ->postJson('/api/admin/manual-inspection-requests', [
+                'customer_name' => 'Prospect Caller',
+                'customer_email' => 'prospect@example.com',
+                'contact_number' => '0917-555-0101',
+                'address_details' => '45 Sample Street, Calamba City',
+                'date_needed' => '2026-04-20',
+                'details' => 'Caller wants a roof inspection before deciding on solar.',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.user_id', null)
+            ->assertJsonPath('data.customer_name', 'Prospect Caller')
+            ->assertJsonPath('data.customer_email', 'prospect@example.com')
+            ->assertJsonPath('data.request_type', ServiceRequest::MANUAL_INSPECTION_REQUEST_TYPE)
+            ->assertJsonPath('data.status', 'pending');
+
+        $serviceRequestId = $createResponse->json('data.id');
+
+        $this->actingAs($admin)
+            ->putJson("/api/service-requests/{$serviceRequestId}/assign-technician", [
+                'technician_id' => $technician->id,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'assigned');
+
+        $this->actingAs($technician)
+            ->getJson('/api/technician/service-requests')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $serviceRequestId)
+            ->assertJsonPath('data.0.user_id', null)
+            ->assertJsonPath('data.0.customer_name', 'Prospect Caller')
+            ->assertJsonPath('data.0.request_type', ServiceRequest::MANUAL_INSPECTION_REQUEST_TYPE);
+
+        $this->assertDatabaseHas('service_requests', [
+            'id' => $serviceRequestId,
+            'user_id' => null,
+            'customer_name' => 'Prospect Caller',
+            'customer_email' => 'prospect@example.com',
+            'request_type' => ServiceRequest::MANUAL_INSPECTION_REQUEST_TYPE,
+        ]);
+    }
+
     public function test_service_completion_request_is_limited_to_assigned_technician_and_admin_controls_completion(): void
     {
         $customer = User::query()->create([

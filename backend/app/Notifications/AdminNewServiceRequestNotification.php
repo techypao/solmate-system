@@ -15,10 +15,16 @@ class AdminNewServiceRequestNotification extends BaseDatabaseNotification
 
     public function toArray(object $notifiable): array
     {
+        $isManualInspection = $this->serviceRequest->isManualInspectionRequest();
+        $title = $isManualInspection ? 'New Manual Inspection Request' : 'New Service Request';
+        $message = $isManualInspection
+            ? "Admin created manual inspection request #{$this->serviceRequest->id}."
+            : "A customer submitted service request #{$this->serviceRequest->id}.";
+
         return $this->buildPayload([
             'type' => 'admin_new_service_request',
-            'title' => 'New Service Request',
-            'message' => "A customer submitted service request #{$this->serviceRequest->id}.",
+            'title' => $title,
+            'message' => $message,
             'entity_type' => 'service_request',
             'entity_id' => $this->serviceRequest->id,
             'target_screen' => 'AdminServiceRequestDetails',

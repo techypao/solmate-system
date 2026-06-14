@@ -18,7 +18,9 @@ class AdminCompletionReportSubmittedNotification extends BaseDatabaseNotificatio
     public function toArray(object $notifiable): array
     {
         $technicianName = $this->requestModel->technician?->name ?? 'A technician';
-        $customerName = $this->requestModel->customer?->name ?? 'the customer';
+        $customerName = $this->requestModel instanceof ServiceRequest
+            ? $this->requestModel->displayCustomerName()
+            : ($this->requestModel->customer?->name ?? 'the customer');
 
         if ($this->requestModel instanceof InspectionRequest) {
             return $this->buildPayload([
@@ -62,6 +64,10 @@ class AdminCompletionReportSubmittedNotification extends BaseDatabaseNotificatio
 
         if (Str::contains($normalizedRequestType, 'installation')) {
             return 'Installation';
+        }
+
+        if ($serviceRequest->isManualInspectionRequest()) {
+            return 'Manual Inspection';
         }
 
         if (Str::contains($normalizedRequestType, 'repair')) {

@@ -13,17 +13,26 @@
         ->lower()
         ->replace(['_', '-'], ' ')
         ->contains('installation');
+    $isManualInspectionRequest = fn ($request) => method_exists($request, 'isManualInspectionRequest')
+        && $request->isManualInspectionRequest();
 
     $installationRequests = $sortedServiceRequests
         ->filter($isInstallationRequest)
         ->values();
 
+    $manualInspectionRequests = $sortedServiceRequests
+        ->filter($isManualInspectionRequest)
+        ->values();
+
+    $inspectionTabRequestCount = $sortedInspectionRequests->count() + $manualInspectionRequests->count();
+    $defaultInspectionSource = $sortedInspectionRequests->isNotEmpty() ? 'registered' : 'manual';
+
     $maintenanceRequests = $sortedServiceRequests
-        ->reject($isInstallationRequest)
+        ->reject(fn ($request) => $isInstallationRequest($request) || $isManualInspectionRequest($request))
         ->values();
 
     $serviceTabCounts = [
-        'inspection' => $sortedInspectionRequests->count(),
+        'inspection' => $inspectionTabRequestCount,
         'installation' => $installationRequests->count(),
         'maintenance' => $maintenanceRequests->count(),
     ];
@@ -308,6 +317,70 @@
             margin-bottom: 0;
         }
 
+        .inspection-source-filter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 6px;
+            width: fit-content;
+            max-width: 100%;
+            border: 1px solid #DDE7EE;
+            border-radius: 999px;
+            background: #F8FAFC;
+        }
+
+        .inspection-source-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 38px;
+            padding: 8px 16px;
+            border: 0;
+            border-radius: 999px;
+            background: transparent;
+            color: #4b5b73;
+            box-shadow: none;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .inspection-source-btn:hover {
+            transform: none;
+            color: #123A5A;
+            background: #ffffff;
+        }
+
+        .inspection-source-btn.active {
+            color: #ffffff;
+            background: linear-gradient(135deg, #20A7C9, #2a5b92);
+            box-shadow: 0 10px 22px rgba(23, 59, 99, .18);
+        }
+
+        .inspection-source-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 7px;
+            border-radius: 999px;
+            background: #DDE7EE;
+            color: #4b5b73;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .inspection-source-btn.active .inspection-source-count {
+            background: rgba(255,255,255,.18);
+            color: #ffffff;
+        }
+
+        .inspection-source-hidden {
+            display: none !important;
+        }
+
         .request-summary-grid {
             grid-area: summary;
             display: grid;
@@ -489,6 +562,25 @@
             grid-column: 1 / -1;
         }
 
+        .request-section .manual-customer-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            align-items: stretch;
+        }
+
+        .request-section .manual-customer-grid .detail-item strong {
+            overflow-wrap: anywhere;
+            word-break: normal;
+        }
+
+        .request-section .manual-address-card {
+            grid-column: 1 / -1;
+            min-height: auto;
+        }
+
+        .request-section .manual-address-card strong {
+            line-height: 1.55;
+        }
+
         .request-empty-card {
             padding: 16px 18px;
             border: 1px dashed #DDE7EE;
@@ -621,6 +713,10 @@
             .request-card-body .stack {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
+
+            .request-section .manual-customer-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
         }
 
         @media (max-width: 768px) {
@@ -652,6 +748,10 @@
 
             .request-card-body .stack,
             .assignment-row {
+                grid-template-columns: 1fr;
+            }
+
+            .request-section .manual-customer-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -783,11 +883,11 @@
             </div>
             <div class="summary-card">
                 <div class="summary-label">Unassigned services</div>
-                <div class="summary-value">{{ $sortedServiceRequests->whereNull('technician_id')->count() }}</div>
+                <div class="summary-value">{{ $sortedServiceRequests->reject($isManualInspectionRequest)->whereNull('technician_id')->count() }}</div>
             </div>
             <div class="summary-card">
                 <div class="summary-label">Unassigned inspection requests</div>
-                <div class="summary-value">{{ $sortedInspectionRequests->whereNull('technician_id')->count() }}</div>
+                <div class="summary-value">{{ $sortedInspectionRequests->whereNull('technician_id')->count() + $manualInspectionRequests->whereNull('technician_id')->count() }}</div>
             </div>
         </div>
 
@@ -821,7 +921,7 @@
                     aria-selected="true"
                 >
                     Inspection
-                    <span class="services-tab-count">{{ $sortedInspectionRequests->count() }}</span>
+                    <span class="services-tab-count">{{ $inspectionTabRequestCount }}</span>
                 </a>
                 <a
                     id="services-tab-installation"
@@ -868,13 +968,50 @@
                     <h3 class="admin-section-title" style="margin-bottom: 0;">Inspection</h3>
                     <p class="page-copy services-panel-copy">Quick summaries first, then expand the request you want to work on.</p>
                 </div>
-                <span class="badge badge-neutral">{{ $sortedInspectionRequests->count() }} total</span>
+                <span class="badge badge-neutral">{{ $inspectionTabRequestCount }} total</span>
             </div>
 
-            @if ($sortedInspectionRequests->isEmpty())
+            @if ($inspectionTabRequestCount > 0)
+                <div class="inspection-source-filter" role="tablist" aria-label="Inspection request source">
+                    <button
+                        type="button"
+                        class="inspection-source-btn {{ $defaultInspectionSource === 'registered' ? 'active' : '' }}"
+                        data-inspection-source-filter="registered"
+                        aria-selected="{{ $defaultInspectionSource === 'registered' ? 'true' : 'false' }}"
+                    >
+                        Registered
+                        <span class="inspection-source-count">{{ $sortedInspectionRequests->count() }}</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="inspection-source-btn {{ $defaultInspectionSource === 'manual' ? 'active' : '' }}"
+                        data-inspection-source-filter="manual"
+                        aria-selected="{{ $defaultInspectionSource === 'manual' ? 'true' : 'false' }}"
+                    >
+                        Manual
+                        <span class="inspection-source-count">{{ $manualInspectionRequests->count() }}</span>
+                    </button>
+                </div>
+            @endif
+
+            @if ($sortedInspectionRequests->isEmpty() && $manualInspectionRequests->isEmpty())
                 <div class="info-box services-empty-state">No inspection requests yet.</div>
             @else
                 <div class="request-list">
+                    <div
+                        class="info-box services-empty-state"
+                        data-inspection-source-empty="registered"
+                        @if ($defaultInspectionSource !== 'registered' || $sortedInspectionRequests->isNotEmpty()) style="display: none;" @endif
+                    >
+                        No registered inspection requests yet.
+                    </div>
+                    <div
+                        class="info-box services-empty-state"
+                        data-inspection-source-empty="manual"
+                        @if ($defaultInspectionSource !== 'manual' || $manualInspectionRequests->isNotEmpty()) style="display: none;" @endif
+                    >
+                        No manual inspection requests yet.
+                    </div>
                         @foreach ($sortedInspectionRequests as $inspectionRequest)
                         @php
                             $requestKey = "inspection-{$inspectionRequest->id}";
@@ -920,9 +1057,10 @@
 
                         <div
                             id="inspection-request-{{ $inspectionRequest->id }}"
-                            class="request-card"
+                            class="request-card {{ $defaultInspectionSource !== 'registered' ? 'inspection-source-hidden' : '' }}"
                             data-request-card
                             data-request-tab="inspection"
+                            data-inspection-source="registered"
                             data-request-label="Inspection Request #{{ $inspectionRequest->id }}"
                         >
                             <div class="request-header">
@@ -1183,6 +1321,259 @@
                                                 >
                                                     @foreach ($serviceStatusOptions as $value => $label)
                                                         <option value="{{ $value }}" @selected($inspectionRequest->status === $value)>{{ $label }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <button type="submit">Save official status</button>
+                                        </div>
+                                        <div class="field-error" data-form-error></div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                    @foreach ($manualInspectionRequests as $serviceRequest)
+                        @php
+                            $requestKey = "service-{$serviceRequest->id}";
+                            $statusClass = $statusClasses[$serviceRequest->status] ?? 'badge badge-neutral';
+                            $isAssigned = filled($serviceRequest->technician_id);
+                            $completionReport = $serviceRequest->completionReport;
+                            $hasCompletionRequest = filled($completionReport?->submitted_at);
+                            $buttonLabel = $isAssigned ? 'Update assignment' : 'Assign technician';
+                            $dateNeeded = $serviceRequest->date_needed
+                                ? \Illuminate\Support\Carbon::parse($serviceRequest->date_needed)->format('M d, Y')
+                                : 'Not specified';
+                            $technicianSummary = $serviceRequest->technician
+                                ? "{$serviceRequest->technician->name} ({$serviceRequest->technician->email})"
+                                : 'Not assigned';
+                            $completionStateClass = 'badge badge-neutral';
+                            $completionStateLabel = 'No report yet';
+
+                            if ($hasCompletionRequest && $serviceRequest->status !== 'completed') {
+                                $completionStateClass = 'badge badge-warning';
+                                $completionStateLabel = 'Awaiting admin review';
+                            } elseif ($hasCompletionRequest && $serviceRequest->status === 'completed') {
+                                $completionStateClass = 'badge badge-success';
+                                $completionStateLabel = 'Report approved';
+                            }
+
+                            if ($hasCompletionRequest && $serviceRequest->status !== 'completed') {
+                                $completionMessage = 'Technician submitted the completion notes on '
+                                    . ($formatAdminDateTime($completionReport?->submitted_at) ?? $formatAdminDateTime($serviceRequest->technician_marked_done_at))
+                                    . '. Review the report below before marking the official status as completed.';
+                            } elseif ($hasCompletionRequest && $serviceRequest->status === 'completed') {
+                                $completionMessage = 'Technician submitted the completion notes on '
+                                    . ($formatAdminDateTime($completionReport?->submitted_at) ?? $formatAdminDateTime($serviceRequest->technician_marked_done_at))
+                                    . ', and the official service status is now completed.';
+                            } else {
+                                $completionMessage = 'No technician completion notes have been submitted yet.';
+                            }
+                        @endphp
+
+                        <div
+                            id="service-request-{{ $serviceRequest->id }}"
+                            class="request-card {{ $defaultInspectionSource !== 'manual' ? 'inspection-source-hidden' : '' }}"
+                            data-request-card
+                            data-request-tab="inspection"
+                            data-inspection-source="manual"
+                            data-request-label="Manual Inspection Request #{{ $serviceRequest->id }}"
+                        >
+                            <div class="request-header">
+                                <div class="request-header-main">
+                                    <div class="request-header-copy">
+                                        <span class="request-kicker">Manual Inspection Request</span>
+                                        <div class="request-title">
+                                            Manual Inspection Request #{{ $serviceRequest->id }}
+                                            <span class="request-active-indicator">Open now</span>
+                                        </div>
+                                        <div class="muted">Customer: {{ $serviceRequest->displayCustomerName() }}</div>
+                                    </div>
+
+                                    <div class="request-top-actions">
+                                        <div class="request-badges">
+                                            <span class="{{ $statusClass }}" data-status-for="{{ $requestKey }}">
+                                                {{ \Illuminate\Support\Str::headline($serviceRequest->status) }}
+                                            </span>
+                                            <span
+                                                class="{{ $isAssigned ? 'badge badge-neutral' : 'badge badge-warning' }}"
+                                                data-assignment-state-for="{{ $requestKey }}"
+                                            >
+                                                {{ $isAssigned ? 'Assigned' : 'Needs technician' }}
+                                            </span>
+                                            <span
+                                                class="{{ $completionStateClass }}"
+                                                data-completion-state-for="{{ $requestKey }}"
+                                            >
+                                                {{ $completionStateLabel }}
+                                            </span>
+                                        </div>
+                                        <button type="button" class="request-toggle-btn" data-request-toggle>
+                                            Open request
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="request-summary-grid">
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Preferred Date</span>
+                                        <div class="request-summary-value" data-service-preferred-date-for="{{ $requestKey }}">{{ $dateNeeded }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Technician</span>
+                                        <div class="request-summary-value" data-technician-for="{{ $requestKey }}">{{ $technicianSummary }}</div>
+                                    </div>
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Official Status</span>
+                                        <div class="request-summary-value" data-service-status-summary-for="{{ $requestKey }}">
+                                            {{ \Illuminate\Support\Str::headline($serviceRequest->status) }}
+                                        </div>
+                                    </div>
+                                    <div class="request-summary-item">
+                                        <span class="request-summary-label">Completion</span>
+                                        <div class="request-summary-value" data-completion-summary-for="{{ $requestKey }}">{{ $completionStateLabel }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="request-card-body">
+                                <div class="request-section">
+                                    <div class="request-section-header">
+                                        <h4 class="request-section-title">Customer information</h4>
+                                        <p class="request-section-copy">Prospect contact and site details for this admin-created inspection.</p>
+                                    </div>
+                                    <div class="detail-grid manual-customer-grid">
+                                        <div class="detail-item">
+                                            <span class="detail-label">Customer Email</span>
+                                            <strong>{{ $serviceRequest->displayCustomerEmail() }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Contact Number</span>
+                                            <strong>{{ $serviceRequest->contact_number ?: 'Not provided' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Request Type</span>
+                                            <strong>{{ $serviceRequest->request_type }}</strong>
+                                        </div>
+                                        <div class="detail-item manual-address-card">
+                                            <span class="detail-label">Address Details</span>
+                                            <strong>{{ $serviceRequest->address_details ?: 'Not provided' }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="request-section">
+                                    <div class="request-section-header">
+                                        <h4 class="request-section-title">Notes and details</h4>
+                                        <p class="request-section-copy">Information captured by admin from the customer call or email.</p>
+                                    </div>
+                                    <div class="info-box request-detail-box">
+                                        {{ $serviceRequest->details }}
+                                    </div>
+                                </div>
+
+                                <div class="info-box request-detail-box">
+                                    <strong data-completion-heading-for="{{ $requestKey }}">Completion review:</strong>
+                                    <span data-completion-detail-for="{{ $requestKey }}">{{ $completionMessage }}</span>
+                                </div>
+
+                                @if ($completionReport)
+                                    <div class="detail-grid" style="margin-bottom: 14px;">
+                                        <div class="detail-item">
+                                            <span class="detail-label">Report Submitted By</span>
+                                            <strong>{{ $completionReport->technician?->name ?? ($serviceRequest->technician?->name ?? 'Assigned technician') }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Task Completed At</span>
+                                            <strong>{{ $formatAdminDateTime($completionReport->completed_at) ?? 'Not available' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Report Submitted At</span>
+                                            <strong>{{ $formatAdminDateTime($completionReport->submitted_at) ?? 'Not available' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Approved At</span>
+                                            <strong>{{ $formatAdminDateTime($completionReport->approved_at) ?? 'Pending admin review' }}</strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="info-box request-detail-box">
+                                        <strong>Completion summary:</strong> {{ $completionReport->report_text }}
+                                    </div>
+                                @endif
+
+                                <div class="stack">
+                                    <form
+                                        class="service-preferred-date-form"
+                                        data-endpoint="/api/admin/service-requests/{{ $serviceRequest->id }}/preferred-date"
+                                        data-request-key="{{ $requestKey }}"
+                                    >
+                                        <label for="manual_service_date_needed_{{ $serviceRequest->id }}">Official preferred date</label>
+                                        <div class="assignment-row">
+                                            <div>
+                                                <input
+                                                    id="manual_service_date_needed_{{ $serviceRequest->id }}"
+                                                    name="date_needed"
+                                                    type="hidden"
+                                                    autocomplete="off"
+                                                    value="{{ $serviceRequest->date_needed ? \Illuminate\Support\Carbon::parse($serviceRequest->date_needed)->toDateString() : '' }}"
+                                                    required
+                                                >
+                                                <div id="manual_service_date_picker_{{ $serviceRequest->id }}" data-preferred-date-picker></div>
+                                                <label class="preferred-date-bypass">
+                                                    <input type="checkbox" name="bypass_reserved_date_lock" value="1" data-bypass-reserved>
+                                                    <span>Bypass calendar lock for reserved dates</span>
+                                                </label>
+                                                <div class="preferred-date-bypass-note" data-bypass-note></div>
+                                                <div class="muted" style="margin-top: 8px;" data-availability-helper></div>
+                                            </div>
+                                            <button type="submit">Save preferred date</button>
+                                        </div>
+                                        <div class="field-error" data-form-error></div>
+                                    </form>
+
+                                    <form
+                                        class="assignment-form"
+                                        data-endpoint="/api/service-requests/{{ $serviceRequest->id }}/assign-technician"
+                                        data-request-key="{{ $requestKey }}"
+                                        data-default-label="{{ $buttonLabel }}"
+                                    >
+                                        <label for="manual_service_technician_{{ $serviceRequest->id }}">Technician assignment</label>
+                                        <div class="assignment-row">
+                                            <div>
+                                                <select
+                                                    id="manual_service_technician_{{ $serviceRequest->id }}"
+                                                    name="technician_id"
+                                                    required
+                                                    @disabled($technicians->isEmpty())
+                                                >
+                                                    <option value="">Select technician</option>
+                                                    @foreach ($technicians as $technician)
+                                                        <option value="{{ $technician->id }}" @selected($serviceRequest->technician_id === $technician->id)>
+                                                            {{ $technician->name }} ({{ $technician->email }})
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <button type="submit" @disabled($technicians->isEmpty())>{{ $buttonLabel }}</button>
+                                        </div>
+                                        <div class="field-error" data-form-error></div>
+                                    </form>
+
+                                    <form
+                                        class="service-status-form"
+                                        data-endpoint="/api/admin/service-requests/{{ $serviceRequest->id }}/status"
+                                        data-request-key="{{ $requestKey }}"
+                                    >
+                                        <label for="manual_service_status_{{ $serviceRequest->id }}">Official service status</label>
+                                        <div class="assignment-row">
+                                            <div>
+                                                <select
+                                                    id="manual_service_status_{{ $serviceRequest->id }}"
+                                                    name="status"
+                                                    required
+                                                >
+                                                    @foreach ($serviceStatusOptions as $value => $label)
+                                                        <option value="{{ $value }}" @selected($serviceRequest->status === $value)>{{ $label }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
@@ -1939,6 +2330,9 @@
         const serviceStatusForms = document.querySelectorAll('.service-status-form');
         const inspectionStatusForms = document.querySelectorAll('.inspection-status-form');
         const requestCards = document.querySelectorAll('[data-request-card]');
+        const inspectionSourceButtons = document.querySelectorAll('[data-inspection-source-filter]');
+        const inspectionSourceCards = document.querySelectorAll('[data-inspection-source]');
+        const inspectionSourceEmptyStates = document.querySelectorAll('[data-inspection-source-empty]');
         const focusBanners = document.querySelectorAll('[data-services-focus-banner]');
         const lockingStatuses = new Set(['pending', 'approved', 'scheduled', 'assigned', 'in_progress']);
         const adminServicePopup = JSON.parse(document.getElementById('__data_adminServicePopup').textContent);
@@ -2321,6 +2715,42 @@
             }
         }
 
+        function currentInspectionSource() {
+            const activeButton = document.querySelector('[data-inspection-source-filter].active');
+
+            return activeButton?.dataset.inspectionSourceFilter || 'registered';
+        }
+
+        function setInspectionSourceFilter(source, keepFocus = false) {
+            const selectedSource = source === 'manual' ? 'manual' : 'registered';
+            let visibleCount = 0;
+
+            inspectionSourceButtons.forEach((button) => {
+                const isActive = button.dataset.inspectionSourceFilter === selectedSource;
+                button.classList.toggle('active', isActive);
+                button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+
+            inspectionSourceCards.forEach((card) => {
+                const isVisible = card.dataset.inspectionSource === selectedSource;
+                card.classList.toggle('inspection-source-hidden', !isVisible);
+
+                if (isVisible) {
+                    visibleCount += 1;
+                }
+            });
+
+            inspectionSourceEmptyStates.forEach((emptyState) => {
+                emptyState.style.display = emptyState.dataset.inspectionSourceEmpty === selectedSource && visibleCount === 0
+                    ? 'block'
+                    : 'none';
+            });
+
+            if (!keepFocus) {
+                setFocusedRequest(null);
+            }
+        }
+
         function setActiveServiceTab(tabKey, syncHash = false) {
             serviceTabLinks.forEach((link) => {
                 const isActive = link.dataset.servicesTabLink === tabKey;
@@ -2338,6 +2768,10 @@
             const preferredCard = hashCard && hashCard.dataset.requestTab === tabKey
                 ? hashCard
                 : null;
+
+            if (tabKey === 'inspection' && inspectionSourceButtons.length) {
+                setInspectionSourceFilter(preferredCard?.dataset.inspectionSource || currentInspectionSource(), true);
+            }
 
             if (preferredCard) {
                 setFocusedRequest(preferredCard);
@@ -2367,11 +2801,11 @@
             setVisible(errorBox, false);
         }
 
-        async function submitJson(endpoint, payload) {
+        async function submitJson(endpoint, payload, method = 'PUT') {
             await ensureCsrfCookie();
 
             const response = await fetch(endpoint, {
-                method: 'PUT',
+                method,
                 credentials: 'same-origin',
                 headers: {
                     'Accept': 'application/json',
@@ -2391,7 +2825,9 @@
                     ? firstError[0]
                     : (responseBody.message || 'Please review the form.');
 
-                throw new Error(message);
+                const validationError = new Error(message);
+                validationError.errors = errors;
+                throw validationError;
             }
 
             if (!response.ok) {
@@ -2419,6 +2855,12 @@
         }
 
         if (serviceTabLinks.length && serviceTabPanels.length) {
+            inspectionSourceButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    setInspectionSourceFilter(button.dataset.inspectionSourceFilter || 'registered');
+                });
+            });
+
             serviceTabLinks.forEach((link) => {
                 link.addEventListener('click', (event) => {
                     event.preventDefault();

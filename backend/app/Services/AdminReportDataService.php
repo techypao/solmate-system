@@ -103,10 +103,11 @@ class AdminReportDataService
         $rangeEnd = $rangeEnd?->copy() ?? Carbon::now()->endOfMonth();
         $snapshot = $this->buildRangeSnapshot($rangeStart, $rangeEnd);
         $requestStatusCounts = $this->buildRequestStatusCounts($snapshot['allRequests']);
+        $serviceRequestsCount = $snapshot['installationRequests']->count() + $snapshot['maintenanceRequests']->count();
 
         $metrics = [
             ['label' => 'Inspection Requests', 'value' => $snapshot['inspectionRequests']->count()],
-            ['label' => 'Service Requests', 'value' => $snapshot['serviceRequests']->count()],
+            ['label' => 'Service Requests', 'value' => $serviceRequestsCount],
             ['label' => 'Quotations Generated', 'value' => $snapshot['quotations']->count()],
             ['label' => 'Approved / Scheduled', 'value' => $requestStatusCounts['approved_scheduled']],
             ['label' => 'Completed Requests', 'value' => $requestStatusCounts['completed']],
@@ -120,7 +121,7 @@ class AdminReportDataService
             'rangeStart' => $rangeStart,
             'rangeEnd' => $rangeEnd,
             'inspectionRequests' => $snapshot['inspectionRequests']->count(),
-            'serviceRequests' => $snapshot['serviceRequests']->count(),
+            'serviceRequests' => $serviceRequestsCount,
             'quotationsGenerated' => $snapshot['quotations']->count(),
             'approvedScheduledRequests' => $requestStatusCounts['approved_scheduled'],
             'completedRequests' => $requestStatusCounts['completed'],
@@ -167,10 +168,15 @@ class AdminReportDataService
             fn (ServiceRequest $request) => $this->isInstallationRequest($request)
         )->values();
 
-        $maintenanceRequests = $serviceRequests->reject(
-            fn (ServiceRequest $request) => $this->isInstallationRequest($request)
+        $manualInspectionRequests = $serviceRequests->filter(
+            fn (ServiceRequest $request) => $request->isManualInspectionRequest()
         )->values();
 
+        $maintenanceRequests = $serviceRequests->reject(
+            fn (ServiceRequest $request) => $this->isInstallationRequest($request) || $request->isManualInspectionRequest()
+        )->values();
+
+        $allInspectionRequests = $inspectionRequests->concat($manualInspectionRequests)->values();
         $allRequests = $inspectionRequests->concat($serviceRequests)->values();
         $finalQuotations = $quotations->filter(
             fn (Quotation $quotation) => $this->normalizeQuotationType($quotation->quotation_type) === 'final'
@@ -187,7 +193,7 @@ class AdminReportDataService
                 $rangeStart,
                 $rangeEnd
             )->count(),
-            'inspectionRequests' => $inspectionRequests,
+            'inspectionRequests' => $allInspectionRequests,
             'serviceRequests' => $serviceRequests,
             'quotations' => $quotations,
             'installationRequests' => $installationRequests,
@@ -244,10 +250,11 @@ class AdminReportDataService
             ->get(['id', 'name', 'email'])
             ->map(function (User $technician) use ($inspectionRequests, $serviceRequests) {
                 $assignedInspectionRequests = $inspectionRequests->filter(
-                    fn (InspectionRequest $request) => (int) $request->technician_id === (int) $technician->id
+                    fn ($request) => (int) $request->technician_id === (int) $technician->id
                 );
                 $assignedServiceRequests = $serviceRequests->filter(
-                    fn (ServiceRequest $request) => (int) $request->technician_id === (int) $technician->id
+                    fn (ServiceRequest $request) => ! $request->isManualInspectionRequest()
+                        && (int) $request->technician_id === (int) $technician->id
                 );
                 $assignedRequests = $assignedInspectionRequests->concat($assignedServiceRequests);
                 $totalAssigned = $assignedRequests->count();
@@ -278,7 +285,7 @@ class AdminReportDataService
         return $allRequests
             ->map(function ($requestItem) {
                 $isInspection = $requestItem instanceof InspectionRequest;
-                $requestType = $isInspection
+                $requestType = $isInspection || ($requestItem instanceof ServiceRequest && $requestItem->isManualInspectionRequest())
                     ? 'Inspection'
                     : ($this->isInstallationRequest($requestItem) ? 'Installation' : 'Maintenance');
 
@@ -287,7 +294,9 @@ class AdminReportDataService
                         ? "Inspection Request #{$requestItem->id}"
                         : "{$requestType} Request #{$requestItem->id}",
                     'type' => $requestType,
-                    'customer_name' => $requestItem->customer?->name ?? 'Unknown customer',
+                    'customer_name' => $requestItem instanceof ServiceRequest
+                        ? $requestItem->displayCustomerName()
+                        : ($requestItem->customer?->name ?? 'Unknown customer'),
                     'status' => Str::headline($this->normalizeStatus($requestItem->status)),
                     'created_at' => $requestItem->created_at,
                 ];

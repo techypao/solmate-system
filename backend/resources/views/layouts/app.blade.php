@@ -1913,6 +1913,18 @@
                     Services
                 </a>
 
+                {{-- Walkin --}}
+                <a href="{{ route('admin.walkin') }}"
+                   class="admin-sidebar-link {{ request()->routeIs('admin.walkin') ? 'active' : '' }}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M9 18V5l12-2v13"/>
+                        <path d="M9 9h12"/>
+                        <path d="M3 21h18"/>
+                        <path d="M6 21v-7a3 3 0 0 1 3-3"/>
+                    </svg>
+                    Walkin
+                </a>
+
                 {{-- Quotations --}}
                 <a href="{{ route('quotations.item-builder') }}"
                    class="admin-sidebar-link {{ request()->routeIs('quotations.item-builder') ? 'active' : '' }}">

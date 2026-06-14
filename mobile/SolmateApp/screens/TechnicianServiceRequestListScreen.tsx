@@ -35,10 +35,11 @@ const BORDER = '#D4E0F2';
 
 /* ── filter config ─────────────────────────────────────────── */
 
-type FilterValue = 'all' | 'installation' | 'maintenance';
+type FilterValue = 'all' | 'inspection' | 'installation' | 'maintenance';
 
 const FILTERS: {label: string; value: FilterValue}[] = [
   {label: 'All', value: 'all'},
+  {label: 'Inspection', value: 'inspection'},
   {label: 'Installation', value: 'installation'},
   {label: 'Maintenance', value: 'maintenance'},
 ];
@@ -77,6 +78,7 @@ function getStatusColors(status?: unknown) {
 
 function getTypePillColors(type: unknown) {
   const t = formatDisplayValue(type, '').toLowerCase();
+  if (t.includes('inspection')) return {bg: '#ecfeff', text: '#0e7490', border: '#a5f3fc'};
   if (t.includes('maintenance'))  return {bg: '#fffbeb', text: '#b45309', border: '#fde68a'};
   if (t.includes('installation')) return {bg: '#f0f9ff', text: '#0369a1', border: '#bae6fd'};
   return {bg: '#f1f5f9', text: MUTED, border: BORDER};
@@ -87,6 +89,12 @@ function applyFilter(
   filter: FilterValue,
 ): ServiceRequest[] {
   switch (filter) {
+    case 'inspection':
+      return items.filter(i =>
+        formatDisplayValue(i.request_type, '')
+          .toLowerCase()
+          .includes('inspection'),
+      );
     case 'installation':
       return items.filter(i =>
         formatDisplayValue(i.request_type, '')
@@ -124,7 +132,10 @@ function ServiceRequestCard({
   const statusColors = getStatusColors(item.status);
   const requestType = formatDisplayValue(item.request_type, 'Service');
   const typeColors   = getTypePillColors(requestType);
-  const customerName = formatDisplayValue(item.customer?.name, 'Unknown customer');
+  const customerName = formatDisplayValue(
+    item.customer?.name || item.customer_name,
+    'Unknown customer',
+  );
 
   return (
     <Pressable
@@ -155,7 +166,9 @@ function ServiceRequestCard({
       </View>
 
       {/* title */}
-      <Text style={s.cardId}>Service Request ID: SR-{item.id}</Text>
+      <Text style={s.cardId}>
+        {requestType.includes('Inspection') ? 'Inspection Request' : 'Service Request'} ID: SR-{item.id}
+      </Text>
 
       {/* customer */}
       <Text style={s.cardMeta}>Customer Name: {customerName}</Text>
