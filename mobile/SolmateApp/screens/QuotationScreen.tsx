@@ -189,6 +189,12 @@ export default function QuotationScreen({ navigation }: any) {
               projected savings, and return on investment may change after an
               on-site inspection.
             </Text>
+            <Text style={s.noticeScope}>
+              The pre-inspection estimate only accounts for solar panels,
+              inverter, and battery. It does not include labor, wiring,
+              mounting materials, protection devices, permits, and other
+              installation costs.
+            </Text>
 
             <Text style={s.noticeIntro}>
               During the inspection, our technician will evaluate additional
@@ -366,6 +372,13 @@ const s = StyleSheet.create({
     fontSize: 13,
     color: MUTED,
     lineHeight: 20,
+  },
+  noticeScope: {
+    fontSize: 13,
+    color: WARNING,
+    fontWeight: '800',
+    lineHeight: 20,
+    marginTop: 12,
   },
   noticeIntro: {
     fontSize: 13,

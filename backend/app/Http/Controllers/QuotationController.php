@@ -189,6 +189,29 @@ class QuotationController extends Controller
         return response()->json($quotation);
     }
 
+    public function destroyCustomerInitialQuotation(Request $request, Quotation $quotation)
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'customer' || $quotation->user_id !== $user->id) {
+            return response()->json([
+                'message' => 'Forbidden',
+            ], 403);
+        }
+
+        if (strtolower((string) $quotation->quotation_type) !== 'initial') {
+            return response()->json([
+                'message' => 'Only pre-inspection estimates can be deleted.',
+            ], 422);
+        }
+
+        $quotation->delete();
+
+        return response()->json([
+            'message' => 'Pre-inspection estimate deleted successfully.',
+        ]);
+    }
+
     public function getFinalQuotationOptions()
     {
         return response()->json([

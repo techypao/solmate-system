@@ -185,6 +185,9 @@ Route::middleware(['auth', 'verified.email'])->group(function () {
             return view('customer.quotations');
         })->name('customer.quotation.index');
 
+        Route::delete('/customer/quotation/{quotation}', [QuotationController::class, 'destroyCustomerInitialQuotation'])
+            ->name('customer.quotation.destroy');
+
         Route::get('/customer/inspection', function () {
             return view('customer.inspection');
         })->name('customer.inspection');

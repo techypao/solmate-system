@@ -377,6 +377,16 @@
         font-size: 12px;
         line-height: 1.5;
     }
+    .cqc-estimate-disclaimer {
+        margin-bottom: 14px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: #fff7e0;
+        border: 1px solid #f2d48a;
+        color: #6f5a1a;
+        font-size: 13px;
+        line-height: 1.6;
+    }
     .cqc-result-item {
         padding: 14px;
         border-radius: 14px;
@@ -571,6 +581,7 @@
 
             <div id="cqc-result" class="cqc-result">
                 <h3 class="cqc-result-title">Your estimate options</h3>
+                <div class="cqc-estimate-disclaimer">This pre-inspection estimate only accounts for solar panels, inverter, and battery. It does not include labor, wiring, mounting materials, protection devices, permits, and other installation costs.</div>
                 <div id="cqc-result-grid" class="cqc-result-grid"></div>
                 <div class="cqc-result-actions">
                     <a href="{{ route('customer.quotation.index') }}" class="cqc-link-btn cqc-link-btn-primary">View My Quotations</a>

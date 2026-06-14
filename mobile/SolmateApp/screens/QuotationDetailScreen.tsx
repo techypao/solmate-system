@@ -286,6 +286,12 @@ export default function QuotationDetailScreen({route, navigation}: any) {
             <Text style={s.disclaimerText}>
               Taxes are not yet included. This is only a pre-inspection estimate and may change after a site inspection.
             </Text>
+            <Text style={s.disclaimerScopeText}>
+              This pre-inspection estimate only accounts for solar panels,
+              inverter, and battery. It does not include labor, wiring,
+              mounting materials, protection devices, permits, and other
+              installation costs.
+            </Text>
           </View>
         ) : null}
 
@@ -408,6 +414,13 @@ const s = StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
     color: '#6f5a1a',
+  },
+  disclaimerScopeText: {
+    color: '#6f5a1a',
+    fontSize: 13,
+    fontWeight: '800',
+    lineHeight: 20,
+    marginTop: 10,
   },
 
   /* card */

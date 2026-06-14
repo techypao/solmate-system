@@ -122,6 +122,11 @@
         border: 1px solid #fecaca;
         color: #991b1b;
     }
+    .cql-msg-success {
+        background: #dcfce7;
+        border: 1px solid #bbf7d0;
+        color: #166534;
+    }
     .cql-loading {
         display: none;
         padding: 30px 18px;
@@ -292,6 +297,15 @@
         border-color: #123A5A;
         color: #fff;
     }
+    .cql-detail-btn-danger {
+        border-color: #fecaca;
+        color: #b91c1c;
+    }
+    .cql-detail-btn-danger:hover {
+        background: #b91c1c;
+        border-color: #b91c1c;
+        color: #fff;
+    }
     .cql-detail {
         display: none;
         padding: 0 24px 22px;
@@ -372,6 +386,15 @@
         color: #92400e;
         font-size: 12px;
         line-height: 1.5;
+    }
+    .cql-estimate-disclaimer {
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: #fff7e0;
+        border: 1px solid #f2d48a;
+        color: #6f5a1a;
+        font-size: 13px;
+        line-height: 1.6;
     }
     .cql-initial-remarks {
         padding: 16px 18px;
@@ -543,6 +566,17 @@
         return !!(getAppliedPromo(quotation) || (quotation && quotation.applied_promo_id) || discount > 0);
     }
 
+    function getCookie(name) {
+        var match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.*+?^=!:${}()|[\]\/\\])/g, '\\$1') + '=([^;]*)'));
+        return match ? decodeURIComponent(match[1]) : null;
+    }
+
+    async function ensureCsrf() {
+        if (!getCookie('XSRF-TOKEN')) {
+            await fetch('/sanctum/csrf-cookie', { credentials: 'same-origin' });
+        }
+    }
+
     function formatPromoRule(quotation) {
         var promo = getAppliedPromo(quotation);
         if (!promo) {
@@ -566,14 +600,24 @@
         return title;
     }
 
-    async function apiRequest(endpoint) {
+    async function apiRequest(endpoint, options) {
+        var method = (options && options.method) || 'GET';
+        var headers = {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        };
+
+        if (method !== 'GET') {
+            await ensureCsrf();
+            headers['Content-Type'] = 'application/json';
+            headers['X-XSRF-TOKEN'] = getCookie('XSRF-TOKEN') || '';
+        }
+
         var response = await fetch(endpoint, {
-            method: 'GET',
+            method: method,
             credentials: 'same-origin',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            headers: headers,
+            body: options && options.body !== undefined ? JSON.stringify(options.body) : undefined
         });
 
         var payload = await response.json().catch(function () { return {}; });
@@ -587,9 +631,9 @@
         return payload;
     }
 
-    function showMsg(text) {
+    function showMsg(text, type) {
         var el = qs('#cql-msg');
-        el.className = 'cql-msg show cql-msg-error';
+        el.className = 'cql-msg show cql-msg-' + (type || 'error');
         el.textContent = text;
     }
 
@@ -692,6 +736,7 @@
             : '';
 
         return '<div class="cql-initial-detail">'
+            + '<div class="cql-estimate-disclaimer">This pre-inspection estimate only accounts for solar panels, inverter, and battery. It does not include labor, wiring, mounting materials, protection devices, permits, and other installation costs.</div>'
             + options
             + remarks
             + '</div>';
@@ -747,7 +792,10 @@
                 + '</div>';
         }
 
-        return '<button type="button" class="cql-detail-btn" data-toggle-id="' + escHtml(quotation.id) + '">View Details</button>';
+        return '<div class="cql-action-group">'
+            + '<button type="button" class="cql-detail-btn" data-toggle-id="' + escHtml(quotation.id) + '">View Details</button>'
+            + '<button type="button" class="cql-detail-btn cql-detail-btn-danger" data-delete-id="' + escHtml(quotation.id) + '">Delete</button>'
+            + '</div>';
     }
 
     function renderCard(quotation) {
@@ -849,6 +897,34 @@
                 var isOpen = detail.classList.contains('show');
                 detail.classList.toggle('show', !isOpen);
                 button.textContent = isOpen ? 'View Details' : 'Hide Details';
+            });
+        });
+
+        qsa('[data-delete-id]', list).forEach(function (button) {
+            button.addEventListener('click', async function () {
+                var id = button.getAttribute('data-delete-id');
+
+                if (!id || !window.confirm('Delete this pre-inspection estimate? This action cannot be undone.')) {
+                    return;
+                }
+
+                button.disabled = true;
+                button.textContent = 'Deleting...';
+
+                try {
+                    var response = await apiRequest('{{ url("/customer/quotation") }}/' + encodeURIComponent(id), {
+                        method: 'DELETE'
+                    });
+                    quotations = quotations.filter(function (quotation) {
+                        return String(quotation.id) !== String(id);
+                    });
+                    renderList();
+                    showMsg(response.message || 'Pre-inspection estimate deleted successfully.', 'success');
+                } catch (error) {
+                    button.disabled = false;
+                    button.textContent = 'Delete';
+                    showMsg(error.message || 'Could not delete the pre-inspection estimate.');
+                }
             });
         });
     }
