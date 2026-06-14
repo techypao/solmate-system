@@ -681,18 +681,6 @@
     }
 
     function renderInitialDetail(quotation) {
-        var summaryCards = [
-            ['Quotation ID', '#' + quotation.id, ''],
-            ['Quotation Type', 'Pre-Inspection Estimate', ''],
-            ['Submitted Date', fmtDate(quotation.created_at), ''],
-            ['Monthly Electric Bill', fmtPeso(quotation.monthly_electric_bill), ''],
-            ['Estimated System Size', quotation.system_kw ? Number(quotation.system_kw).toFixed(2) + ' kW' : '-', ''],
-            ['Projected Cost', fmtPeso(quotation.project_cost), 'cql-initial-card-feature'],
-            ['Estimated Monthly Savings', fmtPeso(quotation.estimated_monthly_savings), ''],
-            ['Estimated Annual Savings', fmtPeso(quotation.estimated_annual_savings), ''],
-            ['ROI', quotation.roi_years ? Number(quotation.roi_years).toFixed(1) + ' years' : '-', '']
-        ];
-
         var remarks = quotation.remarks
             ? '<div class="cql-initial-remarks">'
                 + '<p class="cql-initial-remarks-title">Remarks</p>'
@@ -704,11 +692,6 @@
             : '';
 
         return '<div class="cql-initial-detail">'
-            + '<div class="cql-initial-summary">'
-            + summaryCards.map(function (item) {
-                return renderInitialSummaryCard(item[0], item[1], item[2]);
-            }).join('')
-            + '</div>'
             + options
             + remarks
             + '</div>';
@@ -775,6 +758,9 @@
         var initial = isInitialQuotation(quotation);
         var typeText = initial ? 'Pre-Inspection Estimate' : 'Inspection-Based Quotation';
         var detailWrapperClass = initial ? 'cql-detail-content-full' : 'cql-detail-grid';
+        var cardNote = initial
+            ? 'Estimate options: <strong>On-Grid and Hybrid</strong>'
+            : 'Projected cost: <strong>' + projectedCost + '</strong>';
         var metaItems = [
             ['Quotation ID', '#' + quotation.id],
             ['Quotation Type', typeText],
@@ -801,7 +787,7 @@
             }).join('')
             + '</div>'
             + '<div class="cql-actions-row">'
-            + '<div class="cql-card-note">Projected cost: <strong>' + projectedCost + '</strong></div>'
+            + '<div class="cql-card-note">' + cardNote + '</div>'
             + buildAction(quotation)
             + '</div>'
             + '</div>'
