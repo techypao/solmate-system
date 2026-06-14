@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CompletionReport;
+use App\Models\InspectionRequest;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Services\CustomerRequestEligibilityService;
@@ -107,7 +108,7 @@ class ServiceRequestController extends Controller
             'date_needed' => 'required|date',
         ]);
 
-        $serviceRequest = $this->preferredDateLockService->withLockedDates(
+        $inspectionRequest = $this->preferredDateLockService->withLockedDates(
             [$validated['date_needed']],
             function () use ($validated) {
                 return DB::transaction(function () use ($validated) {
@@ -118,11 +119,10 @@ class ServiceRequestController extends Controller
                         PreferredDateLockService::REQUEST_TYPE_INSPECTION
                     );
 
-                    return ServiceRequest::query()->create([
+                    return InspectionRequest::query()->create([
                         'user_id' => null,
                         'customer_name' => trim($validated['customer_name']),
                         'customer_email' => trim($validated['customer_email']),
-                        'request_type' => ServiceRequest::MANUAL_INSPECTION_REQUEST_TYPE,
                         'details' => trim($validated['details']),
                         'contact_number' => trim($validated['contact_number']),
                         'address' => null,
@@ -136,7 +136,7 @@ class ServiceRequestController extends Controller
 
         return response()->json([
             'message' => 'Manual inspection request created successfully.',
-            'data' => $serviceRequest,
+            'data' => $inspectionRequest,
         ], 201);
     }
 

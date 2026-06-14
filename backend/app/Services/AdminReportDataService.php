@@ -296,7 +296,7 @@ class AdminReportDataService
                     'type' => $requestType,
                     'customer_name' => $requestItem instanceof ServiceRequest
                         ? $requestItem->displayCustomerName()
-                        : ($requestItem->customer?->name ?? 'Unknown customer'),
+                        : $requestItem->displayCustomerName(),
                     'status' => Str::headline($this->normalizeStatus($requestItem->status)),
                     'created_at' => $requestItem->created_at,
                 ];

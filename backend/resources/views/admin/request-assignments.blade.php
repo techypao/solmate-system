@@ -1,10 +1,6 @@
 @extends('layouts.app', ['title' => 'Admin Services'])
 
 @php
-    $sortedInspectionRequests = $inspectionRequests
-        ->sortByDesc(fn ($request) => optional($request->created_at)->timestamp ?? 0)
-        ->values();
-
     $sortedServiceRequests = $serviceRequests
         ->sortByDesc(fn ($request) => optional($request->created_at)->timestamp ?? 0)
         ->values();
@@ -16,6 +12,18 @@
     $isManualInspectionRequest = fn ($request) => method_exists($request, 'isManualInspectionRequest')
         && $request->isManualInspectionRequest();
 
+    $sortedAllInspectionRequests = $inspectionRequests
+        ->sortByDesc(fn ($request) => optional($request->created_at)->timestamp ?? 0)
+        ->values();
+
+    $sortedInspectionRequests = $sortedAllInspectionRequests
+        ->reject($isManualInspectionRequest)
+        ->values();
+
+    $manualWalkinInspectionRequests = $sortedAllInspectionRequests
+        ->filter($isManualInspectionRequest)
+        ->values();
+
     $installationRequests = $sortedServiceRequests
         ->filter($isInstallationRequest)
         ->values();
@@ -24,7 +32,9 @@
         ->filter($isManualInspectionRequest)
         ->values();
 
-    $inspectionTabRequestCount = $sortedInspectionRequests->count() + $manualInspectionRequests->count();
+    $inspectionTabRequestCount = $sortedInspectionRequests->count()
+        + $manualWalkinInspectionRequests->count()
+        + $manualInspectionRequests->count();
     $defaultInspectionSource = $sortedInspectionRequests->isNotEmpty() ? 'registered' : 'manual';
 
     $maintenanceRequests = $sortedServiceRequests
@@ -69,7 +79,7 @@
         ->values()
         ->all();
 
-    $inspectionRequestRecords = $sortedInspectionRequests
+    $inspectionRequestRecords = $sortedAllInspectionRequests
         ->map(fn ($request) => [
             'requestKey' => "inspection-{$request->id}",
             'date_needed' => $request->date_needed
@@ -110,7 +120,7 @@
     $awaitingCompletionReviewCount = $sortedServiceRequests
         ->filter(fn ($request) => $request->completionReport && $request->status !== 'completed')
         ->count()
-        + $sortedInspectionRequests
+        + $sortedAllInspectionRequests
             ->filter(fn ($request) => $request->completionReport && $request->status !== 'completed')
             ->count();
 @endphp
@@ -887,7 +897,7 @@
             </div>
             <div class="summary-card">
                 <div class="summary-label">Unassigned inspection requests</div>
-                <div class="summary-value">{{ $sortedInspectionRequests->whereNull('technician_id')->count() + $manualInspectionRequests->whereNull('technician_id')->count() }}</div>
+                <div class="summary-value">{{ $sortedInspectionRequests->whereNull('technician_id')->count() + $manualWalkinInspectionRequests->whereNull('technician_id')->count() + $manualInspectionRequests->whereNull('technician_id')->count() }}</div>
             </div>
         </div>
 
@@ -989,12 +999,12 @@
                         aria-selected="{{ $defaultInspectionSource === 'manual' ? 'true' : 'false' }}"
                     >
                         Manual
-                        <span class="inspection-source-count">{{ $manualInspectionRequests->count() }}</span>
+                        <span class="inspection-source-count">{{ $manualWalkinInspectionRequests->count() + $manualInspectionRequests->count() }}</span>
                     </button>
                 </div>
             @endif
 
-            @if ($sortedInspectionRequests->isEmpty() && $manualInspectionRequests->isEmpty())
+            @if ($sortedAllInspectionRequests->isEmpty() && $manualInspectionRequests->isEmpty())
                 <div class="info-box services-empty-state">No inspection requests yet.</div>
             @else
                 <div class="request-list">
@@ -1008,13 +1018,14 @@
                     <div
                         class="info-box services-empty-state"
                         data-inspection-source-empty="manual"
-                        @if ($defaultInspectionSource !== 'manual' || $manualInspectionRequests->isNotEmpty()) style="display: none;" @endif
+                        @if ($defaultInspectionSource !== 'manual' || $manualWalkinInspectionRequests->isNotEmpty() || $manualInspectionRequests->isNotEmpty()) style="display: none;" @endif
                     >
                         No manual inspection requests yet.
                     </div>
-                        @foreach ($sortedInspectionRequests as $inspectionRequest)
+                        @foreach ($sortedAllInspectionRequests as $inspectionRequest)
                         @php
                             $requestKey = "inspection-{$inspectionRequest->id}";
+                            $inspectionSource = $isManualInspectionRequest($inspectionRequest) ? 'manual' : 'registered';
                             $statusClass = $statusClasses[$inspectionRequest->status] ?? 'badge badge-neutral';
                             $isAssigned = filled($inspectionRequest->technician_id);
                             $completionReport = $inspectionRequest->completionReport;
@@ -1057,10 +1068,10 @@
 
                         <div
                             id="inspection-request-{{ $inspectionRequest->id }}"
-                            class="request-card {{ $defaultInspectionSource !== 'registered' ? 'inspection-source-hidden' : '' }}"
+                            class="request-card {{ $defaultInspectionSource !== $inspectionSource ? 'inspection-source-hidden' : '' }}"
                             data-request-card
                             data-request-tab="inspection"
-                            data-inspection-source="registered"
+                            data-inspection-source="{{ $inspectionSource }}"
                             data-request-label="Inspection Request #{{ $inspectionRequest->id }}"
                         >
                             <div class="request-header">
@@ -1071,7 +1082,7 @@
                                             Inspection Request #{{ $inspectionRequest->id }}
                                             <span class="request-active-indicator">Open now</span>
                                         </div>
-                                        <div class="muted">Customer: {{ $inspectionRequest->customer?->name ?? 'Unknown customer' }}</div>
+                                        <div class="muted">Customer: {{ $inspectionRequest->displayCustomerName() }}</div>
                                     </div>
 
                                     <div class="request-top-actions">
@@ -1131,7 +1142,7 @@
                                     <div class="detail-grid">
                                         <div class="detail-item">
                                             <span class="detail-label">Customer Email</span>
-                                            <strong>{{ $inspectionRequest->customer?->email ?? 'Not available' }}</strong>
+                                            <strong>{{ $inspectionRequest->displayCustomerEmail() }}</strong>
                                         </div>
                                         <div class="detail-item">
                                             <span class="detail-label">Contact Number</span>
@@ -1139,7 +1150,7 @@
                                         </div>
                                         <div class="detail-item">
                                             <span class="detail-label">Address</span>
-                                            <strong>{{ $inspectionRequest->address ?: 'Not provided' }}</strong>
+                                            <strong>{{ $inspectionRequest->address ?: ($inspectionRequest->address_details ?: 'Not provided') }}</strong>
                                         </div>
                                         <div class="detail-item">
                                             <span class="detail-label">Address Details</span>

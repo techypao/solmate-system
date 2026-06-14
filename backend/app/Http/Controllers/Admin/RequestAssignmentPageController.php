@@ -47,8 +47,9 @@ class RequestAssignmentPageController extends Controller
         abort_unless($request->user()?->role === User::ROLE_ADMIN, 403);
 
         return view('admin.walkin', [
-            'manualInspectionRequests' => ServiceRequest::query()
-                ->where('request_type', ServiceRequest::MANUAL_INSPECTION_REQUEST_TYPE)
+            'manualInspectionRequests' => InspectionRequest::query()
+                ->whereNull('user_id')
+                ->whereNotNull('customer_name')
                 ->with(['technician', 'completionReport'])
                 ->latest()
                 ->get(),

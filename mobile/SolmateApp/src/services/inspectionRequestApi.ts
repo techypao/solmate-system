@@ -18,6 +18,8 @@ export type InspectionRequestStatus =
 export type InspectionRequest = {
   id: number;
   user_id?: number;
+  customer_name?: string | null;
+  customer_email?: string | null;
   technician_id?: number | null;
   details: string;
   contact_number?: string | null;

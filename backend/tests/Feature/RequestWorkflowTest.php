@@ -141,32 +141,55 @@ class RequestWorkflowTest extends TestCase
             ->assertJsonPath('data.user_id', null)
             ->assertJsonPath('data.customer_name', 'Prospect Caller')
             ->assertJsonPath('data.customer_email', 'prospect@example.com')
-            ->assertJsonPath('data.request_type', ServiceRequest::MANUAL_INSPECTION_REQUEST_TYPE)
             ->assertJsonPath('data.status', 'pending');
 
-        $serviceRequestId = $createResponse->json('data.id');
+        $inspectionRequestId = $createResponse->json('data.id');
 
         $this->actingAs($admin)
-            ->putJson("/api/service-requests/{$serviceRequestId}/assign-technician", [
+            ->putJson("/api/inspection-requests/{$inspectionRequestId}/assign-technician", [
                 'technician_id' => $technician->id,
             ])
             ->assertOk()
-            ->assertJsonPath('data.status', 'assigned');
+            ->assertJsonPath('inspection_request.status', 'assigned');
 
         $this->actingAs($technician)
-            ->getJson('/api/technician/service-requests')
+            ->getJson('/api/technician/inspection-requests')
             ->assertOk()
-            ->assertJsonPath('data.0.id', $serviceRequestId)
-            ->assertJsonPath('data.0.user_id', null)
-            ->assertJsonPath('data.0.customer_name', 'Prospect Caller')
-            ->assertJsonPath('data.0.request_type', ServiceRequest::MANUAL_INSPECTION_REQUEST_TYPE);
+            ->assertJsonPath('inspection_requests.0.id', $inspectionRequestId)
+            ->assertJsonPath('inspection_requests.0.user_id', null)
+            ->assertJsonPath('inspection_requests.0.customer_name', 'Prospect Caller');
 
-        $this->assertDatabaseHas('service_requests', [
-            'id' => $serviceRequestId,
+        $this->actingAs($technician)
+            ->putJson("/api/technician/inspection-requests/{$inspectionRequestId}/status", [
+                'status' => 'in_progress',
+            ])
+            ->assertOk()
+            ->assertJsonPath('inspection_request.status', 'in_progress');
+
+        $this->actingAs($technician)
+            ->postJson('/api/technician/final-quotations', [
+                'inspection_request_id' => $inspectionRequestId,
+                'monthly_electric_bill' => 4200,
+                'pv_system_type' => 'hybrid',
+                'with_battery' => true,
+                'remarks' => 'Inspection-based quotation for walk-in prospect.',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.user_id', null)
+            ->assertJsonPath('data.inspection_request_id', $inspectionRequestId)
+            ->assertJsonPath('data.quotation_type', 'final');
+
+        $this->assertDatabaseHas('inspection_requests', [
+            'id' => $inspectionRequestId,
             'user_id' => null,
             'customer_name' => 'Prospect Caller',
             'customer_email' => 'prospect@example.com',
-            'request_type' => ServiceRequest::MANUAL_INSPECTION_REQUEST_TYPE,
+        ]);
+
+        $this->assertDatabaseHas('quotations', [
+            'inspection_request_id' => $inspectionRequestId,
+            'user_id' => null,
+            'quotation_type' => 'final',
         ]);
     }
 

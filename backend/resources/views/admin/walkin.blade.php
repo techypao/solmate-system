@@ -126,7 +126,7 @@
             <div class="section-header">
                 <div>
                     <h2 class="admin-section-title">Create Walkin Request</h2>
-                    <p class="admin-section-copy">After creation, the request can be assigned and tracked through the normal service workflow.</p>
+                    <p class="admin-section-copy">After creation, the request can be assigned and tracked through the normal inspection workflow.</p>
                 </div>
             </div>
 
@@ -182,7 +182,7 @@
             <div class="section-header">
                 <div>
                     <h2 class="admin-section-title">Recent Walkin Requests</h2>
-                    <p class="admin-section-copy">Open Services to assign a technician or update official status.</p>
+                    <p class="admin-section-copy">Open Services to assign a technician, update official status, and continue the inspection-based quotation workflow.</p>
                 </div>
                 <span class="badge badge-neutral">{{ $manualInspectionRequests->count() }} total</span>
             </div>
@@ -198,7 +198,7 @@
                                     <p class="walkin-card-title">Walkin Request #{{ $request->id }}</p>
                                     <p class="walkin-card-sub">{{ $request->displayCustomerName() }} · {{ \Illuminate\Support\Str::headline($request->status) }}</p>
                                 </div>
-                                <a class="button-link secondary" href="{{ route('admin.request-assignments') }}#service-request-{{ $request->id }}">Open in Services</a>
+                                <a class="button-link secondary" href="{{ route('admin.request-assignments') }}#inspection-request-{{ $request->id }}">Open in Services</a>
                             </div>
                             <div class="walkin-detail-grid">
                                 <div class="walkin-detail">

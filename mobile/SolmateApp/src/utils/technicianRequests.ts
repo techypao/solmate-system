@@ -132,7 +132,7 @@ export function getCustomerName(
   inspectionRequest?: TechnicianInspectionRequest | null,
 ) {
   return formatDisplayValue(
-    inspectionRequest?.customer?.name,
+    inspectionRequest?.customer?.name || inspectionRequest?.customer_name,
     'Customer not provided',
   );
 }
@@ -141,7 +141,7 @@ export function getCustomerEmail(
   inspectionRequest?: TechnicianInspectionRequest | null,
 ) {
   return formatDisplayValue(
-    inspectionRequest?.customer?.email,
+    inspectionRequest?.customer?.email || inspectionRequest?.customer_email,
     'No email available',
   );
 }

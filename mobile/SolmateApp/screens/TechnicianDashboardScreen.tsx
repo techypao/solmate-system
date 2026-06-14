@@ -45,6 +45,7 @@ type DashboardTask = {
   kind: 'inspection' | 'service';
   customerName: string;
   address: string;
+  hideAddress?: boolean;
   taskType: string;
   scheduleLabel: string;
   statusLabel: string;
@@ -124,11 +125,16 @@ function getTaskShortDetails(value?: unknown, fallback = 'No details provided.')
 }
 
 function buildInspectionTask(item: TechnicianInspectionRequest): DashboardTask {
+  const isWalkinInspection = !item.user_id && !!formatDisplayValue(item.customer_name, '');
+
   return {
     id: item.id,
     kind: 'inspection',
-    customerName: formatDisplayValue(item.customer?.name, 'Unknown customer'),
-    address: formatDisplayValue(item.address, 'Not provided'),
+    customerName: isWalkinInspection
+      ? 'Walkin Customer'
+      : formatDisplayValue(item.customer?.name, 'Unknown customer'),
+    address: formatDisplayValue(item.address || item.address_details, 'Not provided'),
+    hideAddress: isWalkinInspection,
     taskType: 'Inspection Request',
     scheduleLabel: formatTaskSchedule(item.date_needed),
     statusLabel: formatTaskStatus(item.status),
@@ -142,13 +148,21 @@ function buildInspectionTask(item: TechnicianInspectionRequest): DashboardTask {
 function buildServiceTask(item: ServiceRequest): DashboardTask {
   const rawType = formatDisplayValue(item.request_type, 'Service');
   const hasInstallation = rawType.toLowerCase().includes('installation');
+  const isManualInspection = rawType.toLowerCase().includes('manual inspection');
 
   return {
     id: item.id,
     kind: 'service',
-    customerName: formatDisplayValue(item.customer?.name, 'Unknown customer'),
+    customerName: isManualInspection
+      ? 'Walkin Customer'
+      : formatDisplayValue(item.customer?.name, 'Unknown customer'),
     address: formatDisplayValue(item.address, 'Not provided'),
-    taskType: hasInstallation ? 'Installation Request' : 'Maintenance Request',
+    hideAddress: isManualInspection,
+    taskType: isManualInspection
+      ? 'Inspection Request'
+      : hasInstallation
+        ? 'Installation Request'
+        : 'Maintenance Request',
     scheduleLabel: formatTaskSchedule(item.date_needed),
     statusLabel: formatTaskStatus(item.status),
     statusValue: normalizeRequestStatus(item.status) || 'pending',
@@ -204,7 +218,9 @@ function TaskCard({
       </View>
 
       <Text style={s.taskCustomer}>{item.customerName}</Text>
-      <Text style={s.taskAddress}>Address: {item.address}</Text>
+      {!item.hideAddress ? (
+        <Text style={s.taskAddress}>Address: {item.address}</Text>
+      ) : null}
       <Text style={s.taskDate}>Scheduled: {item.scheduleLabel}</Text>
       <Text style={s.taskDetails}>{item.shortDetails}</Text>
 

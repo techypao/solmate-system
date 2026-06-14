@@ -498,7 +498,10 @@ export default function RequestDetailsScreen({navigation, route}: any) {
             <InfoRow label="Contact No." value={inspectionRequest.contact_number} />
             <InfoRow
               label="Address"
-              value={formatDisplayValue(inspectionRequest.address, 'Not provided')}
+              value={formatDisplayValue(
+                inspectionRequest.address || inspectionRequest.address_details,
+                'Not provided',
+              )}
             />
           </View>
 

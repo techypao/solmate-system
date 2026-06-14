@@ -72,11 +72,10 @@ class WebAdminAssignmentsTest extends TestCase
             'role' => User::ROLE_ADMIN,
         ]);
 
-        ServiceRequest::query()->create([
+        InspectionRequest::query()->create([
             'user_id' => null,
             'customer_name' => 'Walkin Prospect',
             'customer_email' => 'walkin@example.com',
-            'request_type' => ServiceRequest::MANUAL_INSPECTION_REQUEST_TYPE,
             'details' => 'Manual inspection from a walk-in inquiry',
             'contact_number' => '0917-222-3333',
             'address_details' => '123 Walkin Street',

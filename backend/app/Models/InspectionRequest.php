@@ -13,6 +13,8 @@ class InspectionRequest extends Model
 
     protected $fillable = [
         'user_id',
+        'customer_name',
+        'customer_email',
         'technician_id',
         'details',
         'cancellation_note',
@@ -48,5 +50,22 @@ class InspectionRequest extends Model
     public function finalQuotation(): HasOne
     {
         return $this->hasOne(Quotation::class)->where('quotation_type', 'final');
+    }
+
+    public function isManualInspectionRequest(): bool
+    {
+        return $this->user_id === null && filled($this->customer_name);
+    }
+
+    public function displayCustomerName(): string
+    {
+        return $this->customer?->name
+            ?: ($this->customer_name ?: 'Unknown customer');
+    }
+
+    public function displayCustomerEmail(): string
+    {
+        return $this->customer?->email
+            ?: ($this->customer_email ?: 'Not available');
     }
 }

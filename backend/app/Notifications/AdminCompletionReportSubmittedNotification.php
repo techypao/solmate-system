@@ -20,7 +20,7 @@ class AdminCompletionReportSubmittedNotification extends BaseDatabaseNotificatio
         $technicianName = $this->requestModel->technician?->name ?? 'A technician';
         $customerName = $this->requestModel instanceof ServiceRequest
             ? $this->requestModel->displayCustomerName()
-            : ($this->requestModel->customer?->name ?? 'the customer');
+            : $this->requestModel->displayCustomerName();
 
         if ($this->requestModel instanceof InspectionRequest) {
             return $this->buildPayload([

@@ -72,7 +72,10 @@ function formatSchedule(dateNeeded?: unknown) {
 }
 
 function getCustomerName(item: TechnicianInspectionRequest) {
-  return formatDisplayValue(item.customer?.name, 'Unknown customer');
+  return formatDisplayValue(
+    item.customer?.name || item.customer_name,
+    'Unknown customer',
+  );
 }
 
 // ─── bottom nav icons ─────────────────────────────────────────────────────────
@@ -103,7 +106,7 @@ function InspectionCard({
       {/* customer */}
       <Text style={s.cardMeta}>Customer Name: {getCustomerName(item)}</Text>
       <Text style={s.cardMeta}>
-        Address: {formatDisplayValue(item.address, 'Not provided')}
+        Address: {formatDisplayValue(item.address || item.address_details, 'Not provided')}
       </Text>
 
       {/* schedule */}
