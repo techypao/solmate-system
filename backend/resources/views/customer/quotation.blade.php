@@ -642,6 +642,10 @@
         <section class="cqc-note">
             <strong>ROI guide:</strong> Return on investment estimates how long it may take for your solar savings to recover the project cost.
         </section>
+
+        <section class="cqc-note">
+            <strong>FAQ:</strong> On-grid is usually cheaper because it does not include a battery, so the estimate only adds the inverter to the base solar panel cost. Hybrid costs more because it includes a battery, but it is often the nicer option for customers who want stored solar energy and better backup readiness during outages.
+        </section>
     </aside>
 </div>
 @endsection
