@@ -44,6 +44,30 @@ export type AppliedPromotionSummary = {
   conditions?: Record<string, unknown> | null;
 };
 
+export type PreInspectionQuotationOption = {
+  id?: number;
+  quotation_id?: number;
+  system_type?: 'on-grid' | 'hybrid' | string | null;
+  with_battery?: boolean | null;
+  system_kw?: number | string | null;
+  panel_quantity?: number | string | null;
+  panel_watts?: number | string | null;
+  base_project_cost?: number | string | null;
+  inverter_capacity_kw?: number | string | null;
+  inverter_cost?: number | string | null;
+  battery_required_kwh?: number | string | null;
+  battery_required_ah?: number | string | null;
+  battery_capacity_ah?: number | string | null;
+  battery_voltage?: number | string | null;
+  battery_cost?: number | string | null;
+  project_cost?: number | string | null;
+  estimated_monthly_savings?: number | string | null;
+  estimated_annual_savings?: number | string | null;
+  roi_years?: number | string | null;
+  requires_technician_validation?: boolean | null;
+  validation_note?: string | null;
+};
+
 export type Quotation = {
   id: number;
   user_id?: number;
@@ -90,6 +114,7 @@ export type Quotation = {
   customer?: UserSummary | null;
   inspectionRequest?: InspectionRequest | null;
   line_items?: QuotationLineItem[];
+  pre_inspection_options?: PreInspectionQuotationOption[];
 };
 
 export type CreateQuotationPayload = {

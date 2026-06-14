@@ -42,6 +42,20 @@ type QuotationDetail = {
   roi_years?: string | number | null;
   remarks?: string | null;
   created_at?: string | null;
+  pre_inspection_options?: PreInspectionOption[];
+};
+
+type PreInspectionOption = {
+  id?: number;
+  system_type?: string | null;
+  with_battery?: boolean | null;
+  system_kw?: string | number | null;
+  inverter_capacity_kw?: string | number | null;
+  battery_capacity_ah?: string | number | null;
+  project_cost?: string | number | null;
+  estimated_monthly_savings?: string | number | null;
+  roi_years?: string | number | null;
+  validation_note?: string | null;
 };
 
 /* ── constants ── */
@@ -78,6 +92,12 @@ function fmtKw(value?: string | number | null) {
   return numericValue + ' kWp';
 }
 
+function fmtCapacity(value?: string | number | null, suffix = '') {
+  const numericValue = toFiniteNumber(value);
+  if (numericValue === null) return 'N/A';
+  return numericValue.toFixed(2) + suffix;
+}
+
 function fmtKwh(value?: string | number | null) {
   const numericValue = toFiniteNumber(value);
   if (numericValue === null) return 'N/A';
@@ -108,6 +128,40 @@ function InfoRow({label, value, bold}: {label: string; value: string; bold?: boo
     <View style={s.infoRow}>
       <Text style={s.infoLabel}>{label}</Text>
       <Text style={[s.infoValue, bold && s.infoValueBold]}>{value}</Text>
+    </View>
+  );
+}
+
+function optionTitle(option: PreInspectionOption) {
+  return (option.system_type || '').toLowerCase() === 'hybrid'
+    ? 'Hybrid'
+    : 'On-Grid';
+}
+
+function PreInspectionOptionCard({option}: {option: PreInspectionOption}) {
+  const batteryValue = option.with_battery
+    ? fmtCapacity(option.battery_capacity_ah, ' Ah')
+    : 'Not included';
+
+  return (
+    <View style={s.optionCard}>
+      <View style={s.optionHeader}>
+        <Text style={s.optionTitle}>{optionTitle(option)}</Text>
+        <View style={s.optionBadge}>
+          <Text style={s.optionBadgeText}>
+            {option.with_battery ? 'With battery' : 'No battery'}
+          </Text>
+        </View>
+      </View>
+      <InfoRow label="System Size" value={fmtCapacity(option.system_kw, ' kW')} bold />
+      <InfoRow label="Inverter" value={fmtCapacity(option.inverter_capacity_kw, ' kW')} bold />
+      <InfoRow label="Battery" value={batteryValue} bold />
+      <InfoRow label="Total Estimate" value={formatQuotationCurrency(option.project_cost)} bold />
+      <InfoRow label="Monthly Savings" value={formatQuotationCurrency(option.estimated_monthly_savings)} />
+      <InfoRow label="ROI" value={fmtYears(option.roi_years)} />
+      {option.validation_note ? (
+        <Text style={s.optionNote}>{option.validation_note}</Text>
+      ) : null}
     </View>
   );
 }
@@ -189,6 +243,9 @@ export default function QuotationDetailScreen({route, navigation}: any) {
   const screenSubtitle = getQuotationScreenSubtitle(quotation.quotation_type);
   const showEstimateDisclaimer =
     (quotation.quotation_type || '').toLowerCase() !== 'final';
+  const preInspectionOptions = Array.isArray(quotation.pre_inspection_options)
+    ? quotation.pre_inspection_options
+    : [];
 
   /* ── handlers ── */
 
@@ -261,6 +318,18 @@ export default function QuotationDetailScreen({route, navigation}: any) {
           <InfoRow label="System Size" value={systemSize} bold />
           <InfoRow label="Panel Qty" value={panelQty} bold />
         </View>
+
+        {showEstimateDisclaimer && preInspectionOptions.length > 0 ? (
+          <View style={s.card}>
+            <Text style={s.cardTitle}>Estimate Options</Text>
+            {preInspectionOptions.map((option, index) => (
+              <PreInspectionOptionCard
+                key={option.id ?? `${option.system_type || 'option'}-${index}`}
+                option={option}
+              />
+            ))}
+          </View>
+        ) : null}
 
         {/* ── action buttons ── */}
         <Pressable
@@ -375,6 +444,33 @@ const s = StyleSheet.create({
   infoLabel: {fontSize: 14, color: MUTED},
   infoValue: {fontSize: 14, color: NAVY},
   infoValueBold: {fontWeight: '800'},
+  optionCard: {
+    borderTopWidth: 1,
+    borderTopColor: '#D4E0F2',
+    paddingTop: 14,
+    marginTop: 4,
+    marginBottom: 14,
+  },
+  optionHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  optionTitle: {fontSize: 15, fontWeight: '900', color: NAVY},
+  optionBadge: {
+    backgroundColor: '#EAF9FD',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  optionBadgeText: {color: '#1d4ed8', fontSize: 11, fontWeight: '800'},
+  optionNote: {
+    color: '#7A4F00',
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 8,
+  },
 
   /* primary button */
   primaryBtn: {

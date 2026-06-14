@@ -1881,6 +1881,29 @@
     });
 
     function renderQuotationDetails(q) {
+        var optionRows = '';
+
+        if (Array.isArray(q.pre_inspection_options) && q.pre_inspection_options.length) {
+            optionRows = q.pre_inspection_options.map(function(option) {
+                var title = String(option.system_type || '').toLowerCase() === 'hybrid' ? 'Hybrid' : 'On-Grid';
+                var battery = option.with_battery
+                    ? (option.battery_capacity_ah ? Number(option.battery_capacity_ah).toFixed(2) + ' Ah' : '-')
+                    : 'Not included';
+                var note = option.validation_note ? ' · ' + option.validation_note : '';
+
+                return '<div class="dash-info-row" style="padding:8px 0;">'
+                    + '<span class="dash-info-label">' + escHtml(title + ' Option') + '</span>'
+                    + '<span class="dash-info-value">' + escHtml(
+                        'Inverter: ' + (option.inverter_capacity_kw ? Number(option.inverter_capacity_kw).toFixed(2) + ' kW' : '-')
+                        + ' · Battery: ' + battery
+                        + ' · Total: ' + fmtPeso(option.project_cost)
+                        + ' · ROI: ' + (option.roi_years ? Number(option.roi_years).toFixed(1) + ' yrs' : '-')
+                        + note
+                    ) + '</span>'
+                    + '</div>';
+            }).join('');
+        }
+
         var rows = [
             ['Monthly Bill', fmtPeso(q.monthly_electric_bill)],
             ['Rate / kWh', q.rate_per_kwh ? 'PHP ' + q.rate_per_kwh : '-'],
@@ -1900,7 +1923,7 @@
                 + '<span class="dash-info-label">' + escHtml(row[0]) + '</span>'
                 + '<span class="dash-info-value">' + escHtml(String(row[1])) + '</span>'
                 + '</div>';
-        }).join('') + '</div>';
+        }).join('') + optionRows + '</div>';
     }
 
     window.toggleQDetails = function(id) {

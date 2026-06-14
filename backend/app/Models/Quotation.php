@@ -85,6 +85,11 @@ class Quotation extends Model
         return $this->hasMany(QuotationLineItem::class)->orderBy('id');
     }
 
+    public function preInspectionOptions(): HasMany
+    {
+        return $this->hasMany(PreInspectionQuotationOption::class)->orderBy('id');
+    }
+
     public function appliedPromo(): BelongsTo
     {
         return $this->belongsTo(Promotion::class, 'applied_promo_id');

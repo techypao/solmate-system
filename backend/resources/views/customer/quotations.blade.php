@@ -350,6 +350,29 @@
         line-height: 1.35;
         word-break: break-word;
     }
+    .cql-option-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+    .cql-option-card {
+        padding: 16px;
+        border-radius: 16px;
+        background: #fff;
+        border: 1px solid #DDE7EE;
+    }
+    .cql-option-title {
+        margin: 0 0 10px;
+        color: #123A5A;
+        font-size: 15px;
+        font-weight: 900;
+    }
+    .cql-option-note {
+        margin: 10px 0 0;
+        color: #92400e;
+        font-size: 12px;
+        line-height: 1.5;
+    }
     .cql-initial-remarks {
         padding: 16px 18px;
         border-radius: 16px;
@@ -415,6 +438,7 @@
             padding-right: 18px;
         }
         .cql-initial-summary,
+        .cql-option-list,
         .cql-detail-grid,
         .cql-meta-grid {
             grid-template-columns: 1fr;
@@ -620,6 +644,42 @@
             + '</div>';
     }
 
+    function initialOptionTitle(option) {
+        return String(option.system_type || '').toLowerCase() === 'hybrid'
+            ? 'Hybrid'
+            : 'On-Grid';
+    }
+
+    function fmtCapacity(value, suffix) {
+        if (value === null || value === undefined || value === '' || isNaN(Number(value))) {
+            return '-';
+        }
+
+        return Number(value).toFixed(2) + suffix;
+    }
+
+    function renderInitialOption(option) {
+        var battery = option.with_battery
+            ? fmtCapacity(option.battery_capacity_ah, ' Ah')
+            : 'Not included';
+        var note = option.validation_note
+            ? '<p class="cql-option-note">' + escHtml(option.validation_note) + '</p>'
+            : '';
+
+        return '<article class="cql-option-card">'
+            + '<p class="cql-option-title">' + escHtml(initialOptionTitle(option)) + '</p>'
+            + '<div class="cql-initial-summary">'
+            + renderInitialSummaryCard('System Size', fmtCapacity(option.system_kw, ' kW'), '')
+            + renderInitialSummaryCard('Inverter', fmtCapacity(option.inverter_capacity_kw, ' kW'), '')
+            + renderInitialSummaryCard('Battery', battery, '')
+            + renderInitialSummaryCard('Total Estimate', fmtPeso(option.project_cost), 'cql-initial-card-feature')
+            + renderInitialSummaryCard('Monthly Savings', fmtPeso(option.estimated_monthly_savings), '')
+            + renderInitialSummaryCard('ROI', option.roi_years ? Number(option.roi_years).toFixed(1) + ' years' : '-', '')
+            + '</div>'
+            + note
+            + '</article>';
+    }
+
     function renderInitialDetail(quotation) {
         var summaryCards = [
             ['Quotation ID', '#' + quotation.id, ''],
@@ -639,6 +699,9 @@
                 + '<p class="cql-initial-remarks-copy">' + escHtml(quotation.remarks) + '</p>'
               + '</div>'
             : '';
+        var options = Array.isArray(quotation.pre_inspection_options) && quotation.pre_inspection_options.length
+            ? '<div class="cql-option-list">' + quotation.pre_inspection_options.map(renderInitialOption).join('') + '</div>'
+            : '';
 
         return '<div class="cql-initial-detail">'
             + '<div class="cql-initial-summary">'
@@ -646,6 +709,7 @@
                 return renderInitialSummaryCard(item[0], item[1], item[2]);
             }).join('')
             + '</div>'
+            + options
             + remarks
             + '</div>';
     }

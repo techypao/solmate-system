@@ -47,11 +47,15 @@ class InitialQuotationEstimateOutputTest extends TestCase
 
     private function createCustomer(): User
     {
-        return User::query()->create([
+        $customer = User::query()->create([
             'name' => 'Customer User',
             'email' => 'customer_' . uniqid() . '@example.com',
             'password' => Hash::make('password'),
             'role' => User::ROLE_CUSTOMER,
         ]);
+
+        $customer->forceFill(['email_verified_at' => now()])->save();
+
+        return $customer;
     }
 }

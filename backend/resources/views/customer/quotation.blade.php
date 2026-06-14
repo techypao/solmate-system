@@ -341,6 +341,42 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
     }
+    .cqc-option-card {
+        padding: 16px;
+        border-radius: 16px;
+        background: #fff;
+        border: 1px solid #DDE7EE;
+    }
+    .cqc-option-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+    .cqc-option-name {
+        margin: 0;
+        color: #123A5A;
+        font-size: 15px;
+        font-weight: 900;
+    }
+    .cqc-option-tag {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 0 9px;
+        border-radius: 999px;
+        background: #EAF9FD;
+        color: #2563eb;
+        font-size: 11px;
+        font-weight: 800;
+    }
+    .cqc-option-note {
+        margin: 12px 0 0;
+        color: #92400e;
+        font-size: 12px;
+        line-height: 1.5;
+    }
     .cqc-result-item {
         padding: 14px;
         border-radius: 14px;
@@ -534,7 +570,7 @@
             </form>
 
             <div id="cqc-result" class="cqc-result">
-                <h3 class="cqc-result-title">Your estimate</h3>
+                <h3 class="cqc-result-title">Your estimate options</h3>
                 <div id="cqc-result-grid" class="cqc-result-grid"></div>
                 <div class="cqc-result-actions">
                     <a href="{{ route('customer.quotation.index') }}" class="cqc-link-btn cqc-link-btn-primary">View My Quotations</a>
@@ -708,6 +744,45 @@
             + '</div>';
     }
 
+    function fmtNumber(value, suffix) {
+        if (value === null || value === undefined || value === '' || isNaN(Number(value))) {
+            return '-';
+        }
+
+        return Number(value).toFixed(2) + (suffix || '');
+    }
+
+    function optionTitle(option) {
+        return String(option.system_type || '').toLowerCase() === 'hybrid'
+            ? 'Hybrid'
+            : 'On-Grid';
+    }
+
+    function renderOption(option) {
+        var batteryLine = option.with_battery
+            ? renderResultItem('Battery', fmtNumber(option.battery_capacity_ah, ' Ah'))
+            : renderResultItem('Battery', 'Not included');
+        var note = option.validation_note
+            ? '<p class="cqc-option-note">' + escHtml(option.validation_note) + '</p>'
+            : '';
+
+        return '<article class="cqc-option-card">'
+            + '<div class="cqc-option-head">'
+            + '<p class="cqc-option-name">' + escHtml(optionTitle(option)) + '</p>'
+            + '<span class="cqc-option-tag">' + (option.with_battery ? 'With battery' : 'No battery') + '</span>'
+            + '</div>'
+            + '<div class="cqc-result-grid">'
+            + renderResultItem('System Size', fmtNumber(option.system_kw, ' kW'))
+            + renderResultItem('Inverter', fmtNumber(option.inverter_capacity_kw, ' kW'))
+            + batteryLine
+            + renderResultItem('Total Estimate', fmtPeso(option.project_cost))
+            + renderResultItem('Monthly Savings', fmtPeso(option.estimated_monthly_savings))
+            + renderResultItem('ROI', option.roi_years ? Number(option.roi_years).toFixed(1) + ' years' : '-')
+            + '</div>'
+            + note
+            + '</article>';
+    }
+
     var form = qs('#cqc-form');
     var formMsg = qs('#cqc-form-msg');
     var billInput = qs('#cqc-bill-input');
@@ -734,11 +809,22 @@
             });
             var quotation = response.data || response;
 
-            resultGrid.innerHTML =
-                renderResultItem('System Size', quotation.system_kw ? Number(quotation.system_kw).toFixed(2) + ' kW' : '-') +
-                renderResultItem('Projected Cost', fmtPeso(quotation.project_cost)) +
-                renderResultItem('Monthly Savings', fmtPeso(quotation.estimated_monthly_savings)) +
-                renderResultItem('ROI', quotation.roi_years ? Number(quotation.roi_years).toFixed(1) + ' years' : '-');
+            var options = Array.isArray(quotation.pre_inspection_options)
+                ? quotation.pre_inspection_options
+                : [];
+
+            resultGrid.innerHTML = options.length
+                ? options.map(renderOption).join('')
+                : renderOption({
+                    system_type: 'hybrid',
+                    with_battery: true,
+                    system_kw: quotation.system_kw,
+                    inverter_capacity_kw: null,
+                    battery_capacity_ah: quotation.battery_required_ah,
+                    project_cost: quotation.project_cost,
+                    estimated_monthly_savings: quotation.estimated_monthly_savings,
+                    roi_years: quotation.roi_years
+                });
 
             resultBox.classList.add('show');
             showMsg(formMsg, 'success', 'Your pre-inspection estimate has been generated successfully.');

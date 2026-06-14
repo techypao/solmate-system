@@ -15,6 +15,7 @@ use App\Models\ServiceRequest;
 use App\Models\InspectionRequest;
 use App\Services\QuotationComputationService;
 use App\Services\InAppNotificationService;
+use App\Services\PreInspectionQuotationOptionService;
 use App\Services\PromotionDiscountService;
 use App\Services\QuotationLineItemSyncService;
 use App\Services\QuotationSettingsService;
@@ -23,6 +24,7 @@ class QuotationController extends Controller
 {
     private QuotationComputationService $quotationComputationService;
     private InAppNotificationService $notificationService;
+    private PreInspectionQuotationOptionService $preInspectionQuotationOptionService;
     private PromotionDiscountService $promotionDiscountService;
     private QuotationLineItemSyncService $quotationLineItemSyncService;
     private QuotationSettingsService $quotationSettingsService;
@@ -30,6 +32,7 @@ class QuotationController extends Controller
     public function __construct(
         QuotationComputationService $quotationComputationService,
         InAppNotificationService $notificationService,
+        PreInspectionQuotationOptionService $preInspectionQuotationOptionService,
         PromotionDiscountService $promotionDiscountService,
         QuotationLineItemSyncService $quotationLineItemSyncService,
         QuotationSettingsService $quotationSettingsService
@@ -37,6 +40,7 @@ class QuotationController extends Controller
     {
         $this->quotationComputationService = $quotationComputationService;
         $this->notificationService = $notificationService;
+        $this->preInspectionQuotationOptionService = $preInspectionQuotationOptionService;
         $this->promotionDiscountService = $promotionDiscountService;
         $this->quotationLineItemSyncService = $quotationLineItemSyncService;
         $this->quotationSettingsService = $quotationSettingsService;
@@ -47,9 +51,9 @@ class QuotationController extends Controller
         $user = Auth::user();
 
         if (in_array($user->role, ['admin', 'technician'])) {
-            $quotations = Quotation::with(['user', 'appliedPromo'])->latest()->get();
+            $quotations = Quotation::with(['user', 'appliedPromo', 'preInspectionOptions'])->latest()->get();
         } else {
-            $quotations = Quotation::with(['user', 'appliedPromo'])
+            $quotations = Quotation::with(['user', 'appliedPromo', 'preInspectionOptions'])
                 ->where('user_id', $user->id)
                 ->latest()
                 ->get();
@@ -97,6 +101,7 @@ class QuotationController extends Controller
                 $computedValues['system_kw'],
                 $pricePerKw
             );
+            $computedValues['panel_watts'] = $panelWatts;
             $roiValues = $this->quotationComputationService->computeRoi(
                 $estimatedProjectCost,
                 $monthlyElectricBill
@@ -140,6 +145,13 @@ class QuotationController extends Controller
                 'remarks' => $validated['remarks'] ?? null,
             ]);
 
+            $quotation = $this->preInspectionQuotationOptionService->replaceForInitialQuotation(
+                $quotation,
+                $computedValues,
+                (float) $estimatedProjectCost,
+                (float) $monthlyElectricBill
+            );
+
             return response()->json([
                 'message' => 'Quotation created successfully',
                 'data' => $quotation,
@@ -158,7 +170,7 @@ class QuotationController extends Controller
     {
         $user = Auth::user();
 
-        $quotation = Quotation::with('user')->find($id);
+        $quotation = Quotation::with(['user', 'preInspectionOptions'])->find($id);
 
         if (!$quotation) {
             return response()->json([
