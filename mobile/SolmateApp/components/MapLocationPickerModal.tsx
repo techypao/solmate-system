@@ -6,9 +6,12 @@ import {
   PermissionsAndroid,
   Platform,
   Pressable,
+  SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import WebView, {WebViewMessageEvent} from 'react-native-webview';
@@ -309,6 +312,7 @@ export default function MapLocationPickerModal({
   onCancel,
   onConfirm,
 }: MapLocationPickerModalProps) {
+  const {height: windowHeight, width: windowWidth} = useWindowDimensions();
   const webViewRef = useRef<WebView>(null);
   const [mapReady, setMapReady] = useState(false);
   const [webViewKey, setWebViewKey] = useState(0);
@@ -343,6 +347,15 @@ export default function MapLocationPickerModal({
   const mapHtml = useMemo(
     () => buildMapHtml(sessionInitialCoords),
     [sessionInitialCoords],
+  );
+  const sheetMaxHeight = Math.floor(
+    windowHeight * (windowWidth >= 768 ? 0.88 : 0.92),
+  );
+  const mapHeight = Math.round(
+    Math.min(
+      Math.max(windowHeight * (windowHeight < 700 ? 0.24 : 0.28), 168),
+      windowWidth >= 700 ? 280 : 240,
+    ),
   );
 
   useEffect(() => {
@@ -601,11 +614,11 @@ export default function MapLocationPickerModal({
       presentationStyle="fullScreen"
       transparent
       visible={visible}>
-      <View style={styles.overlay}>
+      <SafeAreaView style={styles.overlay}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.overlay}>
-          <View style={styles.sheet}>
+          <View style={[styles.sheet, {maxHeight: sheetMaxHeight}]}>
             <View style={styles.header}>
               <View style={styles.headerTextWrap}>
                 <Text style={styles.title}>{title}</Text>
@@ -621,26 +634,6 @@ export default function MapLocationPickerModal({
                 <Text style={styles.closeButtonText}>×</Text>
               </Pressable>
             </View>
-
-            {feedback ? (
-              <View
-                style={[
-                  styles.feedbackBanner,
-                  feedback.tone === 'error'
-                    ? styles.feedbackBannerError
-                    : styles.feedbackBannerInfo,
-                ]}>
-                <Text
-                  style={[
-                    styles.feedbackText,
-                    feedback.tone === 'error'
-                      ? styles.feedbackTextError
-                      : styles.feedbackTextInfo,
-                  ]}>
-                  {feedback.message}
-                </Text>
-              </View>
-            ) : null}
 
             <View style={styles.searchRow}>
               <TextInput
@@ -670,26 +663,53 @@ export default function MapLocationPickerModal({
               </Pressable>
             </View>
 
-            <View style={styles.mapFrame}>
-              <WebView
-                geolocationEnabled
-                javaScriptEnabled
-                key={webViewKey}
-                onLoadEnd={invalidateMapSize}
-                onMessage={handleMapMessage}
-                originWhitelist={['*']}
-                ref={webViewRef}
-                setSupportMultipleWindows={false}
-                showsHorizontalScrollIndicator={false}
-                showsVerticalScrollIndicator={false}
-                source={{
-                  html: mapHtml,
-                  baseUrl: 'https://solmate.local',
-                }}
-                startInLoadingState
-                style={styles.webView}
-              />
-            </View>
+            <ScrollView
+              bounces={false}
+              contentContainerStyle={styles.contentScrollContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              style={styles.contentScroll}>
+              {feedback ? (
+                <View
+                  style={[
+                    styles.feedbackBanner,
+                    feedback.tone === 'error'
+                      ? styles.feedbackBannerError
+                      : styles.feedbackBannerInfo,
+                  ]}>
+                  <Text
+                    style={[
+                      styles.feedbackText,
+                      feedback.tone === 'error'
+                        ? styles.feedbackTextError
+                        : styles.feedbackTextInfo,
+                    ]}>
+                    {feedback.message}
+                  </Text>
+                </View>
+              ) : null}
+
+              <View style={[styles.mapFrame, {height: mapHeight}]}>
+                <WebView
+                  geolocationEnabled
+                  javaScriptEnabled
+                  key={webViewKey}
+                  onLoadEnd={invalidateMapSize}
+                  onMessage={handleMapMessage}
+                  originWhitelist={['*']}
+                  ref={webViewRef}
+                  setSupportMultipleWindows={false}
+                  showsHorizontalScrollIndicator={false}
+                  showsVerticalScrollIndicator={false}
+                  source={{
+                    html: mapHtml,
+                    baseUrl: 'https://solmate.local',
+                  }}
+                  startInLoadingState
+                  style={styles.webView}
+                />
+              </View>
+            </ScrollView>
 
             <View style={styles.actions}>
               <Pressable
@@ -738,7 +758,7 @@ export default function MapLocationPickerModal({
             </View>
           </View>
         </KeyboardAvoidingView>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
@@ -753,16 +773,15 @@ const styles = StyleSheet.create({
     backgroundColor: CARD,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    minHeight: '88%',
     paddingHorizontal: 18,
     paddingTop: 18,
-    paddingBottom: 24,
+    paddingBottom: 16,
   },
   header: {
     alignItems: 'flex-start',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   headerTextWrap: {
     flex: 1,
@@ -796,7 +815,7 @@ const styles = StyleSheet.create({
   feedbackBanner: {
     borderRadius: 16,
     borderWidth: 1,
-    marginBottom: 14,
+    marginBottom: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
@@ -822,7 +841,7 @@ const styles = StyleSheet.create({
     alignItems: 'stretch',
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 14,
+    marginBottom: 12,
   },
   searchInput: {
     backgroundColor: '#f7f9fc',
@@ -855,14 +874,17 @@ const styles = StyleSheet.create({
     borderColor: '#dbe4f0',
     borderRadius: 22,
     borderWidth: 1,
-    flex: 1,
-    marginBottom: 16,
-    minHeight: 320,
     overflow: 'hidden',
   },
   webView: {
     backgroundColor: '#EAF9FD',
     flex: 1,
+  },
+  contentScroll: {
+    flexShrink: 1,
+  },
+  contentScrollContent: {
+    paddingBottom: 14,
   },
   actions: {
     gap: 12,
