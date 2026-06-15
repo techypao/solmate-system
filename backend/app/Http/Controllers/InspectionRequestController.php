@@ -195,6 +195,23 @@ class InspectionRequestController extends Controller
         ]);
     }
 
+    public function destroyManual(Request $request, int $id)
+    {
+        $inspectionRequest = InspectionRequest::query()->findOrFail($id);
+
+        if (! $inspectionRequest->isManualInspectionRequest()) {
+            return response()->json([
+                'message' => 'Only manual inspection requests can be deleted from this action.',
+            ], 422);
+        }
+
+        $inspectionRequest->delete();
+
+        return response()->json([
+            'message' => 'Manual inspection request deleted successfully.',
+        ]);
+    }
+
     public function assignedToTechnician(Request $request)
     {
         $user = $request->user();

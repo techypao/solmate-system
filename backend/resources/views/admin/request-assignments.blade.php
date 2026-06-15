@@ -689,6 +689,33 @@
             background: linear-gradient(135deg, #E6C200 0%, #F4D000 100%);
         }
 
+        .request-card-body .manual-delete-form {
+            border-color: #FCA5A5;
+            background: linear-gradient(180deg, #ffffff 0%, #FFF7F7 100%);
+        }
+
+        .request-card-body .manual-delete-form .request-section-copy {
+            font-size: 12px;
+        }
+
+        .request-card-body .manual-delete-form button {
+            width: 100%;
+            min-width: 0;
+            min-height: 46px;
+            height: 46px;
+            padding: 0 16px;
+            border: none;
+            border-radius: 12px;
+            background: #DC2626;
+            color: #ffffff;
+            font-weight: 800;
+            box-shadow: 0 10px 20px rgba(220, 38, 38, 0.16);
+        }
+
+        .request-card-body .manual-delete-form button:hover:not(:disabled) {
+            background: #B91C1C;
+        }
+
         .request-card-body .assignment-row button:disabled {
             opacity: .65;
             cursor: not-allowed;
@@ -1339,6 +1366,21 @@
                                         </div>
                                         <div class="field-error" data-form-error></div>
                                     </form>
+
+                                    @if ($inspectionSource === 'manual')
+                                        <form
+                                            class="manual-delete-form"
+                                            data-endpoint="/api/admin/manual-inspection-requests/{{ $inspectionRequest->id }}"
+                                            data-request-key="{{ $requestKey }}"
+                                        >
+                                            <label>Delete manual request</label>
+                                            <p class="request-section-copy" style="margin: 0;">
+                                                Removes this walk-in inspection request from Services.
+                                            </p>
+                                            <button type="submit">Delete manual request</button>
+                                            <div class="field-error" data-form-error></div>
+                                        </form>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -2340,6 +2382,7 @@
         const preferredDateForms = document.querySelectorAll('.preferred-date-form');
         const serviceStatusForms = document.querySelectorAll('.service-status-form');
         const inspectionStatusForms = document.querySelectorAll('.inspection-status-form');
+        const manualDeleteForms = document.querySelectorAll('.manual-delete-form');
         const requestCards = document.querySelectorAll('[data-request-card]');
         const inspectionSourceButtons = document.querySelectorAll('[data-inspection-source-filter]');
         const inspectionSourceCards = document.querySelectorAll('[data-inspection-source]');
@@ -3306,6 +3349,38 @@
                 } finally {
                     button.disabled = false;
                     button.textContent = 'Save official status';
+                }
+            });
+        });
+
+        manualDeleteForms.forEach((form) => {
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                clearGlobalMessages();
+
+                const button = form.querySelector('button[type="submit"]');
+                const inlineError = form.querySelector('[data-form-error]');
+
+                inlineError.textContent = '';
+
+                if (!window.confirm('Delete this manual inspection request?')) {
+                    return;
+                }
+
+                button.disabled = true;
+                button.textContent = 'Deleting...';
+
+                try {
+                    await submitJson(form.dataset.endpoint, {}, 'DELETE');
+                    window.location.href = `${window.location.pathname}#inspection-requests-section`;
+                    window.location.reload();
+                } catch (error) {
+                    inlineError.textContent = error.message || 'Could not delete the manual inspection request.';
+                    errorBox.textContent = error.message || 'Could not delete the manual inspection request.';
+                    setVisible(errorBox, true);
+                } finally {
+                    button.disabled = false;
+                    button.textContent = 'Delete manual request';
                 }
             });
         });

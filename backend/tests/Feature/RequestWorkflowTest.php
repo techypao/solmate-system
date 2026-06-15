@@ -193,6 +193,61 @@ class RequestWorkflowTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_delete_manual_inspection_requests_only(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_delete_manual_inspection@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $customer = User::query()->create([
+            'name' => 'Registered Customer',
+            'email' => 'registered_delete_guard@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        $manualInspection = InspectionRequest::query()->create([
+            'user_id' => null,
+            'customer_name' => 'Walkin Delete',
+            'customer_email' => 'walkin-delete@example.com',
+            'details' => 'Manual request to delete.',
+            'contact_number' => '0917-000-0000',
+            'address_details' => 'Temporary address',
+            'date_needed' => '2026-04-25',
+            'status' => 'pending',
+        ]);
+
+        $registeredInspection = InspectionRequest::query()->create([
+            'user_id' => $customer->id,
+            'details' => 'Registered customer inspection.',
+            'contact_number' => '0917-111-1111',
+            'address' => 'Registered address',
+            'date_needed' => '2026-04-26',
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($admin)
+            ->deleteJson("/api/admin/manual-inspection-requests/{$registeredInspection->id}")
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Only manual inspection requests can be deleted from this action.');
+
+        $this->assertDatabaseHas('inspection_requests', [
+            'id' => $registeredInspection->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->deleteJson("/api/admin/manual-inspection-requests/{$manualInspection->id}")
+            ->assertOk()
+            ->assertJsonPath('message', 'Manual inspection request deleted successfully.');
+
+        $this->assertDatabaseMissing('inspection_requests', [
+            'id' => $manualInspection->id,
+        ]);
+    }
+
     public function test_service_completion_request_is_limited_to_assigned_technician_and_admin_controls_completion(): void
     {
         $customer = User::query()->create([
