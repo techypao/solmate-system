@@ -799,7 +799,6 @@
     }
 
     function renderCard(quotation) {
-        var statusText = quotation.status ? titleCase(quotation.status) : '-';
         var createdDate = fmtDate(quotation.created_at);
         var projectedCost = fmtPeso(quotation.project_cost);
         var relatedRequest = relatedRequestLabel(quotation);
@@ -816,7 +815,6 @@
         ];
 
         if (!initial) {
-            metaItems.push(['Status', statusText]);
             metaItems.push(['Related Request', relatedRequest]);
         }
 
@@ -827,7 +825,7 @@
             + '<h2 class="cql-quote-id">Quotation #' + escHtml(quotation.id) + '</h2>'
             + '<div class="cql-quote-date">Submitted ' + escHtml(createdDate) + '</div>'
             + '</div>'
-            + '<div class="cql-badges">' + typeBadge(quotation.quotation_type) + (initial ? '' : statusBadge(quotation.status)) + '</div>'
+            + '<div class="cql-badges">' + typeBadge(quotation.quotation_type) + '</div>'
             + '</div>'
             + '<div class="cql-meta-grid">'
             + metaItems.map(function (item) {

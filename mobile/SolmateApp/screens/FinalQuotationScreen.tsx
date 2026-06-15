@@ -154,19 +154,20 @@ const WIZARD_STEPS = [
   },
   {
     number: 3,
-    label: 'Cost Breakdown',
-    subtitle: 'Pick catalog items, adjust quantities, and review computed totals.',
+    label: 'Items & Quantities',
+    subtitle: 'Pick catalog items and adjust quantities from the inspection.',
   },
   {
     number: 4,
     label: 'Review & Submit',
-    subtitle: 'Check the full quotation summary, remarks, and submit the inspection-based quotation.',
+    subtitle: 'Check the technical summary, remarks, and submit the inspection-based quotation.',
   },
 ] as const;
 
 const REQUEST_TIMEOUT_MS = 10000;
 const NET_METERING_LINE_ITEM_DESCRIPTION = 'Net Metering';
 const CUSTOM_LINE_ITEM_CATEGORY = 'misc';
+const HIDE_TECHNICIAN_PRICING = true;
 
 function sanitizeNumericInput(value: string) {
   const cleanedValue = value.replace(/[^0-9.]/g, '');
@@ -796,6 +797,26 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         })[0];
       } else if (batteryItems.length === 1) {
         suggestedBattery = batteryItems[0];
+      } else {
+        const batteryItemsByCapacity = [...batteryItems].sort((a, b) => {
+          const aCapacity =
+            a.voltage && a.voltage > 0 ? (a.voltage * a.ah) / 1000 : a.ah;
+          const bCapacity =
+            b.voltage && b.voltage > 0 ? (b.voltage * b.ah) / 1000 : b.ah;
+
+          return aCapacity - bCapacity;
+        });
+        const suitableBattery = batteryItemsByCapacity.find(entry => {
+          const capacity =
+            entry.voltage && entry.voltage > 0
+              ? (entry.voltage * entry.ah) / 1000
+              : entry.ah;
+
+          return capacity >= sizingPreview.requiredBatteryKwh;
+        });
+
+        suggestedBattery =
+          suitableBattery ?? batteryItemsByCapacity[batteryItemsByCapacity.length - 1];
       }
 
       if (suggestedBattery) {
@@ -1668,11 +1689,13 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           <Text style={styles.switchLabel}>Include Net Metering?</Text>
           <Text style={styles.switchHint}>
             {form.include_net_metering
-              ? `Yes. Adds ${formatQuotationCurrency(netMeteringPrice, {
-                  currency: 'PHP',
-                  fallback: 'PHP 0.00',
-                  spaceAfterCurrency: true,
-                })} to the saved quotation total.`
+              ? HIDE_TECHNICIAN_PRICING
+                ? 'Yes. This add-on will be included in the saved quotation.'
+                : `Yes. Adds ${formatQuotationCurrency(netMeteringPrice, {
+                    currency: 'PHP',
+                    fallback: 'PHP 0.00',
+                    spaceAfterCurrency: true,
+                  })} to the saved quotation total.`
               : 'No. Leave this off when the customer does not want net metering included.'}
           </Text>
           <Text style={styles.switchStateText}>
@@ -1865,12 +1888,18 @@ export default function FinalQuotationScreen({navigation, route}: any) {
               <View style={styles.selectedItemTextWrap}>
                 <Text style={styles.selectedItemName}>{item.description}</Text>
                 <Text style={styles.selectedItemMeta}>
-                  {formatCategoryLabel(item.category)} • {item.unit} •{' '}
-                  {formatQuotationCurrency(item.unit_amount, {
-                    currency: 'PHP',
-                    fallback: 'PHP 0.00',
-                    spaceAfterCurrency: true,
-                  })} each
+                  {formatCategoryLabel(item.category)} • {item.unit}
+                  {!HIDE_TECHNICIAN_PRICING ? (
+                    <>
+                      {' • '}
+                      {formatQuotationCurrency(item.unit_amount, {
+                        currency: 'PHP',
+                        fallback: 'PHP 0.00',
+                        spaceAfterCurrency: true,
+                      })}{' '}
+                      each
+                    </>
+                  ) : null}
                 </Text>
               </View>
               <AppButton
@@ -1885,13 +1914,15 @@ export default function FinalQuotationScreen({navigation, route}: any) {
               <Text style={styles.selectedItemTotalsLabel}>
                 Qty {item.qty.toFixed(2).replace(/\.00$/, '')}
               </Text>
-              <Text style={styles.selectedItemTotalsValue}>
-                {formatQuotationCurrency(item.total_amount, {
-                  currency: 'PHP',
-                  fallback: 'PHP 0.00',
-                  spaceAfterCurrency: true,
-                })}
-              </Text>
+              {!HIDE_TECHNICIAN_PRICING ? (
+                <Text style={styles.selectedItemTotalsValue}>
+                  {formatQuotationCurrency(item.total_amount, {
+                    currency: 'PHP',
+                    fallback: 'PHP 0.00',
+                    spaceAfterCurrency: true,
+                  })}
+                </Text>
+              ) : null}
             </View>
           </View>
         ))
@@ -1921,12 +1952,17 @@ export default function FinalQuotationScreen({navigation, route}: any) {
                   {item.name || 'Unnamed item'}
                 </Text>
                 <Text style={styles.catalogItemMeta}>
-                  {item.unit || 'pc'} •{' '}
-                  {formatQuotationCurrency(Number(item.default_unit_price || 0), {
-                    currency: 'PHP',
-                    fallback: 'PHP 0.00',
-                    spaceAfterCurrency: true,
-                  })}
+                  {item.unit || 'pc'}
+                  {!HIDE_TECHNICIAN_PRICING ? (
+                    <>
+                      {' • '}
+                      {formatQuotationCurrency(Number(item.default_unit_price || 0), {
+                        currency: 'PHP',
+                        fallback: 'PHP 0.00',
+                        spaceAfterCurrency: true,
+                      })}
+                    </>
+                  ) : null}
                 </Text>
                 {suggestedQuantities[item.id] !== undefined ? (
                   <Text style={styles.catalogSuggestionText}>
@@ -1983,7 +2019,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
   const optionalItemsSection = (
     <FormSection
       title="Optional Items"
-      subtitle="Add extra items that should be included on top of the catalog-based quotation totals.">
+      subtitle="Add extra items that should be included with the inspected setup.">
       <AppButton
         title="+ Add optional item"
         variant="outline"
@@ -1994,8 +2030,9 @@ export default function FinalQuotationScreen({navigation, route}: any) {
 
       {form.optional_items.length > 0 ? (
         form.optional_items.map((item, index) => {
-          const previewItem =
-            optionalLineItems.find(optionalItem => optionalItem.id === item.id) ?? null;
+          const previewItem = !HIDE_TECHNICIAN_PRICING
+            ? optionalLineItems.find(optionalItem => optionalItem.id === item.id) ?? null
+            : null;
 
           return (
             <View key={item.id} style={styles.optionalItemCard}>
@@ -2005,7 +2042,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
                     Optional Item {index + 1}
                   </Text>
                   <Text style={styles.optionalItemHint}>
-                    Added to the final quotation total only when needed.
+                    Added to the inspection-based quotation only when needed.
                   </Text>
                 </View>
                 <AppButton
@@ -2035,33 +2072,37 @@ export default function FinalQuotationScreen({navigation, route}: any) {
                 value={item.quantity}
                 containerStyle={styles.fieldSpacing}
               />
-              <AppInput
-                label="Unit price"
-                placeholder="0.00"
-                keyboardType="decimal-pad"
-                onChangeText={value =>
-                  updateOptionalItemField(item.id, 'unit_price', value)
-                }
-                value={item.unit_price}
-              />
+              {!HIDE_TECHNICIAN_PRICING ? (
+                <>
+                  <AppInput
+                    label="Unit price"
+                    placeholder="0.00"
+                    keyboardType="decimal-pad"
+                    onChangeText={value =>
+                      updateOptionalItemField(item.id, 'unit_price', value)
+                    }
+                    value={item.unit_price}
+                  />
 
-              <View style={styles.optionalItemTotalRow}>
-                <Text style={styles.optionalItemTotalLabel}>Total</Text>
-                <Text style={styles.optionalItemTotalValue}>
-                  {formatQuotationCurrency(previewItem?.total_amount ?? 0, {
-                    currency: 'PHP',
-                    fallback: 'PHP 0.00',
-                    spaceAfterCurrency: true,
-                  })}
-                </Text>
-              </View>
+                  <View style={styles.optionalItemTotalRow}>
+                    <Text style={styles.optionalItemTotalLabel}>Total</Text>
+                    <Text style={styles.optionalItemTotalValue}>
+                      {formatQuotationCurrency(previewItem?.total_amount ?? 0, {
+                        currency: 'PHP',
+                        fallback: 'PHP 0.00',
+                        spaceAfterCurrency: true,
+                      })}
+                    </Text>
+                  </View>
+                </>
+              ) : null}
             </View>
           );
         })
       ) : (
         <Text style={styles.emptyCatalogText}>
           No optional items added yet. Add one only if it needs to be included
-          on top of the catalog subtotal.
+          with the selected catalog items.
         </Text>
       )}
     </FormSection>
@@ -2070,7 +2111,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
   const optionalItemsReviewSection = (
     <FormSection
       title="Optional Items"
-      subtitle="Extra technician-added items that will be included in the final quotation computation.">
+      subtitle="Extra technician-added items for admin review.">
       {form.optional_items.length > 0 || netMeteringLineItem ? (
         <>
           {netMeteringLineItem ? (
@@ -2081,27 +2122,34 @@ export default function FinalQuotationScreen({navigation, route}: any) {
                     {netMeteringLineItem.description}
                   </Text>
                   <Text style={styles.selectedItemMeta}>
-                    Qty {netMeteringLineItem.qty.toFixed(0)} •{' '}
-                    {formatQuotationCurrency(netMeteringLineItem.unit_amount, {
-                      currency: 'PHP',
-                      fallback: 'PHP 0.00',
-                      spaceAfterCurrency: true,
-                    })}{' '}
-                    each
+                    Qty {netMeteringLineItem.qty.toFixed(0)}
+                    {!HIDE_TECHNICIAN_PRICING ? (
+                      <>
+                        {' • '}
+                        {formatQuotationCurrency(netMeteringLineItem.unit_amount, {
+                          currency: 'PHP',
+                          fallback: 'PHP 0.00',
+                          spaceAfterCurrency: true,
+                        })}{' '}
+                        each
+                      </>
+                    ) : null}
                   </Text>
                 </View>
               </View>
 
-              <View style={styles.selectedItemTotalsRow}>
-                <Text style={styles.selectedItemTotalsLabel}>Net metering total</Text>
-                <Text style={styles.selectedItemTotalsValue}>
-                  {formatQuotationCurrency(netMeteringLineItem.total_amount, {
-                    currency: 'PHP',
-                    fallback: 'PHP 0.00',
-                    spaceAfterCurrency: true,
-                  })}
-                </Text>
-              </View>
+              {!HIDE_TECHNICIAN_PRICING ? (
+                <View style={styles.selectedItemTotalsRow}>
+                  <Text style={styles.selectedItemTotalsLabel}>Net metering total</Text>
+                  <Text style={styles.selectedItemTotalsValue}>
+                    {formatQuotationCurrency(netMeteringLineItem.total_amount, {
+                      currency: 'PHP',
+                      fallback: 'PHP 0.00',
+                      spaceAfterCurrency: true,
+                    })}
+                  </Text>
+                </View>
+              ) : null}
             </View>
           ) : null}
 
@@ -2113,42 +2161,51 @@ export default function FinalQuotationScreen({navigation, route}: any) {
                     {item.description || `Optional Item ${index + 1}`}
                   </Text>
                   <Text style={styles.selectedItemMeta}>
-                    Qty {item.qty.toFixed(2).replace(/\.00$/, '')} •{' '}
-                    {formatQuotationCurrency(item.unit_amount, {
-                      currency: 'PHP',
-                      fallback: 'PHP 0.00',
-                      spaceAfterCurrency: true,
-                    })}{' '}
-                    each
+                    Qty {item.qty.toFixed(2).replace(/\.00$/, '')}
+                    {!HIDE_TECHNICIAN_PRICING ? (
+                      <>
+                        {' • '}
+                        {formatQuotationCurrency(item.unit_amount, {
+                          currency: 'PHP',
+                          fallback: 'PHP 0.00',
+                          spaceAfterCurrency: true,
+                        })}{' '}
+                        each
+                      </>
+                    ) : null}
                   </Text>
                 </View>
               </View>
 
-              <View style={styles.selectedItemTotalsRow}>
-                <Text style={styles.selectedItemTotalsLabel}>Optional total</Text>
-                <Text style={styles.selectedItemTotalsValue}>
-                  {formatQuotationCurrency(item.total_amount, {
-                    currency: 'PHP',
-                    fallback: 'PHP 0.00',
-                    spaceAfterCurrency: true,
-                  })}
-                </Text>
-              </View>
+              {!HIDE_TECHNICIAN_PRICING ? (
+                <View style={styles.selectedItemTotalsRow}>
+                  <Text style={styles.selectedItemTotalsLabel}>Optional total</Text>
+                  <Text style={styles.selectedItemTotalsValue}>
+                    {formatQuotationCurrency(item.total_amount, {
+                      currency: 'PHP',
+                      fallback: 'PHP 0.00',
+                      spaceAfterCurrency: true,
+                    })}
+                  </Text>
+                </View>
+              ) : null}
             </View>
           ))}
 
-          <View style={styles.optionalItemsSubtotalCard}>
-            <Text style={styles.optionalItemsSubtotalLabel}>
-              Optional Items Subtotal
-            </Text>
-            <Text style={styles.optionalItemsSubtotalValue}>
-              {formatQuotationCurrency(computedTotals.optionalItemsSubtotal, {
-                currency: 'PHP',
-                fallback: 'PHP 0.00',
-                spaceAfterCurrency: true,
-              })}
-            </Text>
-          </View>
+          {!HIDE_TECHNICIAN_PRICING ? (
+            <View style={styles.optionalItemsSubtotalCard}>
+              <Text style={styles.optionalItemsSubtotalLabel}>
+                Optional Items Subtotal
+              </Text>
+              <Text style={styles.optionalItemsSubtotalValue}>
+                {formatQuotationCurrency(computedTotals.optionalItemsSubtotal, {
+                  currency: 'PHP',
+                  fallback: 'PHP 0.00',
+                  spaceAfterCurrency: true,
+                })}
+              </Text>
+            </View>
+          ) : null}
         </>
       ) : (
         <Text style={styles.emptyCatalogText}>
@@ -2158,7 +2215,7 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     </FormSection>
   );
 
-  const promoSelectionSection = (
+  const promoSelectionSection = HIDE_TECHNICIAN_PRICING ? null : (
     <FormSection
       title="Active Promotions"
       subtitle="Select a promo to automatically apply a discount to the quotation total.">
@@ -2260,7 +2317,16 @@ export default function FinalQuotationScreen({navigation, route}: any) {
     </FormSection>
   );
 
-  const computedTotalsSection = (
+  const computedTotalsSection = HIDE_TECHNICIAN_PRICING ? (
+    <FormSection
+      title="Admin review"
+      subtitle="Submit the inspected setup and selected quantities for final review.">
+      <Text style={styles.emptyCatalogText}>
+        Make sure the system details, catalog selections, and quantities are
+        complete before submitting.
+      </Text>
+    </FormSection>
+  ) : (
     <FormSection
       title="Computed totals"
       subtitle="These totals are previewed from the selected catalog items plus any technician-added optional items, and will be recomputed by the backend after save.">
@@ -2445,11 +2511,13 @@ export default function FinalQuotationScreen({navigation, route}: any) {
           <Text style={styles.summaryLabel}>Include net metering</Text>
           <Text style={styles.summaryValue}>
             {form.include_net_metering
-              ? `Yes (${formatQuotationCurrency(netMeteringPrice, {
-                  currency: 'PHP',
-                  fallback: 'PHP 0.00',
-                  spaceAfterCurrency: true,
-                })})`
+              ? HIDE_TECHNICIAN_PRICING
+                ? 'Yes'
+                : `Yes (${formatQuotationCurrency(netMeteringPrice, {
+                    currency: 'PHP',
+                    fallback: 'PHP 0.00',
+                    spaceAfterCurrency: true,
+                  })})`
               : 'No'}
           </Text>
         </View>
@@ -2494,11 +2562,10 @@ export default function FinalQuotationScreen({navigation, route}: any) {
         return (
           <>
             <AppCard style={styles.infoCard}>
-              <Text style={styles.infoTitle}>Catalog-based pricing</Text>
+              <Text style={styles.infoTitle}>Catalog-based item selection</Text>
               <Text style={styles.infoText}>
-                Pricing comes from the admin-managed catalog. Suggested
-                quantities stay editable, and the totals below are computed
-                automatically before the quotation is saved.
+                Suggested quantities stay editable. Review the selected catalog
+                items and quantities before submitting the quotation.
               </Text>
             </AppCard>
             {promoSelectionSection}

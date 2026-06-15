@@ -235,7 +235,6 @@
                     <tr><td class="label">Quotation ID</td><td class="value">#{{ $quotation->id }}</td></tr>
                     <tr><td class="label">Quotation Type</td><td class="value">Inspection-Based</td></tr>
                     <tr><td class="label">Created Date</td><td class="value">{{ $createdDate }}</td></tr>
-                    <tr><td class="label">Status</td><td class="value">{{ $quotation->status ? ucfirst($quotation->status) : '—' }}</td></tr>
                 </table>
             </td>
             <td>

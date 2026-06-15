@@ -902,7 +902,8 @@
         /* Hero meta */
         chipIdText.textContent = 'Quotation #' + q.id;
         chipId.style.display   = '';
-        statusBadge.innerHTML  = buildStatusBadge(q.status);
+        statusBadge.innerHTML  = '';
+        statusBadge.style.display = 'none';
 
         renderSpecGrid(q);
         renderCostTable(q);

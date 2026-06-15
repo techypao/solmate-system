@@ -1400,16 +1400,23 @@
                     </thead>
                     <tbody>
                         @forelse ($adm_recentQuotations as $q)
+                            @php
+                                $adm_q_is_final = strtolower((string) ($q->quotation_type ?? 'initial')) === 'final';
+                            @endphp
                             <tr>
                                 <td class="adm2-table-id">Q-{{ str_pad($q->id, 3, '0', STR_PAD_LEFT) }}</td>
-                                <td>{{ strtolower((string) ($q->quotation_type ?? 'initial')) === 'final' ? 'Inspection-Based' : 'Pre-Inspection' }}</td>
+                                <td>{{ $adm_q_is_final ? 'Inspection-Based' : 'Pre-Inspection' }}</td>
                                 <td>{{ $q->customer?->name ?? 'N/A' }}</td>
                                 <td style="white-space:nowrap;">{{ $q->created_at->format('M d, Y') }}</td>
                                 <td style="white-space:nowrap;">{{ $q->project_cost ? '₱'.number_format($q->project_cost) : '—' }}</td>
                                 <td>{{ $q->roi_years ? $q->roi_years.' yrs' : '—' }}</td>
                                 <td>
-                                    @php $adm_q_status = strtolower(str_replace(['_',' '], '-', $q->status ?? 'pending')); @endphp
-                                    <span class="adm2-badge adm2-badge-{{ $adm_q_status }}">{{ ucfirst(str_replace('_',' ',$q->status ?? 'pending')) }}</span>
+                                    @unless ($adm_q_is_final)
+                                        @php $adm_q_status = strtolower(str_replace(['_',' '], '-', $q->status ?? 'pending')); @endphp
+                                        <span class="adm2-badge adm2-badge-{{ $adm_q_status }}">{{ ucfirst(str_replace('_',' ',$q->status ?? 'pending')) }}</span>
+                                    @else
+                                        —
+                                    @endunless
                                 </td>
                                 <td>
                                     <a href="{{ route('quotations.item-builder') }}" class="adm2-row-btn adm2-row-btn-view">View</a>
@@ -1949,10 +1956,6 @@
         qList.innerHTML = filtered.map(function(q) {
             var quotationType = String(q.quotation_type || 'initial').toLowerCase();
             var badges = typeBadge(quotationType);
-
-            if (quotationType === 'final') {
-                badges += statusBadge(q.status || 'pending');
-            }
 
             var systemKw = q.system_kw    ? Number(q.system_kw).toFixed(2) + ' kW' : '-';
             var savings  = q.estimated_monthly_savings ? fmtPeso(q.estimated_monthly_savings) + '/mo' : '-';

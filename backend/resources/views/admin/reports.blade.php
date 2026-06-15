@@ -306,6 +306,7 @@
         <section class="reports-grid">
             <div class="reports-summary-grid">
                 @foreach ($summaryCards as $card)
+                    @continue(($card['label'] ?? '') === 'Total Quotations')
                     <article class="reports-summary-card">
                         <div class="reports-summary-label">{{ $card['label'] }}</div>
                         <div class="reports-summary-value">{{ number_format($card['value']) }}</div>
@@ -325,16 +326,6 @@
                             'title' => 'Requests by Status',
                             'copy' => 'Grouped view of request progress so admin can spot where work is accumulating.',
                             'dataset' => $requestStatusChart,
-                        ],
-                        'quotationsByType' => [
-                            'title' => 'Quotations by Type',
-                            'copy' => 'Compare how many quotations are pre-inspection estimates versus inspection-based quotations.',
-                            'dataset' => $quotationTypeChart,
-                        ],
-                        'quotationsByStatus' => [
-                            'title' => 'Quotations by Status',
-                            'copy' => 'Monitor inspection-based quotation decisions and follow-up needs across the current reporting window.',
-                            'dataset' => $quotationStatusChart,
                         ],
                     ];
                 @endphp
@@ -462,11 +453,14 @@
                             </thead>
                             <tbody>
                                 @forelse ($recentQuotations as $quotation)
+                                    @php
+                                        $isInspectionBasedQuotation = strtolower((string) ($quotation['type'] ?? '')) === 'inspection-based';
+                                    @endphp
                                     <tr>
                                         <td>{{ $quotation['label'] }}</td>
                                         <td>{{ $quotation['type'] }}</td>
                                         <td>{{ $quotation['customer_name'] }}</td>
-                                        <td>{{ $quotation['status'] }}</td>
+                                        <td>{{ $isInspectionBasedQuotation ? '—' : $quotation['status'] }}</td>
                                         <td>{{ optional($quotation['created_at'])->format('M d, Y h:i A') ?? '—' }}</td>
                                     </tr>
                                 @empty
@@ -489,8 +483,6 @@
         {!! json_encode([
             'requestsByType' => $requestTypeChart,
             'requestsByStatus' => $requestStatusChart,
-            'quotationsByType' => $quotationTypeChart,
-            'quotationsByStatus' => $quotationStatusChart,
         ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!}
     </script>
     <script>

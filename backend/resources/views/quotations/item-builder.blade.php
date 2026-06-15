@@ -282,10 +282,11 @@
                         <option value="">Select a quotation ID</option>
                         @foreach ($availableQuotations as $availableQuotation)
                             @php
+                                $isInspectionBasedQuotation = strtolower((string) ($availableQuotation->quotation_type ?? 'initial')) === 'final';
                                 $displayStatus = $availableQuotation->status ?? 'pending';
 
                                 if (
-                                    strtolower((string) ($availableQuotation->quotation_type ?? 'initial')) === 'final'
+                                    $isInspectionBasedQuotation
                                     && strtolower((string) $displayStatus) === 'pending'
                                     && filled($availableQuotation->inspectionRequest?->status)
                                 ) {
@@ -297,8 +298,10 @@
                                 @if ($availableQuotation->customer?->name)
                                     · {{ $availableQuotation->customer->name }}
                                 @endif
-                                · {{ strtolower((string) ($availableQuotation->quotation_type ?? 'initial')) === 'final' ? 'Inspection-Based Quotation' : 'Pre-Inspection Estimate' }}
-                                · {{ \Illuminate\Support\Str::headline($displayStatus) }}
+                                · {{ $isInspectionBasedQuotation ? 'Inspection-Based Quotation' : 'Pre-Inspection Estimate' }}
+                                @unless ($isInspectionBasedQuotation)
+                                    · {{ \Illuminate\Support\Str::headline($displayStatus) }}
+                                @endunless
                             </option>
                         @endforeach
                     </select>
@@ -322,10 +325,11 @@
                         <tbody>
                             @foreach ($availableQuotations as $availableQuotation)
                                 @php
+                                    $isInspectionBasedQuotation = strtolower((string) ($availableQuotation->quotation_type ?? 'initial')) === 'final';
                                     $displayStatus = $availableQuotation->status ?? 'pending';
 
                                     if (
-                                        strtolower((string) ($availableQuotation->quotation_type ?? 'initial')) === 'final'
+                                        $isInspectionBasedQuotation
                                         && strtolower((string) $displayStatus) === 'pending'
                                         && filled($availableQuotation->inspectionRequest?->status)
                                     ) {
@@ -337,8 +341,10 @@
                                     <td>{{ $availableQuotation->customer?->name ?? '—' }}</td>
                                     <td>
                                         <div class="ib-meta-stack">
-                                            <span>{{ strtolower((string) ($availableQuotation->quotation_type ?? 'initial')) === 'final' ? 'Inspection-Based Quotation' : 'Pre-Inspection Estimate' }}</span>
-                                            <span class="ib-inline-note">{{ \Illuminate\Support\Str::headline($displayStatus) }}</span>
+                                            <span>{{ $isInspectionBasedQuotation ? 'Inspection-Based Quotation' : 'Pre-Inspection Estimate' }}</span>
+                                            @unless ($isInspectionBasedQuotation)
+                                                <span class="ib-inline-note">{{ \Illuminate\Support\Str::headline($displayStatus) }}</span>
+                                            @endunless
                                         </div>
                                     </td>
                                     <td>{{ optional($availableQuotation->created_at)->format('M d, Y h:i A') ?? '—' }}</td>
