@@ -379,6 +379,62 @@
         margin: 0;
     }
 
+    .fq-discount-panel {
+        display: grid;
+        gap: 14px;
+    }
+
+    .fq-discount-status {
+        padding: 14px 16px;
+        border: 1px solid #DDE7EE;
+        border-radius: 12px;
+        background: #f8fafc;
+        color: #334155;
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+    .fq-discount-status strong {
+        color: #123A5A;
+    }
+
+    .fq-discount-form {
+        display: grid;
+        gap: 10px;
+    }
+
+    .fq-discount-form label {
+        margin: 0;
+        color: #5E7288;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .5px;
+        text-transform: uppercase;
+    }
+
+    .fq-discount-form textarea {
+        width: 100%;
+        min-height: 98px;
+        padding: 12px 14px;
+        border: 1.5px solid #DDE7EE;
+        border-radius: 12px;
+        resize: vertical;
+        color: #0F2F4A;
+        font: inherit;
+    }
+
+    .fq-discount-form textarea:focus {
+        outline: none;
+        border-color: #20A7C9;
+        box-shadow: 0 0 0 4px rgba(32,167,201,.12);
+    }
+
+    .fq-discount-error {
+        min-height: 18px;
+        color: #991b1b;
+        font-size: 13px;
+    }
+
     /* Action buttons */
     .fq-actions {
         display: flex;
@@ -635,6 +691,34 @@
             </div>
         </div>
 
+        {{-- ── Discount Request ── --}}
+        <div class="fq-card" id="fq-discount-card" style="display:none;">
+            <div class="fq-card-header">
+                <div class="fq-card-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F4D000" stroke-width="2">
+                        <line x1="19" y1="5" x2="5" y2="19"/>
+                        <circle cx="6.5" cy="6.5" r="2.5"/>
+                        <circle cx="17.5" cy="17.5" r="2.5"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="fq-card-title">Discount Request</p>
+                    <p class="fq-card-subtitle">Ask admin to review the quotation total</p>
+                </div>
+            </div>
+            <div class="fq-card-body">
+                <div class="fq-discount-panel">
+                    <div id="fq-discount-status" class="fq-discount-status"></div>
+                    <div class="fq-discount-form">
+                        <label for="fq-discount-message">Message to admin</label>
+                        <textarea id="fq-discount-message" maxlength="1000" placeholder="Optional reason or target budget"></textarea>
+                        <div id="fq-discount-error" class="fq-discount-error"></div>
+                        <button type="button" class="fq-btn-primary" id="fq-request-discount-btn">Request Discount</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- ── ACTION BUTTONS ── --}}
         <div class="fq-actions" id="fq-actions" style="display:none;">
             <a class="fq-btn-secondary fq-btn-download" id="fq-download-btn" href="#">
@@ -686,6 +770,18 @@
     function hasAppliedPromo(q) {
         var discount = q ? Number(q.promo_discount || 0) : 0;
         return !!(getAppliedPromo(q) || (q && q.applied_promo_id) || discount > 0);
+    }
+
+    function getAdminDiscountAmount(q) {
+        return Number((q && q.admin_discount_amount) || 0);
+    }
+
+    function getAdminDiscountBaseTotal(q) {
+        if (q && q.admin_discount_base_total !== null && q.admin_discount_base_total !== undefined) {
+            return Number(q.admin_discount_base_total || 0);
+        }
+
+        return Number((q && q.project_cost) || 0) + getAdminDiscountAmount(q);
     }
 
     function formatPromoRule(q) {
@@ -759,9 +855,14 @@
     var liSection    = qs('#fq-li-section');
     var liTbody      = qs('#fq-li-tbody');
     var roiGrid      = qs('#fq-roi-grid');
-    var remarksCard  = qs('#fq-remarks-card');
-    var remarksText  = qs('#fq-remarks-text');
-    var actionsEl    = qs('#fq-actions');
+	    var remarksCard  = qs('#fq-remarks-card');
+	    var remarksText  = qs('#fq-remarks-text');
+        var discountCard = qs('#fq-discount-card');
+        var discountStatus = qs('#fq-discount-status');
+        var discountMessageInput = qs('#fq-discount-message');
+        var discountError = qs('#fq-discount-error');
+        var requestDiscountBtn = qs('#fq-request-discount-btn');
+	    var actionsEl    = qs('#fq-actions');
     var downloadBtn  = qs('#fq-download-btn');
     var backBtn      = qs('#fq-back-btn');
     var chipId       = qs('#fq-chip-id');
@@ -829,9 +930,12 @@
         return '<tr class="fq-cost-section"><td colspan="2">' + escHtml(label) + '</td></tr>';
     }
 
-    function renderCostTable(q) {
-        var html = '';
-        if (q.panel_cost)        html += costRow('Panel Cost',        fmtPeso(q.panel_cost));
+	    function renderCostTable(q) {
+	        var html = '';
+            var adminDiscount = getAdminDiscountAmount(q);
+            var hasAdminDiscount = adminDiscount > 0;
+            var baseTotal = getAdminDiscountBaseTotal(q);
+	        if (q.panel_cost)        html += costRow('Panel Cost',        fmtPeso(q.panel_cost));
         if (q.inverter_cost)     html += costRow('Inverter Cost',     fmtPeso(q.inverter_cost));
         if (q.battery_cost && q.with_battery) html += costRow('Battery Cost', fmtPeso(q.battery_cost));
         if (q.bos_cost)          html += costRow('BOS Cost', fmtPeso(q.bos_cost));
@@ -843,13 +947,62 @@
                 html += costRow('Promo Discount', '-' + fmtPeso(q.promo_discount));
             }
         }
-        html += costRow('Total Project Cost', fmtPeso(q.project_cost), true);
-        html += costSection('Estimated Savings & ROI');
+            if (hasAdminDiscount) {
+                html += costRow('Original Total Before Admin Discount', fmtPeso(baseTotal), true);
+                html += costRow('Admin Discount', '-' + fmtPeso(adminDiscount));
+                html += costRow('Updated Total Project Cost', fmtPeso(q.project_cost), true);
+            } else {
+                html += costRow('Total Project Cost', fmtPeso(q.project_cost), true);
+            }
+	        html += costSection('Estimated Savings & ROI');
         html += costRow('Est. Monthly Savings', fmtPeso(q.estimated_monthly_savings));
         html += costRow('Est. Annual Savings', fmtPeso(q.estimated_annual_savings));
         html += costRow('ROI / Payback Period', q.roi_years ? Number(q.roi_years).toFixed(1) + ' yrs' : '\u2014');
         costTable.innerHTML = html || '<tr class="fq-cost-row"><td colspan="2" style="color:#7F92A3;font-size:13px;">Cost breakdown not available.</td></tr>';
-        totalCostEl.innerHTML = fmtPeso(q.project_cost);
+	        totalCostEl.innerHTML = fmtPeso(q.project_cost);
+	    }
+
+    function formatDiscountStatus(status) {
+        var normalized = String(status || 'none').replace(/_/g, ' ');
+        return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+    }
+
+    function renderDiscountRequest(q) {
+        if (!discountCard || !discountStatus || !requestDiscountBtn) {
+            return;
+        }
+
+        var status = String(q.discount_request_status || 'none').toLowerCase();
+        var adminDiscount = getAdminDiscountAmount(q);
+        var statusCopy = '<strong>Status:</strong> ' + escHtml(formatDiscountStatus(status));
+
+        if (status === 'requested') {
+            statusCopy += '<br>Admin has been notified and will review your request.';
+        } else if (status === 'applied' && adminDiscount > 0) {
+            statusCopy += '<br>An admin discount of ' + escHtml(fmtPeso(adminDiscount)) + ' has been applied to this quotation.';
+        } else if (status === 'rejected') {
+            statusCopy += '<br>Your request was reviewed by admin. The current quotation total remains shown above.';
+        } else {
+            statusCopy += '<br>You may request an admin review if you would like to ask for a discount.';
+        }
+
+        if (q.discount_request_message) {
+            statusCopy += '<br><br><strong>Your message:</strong><br>' + escHtml(q.discount_request_message);
+        }
+
+        if (q.admin_discount_reason) {
+            statusCopy += '<br><br><strong>Admin note:</strong><br>' + escHtml(q.admin_discount_reason);
+        }
+
+        discountStatus.innerHTML = statusCopy;
+        requestDiscountBtn.disabled = status === 'requested';
+        requestDiscountBtn.textContent = status === 'requested' ? 'Request Sent' : 'Request Discount';
+
+        if (discountMessageInput && q.discount_request_message) {
+            discountMessageInput.value = q.discount_request_message;
+        }
+
+        discountCard.style.display = '';
     }
 
     /* ── Line items ── */
@@ -906,9 +1059,10 @@
         statusBadge.style.display = 'none';
 
         renderSpecGrid(q);
-        renderCostTable(q);
-        renderLineItems(q.line_items || q.lineItems || []);
-        renderRoi(q);
+	        renderCostTable(q);
+	        renderLineItems(q.line_items || q.lineItems || []);
+	        renderRoi(q);
+            renderDiscountRequest(q);
 
         /* Remarks */
         if (q.remarks && q.remarks.trim()) {
@@ -925,7 +1079,50 @@
     }
 
     /* ── Back button ── */
-    backBtn.addEventListener('click', function () { window.history.back(); });
+	    backBtn.addEventListener('click', function () { window.history.back(); });
+
+    async function submitDiscountRequest() {
+        if (!inspectionId || !requestDiscountBtn) {
+            return;
+        }
+
+        hideMsg(actionMsg);
+        if (discountError) {
+            discountError.textContent = '';
+        }
+
+        requestDiscountBtn.disabled = true;
+        requestDiscountBtn.textContent = 'Sending...';
+
+        try {
+            var payload = {
+                message: discountMessageInput ? discountMessageInput.value.trim() : '',
+            };
+
+            var resp = await apiRequest('/api/customer/final-quotations/' + inspectionId + '/discount-request', {
+                method: 'POST',
+                body: payload,
+            });
+
+            currentQuotation = resp.data || resp;
+            renderQuotation(currentQuotation);
+            showMsg(actionMsg, 'success', resp.message || 'Discount request sent to admin.');
+        } catch (err) {
+            if (discountError && err.errors && err.errors.message) {
+                discountError.textContent = err.errors.message[0];
+            }
+            showMsg(actionMsg, 'error', err.message || 'Could not send discount request.');
+        } finally {
+            if (currentQuotation && String(currentQuotation.discount_request_status || '').toLowerCase() !== 'requested') {
+                requestDiscountBtn.disabled = false;
+                requestDiscountBtn.textContent = 'Request Discount';
+            }
+        }
+    }
+
+    if (requestDiscountBtn) {
+        requestDiscountBtn.addEventListener('click', submitDiscountRequest);
+    }
 
     /* ── Load quotation ── */
     async function load() {

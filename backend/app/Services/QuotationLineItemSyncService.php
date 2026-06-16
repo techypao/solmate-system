@@ -108,7 +108,9 @@ class QuotationLineItemSyncService
             $baseProjectCost,
             $promoContext
         );
-        $projectCost = round(max(0, $baseProjectCost - (float) ($promoDiscount ?? 0)), 2);
+        $promoAdjustedProjectCost = round(max(0, $baseProjectCost - (float) ($promoDiscount ?? 0)), 2);
+        $adminDiscount = round((float) ($quotation->admin_discount_amount ?? 0), 2);
+        $projectCost = round(max(0, $promoAdjustedProjectCost - $adminDiscount), 2);
 
         $roiValues = $this->quotationComputationService->computeRoi(
             $projectCost,

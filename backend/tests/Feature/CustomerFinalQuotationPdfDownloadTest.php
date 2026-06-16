@@ -70,11 +70,15 @@ class CustomerFinalQuotationPdfDownloadTest extends TestCase
 
     private function createUser(string $role, string $name): User
     {
-        return User::query()->create([
+        $user = User::query()->create([
             'name' => $name,
             'email' => strtolower($role) . '_' . uniqid() . '@example.com',
             'password' => Hash::make('password'),
             'role' => $role,
         ]);
+
+        $user->forceFill(['email_verified_at' => now()])->save();
+
+        return $user;
     }
 }

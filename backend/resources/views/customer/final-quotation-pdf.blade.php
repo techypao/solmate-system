@@ -200,9 +200,12 @@
     $fmtNumber = fn ($value, $suffix = '') => ($value === null || $value === '') ? '—' : number_format((float) $value, 2) . $suffix;
     $systemType = $quotation->pv_system_type ? ucwords(str_replace('_', ' ', $quotation->pv_system_type)) : '—';
     $inverterType = $quotation->inverter_type ? ucwords(str_replace('_', ' ', $quotation->inverter_type)) : '—';
-    $appliedPromo = $quotation->appliedPromo;
-    $hasAppliedPromo = $appliedPromo || $quotation->applied_promo_id || (float) ($quotation->promo_discount ?? 0) > 0;
-    $promoLabel = '—';
+	    $appliedPromo = $quotation->appliedPromo;
+	    $hasAppliedPromo = $appliedPromo || $quotation->applied_promo_id || (float) ($quotation->promo_discount ?? 0) > 0;
+        $adminDiscountAmount = (float) ($quotation->admin_discount_amount ?? 0);
+        $hasAdminDiscount = $adminDiscountAmount > 0;
+        $adminDiscountBaseTotal = $quotation->admin_discount_base_total;
+	    $promoLabel = '—';
 
     if ($appliedPromo) {
         $promoLabel = $appliedPromo->title ?: ($appliedPromo->free_item_description ?: 'Promo #' . $appliedPromo->id);
@@ -247,10 +250,10 @@
             </td>
         </tr>
     </table>
-    <div class="highlight-box">
-        <p class="highlight-label">Total Project Cost</p>
-        <p class="highlight-value">{{ $fmtPeso($quotation->project_cost) }}</p>
-    </div>
+	    <div class="highlight-box">
+	        <p class="highlight-label">{{ $hasAdminDiscount ? 'Updated Total Project Cost' : 'Total Project Cost' }}</p>
+	        <p class="highlight-value">{{ $fmtPeso($quotation->project_cost) }}</p>
+	    </div>
 </div>
 
 <div class="section">
@@ -288,14 +291,23 @@
         <tr><td class="label">BOS Cost</td><td class="value">{{ $fmtPeso($quotation->bos_cost) }}</td></tr>
         <tr><td class="label">Materials Subtotal</td><td class="value">{{ $fmtPeso($quotation->materials_subtotal) }}</td></tr>
         <tr><td class="label">Labor Cost</td><td class="value">{{ $fmtPeso($quotation->labor_cost) }}</td></tr>
-        @if($hasAppliedPromo)
-            <tr><td class="label">Applied Promo</td><td class="value">{{ $promoLabel }}</td></tr>
-            @if((float) ($quotation->promo_discount ?? 0) > 0)
-                <tr><td class="label">Promo Discount</td><td class="value">-{{ $fmtPeso($quotation->promo_discount) }}</td></tr>
+	        @if($hasAppliedPromo)
+	            <tr><td class="label">Applied Promo</td><td class="value">{{ $promoLabel }}</td></tr>
+	            @if((float) ($quotation->promo_discount ?? 0) > 0)
+	                <tr><td class="label">Promo Discount</td><td class="value">-{{ $fmtPeso($quotation->promo_discount) }}</td></tr>
+	            @endif
+	        @endif
+            @if($hasAdminDiscount)
+                <tr><td class="label">Original Total Before Admin Discount</td><td class="value">{{ $fmtPeso($adminDiscountBaseTotal) }}</td></tr>
+                <tr><td class="label">Admin Discount</td><td class="value">-{{ $fmtPeso($adminDiscountAmount) }}</td></tr>
+                @if($quotation->admin_discount_reason)
+                    <tr><td class="label">Admin Note</td><td class="value">{{ $quotation->admin_discount_reason }}</td></tr>
+                @endif
+                <tr><td class="label">Updated Total Project Cost</td><td class="value">{{ $fmtPeso($quotation->project_cost) }}</td></tr>
+            @else
+	            <tr><td class="label">Total Project Cost</td><td class="value">{{ $fmtPeso($quotation->project_cost) }}</td></tr>
             @endif
-        @endif
-        <tr><td class="label">Total Project Cost</td><td class="value">{{ $fmtPeso($quotation->project_cost) }}</td></tr>
-    </table>
+	    </table>
 
     @if($lineItems->isNotEmpty())
         <p class="section-title" style="margin-top:16px;">Pricing Items</p>

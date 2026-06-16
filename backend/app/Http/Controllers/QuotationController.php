@@ -523,10 +523,149 @@ public function getCustomerFinalQuotation(Request $request, int $inspectionReque
         ], 404);
     }
 
+	    return response()->json([
+	        'message' => 'Inspection-based quotation retrieved successfully.',
+	        'data' => $quotation
+	    ], 200);
+	}
+
+public function requestCustomerDiscount(Request $request, int $inspectionRequestId)
+{
+    $validated = $request->validate([
+        'message' => 'nullable|string|max:1000',
+    ], [
+        'message.string' => 'Discount request message must be valid text.',
+        'message.max' => 'Discount request message must not be greater than 1000 characters.',
+    ]);
+
+    $customer = $request->user();
+
+    $quotation = $this->findCustomerFinalQuotation($customer->id, $inspectionRequestId);
+
+    if (! $quotation) {
+        return response()->json([
+            'message' => 'Inspection-based quotation not found.'
+        ], 404);
+    }
+
+    if (in_array($quotation->status, ['completed', 'rejected'], true)) {
+        return response()->json([
+            'message' => 'Discount requests are only available for active inspection-based quotations.',
+        ], 422);
+    }
+
+    $quotation->update([
+        'discount_request_status' => 'requested',
+        'discount_request_message' => $validated['message'] ?? null,
+        'discount_requested_at' => now(),
+        'discount_request_resolved_at' => null,
+    ]);
+
+    $quotation = $quotation->fresh(['customer', 'inspectionRequest.technician', 'lineItems.pricingItem', 'appliedPromo', 'adminDiscountAppliedBy']);
+
+    $this->notificationService->notifyAdminsOfQuotationDiscountRequest($quotation, $customer->id);
+
     return response()->json([
-        'message' => 'Inspection-based quotation retrieved successfully.',
-        'data' => $quotation
-    ], 200);
+        'message' => 'Discount request sent to admin successfully.',
+        'data' => $quotation,
+    ]);
+}
+
+public function applyAdminDiscount(Request $request, Quotation $quotation)
+{
+    if ($request->user()?->role !== 'admin') {
+        return response()->json([
+            'message' => 'Forbidden',
+        ], 403);
+    }
+
+    if ($quotation->quotation_type !== 'final') {
+        return response()->json([
+            'message' => 'Admin discounts can only be applied to inspection-based quotations.',
+        ], 422);
+    }
+
+    $validated = $request->validate([
+        'admin_discount_amount' => 'required|numeric|gt:0',
+        'admin_discount_reason' => 'nullable|string|max:1000',
+    ], [
+        'admin_discount_amount.required' => 'Discount amount is required.',
+        'admin_discount_amount.numeric' => 'Discount amount must be a valid number.',
+        'admin_discount_amount.gt' => 'Discount amount must be greater than 0.',
+        'admin_discount_reason.string' => 'Discount reason must be valid text.',
+        'admin_discount_reason.max' => 'Discount reason must not be greater than 1000 characters.',
+    ]);
+
+    $quotation = $this->refreshFinalQuotationTotalsIfNeeded($quotation);
+    $baseTotal = $quotation->adminDiscountBaseTotal();
+    $discountAmount = round((float) $validated['admin_discount_amount'], 2);
+
+    if ($baseTotal === null || $baseTotal <= 0) {
+        throw ValidationException::withMessages([
+            'admin_discount_amount' => 'This quotation does not have a total amount available for discounting.',
+        ]);
+    }
+
+    if ($discountAmount > $baseTotal) {
+        throw ValidationException::withMessages([
+            'admin_discount_amount' => 'Discount amount must not be greater than the quotation total before admin discount.',
+        ]);
+    }
+
+    $quotation->update([
+        'discount_request_status' => 'applied',
+        'discount_request_resolved_at' => now(),
+        'admin_discount_amount' => $discountAmount,
+        'admin_discount_reason' => $validated['admin_discount_reason'] ?? null,
+        'admin_discount_applied_by' => $request->user()->id,
+        'admin_discount_applied_at' => now(),
+    ]);
+
+    $quotation = $this->refreshFinalQuotationTotalsAfterAdminDiscount($quotation);
+
+    $this->notificationService->notifyCustomerOfQuotationDiscountUpdate($quotation, 'applied', $request->user()->id);
+
+    return response()->json([
+        'message' => 'Admin discount applied successfully.',
+        'data' => $quotation,
+    ]);
+}
+
+public function rejectDiscountRequest(Request $request, Quotation $quotation)
+{
+    if ($request->user()?->role !== 'admin') {
+        return response()->json([
+            'message' => 'Forbidden',
+        ], 403);
+    }
+
+    if ($quotation->quotation_type !== 'final') {
+        return response()->json([
+            'message' => 'Discount requests can only be reviewed for inspection-based quotations.',
+        ], 422);
+    }
+
+    $validated = $request->validate([
+        'admin_discount_reason' => 'nullable|string|max:1000',
+    ], [
+        'admin_discount_reason.string' => 'Discount reason must be valid text.',
+        'admin_discount_reason.max' => 'Discount reason must not be greater than 1000 characters.',
+    ]);
+
+    $quotation->update([
+        'discount_request_status' => 'rejected',
+        'discount_request_resolved_at' => now(),
+        'admin_discount_reason' => $validated['admin_discount_reason'] ?? null,
+    ]);
+
+    $quotation = $quotation->fresh(['customer', 'inspectionRequest.technician', 'lineItems.pricingItem', 'appliedPromo', 'adminDiscountAppliedBy']);
+
+    $this->notificationService->notifyCustomerOfQuotationDiscountUpdate($quotation, 'rejected', $request->user()->id);
+
+    return response()->json([
+        'message' => 'Discount request rejected.',
+        'data' => $quotation,
+    ]);
 }
 
 public function downloadCustomerFinalQuotationPdf(Request $request, int $inspectionRequestId)
@@ -556,12 +695,12 @@ private function loadLineItemsForFinalQuotation(Quotation $quotation): void
         return;
     }
 
-    $quotation->loadMissing(['lineItems.pricingItem', 'appliedPromo']);
+    $quotation->loadMissing(['lineItems.pricingItem', 'appliedPromo', 'adminDiscountAppliedBy']);
 }
 
 private function findCustomerFinalQuotation(int $customerId, int $inspectionRequestId): ?Quotation
 {
-    $quotation = Quotation::with(['customer', 'inspectionRequest.technician'])
+    $quotation = Quotation::with(['customer', 'inspectionRequest.technician', 'adminDiscountAppliedBy'])
         ->where('inspection_request_id', $inspectionRequestId)
         ->where('user_id', $customerId)
         ->where('quotation_type', 'final')
@@ -574,7 +713,7 @@ private function findCustomerFinalQuotation(int $customerId, int $inspectionRequ
     $this->loadLineItemsForFinalQuotation($quotation);
 
     $quotation = $this->refreshFinalQuotationTotalsIfNeeded($quotation);
-    $quotation->loadMissing(['customer', 'inspectionRequest.technician']);
+    $quotation->loadMissing(['customer', 'inspectionRequest.technician', 'adminDiscountAppliedBy']);
 
     return $quotation;
 }
@@ -591,7 +730,36 @@ private function refreshFinalQuotationTotalsIfNeeded(Quotation $quotation): Quot
         return $quotation;
     }
 
-    return $this->quotationLineItemSyncService->refreshTotalsFromExistingLineItems($quotation);
+	return $this->quotationLineItemSyncService->refreshTotalsFromExistingLineItems($quotation);
+}
+
+private function refreshFinalQuotationTotalsAfterAdminDiscount(Quotation $quotation): Quotation
+{
+    $quotation->loadMissing(['lineItems', 'appliedPromo']);
+
+    if ($quotation->lineItems->isNotEmpty()) {
+        return $this->quotationLineItemSyncService->refreshTotalsFromExistingLineItems($quotation)
+            ->load(['customer', 'inspectionRequest.technician', 'lineItems.pricingItem', 'appliedPromo', 'adminDiscountAppliedBy']);
+    }
+
+    $baseTotal = $quotation->adminDiscountBaseTotal();
+
+    if ($baseTotal === null) {
+        return $quotation->fresh(['customer', 'inspectionRequest.technician', 'lineItems.pricingItem', 'appliedPromo', 'adminDiscountAppliedBy']);
+    }
+
+    $adminDiscount = round((float) ($quotation->admin_discount_amount ?? 0), 2);
+    $projectCost = round(max(0, $baseTotal - $adminDiscount), 2);
+    $roiValues = $this->quotationComputationService->computeRoi(
+        $projectCost,
+        (float) ($quotation->monthly_electric_bill ?? 0)
+    );
+
+    $quotation->update(array_merge([
+        'project_cost' => $projectCost,
+    ], $roiValues));
+
+    return $quotation->fresh(['customer', 'inspectionRequest.technician', 'lineItems.pricingItem', 'appliedPromo', 'adminDiscountAppliedBy']);
 }
 
 private function finalQuotationPdfFilename(Quotation $quotation): string

@@ -21,6 +21,7 @@ class WebQuotationItemBuilderTest extends TestCase
             'password' => 'password123',
             'role' => User::ROLE_ADMIN,
         ]);
+        $admin->forceFill(['email_verified_at' => now()])->save();
 
         $technician = User::query()->create([
             'name' => 'Technician Builder User',
@@ -28,6 +29,7 @@ class WebQuotationItemBuilderTest extends TestCase
             'password' => 'password123',
             'role' => User::ROLE_TECHNICIAN,
         ]);
+        $technician->forceFill(['email_verified_at' => now()])->save();
 
         $this->actingAs($admin)
             ->get('/quotations/item-builder')
@@ -51,6 +53,7 @@ class WebQuotationItemBuilderTest extends TestCase
             'password' => 'password123',
             'role' => User::ROLE_CUSTOMER,
         ]);
+        $customer->forceFill(['email_verified_at' => now()])->save();
 
         $this->actingAs($customer)
             ->get('/quotations/item-builder')
@@ -65,6 +68,7 @@ class WebQuotationItemBuilderTest extends TestCase
             'password' => Hash::make('password123'),
             'role' => User::ROLE_ADMIN,
         ]);
+        $admin->forceFill(['email_verified_at' => now()])->save();
 
         $customer = User::query()->create([
             'name' => 'Jose Rizal',
@@ -72,6 +76,7 @@ class WebQuotationItemBuilderTest extends TestCase
             'password' => Hash::make('password123'),
             'role' => User::ROLE_CUSTOMER,
         ]);
+        $customer->forceFill(['email_verified_at' => now()])->save();
 
         $technician = User::query()->create([
             'name' => 'Technician Builder User',
@@ -79,6 +84,7 @@ class WebQuotationItemBuilderTest extends TestCase
             'password' => Hash::make('password123'),
             'role' => User::ROLE_TECHNICIAN,
         ]);
+        $technician->forceFill(['email_verified_at' => now()])->save();
 
         $inspectionRequest = InspectionRequest::query()->create([
             'user_id' => $customer->id,

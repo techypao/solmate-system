@@ -53,7 +53,20 @@ class Quotation extends Model
     'remarks',
     'applied_promo_id',
     'promo_discount',
-];
+    'discount_request_status',
+    'discount_request_message',
+    'discount_requested_at',
+    'discount_request_resolved_at',
+    'admin_discount_amount',
+    'admin_discount_reason',
+    'admin_discount_applied_by',
+    'admin_discount_applied_at',
+	];
+
+    protected $appends = [
+        'admin_discount_base_total',
+        'has_admin_discount',
+    ];
 
     public function user(): BelongsTo
     {
@@ -95,10 +108,47 @@ class Quotation extends Model
         return $this->belongsTo(Promotion::class, 'applied_promo_id');
     }
 
+    public function adminDiscountAppliedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'admin_discount_applied_by');
+    }
+
+    public function adminDiscountBaseTotal(): ?float
+    {
+        if ($this->materials_subtotal !== null || $this->labor_cost !== null) {
+            return round(max(
+                0,
+                (float) ($this->materials_subtotal ?? 0)
+                    + (float) ($this->labor_cost ?? 0)
+                    - (float) ($this->promo_discount ?? 0)
+            ), 2);
+        }
+
+        if ($this->project_cost === null) {
+            return null;
+        }
+
+        return round((float) $this->project_cost + (float) ($this->admin_discount_amount ?? 0), 2);
+    }
+
+    public function getAdminDiscountBaseTotalAttribute(): ?float
+    {
+        return $this->adminDiscountBaseTotal();
+    }
+
+    public function getHasAdminDiscountAttribute(): bool
+    {
+        return (float) ($this->admin_discount_amount ?? 0) > 0;
+    }
+
     protected function casts(): array
     {
         return [
             'promo_discount' => 'decimal:2',
+            'admin_discount_amount' => 'decimal:2',
+            'discount_requested_at' => 'datetime',
+            'discount_request_resolved_at' => 'datetime',
+            'admin_discount_applied_at' => 'datetime',
         ];
     }
 }

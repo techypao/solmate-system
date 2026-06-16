@@ -15,8 +15,10 @@ use App\Notifications\AdminNewInspectionRequestNotification;
 use App\Notifications\AdminNewServiceRequestNotification;
 use App\Notifications\AdminServiceRequestCancellationRequestedNotification;
 use App\Notifications\AdminNewTestimonyNotification;
+use App\Notifications\AdminQuotationDiscountRequestedNotification;
 use App\Notifications\FinalQuotationAvailableNotification;
 use App\Notifications\NewPromotionNotification;
+use App\Notifications\QuotationDiscountUpdatedNotification;
 use App\Notifications\InspectionRequestAssignedNotification;
 use App\Notifications\InspectionRequestStatusUpdatedNotification;
 use App\Notifications\ScheduleRescheduledNotification;
@@ -225,6 +227,29 @@ class InAppNotificationService
         $quotation->customer->notify(
             new FinalQuotationAvailableNotification($quotation, $actorId)
         );
+    }
+
+    public function notifyAdminsOfQuotationDiscountRequest(Quotation $quotation, ?int $actorId = null): void
+    {
+        $quotation->loadMissing('customer');
+
+        $this->adminRecipients()->each(
+            fn (User $admin) => $admin->notify(new AdminQuotationDiscountRequestedNotification($quotation, $actorId))
+        );
+    }
+
+    public function notifyCustomerOfQuotationDiscountUpdate(
+        Quotation $quotation,
+        string $outcome,
+        ?int $actorId = null
+    ): void {
+        $quotation->loadMissing('customer');
+
+        if (! $quotation->customer) {
+            return;
+        }
+
+        $quotation->customer->notify(new QuotationDiscountUpdatedNotification($quotation, $outcome, $actorId));
     }
 
     public function notifyAllCustomersOfNewPromotion(Promotion $promotion, ?int $actorId = null): void

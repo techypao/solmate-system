@@ -210,6 +210,48 @@
             margin: 0;
         }
 
+        .ib-negotiation-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+            gap: 18px;
+            align-items: start;
+        }
+
+        .ib-negotiation-status {
+            display: grid;
+            gap: 10px;
+        }
+
+        .ib-negotiation-pill {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            min-height: 30px;
+            padding: 0 11px;
+            border-radius: 999px;
+            background: #EAF9FD;
+            color: #20A7C9;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: capitalize;
+        }
+
+        .ib-negotiation-message {
+            padding: 14px 16px;
+            border: 1px solid #DDE7EE;
+            border-radius: 14px;
+            background: #F8FAFC;
+            color: #334155;
+            font-size: 13px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
+        .ib-negotiation-form {
+            display: grid;
+            gap: 14px;
+        }
+
         @media (max-width: 720px) {
             .ib-available-card {
                 padding: 16px;
@@ -231,6 +273,10 @@
             .ib-table th,
             .ib-table td {
                 padding: 10px 12px;
+            }
+
+            .ib-negotiation-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -299,9 +345,7 @@
                                     · {{ $availableQuotation->customer->name }}
                                 @endif
                                 · {{ $isInspectionBasedQuotation ? 'Inspection-Based Quotation' : 'Pre-Inspection Estimate' }}
-                                @unless ($isInspectionBasedQuotation)
-                                    · {{ \Illuminate\Support\Str::headline($displayStatus) }}
-                                @endunless
+                                · {{ \Illuminate\Support\Str::headline($displayStatus) }}
                             </option>
                         @endforeach
                     </select>
@@ -341,11 +385,9 @@
                                     <td>{{ $availableQuotation->customer?->name ?? '—' }}</td>
                                     <td>
                                         <div class="ib-meta-stack">
-                                            <span>{{ $isInspectionBasedQuotation ? 'Inspection-Based Quotation' : 'Pre-Inspection Estimate' }}</span>
-                                            @unless ($isInspectionBasedQuotation)
-                                                <span class="ib-inline-note">{{ \Illuminate\Support\Str::headline($displayStatus) }}</span>
-                                            @endunless
-                                        </div>
+	                                            <span>{{ $isInspectionBasedQuotation ? 'Inspection-Based Quotation' : 'Pre-Inspection Estimate' }}</span>
+	                                            <span class="ib-inline-note">{{ \Illuminate\Support\Str::headline($displayStatus) }}</span>
+	                                        </div>
                                     </td>
                                     <td>{{ optional($availableQuotation->created_at)->format('M d, Y h:i A') ?? '—' }}</td>
                                     <td>
@@ -378,12 +420,50 @@
     </div>
 
         <div id="builder-content" style="display: none;">
-        <div class="card admin-section-surface" style="margin-top: 16px;">
-            <h2 class="admin-section-title" style="margin-top: 0;">Quotation Summary</h2>
-            <div id="quotation-summary" class="stack"></div>
-        </div>
+	        <div class="card admin-section-surface" style="margin-top: 16px;">
+	            <h2 class="admin-section-title" style="margin-top: 0;">Quotation Summary</h2>
+	            <div id="quotation-summary" class="stack"></div>
+	        </div>
 
-        <div class="card admin-section-surface" style="margin-top: 16px;">
+            @if (auth()->user()?->role === \App\Models\User::ROLE_ADMIN)
+                <div id="discount-negotiation-panel" class="card admin-section-surface" style="margin-top: 16px; display: none;">
+                    <div class="actions" style="justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <h2 class="admin-section-title" style="margin: 0 0 6px;">Customer Discount Negotiation</h2>
+                            <div class="muted">Review customer discount requests and apply an admin-only peso discount to the customer-facing quotation total.</div>
+                        </div>
+                    </div>
+
+                    <div class="ib-negotiation-grid" style="margin-top: 16px;">
+                        <div class="ib-negotiation-status">
+                            <span id="discount-status-pill" class="ib-negotiation-pill">None</span>
+                            <div id="discount-request-message" class="ib-negotiation-message">No customer discount request yet.</div>
+                            <div id="discount-breakdown" class="stack"></div>
+                        </div>
+
+                        <div class="ib-negotiation-form">
+                            <div>
+                                <label for="admin_discount_amount">Admin Discount Amount</label>
+                                <input id="admin_discount_amount" type="number" min="0" step="0.01" placeholder="0.00">
+                                <div class="field-error" data-discount-error-for="admin_discount_amount"></div>
+                            </div>
+
+                            <div>
+                                <label for="admin_discount_reason">Admin Note</label>
+                                <textarea id="admin_discount_reason" rows="4" maxlength="1000" placeholder="Optional note for this discount or review decision"></textarea>
+                                <div class="field-error" data-discount-error-for="admin_discount_reason"></div>
+                            </div>
+
+                            <div class="actions" style="margin-top: 0;">
+                                <button id="apply-discount-button" type="button">Apply discount</button>
+                                <button id="reject-discount-button" type="button" class="secondary">Reject request</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+	        <div class="card admin-section-surface" style="margin-top: 16px;">
             <div class="actions" style="justify-content: space-between;">
                 <div>
                     <h2 class="admin-section-title" style="margin: 0 0 6px;">Line Items</h2>
@@ -416,6 +496,7 @@
     <script>
         const categories = JSON.parse(document.getElementById('__ib-categories').textContent);
         const initialQuotationId = JSON.parse(document.getElementById('__ib-quotation-id').textContent);
+        const isAdminUser = @json(auth()->user()?->role === \App\Models\User::ROLE_ADMIN);
         const quotationLoaderForm = document.getElementById('quotation-loader-form');
         const quotationIdInput = document.getElementById('quotation_id');
         const availableQuotationSelect = document.getElementById('available_quotation_id');
@@ -438,6 +519,14 @@
         const totalsPreview = document.getElementById('totals-preview');
         const addLineItemButton = document.getElementById('add-line-item-button');
         const saveLineItemsButton = document.getElementById('save-line-items-button');
+        const discountNegotiationPanel = document.getElementById('discount-negotiation-panel');
+        const discountStatusPill = document.getElementById('discount-status-pill');
+        const discountRequestMessage = document.getElementById('discount-request-message');
+        const discountBreakdown = document.getElementById('discount-breakdown');
+        const adminDiscountAmountInput = document.getElementById('admin_discount_amount');
+        const adminDiscountReasonInput = document.getElementById('admin_discount_reason');
+        const applyDiscountButton = document.getElementById('apply-discount-button');
+        const rejectDiscountButton = document.getElementById('reject-discount-button');
 
         let quotationState = null;
         let pricingCatalog = [];
@@ -490,6 +579,9 @@
             setVisible(builderError, false);
             setVisible(lineItemErrors, false);
             loaderError.textContent = '';
+            document.querySelectorAll('[data-discount-error-for]').forEach((element) => {
+                element.textContent = '';
+            });
         }
 
         function showError(message) {
@@ -640,6 +732,18 @@
             return `${promo.title} (${formatPromoTypeLabel(promo.promo_type)})`;
         }
 
+        function getAdminDiscountAmount() {
+            return Number(quotationState?.admin_discount_amount || 0);
+        }
+
+        function getAdminDiscountBaseTotal() {
+            if (quotationState?.admin_discount_base_total !== null && quotationState?.admin_discount_base_total !== undefined) {
+                return Number(quotationState.admin_discount_base_total || 0);
+            }
+
+            return Number(quotationState?.project_cost || 0) + getAdminDiscountAmount();
+        }
+
         function updateUrl(quotationId) {
             const url = new URL(window.location.href);
 
@@ -778,6 +882,7 @@
             }
 
             const appliedPromo = getAppliedPromo();
+            const adminDiscount = getAdminDiscountAmount();
 
             quotationSummary.innerHTML = `
                 <div><strong>Quotation ID:</strong> ${quotationState.id}</div>
@@ -788,9 +893,37 @@
                 <div><strong>Saved labor cost:</strong> ${formatMoney(quotationState.labor_cost)}</div>
                 <div><strong>Applied promo:</strong> ${escapeHtml(formatAppliedPromoLabel(appliedPromo))}</div>
                 <div><strong>Saved promo discount:</strong> ${formatMoney(quotationState.promo_discount)}</div>
+                <div><strong>Admin discount:</strong> ${formatMoney(adminDiscount)}</div>
                 <div><strong>Saved final project cost:</strong> ${formatMoney(quotationState.project_cost)}</div>
                 <div><strong>Remarks:</strong> ${escapeHtml(quotationState.remarks || 'No remarks')}</div>
             `;
+        }
+
+        function renderDiscountNegotiation() {
+            if (!isAdminUser || !discountNegotiationPanel || !quotationState) {
+                return;
+            }
+
+            const status = String(quotationState.discount_request_status || 'none').replace(/_/g, ' ');
+            const requestMessage = quotationState.discount_request_message
+                ? quotationState.discount_request_message
+                : 'No customer discount request yet.';
+            const adminDiscount = getAdminDiscountAmount();
+            const baseTotal = getAdminDiscountBaseTotal();
+            const updatedTotal = Number(quotationState.project_cost || 0);
+
+            discountStatusPill.textContent = status;
+            discountRequestMessage.textContent = requestMessage;
+            discountBreakdown.innerHTML = `
+                <div><strong>Original total before admin discount:</strong> ${formatMoney(baseTotal)}</div>
+                <div><strong>Current admin discount:</strong> ${formatMoney(adminDiscount)}</div>
+                <div><strong>Updated customer-facing total:</strong> ${formatMoney(updatedTotal)}</div>
+            `;
+
+            adminDiscountAmountInput.value = adminDiscount > 0 ? adminDiscount.toFixed(2) : '';
+            adminDiscountAmountInput.max = baseTotal > 0 ? String(baseTotal) : '';
+            adminDiscountReasonInput.value = quotationState.admin_discount_reason || '';
+            setVisible(discountNegotiationPanel, true);
         }
 
         function renderLineItems() {
@@ -881,7 +1014,9 @@
             const baseTotal = subtotal + laborCost;
             const promoDiscount = computePromoDiscountPreview(baseTotal);
             const appliedPromo = getAppliedPromo();
-            const finalTotal = Math.max(0, baseTotal - promoDiscount);
+            const adminDiscount = getAdminDiscountAmount();
+            const totalBeforeAdminDiscount = Math.max(0, baseTotal - promoDiscount);
+            const finalTotal = Math.max(0, totalBeforeAdminDiscount - adminDiscount);
 
             totalsPreview.innerHTML = `
                 <div><strong>Line-item subtotal:</strong> ${formatMoney(subtotal)}</div>
@@ -889,6 +1024,7 @@
                 <div><strong>Base total:</strong> ${formatMoney(baseTotal)}</div>
                 <div><strong>Applied promo:</strong> ${escapeHtml(formatAppliedPromoLabel(appliedPromo))}</div>
                 <div><strong>Promo discount preview:</strong> ${formatMoney(promoDiscount)}</div>
+                <div><strong>Admin discount:</strong> ${formatMoney(adminDiscount)}</div>
                 <div><strong>Projected final total:</strong> ${formatMoney(finalTotal)}</div>
             `;
         }
@@ -940,10 +1076,91 @@
 
             lineItemsState = (quotationState.line_items || []).map((item) => normalizeLineItem(item));
 
-            renderSummary();
-            renderLineItems();
-            renderTotals();
-            setVisible(builderContent, true);
+	            renderSummary();
+                renderDiscountNegotiation();
+	            renderLineItems();
+	            renderTotals();
+	            setVisible(builderContent, true);
+	        }
+
+        async function submitDiscountReview(action) {
+            if (!quotationState || quotationState.quotation_type !== 'final') {
+                showError('Load an inspection-based quotation before reviewing a discount request.');
+                return;
+            }
+
+            clearMessages();
+
+            const button = action === 'apply' ? applyDiscountButton : rejectDiscountButton;
+            const originalLabel = button ? button.textContent : '';
+
+            if (button) {
+                button.disabled = true;
+                button.textContent = action === 'apply' ? 'Applying...' : 'Rejecting...';
+            }
+
+            try {
+                await ensureCsrfCookie();
+
+                const payload = {
+                    admin_discount_reason: adminDiscountReasonInput?.value?.trim() || null,
+                };
+
+                if (action === 'apply') {
+                    payload.admin_discount_amount = Number(adminDiscountAmountInput?.value || 0);
+                }
+
+                const endpoint = action === 'apply'
+                    ? `/api/admin/quotations/${quotationState.id}/discount`
+                    : `/api/admin/quotations/${quotationState.id}/discount/reject`;
+
+                const response = await fetch(endpoint, {
+                    method: 'PATCH',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') || '',
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                const responseBody = await response.json();
+
+                if (response.status === 422) {
+                    Object.entries(responseBody.errors || {}).forEach(([field, messages]) => {
+                        const errorElement = document.querySelector(`[data-discount-error-for="${field}"]`);
+                        if (errorElement) {
+                            errorElement.textContent = messages[0];
+                        }
+                    });
+
+                    throw new Error(responseBody.message || 'Please review the discount fields.');
+                }
+
+                if (!response.ok) {
+                    throw new Error(responseBody.message || 'Could not review discount request.');
+                }
+
+                quotationState = responseBody.data;
+                lineItemsState = (quotationState.line_items || []).map((item) => normalizeLineItem(item));
+
+                renderSummary();
+                renderDiscountNegotiation();
+                renderLineItems();
+                renderTotals();
+
+                builderSuccess.textContent = responseBody.message || 'Discount review saved successfully.';
+                setVisible(builderSuccess, true);
+            } catch (error) {
+                showError(error.message || 'Could not review discount request.');
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = originalLabel;
+                }
+            }
         }
 
         async function loadBuilder(quotationId) {
@@ -1022,9 +1239,10 @@
                 quotationState = responseBody.data;
                 lineItemsState = (quotationState.line_items || []).map((item) => normalizeLineItem(item));
 
-                renderSummary();
-                renderLineItems();
-                renderTotals();
+	                renderSummary();
+                    renderDiscountNegotiation();
+	                renderLineItems();
+	                renderTotals();
 
                 builderSuccess.textContent = responseBody.message || 'Quotation line items updated successfully.';
                 setVisible(builderSuccess, true);
@@ -1088,6 +1306,14 @@
         });
 
         saveLineItemsButton.addEventListener('click', saveLineItems);
+
+        if (applyDiscountButton) {
+            applyDiscountButton.addEventListener('click', () => submitDiscountReview('apply'));
+        }
+
+        if (rejectDiscountButton) {
+            rejectDiscountButton.addEventListener('click', () => submitDiscountReview('reject'));
+        }
 
         if (initialQuotationId) {
             applyQuotationId(initialQuotationId);

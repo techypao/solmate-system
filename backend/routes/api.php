@@ -83,6 +83,8 @@ Route::middleware(['auth:sanctum', 'verified.email', 'role:admin'])->group(funct
     Route::put('/admin/inspection-requests/{id}/status', [InspectionRequestController::class, 'updateAdminStatus']);
     Route::get('/admin/quotation-settings', [QuotationSettingsController::class, 'show']);
     Route::match(['put', 'patch'], '/admin/quotation-settings', [QuotationSettingsController::class, 'update']);
+    Route::patch('/admin/quotations/{quotation}/discount', [QuotationController::class, 'applyAdminDiscount']);
+    Route::patch('/admin/quotations/{quotation}/discount/reject', [QuotationController::class, 'rejectDiscountRequest']);
     Route::get('/admin/pricing-items', [PricingItemController::class, 'index']);
     Route::post('/admin/pricing-items', [PricingItemController::class, 'store']);
     Route::match(['put', 'patch'], '/admin/pricing-items/{pricingItem}', [PricingItemController::class, 'update']);
@@ -159,6 +161,7 @@ Route::middleware(['auth:sanctum', 'verified.email', 'role:customer'])->group(fu
     Route::delete('/testimonies/{id}', [TestimonyController::class, 'destroy']);
 
     Route::get('/customer/final-quotations/{inspection_request_id}', [QuotationController::class, 'getCustomerFinalQuotation']);
+    Route::post('/customer/final-quotations/{inspection_request_id}/discount-request', [QuotationController::class, 'requestCustomerDiscount']);
     Route::put('/customer/account', [CustomerAccountController::class, 'updateProfile']);
     Route::put('/customer/account/password', [CustomerAccountController::class, 'updatePassword']);
     Route::get('/chat/conversation', [ChatConversationController::class, 'show']);
