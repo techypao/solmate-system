@@ -9,6 +9,11 @@ export type QuotationStatus =
   | 'rejected'
   | 'completed'
   | string;
+export type DiscountRequestStatus =
+  | 'requested'
+  | 'applied'
+  | 'rejected'
+  | string;
 
 export type PricingItemSummary = {
   id: number;
@@ -109,6 +114,16 @@ export type Quotation = {
   applied_promo_id?: number | null;
   promo_discount?: number | string | null;
   applied_promo?: AppliedPromotionSummary | null;
+  discount_request_status?: DiscountRequestStatus | null;
+  discount_request_message?: string | null;
+  discount_requested_at?: string | null;
+  discount_request_resolved_at?: string | null;
+  admin_discount_amount?: number | string | null;
+  admin_discount_reason?: string | null;
+  admin_discount_applied_by?: number | null;
+  admin_discount_applied_at?: string | null;
+  admin_discount_base_total?: number | string | null;
+  has_admin_discount?: boolean | null;
   created_at?: string;
   updated_at?: string;
   customer?: UserSummary | null;
@@ -315,6 +330,18 @@ export async function getPricingCatalog() {
 export async function getCustomerFinalQuotation(inspectionRequestId: number) {
   const response = await apiGet<Quotation | ApiEnvelope<Quotation>>(
     `/customer/final-quotations/${inspectionRequestId}`,
+  );
+
+  return extractEnvelopeData<Quotation>(response, {} as Quotation);
+}
+
+export async function requestCustomerFinalQuotationDiscount(
+  inspectionRequestId: number,
+  payload: {message?: string | null},
+) {
+  const response = await apiPost<Quotation | ApiEnvelope<Quotation>>(
+    `/customer/final-quotations/${inspectionRequestId}/discount-request`,
+    payload,
   );
 
   return extractEnvelopeData<Quotation>(response, {} as Quotation);

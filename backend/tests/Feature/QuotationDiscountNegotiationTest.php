@@ -46,7 +46,18 @@ class QuotationDiscountNegotiationTest extends TestCase
             'discount_request_message' => 'Can we lower this a little?',
         ]);
 
-        Notification::assertSentTo($admin, AdminQuotationDiscountRequestedNotification::class);
+        Notification::assertSentTo(
+            $admin,
+            AdminQuotationDiscountRequestedNotification::class,
+            function (AdminQuotationDiscountRequestedNotification $notification) use ($admin, $quotation): bool {
+                $payload = $notification->toArray($admin);
+
+                return $payload['entity_type'] === 'quotation'
+                    && $payload['entity_id'] === $quotation->id
+                    && $payload['target_screen'] === 'QuotationItemBuilder'
+                    && $payload['target_params']['quotationId'] === $quotation->id;
+            }
+        );
     }
 
     public function test_admin_can_apply_discount_and_customer_gets_updated_total(): void
@@ -121,6 +132,17 @@ class QuotationDiscountNegotiationTest extends TestCase
             ->assertJsonPath('data.labor_cost', 5000)
             ->assertJsonPath('data.admin_discount_amount', '10000.00')
             ->assertJsonPath('data.project_cost', 115000);
+    }
+
+    public function test_admin_notifications_page_contains_quotation_workspace_target_url(): void
+    {
+        $admin = $this->createUser(User::ROLE_ADMIN, 'Admin User');
+
+        $this->actingAs($admin)
+            ->get('/admin/notifications')
+            ->assertOk()
+            ->assertSee('__data_quotationsUrl')
+            ->assertSee('/quotations/item-builder');
     }
 
     private function createUser(string $role, string $name): User

@@ -12,6 +12,8 @@ export const CUSTOMER_NOTIFICATION_ROUTE_NAMES = [
   'ServiceRequestDetail',
   'InspectionRequestList',
   'InspectionRequestDetail',
+  'FinalQuotationView',
+  'QuotationList',
 ] as const;
 
 export const TECHNICIAN_NOTIFICATION_ROUTE_NAMES = [
@@ -66,9 +68,11 @@ export function getCustomerNotificationNavigationTarget(
     toPositiveNumber(targetParams.requestId) ??
     toPositiveNumber(targetParams.serviceRequestId) ??
     entityId;
+  const targetInspectionRequestId = toPositiveNumber(
+    targetParams.inspectionRequestId,
+  );
   const inspectionRequestId =
-    toPositiveNumber(targetParams.inspectionRequestId) ?? entityId;
-  const quotationId = toPositiveNumber(targetParams.quotationId) ?? entityId;
+    targetInspectionRequestId ?? entityId;
 
   switch (targetScreen) {
     case 'CustomerRequestDetails':
@@ -89,12 +93,15 @@ export function getCustomerNotificationNavigationTarget(
           }
         : {routeName: 'InspectionRequestList'};
     case 'CustomerFinalQuotationDetails':
-      return inspectionRequestId
+      return targetInspectionRequestId
         ? {
-            routeName: 'InspectionRequestDetail',
-            params: {inspectionRequestId},
+            routeName: 'FinalQuotationView',
+            params: {inspectionRequestId: targetInspectionRequestId},
           }
-        : {routeName: 'InspectionRequestList'};
+        : {
+            routeName: 'QuotationList',
+            params: {initialFilter: 'final', lockFilter: true},
+          };
     default:
       break;
   }
@@ -118,12 +125,15 @@ export function getCustomerNotificationNavigationTarget(
           }
         : {routeName: 'InspectionRequestList'};
     case 'quotation':
-      return inspectionRequestId
+      return targetInspectionRequestId
         ? {
-            routeName: 'InspectionRequestDetail',
-            params: {inspectionRequestId},
+            routeName: 'FinalQuotationView',
+            params: {inspectionRequestId: targetInspectionRequestId},
           }
-        : {routeName: 'InspectionRequestList'};
+        : {
+            routeName: 'QuotationList',
+            params: {initialFilter: 'final', lockFilter: true},
+          };
     default:
       return {routeName: 'Home'};
   }

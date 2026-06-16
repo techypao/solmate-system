@@ -5,6 +5,7 @@
     <script type="application/json" id="__data_testimoniesUrl">@json($testimoniesUrl)</script>
     <script type="application/json" id="__data_adminChatUrl">@json($adminChatUrl)</script>
     <script type="application/json" id="__data_customersUrl">@json($customersUrl)</script>
+    <script type="application/json" id="__data_quotationsUrl">@json($quotationsUrl)</script>
     <style>
         .notification-summary-card {
             display: flex;
@@ -216,7 +217,7 @@
         <div class="section-header">
             <div>
                 <h2 class="admin-section-title">Latest notifications</h2>
-                <p class="page-copy" style="margin-bottom: 0;">Click a notification to mark it as read and open the related admin request assignment record.</p>
+                <p class="page-copy" style="margin-bottom: 0;">Click a notification to mark it as read and open the related admin workspace.</p>
             </div>
         </div>
 
@@ -245,6 +246,7 @@
         const testimoniesUrl = JSON.parse(document.getElementById('__data_testimoniesUrl').textContent);
         const adminChatUrl = JSON.parse(document.getElementById('__data_adminChatUrl').textContent);
         const customersUrl = JSON.parse(document.getElementById('__data_customersUrl').textContent);
+        const quotationsUrl = JSON.parse(document.getElementById('__data_quotationsUrl').textContent);
         let notificationsState = [];
         let deletingAllNotifications = false;
         let deletingNotificationId = null;
@@ -417,6 +419,19 @@
                 return Number.isFinite(customerId) && customerId > 0
                     ? `${customersUrl}#customer-${customerId}`
                     : customersUrl;
+            }
+
+            if (notification?.target_screen === 'QuotationItemBuilder' || notification?.entity_type === 'quotation') {
+                const quotationId = Number(targetParams.quotationId ?? notification?.entity_id);
+
+                if (Number.isFinite(quotationId) && quotationId > 0) {
+                    const url = new URL(quotationsUrl, window.location.origin);
+                    url.searchParams.set('quotation_id', String(quotationId));
+
+                    return url.toString();
+                }
+
+                return quotationsUrl;
             }
 
             return requestAssignmentsUrl;

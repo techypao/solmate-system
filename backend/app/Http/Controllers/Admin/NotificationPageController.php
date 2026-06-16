@@ -17,6 +17,7 @@ class NotificationPageController extends Controller
             'testimoniesUrl' => route('admin.testimonies'),
             'adminChatUrl' => route('admin.chat'),
             'customersUrl' => route('admin.customers'),
+            'quotationsUrl' => route('quotations.item-builder'),
         ]);
     }
 }

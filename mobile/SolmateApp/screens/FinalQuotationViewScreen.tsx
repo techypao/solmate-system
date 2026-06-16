@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
@@ -17,6 +18,7 @@ import {
   getCustomerFinalQuotation,
   Quotation,
   QuotationLineItem,
+  requestCustomerFinalQuotationDiscount,
 } from '../src/services/quotationApi';
 import {formatQuotationCurrency} from '../src/utils/currency';
 
@@ -143,6 +145,48 @@ function hasAppliedPromo(quotation: Quotation) {
   return Boolean(quotation.applied_promo || quotation.applied_promo_id || (promoDiscount && promoDiscount > 0));
 }
 
+function getAdminDiscountAmount(quotation: Quotation) {
+  const discountAmount = toFiniteNumber(quotation.admin_discount_amount);
+  return discountAmount && discountAmount > 0 ? discountAmount : 0;
+}
+
+function getAdminDiscountBaseTotal(quotation: Quotation) {
+  const explicitBaseTotal = toFiniteNumber(quotation.admin_discount_base_total);
+
+  if (explicitBaseTotal !== null) {
+    return explicitBaseTotal;
+  }
+
+  const projectCost = toFiniteNumber(quotation.project_cost) ?? 0;
+  return projectCost + getAdminDiscountAmount(quotation);
+}
+
+function formatDiscountRequestStatus(status?: string | null) {
+  switch ((status || '').toLowerCase()) {
+    case 'requested':
+      return 'Pending admin review';
+    case 'applied':
+      return 'Discount applied';
+    case 'rejected':
+      return 'Reviewed by admin';
+    default:
+      return 'No request yet';
+  }
+}
+
+function getDiscountRequestCopy(status?: string | null) {
+  switch ((status || '').toLowerCase()) {
+    case 'requested':
+      return 'Your request has been sent. Admin will review this quotation and update the total if approved.';
+    case 'applied':
+      return 'Admin approved the request and updated the quotation total.';
+    case 'rejected':
+      return 'Admin reviewed the request. You can send another request if you still want to discuss the total.';
+    default:
+      return 'Send a discount request to admin if you want to bargain for this inspection-based quotation.';
+  }
+}
+
 function getFriendlyErrorMessage(error: unknown) {
   if (error instanceof ApiError) {
     if (error.status === 404) {
@@ -216,6 +260,9 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
   const [quotation, setQuotation] = useState<Quotation | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [discountMessage, setDiscountMessage] = useState('');
+  const [discountSubmitting, setDiscountSubmitting] = useState(false);
+  const [discountErrorMessage, setDiscountErrorMessage] = useState('');
 
   const loadQuotation = useCallback(
     async (showLoadingState = false) => {
@@ -230,6 +277,8 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
         setErrorMessage('');
         const data = await getCustomerFinalQuotation(inspectionRequestId);
         setQuotation(data);
+        setDiscountMessage(data.discount_request_message || '');
+        setDiscountErrorMessage('');
       } catch (error) {
         setQuotation(null);
         setErrorMessage(getFriendlyErrorMessage(error));
@@ -288,6 +337,44 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
   const handleSave = () => {
     Alert.alert('Saved', 'Quotation saved to your history.');
   };
+
+  const handleRequestDiscount = async () => {
+    if (!inspectionRequestId || discountSubmitting) {
+      return;
+    }
+
+    try {
+      setDiscountSubmitting(true);
+      setDiscountErrorMessage('');
+
+      const message = discountMessage.trim();
+      const updatedQuotation = await requestCustomerFinalQuotationDiscount(
+        inspectionRequestId,
+        {
+          message: message.length > 0 ? message : null,
+        },
+      );
+
+      setQuotation(updatedQuotation);
+      setDiscountMessage(updatedQuotation.discount_request_message || message);
+      Alert.alert(
+        'Request sent',
+        'Admin has been notified about your discount request.',
+      );
+    } catch (error) {
+      const message = getFriendlyErrorMessage(error);
+      setDiscountErrorMessage(message);
+      Alert.alert('Request failed', message);
+    } finally {
+      setDiscountSubmitting(false);
+    }
+  };
+
+  const adminDiscountAmount = getAdminDiscountAmount(quotation);
+  const hasAdminDiscount = adminDiscountAmount > 0;
+  const discountRequestStatus = quotation.discount_request_status || null;
+  const normalizedDiscountRequestStatus = (discountRequestStatus || '').toLowerCase();
+  const isDiscountRequestPending = normalizedDiscountRequestStatus === 'requested';
 
   /* ── render ── */
 
@@ -467,12 +554,33 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
               />
             </>
           ) : null}
-          <InfoRow
-            label="Total Project Cost"
-            value={fmtCurrency(quotation.project_cost)}
-            bold
-            highlight
-          />
+          {hasAdminDiscount ? (
+            <>
+              <InfoRow
+                label="Original Total"
+                value={fmtCurrency(getAdminDiscountBaseTotal(quotation))}
+                bold
+              />
+              <InfoRow
+                label="Admin Discount"
+                value={'-' + fmtCurrency(adminDiscountAmount)}
+                bold
+              />
+              <InfoRow
+                label="Updated Total Project Cost"
+                value={fmtCurrency(quotation.project_cost)}
+                bold
+                highlight
+              />
+            </>
+          ) : (
+            <InfoRow
+              label="Total Project Cost"
+              value={fmtCurrency(quotation.project_cost)}
+              bold
+              highlight
+            />
+          )}
 
           {/* divider before savings */}
           <View style={s.sectionDivider} />
@@ -488,6 +596,79 @@ export default function FinalQuotationViewScreen({navigation, route}: any) {
             bold
           />
           <InfoRow label="ROI / Payback Period" value={fmtYears(quotation.roi_years)} bold />
+        </SectionCard>
+
+        {/* ── Discount Request ── */}
+        <SectionCard title="Discount Request">
+          <View style={s.discountStatusBox}>
+            <Text style={s.discountStatusTitle}>
+              {formatDiscountRequestStatus(discountRequestStatus)}
+            </Text>
+            <Text style={s.discountStatusText}>
+              {getDiscountRequestCopy(discountRequestStatus)}
+            </Text>
+          </View>
+
+          {quotation.discount_request_message ? (
+            <InfoRow
+              label="Your Message"
+              value={formatReadableText(quotation.discount_request_message)}
+            />
+          ) : null}
+
+          {quotation.admin_discount_reason ? (
+            <InfoRow
+              label="Admin Note"
+              value={formatReadableText(quotation.admin_discount_reason)}
+            />
+          ) : null}
+
+          {quotation.discount_requested_at ? (
+            <InfoRow
+              label="Requested"
+              value={formatDate(quotation.discount_requested_at)}
+            />
+          ) : null}
+
+          {quotation.discount_request_resolved_at ? (
+            <InfoRow
+              label="Reviewed"
+              value={formatDate(quotation.discount_request_resolved_at)}
+            />
+          ) : null}
+
+          <TextInput
+            value={discountMessage}
+            onChangeText={setDiscountMessage}
+            editable={!discountSubmitting}
+            multiline
+            maxLength={1000}
+            placeholder="Optional message for admin"
+            placeholderTextColor={MUTED}
+            style={s.textArea}
+            textAlignVertical="top"
+          />
+
+          {discountErrorMessage ? (
+            <Text style={s.formError}>{discountErrorMessage}</Text>
+          ) : null}
+
+          <Pressable
+            disabled={discountSubmitting || isDiscountRequestPending}
+            onPress={handleRequestDiscount}
+            style={({pressed}) => [
+              s.primaryBtn,
+              (discountSubmitting || isDiscountRequestPending) && s.primaryBtnDisabled,
+              pressed && s.pressed,
+            ]}>
+            <Text style={s.primaryBtnText}>
+              {discountSubmitting
+                ? 'Sending...'
+                : isDiscountRequestPending
+                  ? 'Request Sent'
+                  : 'Request Discount'}
+            </Text>
+          </Pressable>
         </SectionCard>
 
         {/* ── 6. Itemized Line Items ── */}
@@ -688,6 +869,47 @@ const s = StyleSheet.create({
     color: NAVY,
     fontSize: 14,
     lineHeight: 22,
+  },
+
+  /* discount request */
+  discountStatusBox: {
+    backgroundColor: '#f7f9fc',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: DIVIDER,
+    padding: 14,
+    marginBottom: 12,
+  },
+  discountStatusTitle: {
+    color: NAVY,
+    fontSize: 14,
+    fontWeight: '900',
+    marginBottom: 4,
+  },
+  discountStatusText: {
+    color: MUTED,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  textArea: {
+    minHeight: 104,
+    borderWidth: 1,
+    borderColor: DIVIDER,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    color: NAVY,
+    fontSize: 14,
+    lineHeight: 20,
+    backgroundColor: '#f7f9fc',
+    marginTop: 12,
+    marginBottom: 10,
+  },
+  formError: {
+    color: '#dc2626',
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 8,
   },
 
   /* primary button */
