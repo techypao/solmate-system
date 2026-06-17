@@ -182,6 +182,32 @@ class ChatConversationApiTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_on_grid_or_hybrid_suggestion_returns_comparison_answer(): void
+    {
+        config()->set('services.gemini.api_key', 'test-key');
+        Http::fake();
+
+        $customer = $this->createUser(User::ROLE_CUSTOMER, 'chat_customer_on_grid_or_hybrid@example.com');
+        Sanctum::actingAs($customer);
+
+        $hybridResponse = $this->postJson('/api/chat/conversation/messages', [
+            'message' => 'What is a hybrid solar system?',
+        ]);
+
+        $hybridResponse->assertOk()
+            ->assertJsonPath('messages.1.body', 'A hybrid solar system combines solar panels with battery storage. It can use solar power during the day and stored energy when needed.')
+            ->assertJsonPath('messages.1.metadata.suggestions.1', 'On-grid vs hybrid?');
+
+        $comparisonResponse = $this->postJson('/api/chat/conversation/messages', [
+            'message' => 'On-grid or hybrid?',
+        ]);
+
+        $comparisonResponse->assertOk()
+            ->assertJsonPath('messages.3.body', 'An on-grid system connects to the utility grid, while a hybrid system also includes battery storage. Hybrid setups can offer more backup flexibility, but they are usually more expensive.');
+
+        Http::assertNothingSent();
+    }
+
     public function test_customer_can_trigger_admin_escalation_with_human_keywords(): void
     {
         Notification::fake();

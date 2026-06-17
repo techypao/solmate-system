@@ -171,7 +171,7 @@ class ChatbotReplyService
         ],
         'solar_hybrid' => [
             'answer' => 'A hybrid solar system combines solar panels with battery storage. It can use solar power during the day and stored energy when needed.',
-            'suggestions' => ['What does a battery do?', 'On-grid or hybrid?', 'Why does inspection matter?'],
+            'suggestions' => ['What does a battery do?', 'On-grid vs hybrid?', 'Why does inspection matter?'],
         ],
         'solar_on_grid_vs_hybrid' => [
             'answer' => 'An on-grid system connects to the utility grid, while a hybrid system also includes battery storage. Hybrid setups can offer more backup flexibility, but they are usually more expensive.',
@@ -207,7 +207,7 @@ class ChatbotReplyService
         'solar_inverter' => ['inverter'],
         'solar_battery' => ['battery', 'batteries', 'solar storage'],
         'solar_hybrid' => ['hybrid solar', 'hybrid system'],
-        'solar_on_grid_vs_hybrid' => ['on-grid vs hybrid', 'on grid vs hybrid', 'on-grid and hybrid', 'on grid and hybrid'],
+        'solar_on_grid_vs_hybrid' => ['on-grid vs hybrid', 'on grid vs hybrid', 'on-grid or hybrid', 'on grid or hybrid', 'on-grid and hybrid', 'on grid and hybrid'],
     ];
 
     private const SYSTEM_INSTRUCTION = <<<'TEXT'
