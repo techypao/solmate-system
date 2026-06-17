@@ -1,5 +1,7 @@
 import Config from 'react-native-config';
 
+// Legacy direct-Gemini client. The active customer chat uses the backend
+// support chat API so SolBot behavior and API keys stay server-owned.
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_API_URL =
   `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;

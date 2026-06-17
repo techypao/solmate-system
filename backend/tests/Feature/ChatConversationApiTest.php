@@ -18,12 +18,16 @@ class ChatConversationApiTest extends TestCase
 
     private function createUser(string $role, string $email): User
     {
-        return User::query()->create([
+        $user = User::query()->create([
             'name' => ucfirst($role).' User',
             'email' => $email,
             'password' => 'password123',
             'role' => $role,
         ]);
+
+        $user->forceFill(['email_verified_at' => now()])->save();
+
+        return $user;
     }
 
     public function test_customer_message_uses_bot_reply_by_default(): void
@@ -56,6 +60,54 @@ class ChatConversationApiTest extends TestCase
             ->assertJsonPath('messages.1.body', 'You can request an inspection from the customer dashboard.');
     }
 
+    public function test_gemini_receives_short_recent_context_for_follow_up_questions(): void
+    {
+        config()->set('services.gemini.api_key', 'test-key');
+
+        Http::fake([
+            'https://generativelanguage.googleapis.com/*' => Http::response([
+                'candidates' => [[
+                    'content' => [
+                        'parts' => [[
+                            'text' => '{"answer":"Solar benefits usually mean lower bills and better long-term value, depending on usage and site conditions.","suggestions":["What affects solar savings?","Why does inspection matter?"]}',
+                        ]],
+                    ],
+                ]],
+            ]),
+        ]);
+
+        $customer = $this->createUser(User::ROLE_CUSTOMER, 'chat_customer_memory@example.com');
+        $conversation = ChatConversation::query()->create([
+            'customer_user_id' => $customer->id,
+            'status' => ChatConversation::STATUS_BOT,
+            'last_message_at' => now(),
+        ]);
+        $conversation->messages()->create([
+            'sender_user_id' => $customer->id,
+            'sender_type' => 'user',
+            'body' => 'What is ROI?',
+        ]);
+        $conversation->messages()->create([
+            'sender_type' => 'bot',
+            'body' => 'ROI means the value you get back from solar through bill savings compared with the system cost.',
+        ]);
+
+        Sanctum::actingAs($customer);
+
+        $this->postJson('/api/chat/conversation/messages', [
+            'message' => 'Can you explain that solar benefit in simpler words?',
+        ])->assertOk()
+            ->assertJsonPath('messages.3.body', 'Solar benefits usually mean lower bills and better long-term value, depending on usage and site conditions.');
+
+        Http::assertSent(function ($request) {
+            $text = $request->data()['contents'][0]['parts'][0]['text'] ?? '';
+
+            return str_contains($text, 'Recent chat context for follow-up understanding only:')
+                && str_contains($text, 'Customer: What is ROI?')
+                && str_contains($text, 'SolBot: ROI means the value you get back from solar through bill savings compared with the system cost.');
+        });
+    }
+
     public function test_known_quotation_question_uses_exact_faq_mapping_before_gemini(): void
     {
         config()->set('services.gemini.api_key', 'test-key');
@@ -84,6 +136,26 @@ class ChatConversationApiTest extends TestCase
             ->assertJsonPath('messages.1.sender_type', 'bot')
             ->assertJsonPath('messages.1.body', 'You can request a quotation by creating a pre-inspection estimate in the customer app. After inspection, the technician prepares the inspection-based quotation with the final technical details.')
             ->assertJsonPath('messages.1.metadata.suggestions.0', 'What is a pre-inspection estimate?');
+
+        Http::assertNothingSent();
+    }
+
+    public function test_reworded_quotation_question_uses_local_topic_matching_before_gemini(): void
+    {
+        config()->set('services.gemini.api_key', 'test-key');
+        Http::fake();
+
+        $customer = $this->createUser(User::ROLE_CUSTOMER, 'chat_customer_fuzzy_quotation@example.com');
+        Sanctum::actingAs($customer);
+
+        $response = $this->postJson('/api/chat/conversation/messages', [
+            'message' => 'How can I get a quote for solar?',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('conversation.status', ChatConversation::STATUS_BOT)
+            ->assertJsonPath('messages.1.sender_type', 'bot')
+            ->assertJsonPath('messages.1.body', 'You can request a quotation by creating a pre-inspection estimate in the customer app. After inspection, the technician prepares the inspection-based quotation with the final technical details.');
 
         Http::assertNothingSent();
     }
@@ -159,6 +231,107 @@ class ChatConversationApiTest extends TestCase
             ->assertJsonPath('conversation.is_awaiting_admin', false)
             ->assertJsonPath('messages.1.sender_type', 'bot')
             ->assertJsonPath('messages.1.body', 'Awaiting admin approval means an admin still needs to review the request before it moves forward.');
+    }
+
+    public function test_account_specific_status_questions_are_redirected_without_live_data_claims(): void
+    {
+        config()->set('services.gemini.api_key', 'test-key');
+        Http::fake();
+
+        $customer = $this->createUser(User::ROLE_CUSTOMER, 'chat_customer_account_specific@example.com');
+        Sanctum::actingAs($customer);
+
+        $response = $this->postJson('/api/chat/conversation/messages', [
+            'message' => 'Can you check my quotation status?',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('conversation.status', ChatConversation::STATUS_BOT)
+            ->assertJsonPath('conversation.is_awaiting_admin', false)
+            ->assertJsonPath('messages.1.sender_type', 'bot')
+            ->assertJsonPath('messages.1.body', 'I cannot view live account records or check your actual request, quotation, or notification status. Please open the related SolMate screen for updates, or ask an admin if you need help with a specific record.')
+            ->assertJsonPath('messages.1.metadata.admin_handoff_reason', 'account_specific')
+            ->assertJsonPath('messages.1.metadata.admin_handoff_label', 'Account-specific help');
+
+        Http::assertNothingSent();
+    }
+
+    public function test_admin_handoff_reason_is_preserved_when_customer_accepts_account_specific_help(): void
+    {
+        Notification::fake();
+        config()->set('services.gemini.api_key', 'test-key');
+        Http::fake();
+
+        $customer = $this->createUser(User::ROLE_CUSTOMER, 'chat_customer_account_reason@example.com');
+        $admin = $this->createUser(User::ROLE_ADMIN, 'chat_admin_account_reason@example.com');
+        Sanctum::actingAs($customer);
+
+        $this->postJson('/api/chat/conversation/messages', [
+            'message' => 'Can you check my quotation status?',
+        ])->assertOk();
+
+        $response = $this->postJson('/api/chat/conversation/messages', [
+            'message' => 'Talk to a real admin',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('conversation.status', ChatConversation::STATUS_ADMIN)
+            ->assertJsonPath('conversation.is_awaiting_admin', true)
+            ->assertJsonPath('messages.3.sender_type', 'system')
+            ->assertJsonPath('messages.3.metadata.reason', 'account_specific')
+            ->assertJsonPath('messages.3.metadata.reason_label', 'Account-specific help');
+
+        Sanctum::actingAs($admin);
+
+        $this->getJson('/api/admin/chat/conversations')
+            ->assertOk()
+            ->assertJsonPath('conversations.0.escalation_reason', 'account_specific')
+            ->assertJsonPath('conversations.0.escalation_reason_label', 'Account-specific help');
+
+        Notification::assertSentTo($admin, AdminChatEscalationRequestedNotification::class);
+        Http::assertNothingSent();
+    }
+
+    public function test_technical_sizing_questions_require_inspection_without_gemini(): void
+    {
+        config()->set('services.gemini.api_key', 'test-key');
+        Http::fake();
+
+        $customer = $this->createUser(User::ROLE_CUSTOMER, 'chat_customer_technical_safety@example.com');
+        Sanctum::actingAs($customer);
+
+        $response = $this->postJson('/api/chat/conversation/messages', [
+            'message' => 'How many panels do I need and what size system should I install?',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('conversation.status', ChatConversation::STATUS_BOT)
+            ->assertJsonPath('conversation.is_awaiting_admin', false)
+            ->assertJsonPath('messages.1.sender_type', 'bot')
+            ->assertJsonPath('messages.1.body', 'For exact system sizing, wiring, safety, or installation decisions, a technician needs to inspect the site first. I can explain the general SolMate process, but final technical guidance should come from the inspection and technician assessment.');
+
+        Http::assertNothingSent();
+    }
+
+    public function test_non_energy_solar_system_questions_are_out_of_scope_without_gemini(): void
+    {
+        config()->set('services.gemini.api_key', 'test-key');
+        Http::fake();
+
+        $customer = $this->createUser(User::ROLE_CUSTOMER, 'chat_customer_planets_out_of_scope@example.com');
+        Sanctum::actingAs($customer);
+
+        $response = $this->postJson('/api/chat/conversation/messages', [
+            'message' => 'Tell me about solar system planets.',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('conversation.status', ChatConversation::STATUS_BOT)
+            ->assertJsonPath('conversation.is_awaiting_admin', false)
+            ->assertJsonPath('messages.1.sender_type', 'bot')
+            ->assertJsonPath('messages.1.body', "I'm not sure about that, but I can connect you to an admin if you'd like.");
+
+        Http::assertNothingSent();
     }
 
     public function test_scope_fallback_reply_offers_admin_without_escalating(): void

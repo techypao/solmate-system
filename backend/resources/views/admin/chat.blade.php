@@ -108,6 +108,15 @@
             font-weight: 600;
         }
 
+        .support-chat-thread-reason,
+        .support-chat-banner-reason {
+            color: #9a3412;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
         .support-chat-thread-preview {
             color: #425972;
             font-size: 14px;
@@ -499,6 +508,7 @@
                 const waiting = conversation.is_awaiting_admin;
                 const badgeClass = waiting ? 'waiting' : conversation.status === 'admin' ? 'admin' : 'bot';
                 const badgeLabel = waiting ? 'Waiting' : conversation.status === 'admin' ? 'Admin' : 'Bot';
+                const reasonLabel = conversation.escalation_reason_label;
 
                 return `<button type="button" class="support-chat-thread-button ${active ? 'active' : ''} ${waiting ? 'waiting' : ''}" data-conversation-id="${conversation.id}">
                     <div class="support-chat-thread-top">
@@ -506,6 +516,7 @@
                         <span class="support-chat-badge ${badgeClass}">${badgeLabel}</span>
                     </div>
                     <div class="support-chat-thread-meta">${escapeHtml(conversation.customer?.email || '')}</div>
+                    ${reasonLabel ? `<div class="support-chat-thread-reason">${escapeHtml(reasonLabel)}</div>` : ''}
                     <div class="support-chat-thread-preview">${escapeHtml(conversation.latest_message || 'No messages yet.')}</div>
                 </button>`;
             }).join('');
@@ -543,11 +554,11 @@
 
             if (conversation.is_awaiting_admin) {
                 adminChatBanner.className = 'support-chat-banner waiting';
-                adminChatBanner.textContent = 'This conversation has been escalated and is waiting for an admin to take over. SolBot is already paused.';
+                adminChatBanner.innerHTML = `${conversation.escalation_reason_label ? `<div class="support-chat-banner-reason">${escapeHtml(conversation.escalation_reason_label)}</div>` : ''}<div>This conversation has been escalated and is waiting for an admin to take over. SolBot is already paused.</div>`;
                 setVisible(adminChatBanner, true);
             } else if (conversation.admin) {
                 adminChatBanner.className = 'support-chat-banner admin';
-                adminChatBanner.textContent = `${conversation.admin.name} is currently assigned to this conversation.`;
+                adminChatBanner.innerHTML = `${conversation.escalation_reason_label ? `<div class="support-chat-banner-reason">${escapeHtml(conversation.escalation_reason_label)}</div>` : ''}<div>${escapeHtml(conversation.admin.name)} is currently assigned to this conversation.</div>`;
                 setVisible(adminChatBanner, true);
             } else {
                 setVisible(adminChatBanner, false);

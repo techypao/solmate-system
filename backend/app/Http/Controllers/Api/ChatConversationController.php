@@ -14,8 +14,7 @@ class ChatConversationController extends Controller
 {
     public function __construct(
         private readonly ChatbotConversationService $conversationService,
-    ) {
-    }
+    ) {}
 
     public function show(Request $request): JsonResponse
     {
@@ -43,8 +42,15 @@ class ChatConversationController extends Controller
     {
         /** @var User $customer */
         $customer = $request->user();
+        $validated = $request->validate([
+            'reason' => ['sometimes', 'string', 'max:80'],
+        ]);
         $conversation = $this->conversationService->getOrCreateForCustomer($customer);
-        $conversation = $this->conversationService->requestAdminTakeover($conversation, $customer);
+        $conversation = $this->conversationService->requestAdminTakeover(
+            $conversation,
+            $customer,
+            $validated['reason'] ?? 'manual_escalation',
+        );
 
         return response()->json($this->serializeConversation($conversation));
     }

@@ -34,20 +34,30 @@ type ChatMessage = {
   suggestionsEnabled?: boolean;
 };
 
+type QuickHelpItem = {
+  title: string;
+  subtitle: string;
+} & (
+  | {action: 'message'; prompt: string}
+  | {action: 'admin'; reason: string}
+);
+
 const NAVY = '#1A2B55';
 const GOLD = '#F5C000';
 const MUTED = '#6B7A99';
 const BG = '#C8D8F0';
 const CARD = '#ffffff';
 
-const QUICK_HELP = [
-  {title: 'FAQ', subtitle: 'Common questions and answers.', prompt: 'What are the frequently asked questions?'},
-  {title: 'Guide on Quotation', subtitle: 'How to generate initial/final quotes.', prompt: 'How do I create a quotation?'},
-  {title: 'ROI Explanation', subtitle: 'Understand payback and savings.', prompt: 'Can you explain ROI for solar panels?'},
+const QUICK_HELP: QuickHelpItem[] = [
+  {title: 'Quotation', subtitle: 'Estimates, final quotation, and next steps.', action: 'message', prompt: 'How do quotations work?'},
+  {title: 'Inspection', subtitle: 'Site checks and technician assessment.', action: 'message', prompt: 'Why is inspection important?'},
+  {title: 'ROI', subtitle: 'Payback, savings, and solar value.', action: 'message', prompt: 'Can you explain ROI for solar panels?'},
+  {title: 'Service Request', subtitle: 'Maintenance, installation, and support concerns.', action: 'message', prompt: 'When should I use a service request?'},
+  {title: 'Talk to Admin', subtitle: 'Ask a real admin to continue this chat.', action: 'admin', reason: 'customer_quick_help'},
 ];
 
 const WELCOME_TEXT = 'Hi! I\'m SolBot';
-const WELCOME_SUB = 'Ask about quotation, ROI or any solar related.';
+const WELCOME_SUB = 'Ask about SolMate quotations, inspections, service requests, ROI, or basic solar topics.';
 
 const INITIAL_MESSAGES: ChatMessage[] = [];
 
@@ -285,14 +295,14 @@ export default function ChatbotScreen({navigation}: any) {
     sendMessage(suggestion);
   }, [sendMessage]);
 
-  const requestAdminTakeover = useCallback(async () => {
+  const requestAdminTakeover = useCallback(async (reason = 'manual_escalation') => {
     if (isSending || conversation?.is_admin_active) {
       return;
     }
 
     try {
       setIsSending(true);
-      const payload = await requestSupportAdminTakeover();
+      const payload = await requestSupportAdminTakeover(reason);
 
       if (!isMountedRef.current) {
         return;
@@ -307,6 +317,15 @@ export default function ChatbotScreen({navigation}: any) {
       }
     }
   }, [applyConversationPayload, conversation?.is_admin_active, isSending]);
+
+  const handleQuickHelpPress = useCallback((item: QuickHelpItem) => {
+    if (item.action === 'admin') {
+      requestAdminTakeover(item.reason);
+      return;
+    }
+
+    sendMessage(item.prompt);
+  }, [requestAdminTakeover, sendMessage]);
 
   useEffect(() => {
     const timer = setTimeout(() => listRef.current?.scrollToEnd({animated: true}), 40);
@@ -383,7 +402,7 @@ export default function ChatbotScreen({navigation}: any) {
                   <Pressable
                     key={item.title}
                     disabled={isSending}
-                    onPress={() => sendMessage(item.prompt)}
+                    onPress={() => handleQuickHelpPress(item)}
                     style={({pressed}) => [cs.quickCard, pressed && cs.pressed]}>
                     <View style={cs.quickCardInner}>
                       <Text style={cs.quickCardTitle}>{item.title}</Text>
@@ -426,7 +445,7 @@ export default function ChatbotScreen({navigation}: any) {
               <Pressable
                 accessibilityRole="button"
                 disabled={isSending || isAwaitingAdmin}
-                onPress={requestAdminTakeover}
+                onPress={() => requestAdminTakeover()}
                 style={({pressed}) => [
                   cs.escalateBtn,
                   (isSending || isAwaitingAdmin) && cs.escalateBtnDisabled,

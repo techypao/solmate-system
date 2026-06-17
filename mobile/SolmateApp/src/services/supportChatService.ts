@@ -24,6 +24,8 @@ export type SupportChatConversationPayload = {
     customer?: {id: number; name: string} | null;
     admin?: {id: number; name: string} | null;
     escalated_at?: string | null;
+    escalation_reason?: string | null;
+    escalation_reason_label?: string | null;
     admin_joined_at?: string | null;
     last_message_at?: string | null;
   };
@@ -40,6 +42,8 @@ export function sendSupportMessage(message: string) {
   });
 }
 
-export function requestSupportAdminTakeover() {
-  return apiPost<SupportChatConversationPayload>('/chat/conversation/escalate');
+export function requestSupportAdminTakeover(reason = 'manual_escalation') {
+  return apiPost<SupportChatConversationPayload>('/chat/conversation/escalate', {
+    reason,
+  });
 }

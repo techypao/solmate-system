@@ -13,8 +13,7 @@ class AdminChatConversationController extends Controller
 {
     public function __construct(
         private readonly ChatbotConversationService $conversationService,
-    ) {
-    }
+    ) {}
 
     public function index(): JsonResponse
     {
@@ -25,23 +24,29 @@ class AdminChatConversationController extends Controller
             ->get();
 
         return response()->json([
-            'conversations' => $conversations->map(fn (ChatConversation $conversation) => [
-                'id' => $conversation->id,
-                'status' => $conversation->status,
-                'is_awaiting_admin' => $conversation->isAwaitingAdmin(),
-                'customer' => [
-                    'id' => $conversation->customer?->id,
-                    'name' => $conversation->customer?->name,
-                    'email' => $conversation->customer?->email,
-                ],
-                'admin' => $conversation->admin ? [
-                    'id' => $conversation->admin->id,
-                    'name' => $conversation->admin->name,
-                ] : null,
-                'latest_message' => $conversation->messages->first()?->body,
-                'latest_sender_type' => $conversation->messages->first()?->sender_type,
-                'last_message_at' => $conversation->last_message_at?->toIso8601String(),
-            ])->values(),
+            'conversations' => $conversations->map(function (ChatConversation $conversation) {
+                $escalation = $this->latestEscalationMetadata($conversation);
+
+                return [
+                    'id' => $conversation->id,
+                    'status' => $conversation->status,
+                    'is_awaiting_admin' => $conversation->isAwaitingAdmin(),
+                    'customer' => [
+                        'id' => $conversation->customer?->id,
+                        'name' => $conversation->customer?->name,
+                        'email' => $conversation->customer?->email,
+                    ],
+                    'admin' => $conversation->admin ? [
+                        'id' => $conversation->admin->id,
+                        'name' => $conversation->admin->name,
+                    ] : null,
+                    'latest_message' => $conversation->messages->first()?->body,
+                    'latest_sender_type' => $conversation->messages->first()?->sender_type,
+                    'escalation_reason' => $escalation['reason'] ?? null,
+                    'escalation_reason_label' => $escalation['reason_label'] ?? null,
+                    'last_message_at' => $conversation->last_message_at?->toIso8601String(),
+                ];
+            })->values(),
         ]);
     }
 
@@ -80,6 +85,8 @@ class AdminChatConversationController extends Controller
      */
     private function serializeConversation(ChatConversation $conversation): array
     {
+        $escalation = $this->latestEscalationMetadata($conversation);
+
         return [
             'conversation' => [
                 'id' => $conversation->id,
@@ -96,6 +103,8 @@ class AdminChatConversationController extends Controller
                     'name' => $conversation->admin->name,
                 ] : null,
                 'escalated_at' => $conversation->escalated_at?->toIso8601String(),
+                'escalation_reason' => $escalation['reason'] ?? null,
+                'escalation_reason_label' => $escalation['reason_label'] ?? null,
                 'admin_joined_at' => $conversation->admin_joined_at?->toIso8601String(),
                 'last_message_at' => $conversation->last_message_at?->toIso8601String(),
             ],
@@ -107,6 +116,25 @@ class AdminChatConversationController extends Controller
                 'metadata' => $message->metadata ?? [],
                 'created_at' => $message->created_at?->toIso8601String(),
             ])->values(),
+        ];
+    }
+
+    /**
+     * @return array{reason?: string|null, reason_label?: string|null}
+     */
+    private function latestEscalationMetadata(ChatConversation $conversation): array
+    {
+        $message = $conversation->messages()
+            ->where('sender_type', ChatMessage::SENDER_SYSTEM)
+            ->where('metadata->event', 'escalated')
+            ->latest('id')
+            ->first();
+
+        $metadata = is_array($message?->metadata) ? $message->metadata : [];
+
+        return [
+            'reason' => $metadata['reason'] ?? null,
+            'reason_label' => $metadata['reason_label'] ?? null,
         ];
     }
 }
