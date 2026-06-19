@@ -309,7 +309,7 @@
             <h2 class="appdl-card-title">Direct Download</h2>
             <p class="appdl-card-copy">If you are already on your Android phone, tap the button below to open the APK download file.</p>
             <div class="appdl-actions">
-                <a href="https://drive.google.com/file/d/1But4_f2XMylhKfZG6fo_188jSbNdZ8sG/view?usp=sharing" class="appdl-btn" target="_blank" rel="noopener">Download APK</a>
+                <a href="https://drive.google.com/file/d/1GJZ8vnPeRArP8Z-NIpB74woOYsEq3qA6/view?usp=sharing" class="appdl-btn" target="_blank" rel="noopener">Download APK</a>
             </div>
             <div class="appdl-note">After downloading, open the APK file on your phone and follow the Android install prompts.</div>
             <div class="appdl-steps" aria-label="Installation reminders">
