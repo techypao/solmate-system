@@ -103,11 +103,7 @@ class QuotationLineItemSyncService
         $laborCost = round((float) ($quotation->labor_cost ?? 0), 2);
         $baseProjectCost = round($materialsSubtotal + $laborCost, 2);
         $promoContext = $this->promotionDiscountService->buildContextFromLineItems($lineItems);
-        $promoDiscount = $this->promotionDiscountService->compute(
-            $quotation->appliedPromo,
-            $baseProjectCost,
-            $promoContext
-        );
+        $promoDiscount = $this->resolvePromoDiscount($quotation, $baseProjectCost, $promoContext);
         $promoAdjustedProjectCost = round(max(0, $baseProjectCost - (float) ($promoDiscount ?? 0)), 2);
         $adminDiscount = round((float) ($quotation->admin_discount_amount ?? 0), 2);
         $projectCost = round(max(0, $promoAdjustedProjectCost - $adminDiscount), 2);
@@ -132,5 +128,26 @@ class QuotationLineItemSyncService
         ]);
 
         return $quotation->fresh(['lineItems.pricingItem', 'appliedPromo']);
+    }
+
+    private function resolvePromoDiscount(Quotation $quotation, float $baseProjectCost, array $promoContext): ?float
+    {
+        $promo = $quotation->appliedPromo;
+
+        if (! $promo) {
+            return null;
+        }
+
+        $existingDiscount = round((float) ($quotation->promo_discount ?? 0), 2);
+
+        if (! $promo->isCurrentlyLive() && $existingDiscount > 0) {
+            return round(min($existingDiscount, $baseProjectCost), 2);
+        }
+
+        return $this->promotionDiscountService->compute(
+            $promo,
+            $baseProjectCost,
+            $promoContext
+        );
     }
 }

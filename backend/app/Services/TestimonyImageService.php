@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 
 class TestimonyImageService
 {
-    public const MAX_IMAGES = 5;
+    public const MAX_IMAGES = 3;
 
     public function syncForStore(Testimony $testimony, array $uploadedImages = []): void
     {

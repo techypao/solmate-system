@@ -25,7 +25,7 @@ class UpdateTestimonyRequest extends FormRequest
             'title' => ['nullable', 'string', 'max:255'],
             'message' => ['required', 'string'],
             'images' => ['sometimes', 'array', 'max:'.TestimonyImageService::MAX_IMAGES],
-            'images.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'images.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp'],
             'remove_image_ids' => ['sometimes', 'array'],
             'remove_image_ids.*' => [
                 'integer',
@@ -53,7 +53,16 @@ class UpdateTestimonyRequest extends FormRequest
             $removeImageCount = count($this->input('remove_image_ids', []));
             $newImageCount = count($this->file('images', []));
 
-            if (($existingImageCount - $removeImageCount + $newImageCount) > TestimonyImageService::MAX_IMAGES) {
+            $finalImageCount = $existingImageCount - $removeImageCount + $newImageCount;
+
+            if ($finalImageCount < 1) {
+                $validator->errors()->add(
+                    'images',
+                    'A testimony must have at least one image.'
+                );
+            }
+
+            if ($finalImageCount > TestimonyImageService::MAX_IMAGES) {
                 $validator->errors()->add(
                     'images',
                     'A testimony may only have up to '.TestimonyImageService::MAX_IMAGES.' images.'

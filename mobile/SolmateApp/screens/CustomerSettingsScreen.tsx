@@ -332,6 +332,8 @@ export default function CustomerSettingsScreen() {
     const result = await launchImageLibrary({
       mediaType: 'photo',
       selectionLimit: 1,
+      maxWidth: 1200,
+      maxHeight: 1200,
       quality: 0.8,
     });
 

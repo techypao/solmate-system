@@ -22,8 +22,8 @@ class StoreTestimonyRequest extends FormRequest
             'rating' => ['required', 'integer', 'between:1,5'],
             'title' => ['nullable', 'string', 'max:255'],
             'message' => ['required', 'string'],
-            'images' => ['sometimes', 'array', 'max:'.TestimonyImageService::MAX_IMAGES],
-            'images.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'images' => ['required', 'array', 'min:1', 'max:'.TestimonyImageService::MAX_IMAGES],
+            'images.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp'],
         ];
     }
 

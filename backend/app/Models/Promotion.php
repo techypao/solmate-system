@@ -87,4 +87,15 @@ class Promotion extends Model
                 $q->whereNull('end_date')->orWhereDate('end_date', '>=', $today);
             });
     }
+
+    public function isCurrentlyLive(): bool
+    {
+        $today = now()->toDateString();
+        $startsOn = $this->start_date?->format('Y-m-d');
+        $endsOn = $this->end_date?->format('Y-m-d');
+
+        return $this->is_active
+            && ($startsOn === null || $startsOn <= $today)
+            && ($endsOn === null || $endsOn >= $today);
+    }
 }

@@ -35,7 +35,6 @@ const CARD    = '#ffffff';
 const MUTED = '#6B7A99';
 const DIVIDER = '#D4E0F2';
 const RED     = '#dc2626';
-const SOFT_YELLOW = '#FFF7CC';
 const ICON_COLOR = '#1d2f6d';
 
 type LocalProfileImageAsset = {
@@ -217,6 +216,8 @@ export default function TechnicianSettingsScreen({navigation}: any) {
     const result = await launchImageLibrary({
       mediaType: 'photo',
       selectionLimit: 1,
+      maxWidth: 1200,
+      maxHeight: 1200,
       quality: 0.8,
     });
 

@@ -68,4 +68,113 @@ class QuotationLineItemSyncServiceTest extends TestCase
             'project_cost' => 1400.00,
         ]);
     }
+
+    public function test_refreshing_existing_line_items_keeps_saved_discount_for_inactive_promo(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Customer User',
+            'email' => 'customer_' . uniqid() . '@example.com',
+            'password' => Hash::make('password'),
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        $promotion = Promotion::query()->create([
+            'title' => 'Launch Discount',
+            'description' => 'Historical fixed discount.',
+            'is_active' => false,
+            'promo_type' => 'fixed_amount',
+            'discount_value' => 500,
+        ]);
+
+        $quotation = Quotation::query()->create([
+            'user_id' => $customer->id,
+            'quotation_type' => 'final',
+            'monthly_electric_bill' => 3000,
+            'labor_cost' => 0,
+            'status' => 'pending',
+            'applied_promo_id' => $promotion->id,
+            'promo_discount' => 100,
+            'project_cost' => 1500,
+        ]);
+
+        QuotationLineItem::query()->create([
+            'quotation_id' => $quotation->id,
+            'description' => 'Solar Panel',
+            'category' => 'panel',
+            'qty' => 16,
+            'unit' => 'pc',
+            'unit_amount' => 100,
+            'total_amount' => 1600,
+        ]);
+
+        $refreshed = app(QuotationLineItemSyncService::class)
+            ->refreshTotalsFromExistingLineItems($quotation);
+
+        $this->assertSame($promotion->id, $refreshed->appliedPromo->id);
+        $this->assertSame('100.00', $refreshed->promo_discount);
+        $this->assertSame(1500, $refreshed->project_cost);
+        $this->assertDatabaseHas('quotations', [
+            'id' => $quotation->id,
+            'applied_promo_id' => $promotion->id,
+            'promo_discount' => 100.00,
+            'project_cost' => 1500.00,
+        ]);
+    }
+
+    public function test_refreshing_existing_line_items_keeps_saved_discount_for_expired_promo(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Customer User',
+            'email' => 'customer_' . uniqid() . '@example.com',
+            'password' => Hash::make('password'),
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        $promotion = Promotion::query()->create([
+            'title' => 'Buy 5 Get 1',
+            'description' => 'Expired buy 5 panels and get 1 free.',
+            'is_active' => true,
+            'end_date' => now()->subDay()->toDateString(),
+            'promo_type' => 'free_item',
+            'conditions' => [
+                'applies_to' => 'panel',
+                'min_qty' => 5,
+                'free_qty' => 1,
+            ],
+        ]);
+
+        $quotation = Quotation::query()->create([
+            'user_id' => $customer->id,
+            'quotation_type' => 'final',
+            'monthly_electric_bill' => 3000,
+            'labor_cost' => 0,
+            'status' => 'pending',
+            'applied_promo_id' => $promotion->id,
+            'promo_discount' => 100,
+            'project_cost' => 1500,
+        ]);
+
+        QuotationLineItem::query()->create([
+            'quotation_id' => $quotation->id,
+            'description' => 'Solar Panel',
+            'category' => 'panel',
+            'qty' => 16,
+            'unit' => 'pc',
+            'unit_amount' => 100,
+            'total_amount' => 1600,
+        ]);
+
+        $refreshed = app(QuotationLineItemSyncService::class)
+            ->refreshTotalsFromExistingLineItems($quotation);
+
+        $this->assertSame($promotion->id, $refreshed->appliedPromo->id);
+        $this->assertSame('100.00', $refreshed->promo_discount);
+        $this->assertSame(1500, $refreshed->project_cost);
+        $this->assertDatabaseHas('quotations', [
+            'id' => $quotation->id,
+            'applied_promo_id' => $promotion->id,
+            'promo_discount' => 100.00,
+            'project_cost' => 1500.00,
+        ]);
+    }
 }

@@ -40,7 +40,9 @@ const MUTED = '#5E7288';
 const BG = '#F8FAFC';
 const CARD = '#ffffff';
 const DIVIDER = '#DDE7EE';
-const MAX_TESTIMONY_IMAGES = 5;
+const MAX_TESTIMONY_IMAGES = 3;
+const TESTIMONY_IMAGE_MAX_DIMENSION = 1280;
+const TESTIMONY_IMAGE_QUALITY = 0.72;
 
 /* \u2500\u2500 types \u2500\u2500 */
 
@@ -50,6 +52,7 @@ type FieldErrors = {
   linkedRequest?: string;
   rating?: string;
   message?: string;
+  images?: string;
 };
 
 type LocalImageAsset = {
@@ -260,7 +263,7 @@ export default function TestimonyForm({
   };
 
   const handlePickImages = async () => {
-    clearError();
+    clearError('images');
     if (remainingImageSlots <= 0) {
       Alert.alert(
         'Image limit reached',
@@ -273,7 +276,9 @@ export default function TestimonyForm({
     const result = await launchImageLibrary({
       mediaType: 'photo',
       selectionLimit: remainingImageSlots,
-      quality: 0.8,
+      maxWidth: TESTIMONY_IMAGE_MAX_DIMENSION,
+      maxHeight: TESTIMONY_IMAGE_MAX_DIMENSION,
+      quality: TESTIMONY_IMAGE_QUALITY,
     });
     if (result.didCancel) return;
     if (result.errorMessage) {
@@ -297,6 +302,9 @@ export default function TestimonyForm({
     }
     if (!message.trim()) {
       nextErrors.message = 'Please enter your testimony message.';
+    }
+    if (activeExistingImageCount + newImages.length < 1) {
+      nextErrors.images = 'Please add at least one testimony image.';
     }
     setFieldErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
@@ -665,13 +673,16 @@ export default function TestimonyForm({
             <View style={st.fieldGroup}>
               <View style={st.fieldHeader}>
                 <Text style={st.fieldLabel}>Images</Text>
-                <Text style={st.optionalTag}>Up to {MAX_TESTIMONY_IMAGES}</Text>
+                <Text style={st.requiredTag}>1 to {MAX_TESTIMONY_IMAGES}</Text>
               </View>
 
               <Text style={st.helpText}>
                 Add photos that support your testimony. Existing images stay
                 unless you remove them.
               </Text>
+              {fieldErrors.images ? (
+                <Text style={st.fieldError}>{fieldErrors.images}</Text>
+              ) : null}
 
               <Pressable
                 disabled={remainingImageSlots <= 0}

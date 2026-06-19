@@ -17,12 +17,20 @@ class TestimonyApiTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function createVerifiedUser(array $attributes): User
+    {
+        $user = User::query()->create($attributes);
+        $user->forceFill(['email_verified_at' => now()])->save();
+
+        return $user;
+    }
+
     public function test_customer_can_submit_testimony_for_completed_service_request_and_public_endpoint_only_returns_approved_items(): void
     {
         Storage::fake(TestimonyImage::PUBLIC_DISK);
         Storage::disk(TestimonyImage::PUBLIC_DISK)->put('profile_pictures/customer-user.png', 'avatar');
 
-        $customer = User::query()->create([
+        $customer = $this->createVerifiedUser([
             'name' => 'Customer User',
             'email' => 'customer_testimony_create@example.com',
             'password' => 'password123',
@@ -45,12 +53,15 @@ class TestimonyApiTest extends TestCase
         ]);
 
         $createResponse = $this->actingAs($customer)
-            ->postJson('/api/testimonies', [
+            ->post('/api/testimonies', [
                 'service_request_id' => $completedServiceRequest->id,
                 'rating' => 5,
                 'title' => 'Great work',
                 'message' => 'The team finished the service well.',
-            ])
+                'images' => [
+                    UploadedFile::fake()->image('service.jpg'),
+                ],
+            ], ['Accept' => 'application/json'])
             ->assertCreated()
             ->assertJsonPath('data.user_id', $customer->id)
             ->assertJsonPath('data.service_request_id', $completedServiceRequest->id)
@@ -111,21 +122,21 @@ class TestimonyApiTest extends TestCase
     {
         Storage::fake(TestimonyImage::PUBLIC_DISK);
 
-        $customer = User::query()->create([
+        $customer = $this->createVerifiedUser([
             'name' => 'Customer User',
             'email' => 'customer_testimony_restrictions@example.com',
             'password' => 'password123',
             'role' => User::ROLE_CUSTOMER,
         ]);
 
-        $otherCustomer = User::query()->create([
+        $otherCustomer = $this->createVerifiedUser([
             'name' => 'Other Customer',
             'email' => 'other_customer_testimony_restrictions@example.com',
             'password' => 'password123',
             'role' => User::ROLE_CUSTOMER,
         ]);
 
-        $technician = User::query()->create([
+        $technician = $this->createVerifiedUser([
             'name' => 'Technician User',
             'email' => 'technician_testimony_restrictions@example.com',
             'password' => 'password123',
@@ -153,28 +164,37 @@ class TestimonyApiTest extends TestCase
         ]);
 
         $this->actingAs($customer)
-            ->postJson('/api/testimonies', [
+            ->post('/api/testimonies', [
                 'service_request_id' => $pendingServiceRequest->id,
                 'rating' => 5,
                 'message' => 'This should fail.',
-            ])
+                'images' => [
+                    UploadedFile::fake()->image('pending.jpg'),
+                ],
+            ], ['Accept' => 'application/json'])
             ->assertUnprocessable()
             ->assertJsonValidationErrors('service_request_id');
 
         $this->actingAs($customer)
-            ->postJson('/api/testimonies', [
+            ->post('/api/testimonies', [
                 'inspection_request_id' => $otherCustomerInspectionRequest->id,
                 'rating' => 4,
                 'message' => 'This should also fail.',
-            ])
+                'images' => [
+                    UploadedFile::fake()->image('other-customer.jpg'),
+                ],
+            ], ['Accept' => 'application/json'])
             ->assertUnprocessable()
             ->assertJsonValidationErrors('inspection_request_id');
 
         $this->actingAs($customer)
-            ->postJson('/api/testimonies', [
+            ->post('/api/testimonies', [
                 'rating' => 4,
                 'message' => 'Missing linked request.',
-            ])
+                'images' => [
+                    UploadedFile::fake()->image('missing-link.jpg'),
+                ],
+            ], ['Accept' => 'application/json'])
             ->assertUnprocessable()
             ->assertJsonValidationErrors('service_request_id');
 
@@ -197,14 +217,14 @@ class TestimonyApiTest extends TestCase
     {
         Storage::fake(TestimonyImage::PUBLIC_DISK);
 
-        $customer = User::query()->create([
+        $customer = $this->createVerifiedUser([
             'name' => 'Customer User',
             'email' => 'customer_testimony_update@example.com',
             'password' => 'password123',
             'role' => User::ROLE_CUSTOMER,
         ]);
 
-        $otherCustomer = User::query()->create([
+        $otherCustomer = $this->createVerifiedUser([
             'name' => 'Other Customer',
             'email' => 'other_customer_testimony_update@example.com',
             'password' => 'password123',
@@ -225,6 +245,9 @@ class TestimonyApiTest extends TestCase
             'message' => 'Original approved testimony.',
             'status' => Testimony::STATUS_APPROVED,
             'admin_note' => 'Approved previously.',
+        ]);
+        $testimony->images()->create([
+            'image_path' => "testimonies/{$testimony->id}/existing.jpg",
         ]);
 
         $this->actingAs($customer)
@@ -274,7 +297,7 @@ class TestimonyApiTest extends TestCase
             'role' => User::ROLE_ADMIN,
         ]);
 
-        $customer = User::query()->create([
+        $customer = $this->createVerifiedUser([
             'name' => 'Customer User',
             'email' => 'customer_testimony_moderation@example.com',
             'password' => 'password123',
@@ -362,7 +385,7 @@ class TestimonyApiTest extends TestCase
             'role' => User::ROLE_ADMIN,
         ]);
 
-        $customer = User::query()->create([
+        $customer = $this->createVerifiedUser([
             'name' => 'Customer User',
             'email' => 'customer_testimony_images@example.com',
             'password' => 'password123',
@@ -449,7 +472,7 @@ class TestimonyApiTest extends TestCase
         /** @var FilesystemAdapter $publicDisk */
         $publicDisk = Storage::disk(TestimonyImage::PUBLIC_DISK);
 
-        $customer = User::query()->create([
+        $customer = $this->createVerifiedUser([
             'name' => 'Customer User',
             'email' => 'customer_testimony_image_validation@example.com',
             'password' => 'password123',
@@ -473,9 +496,16 @@ class TestimonyApiTest extends TestCase
                     UploadedFile::fake()->image('2.jpg'),
                     UploadedFile::fake()->image('3.jpg'),
                     UploadedFile::fake()->image('4.jpg'),
-                    UploadedFile::fake()->image('5.jpg'),
-                    UploadedFile::fake()->image('6.jpg'),
                 ],
+            ], ['Accept' => 'application/json'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('images');
+
+        $this->actingAs($customer)
+            ->post('/api/testimonies', [
+                'service_request_id' => $serviceRequest->id,
+                'rating' => 5,
+                'message' => 'Missing image.',
             ], ['Accept' => 'application/json'])
             ->assertUnprocessable()
             ->assertJsonValidationErrors('images');
