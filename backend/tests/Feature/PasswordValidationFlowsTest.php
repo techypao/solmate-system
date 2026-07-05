@@ -94,8 +94,46 @@ class PasswordValidationFlowsTest extends TestCase
         $this->assertDatabaseHas('users', [
             'email' => 'api_customer_valid@example.com',
             'role' => User::ROLE_CUSTOMER,
-            'first_name' => 'API',
+            'first_name' => 'Api',
             'last_name' => 'Customer',
+        ]);
+    }
+
+    public function test_api_registration_rejects_numbers_in_customer_names(): void
+    {
+        $this->postJson('/api/register', [
+            'first_name' => 'Juan2',
+            'last_name' => 'Dela Cruz',
+            'email' => 'api_customer_name_invalid@example.com',
+            'address' => '123 Solar Street',
+            'contact_number' => '09171234567',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('first_name')
+            ->assertJsonPath('errors.first_name.0', 'First name may only contain letters, spaces, periods, apostrophes, and hyphens.');
+    }
+
+    public function test_api_registration_normalizes_customer_name_casing(): void
+    {
+        $this->postJson('/api/register', [
+            'first_name' => 'jUaN miguel',
+            'last_name' => 'DELA CRUZ',
+            'email' => 'api_customer_name_normalized@example.com',
+            'address' => '123 Solar Street',
+            'contact_number' => '09171234567',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])
+            ->assertCreated()
+            ->assertJsonPath('message', 'Registered successfully. Please verify your email.');
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'api_customer_name_normalized@example.com',
+            'name' => 'Juan Miguel Dela Cruz',
+            'first_name' => 'Juan Miguel',
+            'last_name' => 'Dela Cruz',
         ]);
     }
 

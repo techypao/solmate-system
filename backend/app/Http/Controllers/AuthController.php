@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\NameValidation;
 use App\Support\PasswordValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -128,8 +129,8 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+            'first_name' => NameValidation::rules(),
+            'last_name' => NameValidation::rules(),
             'email' => 'required|email|max:255|unique:users,email',
             'address' => 'required|string|max:255',
             'contact_number' => ['required', 'regex:/^[0-9]{11}$/'],
@@ -137,13 +138,14 @@ class AuthController extends Controller
             'password' => PasswordValidation::required(),
         ], array_merge(
             PasswordValidation::messages(),
+            NameValidation::messages(),
             [
                 'contact_number.regex' => 'Contact number must be exactly 11 digits.',
             ]
         ));
 
-        $firstName = trim($validated['first_name']);
-        $lastName = trim($validated['last_name']);
+        $firstName = NameValidation::normalize($validated['first_name']);
+        $lastName = NameValidation::normalize($validated['last_name']);
 
         $user = User::create([
             'name' => trim($firstName.' '.$lastName),

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\NameValidation;
 use App\Support\PasswordValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -17,8 +18,8 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+            'first_name' => NameValidation::rules(),
+            'last_name' => NameValidation::rules(),
             'email' => 'required|email|unique:users,email',
             'password' => PasswordValidation::required(),
             'address' => 'required|string|max:255',
@@ -26,13 +27,14 @@ class AuthController extends Controller
             'landline_number' => 'nullable|string|max:30',
         ], array_merge(
             PasswordValidation::messages(),
+            NameValidation::messages(),
             [
                 'contact_number.regex' => 'Contact number must be exactly 11 digits.',
             ]
         ));
 
-        $firstName = trim($validated['first_name']);
-        $lastName = trim($validated['last_name']);
+        $firstName = NameValidation::normalize($validated['first_name']);
+        $lastName = NameValidation::normalize($validated['last_name']);
 
         $user = User::create([
             'name' => trim($firstName.' '.$lastName),
