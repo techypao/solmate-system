@@ -1,19 +1,21 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminAccountController;
 use App\Http\Controllers\Admin\AdminCustomerController;
 use App\Http\Controllers\Admin\ChatConversationPageController;
 use App\Http\Controllers\Admin\ContactMessagePageController;
 use App\Http\Controllers\Admin\NewsArticlePageController;
+use App\Http\Controllers\Admin\NotificationPageController;
+use App\Http\Controllers\Admin\PricingCatalogPageController;
+use App\Http\Controllers\Admin\ProfilePageController;
 use App\Http\Controllers\Admin\PromotionPageController;
 use App\Http\Controllers\Admin\QuotationSettingsPageController;
-use App\Http\Controllers\Admin\PricingCatalogPageController;
-use App\Http\Controllers\Admin\NotificationPageController;
-use App\Http\Controllers\Admin\ProfilePageController;
 use App\Http\Controllers\Admin\ReportsPageController;
 use App\Http\Controllers\Admin\RequestAssignmentPageController;
-use App\Http\Controllers\Admin\TestimonyModerationPageController;
 use App\Http\Controllers\Admin\TechnicianRegistrationController;
+use App\Http\Controllers\Admin\TestimonyModerationPageController;
 use App\Http\Controllers\Admin\VisualHighlightPageController;
+use App\Http\Controllers\Api\VerificationController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CustomerDeleteRequestController;
 use App\Http\Controllers\CustomerTestimonyPageController;
@@ -24,6 +26,7 @@ use App\Http\Controllers\QuotationItemBuilderPageController;
 use App\Models\NewsArticle;
 use App\Models\Promotion;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -37,10 +40,10 @@ Route::get('/landing', function () {
 Route::get('/', function () {
     $headers = [
         'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-        'Pragma'        => 'no-cache',
+        'Pragma' => 'no-cache',
     ];
 
-    if (!Auth::check()) {
+    if (! Auth::check()) {
         return response(view('welcome', [
             'newsArticles' => NewsArticle::query()->active()->latest()->get(),
             'promotions' => Promotion::query()->currentlyLive()->orderByDesc('created_at')->get(),
@@ -69,7 +72,7 @@ Route::get('/delete-account', [CustomerDeleteRequestController::class, 'create']
 Route::post('/delete-account', [CustomerDeleteRequestController::class, 'storePublic'])
     ->name('delete-account.store');
 
-Route::get('/email/verify/{id}/{hash}', [\App\Http\Controllers\Api\VerificationController::class, 'verify'])
+Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
     ->middleware(['signed'])
     ->name('verification.verify');
 
@@ -119,6 +122,15 @@ Route::middleware(['auth', 'verified.email'])->group(function () {
 
         Route::post('/admin/request-assignments/service-popup', [RequestAssignmentPageController::class, 'flashServicePopup'])
             ->name('admin.request-assignments.service-popup');
+
+        Route::get('/admin/admins', [AdminAccountController::class, 'index'])
+            ->name('admin.admins');
+
+        Route::post('/admin/admins', [AdminAccountController::class, 'store'])
+            ->name('admin.admins.store');
+
+        Route::delete('/admin/admins/{admin}', [AdminAccountController::class, 'destroy'])
+            ->name('admin.admins.destroy');
 
         Route::get('/admin/customers', [AdminCustomerController::class, 'index'])
             ->name('admin.customers');
@@ -214,7 +226,7 @@ Route::middleware(['auth', 'verified.email'])->group(function () {
             return view('customer.maintenance');
         })->name('customer.maintenance');
 
-        Route::get('/customer/chat', function (\Illuminate\Http\Request $request) {
+        Route::get('/customer/chat', function (Request $request) {
             abort_unless($request->user()?->role === User::ROLE_CUSTOMER, 403);
 
             return redirect()

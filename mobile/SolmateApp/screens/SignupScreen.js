@@ -1,7 +1,8 @@
-import React, {useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -11,112 +12,259 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {ApiError, apiPost} from '../src/services/api';
-import {
-  getPasswordValidationError,
-} from '../src/utils/passwordValidation';
+import {solmateColors} from '../src/theme/colors';
+import {getPasswordValidationError} from '../src/utils/passwordValidation';
 
-// ─── Color tokens (matched from screenshot) ───────────────────────────────────
-const C = {
-  bgTop:       '#C8D8F0',
-  bgMid:       '#C8D8F0',
-  bgBot:       '#C8D8F0',
-  card:        '#FFFFFF',
-  solText:     '#1A2440',
-  mateText:    '#F5C000',
-  title:       '#1A2440',
-  subtitle:    '#7A88A8',
-  label:       '#8A96B0',
-  placeholder: '#AABCC8',
-  inputText:   '#1A2440',
-  inputBg:     '#FFFFFF',
-  inputBorder: '#D8E2EE',
-  eyeIcon:     '#6B7A99',
-  button:      '#F5C000',
-  buttonText:  '#1A2440',
-  footerText:  '#8A96B0',
-  footerLink:  '#1A2440',
-  danger:      '#D83B3B',
-  dangerBg:    '#FFF2F2',
-  dangerBdr:   '#F0B4B4',
-  success:     '#0C8D4A',
-  successBg:   '#F0FAF4',
-  successBdr:  '#A7D7BC',
+const LOCATION_API_BASE_URL = 'https://psgc.gitlab.io/api';
+const NCR_LOCATION = {
+  code: '130000000',
+  name: 'Metro Manila / NCR',
+  kind: 'region',
 };
 
-// ─── Reusable input ───────────────────────────────────────────────────────────
+function sanitizeNameInput(value) {
+  return value.replace(/[^A-Za-zÀ-ÖØ-öø-ÿÑñ\s.'-]/g, '');
+}
+
+function normalizeName(value) {
+  return sanitizeNameInput(value)
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('en-PH')
+    .replace(/(^|[\s.'-])([A-Za-zÀ-ÖØ-öø-ÿÑñ])/g, (match, separator, letter) =>
+      `${separator}${letter.toLocaleUpperCase('en-PH')}`,
+    );
+}
+
+function sanitizeContactNumber(value) {
+  return value.replace(/\D/g, '').slice(0, 11);
+}
+
+function sanitizeLandlineNumber(value) {
+  return value.replace(/[^0-9()+\-\s]/g, '').slice(0, 30);
+}
+
+function buildAddress({houseNumber, streetName, barangay, city, province}) {
+  return [
+    houseNumber.trim(),
+    streetName.trim(),
+    barangay.trim(),
+    city?.name || '',
+    province?.name || '',
+  ]
+    .filter(Boolean)
+    .join(', ');
+}
+
+function passwordRuleState(password) {
+  return {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    special: /[^A-Za-z0-9]/.test(password),
+  };
+}
+
 function Field({
   label,
-  placeholder,
   value,
   onChangeText,
-  secureTextEntry,
+  placeholder,
   keyboardType,
   autoCapitalize = 'none',
   textContentType,
-  showToggle,
-  onToggle,
+  secureTextEntry,
   editable = true,
+  onBlur,
 }) {
   return (
     <View style={s.field}>
-      <Text style={s.fieldLabel}>{label}</Text>
-      <View style={s.fieldRow}>
+      <Text style={s.label}>{label}</Text>
+      <TextInput
+        autoCapitalize={autoCapitalize}
+        autoCorrect={false}
+        editable={editable}
+        keyboardType={keyboardType}
+        onBlur={onBlur}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={solmateColors.mutedSoft}
+        secureTextEntry={secureTextEntry}
+        style={[s.input, !editable && s.inputDisabled]}
+        textContentType={textContentType}
+        value={value}
+      />
+    </View>
+  );
+}
+
+function PasswordField({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  visible,
+  onToggleVisible,
+}) {
+  return (
+    <View style={s.field}>
+      <Text style={s.label}>{label}</Text>
+      <View style={s.passwordRow}>
         <TextInput
-          style={s.fieldInput}
-          value={value}
+          autoCapitalize="none"
+          autoCorrect={false}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={C.placeholder}
-          secureTextEntry={secureTextEntry}
-          keyboardType={keyboardType}
-          autoCapitalize={autoCapitalize}
-          autoCorrect={false}
-          textContentType={textContentType}
-          editable={editable}
+          placeholderTextColor={solmateColors.mutedSoft}
+          secureTextEntry={!visible}
+          style={[s.input, s.passwordInput]}
+          textContentType="newPassword"
+          value={value}
         />
-        {showToggle != null ? (
-          <Pressable accessibilityRole="button" onPress={onToggle} style={s.eyeBtn}>
-            <MaterialCommunityIcons
-              name={showToggle ? 'eye-off' : 'eye'}
-              size={20}
-              color={C.eyeIcon}
-            />
-          </Pressable>
-        ) : null}
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={onToggleVisible}
+          style={s.passwordToggle}>
+          <Text style={s.passwordToggleText}>{visible ? 'Hide' : 'Show'}</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 }
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
-export default function SignupScreen({navigation}) {
-  const [firstName, setFirstName]     = useState('');
-  const [lastName, setLastName]       = useState('');
-  const [email, setEmail]             = useState('');
-  const [address, setAddress]         = useState('');
-  const [contact, setContact]         = useState('');
-  const [landline, setLandline]       = useState('');
-  const [password, setPassword]       = useState('');
-  const [confirmPw, setConfirmPw]     = useState('');
-  const [showPw, setShowPw]           = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [submitting, setSubmitting]   = useState(false);
-  const [error, setError]             = useState('');
-  const [success, setSuccess]         = useState('');
-
-  const canSubmit = useMemo(
-    () =>
-      firstName.trim().length > 0 &&
-      lastName.trim().length > 0 &&
-      email.trim().length > 0 &&
-      address.trim().length > 0 &&
-      contact.trim().length > 0 &&
-      password.trim().length > 0 &&
-      confirmPw.trim().length > 0,
-    [firstName, lastName, email, address, contact, password, confirmPw],
+function SelectField({label, value, placeholder, disabled, onPress}) {
+  return (
+    <View style={s.field}>
+      <Text style={s.label}>{label}</Text>
+      <TouchableOpacity
+        activeOpacity={0.82}
+        disabled={disabled}
+        onPress={onPress}
+        style={[s.selectBtn, disabled && s.inputDisabled]}>
+        <Text style={[s.selectText, !value && s.selectPlaceholder]}>
+          {value || placeholder}
+        </Text>
+        <Text style={s.selectChevron}>⌄</Text>
+      </TouchableOpacity>
+    </View>
   );
+}
+
+function LocationPickerModal({
+  visible,
+  title,
+  items,
+  loading,
+  emptyText,
+  onClose,
+  onSelect,
+}) {
+  const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    if (visible) {
+      setQuery('');
+    }
+  }, [visible]);
+
+  const filteredItems = useMemo(() => {
+    const cleanQuery = query.trim().toLocaleLowerCase('en-PH');
+
+    if (!cleanQuery) {
+      return items;
+    }
+
+    return items.filter(item =>
+      item.name.toLocaleLowerCase('en-PH').includes(cleanQuery),
+    );
+  }, [items, query]);
+
+  return (
+    <Modal
+      animationType="slide"
+      onRequestClose={onClose}
+      transparent
+      visible={visible}>
+      <View style={s.modalBackdrop}>
+        <View style={s.modalCard}>
+          <View style={s.modalHeader}>
+            <Text style={s.modalTitle}>{title}</Text>
+            <Pressable onPress={onClose} style={s.modalCloseBtn}>
+              <Text style={s.modalCloseText}>Close</Text>
+            </Pressable>
+          </View>
+
+          <TextInput
+            autoCapitalize="words"
+            onChangeText={setQuery}
+            placeholder="Search"
+            placeholderTextColor={solmateColors.mutedSoft}
+            style={s.searchInput}
+            value={query}
+          />
+
+          <ScrollView style={s.modalList} keyboardShouldPersistTaps="handled">
+            {loading ? (
+              <View style={s.modalState}>
+                <ActivityIndicator color={solmateColors.accentStrong} />
+                <Text style={s.modalStateText}>Loading...</Text>
+              </View>
+            ) : filteredItems.length === 0 ? (
+              <View style={s.modalState}>
+                <Text style={s.modalStateText}>{emptyText}</Text>
+              </View>
+            ) : (
+              filteredItems.map(item => (
+                <Pressable
+                  key={item.code}
+                  onPress={() => onSelect(item)}
+                  style={({pressed}) => [
+                    s.optionRow,
+                    pressed && s.optionRowPressed,
+                  ]}>
+                  <Text style={s.optionText}>{item.name}</Text>
+                </Pressable>
+              ))
+            )}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+export default function SignupScreen({navigation}) {
+  const [step, setStep] = useState(0);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [contact, setContact] = useState('');
+  const [landline, setLandline] = useState('');
+  const [houseNumber, setHouseNumber] = useState('');
+  const [streetName, setStreetName] = useState('');
+  const [barangay, setBarangay] = useState('');
+  const [province, setProvince] = useState(null);
+  const [city, setCity] = useState(null);
+  const [password, setPassword] = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [provinces, setProvinces] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [locationsLoading, setLocationsLoading] = useState(false);
+  const [citiesLoading, setCitiesLoading] = useState(false);
+  const [locationError, setLocationError] = useState('');
+  const [pickerMode, setPickerMode] = useState(null);
+
+  const currentAddress = useMemo(
+    () => buildAddress({houseNumber, streetName, barangay, city, province}),
+    [barangay, city, houseNumber, province, streetName],
+  );
+
+  const pwRules = passwordRuleState(password);
 
   const clearError = () => {
     if (error) {
@@ -124,39 +272,191 @@ export default function SignupScreen({navigation}) {
     }
   };
 
-  const handleRegister = async () => {
-    if (submitting) {
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProvinces() {
+      setLocationsLoading(true);
+      setLocationError('');
+
+      try {
+        const response = await fetch(`${LOCATION_API_BASE_URL}/provinces/`, {
+          headers: {Accept: 'application/json'},
+        });
+
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+
+        const data = await response.json();
+        const nextProvinces = data
+          .map(item => ({
+            code: item.code,
+            name: item.name,
+            kind: 'province',
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+
+        if (!cancelled) {
+          setProvinces([NCR_LOCATION, ...nextProvinces]);
+        }
+      } catch (loadError) {
+        if (!cancelled) {
+          setLocationError('Unable to load Philippine locations.');
+        }
+      } finally {
+        if (!cancelled) {
+          setLocationsLoading(false);
+        }
+      }
+    }
+
+    loadProvinces();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const loadCitiesForProvince = async nextProvince => {
+    if (!nextProvince) {
+      setCities([]);
       return;
     }
-    if (!canSubmit) {
-      setError('Please fill in all required fields.');
-      return;
+
+    setCitiesLoading(true);
+    setLocationError('');
+
+    try {
+      const endpoint =
+        nextProvince.kind === 'region'
+          ? `${LOCATION_API_BASE_URL}/regions/${nextProvince.code}/cities-municipalities/`
+          : `${LOCATION_API_BASE_URL}/provinces/${nextProvince.code}/cities-municipalities/`;
+      const response = await fetch(endpoint, {headers: {Accept: 'application/json'}});
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      const data = await response.json();
+      setCities(
+        data
+          .map(item => ({
+            code: item.code,
+            name: item.name,
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      );
+    } catch (loadError) {
+      setCities([]);
+      setLocationError('Unable to load cities and municipalities.');
+    } finally {
+      setCitiesLoading(false);
     }
-    const contactDigits = contact.replace(/\D/g, '');
-    if (contactDigits.length !== 11) {
-      setError('Contact number must be exactly 11 digits.');
-      return;
-    }
-    if (password !== confirmPw) {
-      setError('Passwords do not match.');
-      return;
-    }
-    const pwError = getPasswordValidationError(password);
-    if (pwError) {
-      setError(pwError);
-      return;
-    }
+  };
+
+  const validateStep = stepIndex => {
     setError('');
-    const trimmedLandline = landline.replace(/[^0-9()+\-\s]/g, '').trim();
+
+    if (stepIndex === 0) {
+      const normalizedFirst = normalizeName(firstName);
+      const normalizedLast = normalizeName(lastName);
+
+      if (!normalizedFirst || !normalizedLast || !email.trim() || !contact.trim()) {
+        setError('Please fill in all required fields.');
+        return false;
+      }
+
+      if (/\d/.test(firstName) || /\d/.test(lastName)) {
+        setError('Names cannot contain numbers.');
+        return false;
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+        setError('Please enter a valid email address.');
+        return false;
+      }
+
+      if (sanitizeContactNumber(contact).length !== 11) {
+        setError('Contact number must be exactly 11 digits.');
+        return false;
+      }
+
+      setFirstName(normalizedFirst);
+      setLastName(normalizedLast);
+      return true;
+    }
+
+    if (stepIndex === 1) {
+      if (!houseNumber.trim() || !province || !city) {
+        setError('Please complete all required address fields.');
+        return false;
+      }
+
+      if (locationError) {
+        setError(locationError);
+        return false;
+      }
+
+      if (!currentAddress.trim()) {
+        setError('Address is required.');
+        return false;
+      }
+
+      return true;
+    }
+
+    if (stepIndex === 2) {
+      if (!password.trim() || !confirmPw.trim()) {
+        setError('Please enter and confirm your password.');
+        return false;
+      }
+
+      if (password !== confirmPw) {
+        setError('Passwords do not match.');
+        return false;
+      }
+
+      const pwError = getPasswordValidationError(password);
+
+      if (pwError) {
+        setError(pwError);
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const goNext = () => {
+    if (validateStep(step)) {
+      setStep(current => Math.min(current + 1, 2));
+    }
+  };
+
+  const goBack = () => {
+    setError('');
+    setStep(current => Math.max(current - 1, 0));
+  };
+
+  const handleRegister = async () => {
+    if (submitting || !validateStep(2)) {
+      return;
+    }
+
+    const contactDigits = sanitizeContactNumber(contact);
+    const trimmedLandline = sanitizeLandlineNumber(landline).trim();
+
     try {
       setSubmitting(true);
+      setError('');
       await apiPost(
         '/register',
         {
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
+          first_name: normalizeName(firstName),
+          last_name: normalizeName(lastName),
           email: email.trim(),
-          address: address.trim(),
+          address: currentAddress,
           contact_number: contactDigits,
           landline_number: trimmedLandline || null,
           password,
@@ -164,336 +464,676 @@ export default function SignupScreen({navigation}) {
         },
         false,
       );
-      setSuccess('Account created! Redirecting to sign in...');
-      setTimeout(() => navigation?.navigate?.('Login'), 900);
+      setSuccess('Account created! Please verify your email before logging in.');
+      setTimeout(() => navigation?.navigate?.('Login'), 1200);
     } catch (err) {
       setError(
-        err instanceof ApiError ? err.message : 'Registration failed. Please try again.',
+        err instanceof ApiError
+          ? err.message
+          : 'Registration failed. Please try again.',
       );
     } finally {
       setSubmitting(false);
     }
   };
 
-  return (
-    <View style={s.screen}>
+  const selectProvince = item => {
+    setProvince(item);
+    setCity(null);
+    setCities([]);
+    setPickerMode(null);
+    clearError();
+    loadCitiesForProvince(item);
+  };
 
-      <KeyboardAvoidingView
-        style={s.kav}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}>
-        <ScrollView
-          contentContainerStyle={s.scroll}
-          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}>
+  const selectCity = item => {
+    setCity(item);
+    setPickerMode(null);
+    clearError();
+  };
 
-          {/* ── Header (outside card) ── */}
-          <View style={s.header}>
-            <Text style={s.brand}>
-              <Text style={s.brandSol}>Sol</Text>
-              <Text style={s.brandMate}>Mate</Text>
+  const renderStep = () => {
+    if (step === 0) {
+      return (
+        <>
+          <Field
+            autoCapitalize="words"
+            label="First Name"
+            onBlur={() => setFirstName(value => normalizeName(value))}
+            onChangeText={value => {
+              clearError();
+              setFirstName(sanitizeNameInput(value));
+            }}
+            placeholder="Juan"
+            textContentType="givenName"
+            value={firstName}
+          />
+          <Field
+            autoCapitalize="words"
+            label="Last Name"
+            onBlur={() => setLastName(value => normalizeName(value))}
+            onChangeText={value => {
+              clearError();
+              setLastName(sanitizeNameInput(value));
+            }}
+            placeholder="Dela Cruz"
+            textContentType="familyName"
+            value={lastName}
+          />
+          <Field
+            autoCapitalize="none"
+            keyboardType="email-address"
+            label="Email"
+            onChangeText={value => {
+              clearError();
+              setEmail(value);
+            }}
+            placeholder="name@email.com"
+            textContentType="emailAddress"
+            value={email}
+          />
+          <Field
+            keyboardType="phone-pad"
+            label="Contact Number"
+            onChangeText={value => {
+              clearError();
+              setContact(sanitizeContactNumber(value));
+            }}
+            placeholder="09XXXXXXXXX"
+            textContentType="telephoneNumber"
+            value={contact}
+          />
+          <Field
+            keyboardType="phone-pad"
+            label="Landline Number (Optional)"
+            onChangeText={value => {
+              clearError();
+              setLandline(sanitizeLandlineNumber(value));
+            }}
+            placeholder="(02) 8123-4567"
+            textContentType="telephoneNumber"
+            value={landline}
+          />
+        </>
+      );
+    }
+
+    if (step === 1) {
+      return (
+        <>
+          <Field
+            autoCapitalize="words"
+            label="House / Unit / Block / Lot"
+            onChangeText={value => {
+              clearError();
+              setHouseNumber(value);
+            }}
+            placeholder="e.g. Unit 4B, Block 8 Lot 12"
+            textContentType="streetAddressLine1"
+            value={houseNumber}
+          />
+          <Field
+            autoCapitalize="words"
+            label="Street Name (Optional)"
+            onChangeText={value => {
+              clearError();
+              setStreetName(value);
+            }}
+            placeholder="e.g. Mabini Street"
+            textContentType="streetAddressLine2"
+            value={streetName}
+          />
+          <Field
+            autoCapitalize="words"
+            label="Barangay (Optional)"
+            onChangeText={value => {
+              clearError();
+              setBarangay(value);
+            }}
+            placeholder="e.g. Barangay San Antonio"
+            value={barangay}
+          />
+          <SelectField
+            disabled={locationsLoading}
+            label="Province / NCR"
+            onPress={() => setPickerMode('province')}
+            placeholder={locationsLoading ? 'Loading...' : 'Select province or NCR'}
+            value={province?.name}
+          />
+          <SelectField
+            disabled={!province || citiesLoading}
+            label="City / Municipality"
+            onPress={() => setPickerMode('city')}
+            placeholder={
+              !province
+                ? 'Select province first'
+                : citiesLoading
+                  ? 'Loading...'
+                  : 'Select city or municipality'
+            }
+            value={city?.name}
+          />
+        </>
+      );
+    }
+
+    return (
+      <>
+        <PasswordField
+          label="Password"
+          onChangeText={value => {
+            clearError();
+            setPassword(value);
+          }}
+          onToggleVisible={() => setShowPw(current => !current)}
+          placeholder="Create a secure password"
+          value={password}
+          visible={showPw}
+        />
+        <View style={s.passwordChecks}>
+          <View style={s.passwordCheckRow}>
+            <Text style={[s.checkMark, pwRules.length && s.checkMarkMet]}>
+              {pwRules.length ? '✓' : ''}
             </Text>
-            <Text style={s.pageTitle}>Register</Text>
-            <Text style={s.pageSubtitle}>Customer Only</Text>
+            <Text style={[s.checkText, pwRules.length && s.checkTextMet]}>
+              At least 8 characters
+            </Text>
+          </View>
+          <View style={s.passwordCheckRow}>
+            <Text style={[s.checkMark, pwRules.uppercase && s.checkMarkMet]}>
+              {pwRules.uppercase ? '✓' : ''}
+            </Text>
+            <Text style={[s.checkText, pwRules.uppercase && s.checkTextMet]}>
+              One uppercase letter
+            </Text>
+          </View>
+          <View style={s.passwordCheckRow}>
+            <Text style={[s.checkMark, pwRules.special && s.checkMarkMet]}>
+              {pwRules.special ? '✓' : ''}
+            </Text>
+            <Text style={[s.checkText, pwRules.special && s.checkTextMet]}>
+              One special character
+            </Text>
+          </View>
+        </View>
+        <PasswordField
+          label="Confirm Password"
+          onChangeText={value => {
+            clearError();
+            setConfirmPw(value);
+          }}
+          onToggleVisible={() => setShowConfirm(current => !current)}
+          placeholder="Re-enter your password"
+          value={confirmPw}
+          visible={showConfirm}
+        />
+      </>
+    );
+  };
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
+      style={s.screen}>
+      <ScrollView
+        contentContainerStyle={s.scroll}
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
+        <View style={s.brandRow}>
+          <Text style={s.brandSol}>Sol</Text>
+          <Text style={s.brandMate}>Mate</Text>
+        </View>
+
+        <Text style={s.pageTitle}>Create Account</Text>
+
+        <View style={s.card}>
+          {success ? (
+            <View style={s.successBox}>
+              <Text style={s.successText}>{success}</Text>
+            </View>
+          ) : null}
+
+          {error ? (
+            <View style={s.errorBox}>
+              <Text style={s.errorText}>{error}</Text>
+            </View>
+          ) : null}
+
+          <View style={s.stepHeader}>
+            {[0, 1, 2].map(index => (
+              <View
+                key={index}
+                style={[
+                  s.stepDot,
+                  index <= step && s.stepDotActive,
+                  index === step && s.stepDotCurrent,
+                ]}>
+                <Text
+                  style={[
+                    s.stepDotText,
+                    index <= step && s.stepDotTextActive,
+                  ]}>
+                  {index + 1}
+                </Text>
+              </View>
+            ))}
           </View>
 
-          {/* ── Card ── */}
-          <View style={s.card}>
-            {error ? (
-              <View style={s.errorBox}>
-                <Text style={s.errorText}>{error}</Text>
-              </View>
+          <Text style={s.stepTitle}>
+            {step === 0
+              ? 'Personal Details'
+              : step === 1
+                ? 'Address Details'
+                : 'Secure Account'}
+          </Text>
+
+          {renderStep()}
+
+          <View style={s.actionRow}>
+            {step > 0 ? (
+              <TouchableOpacity
+                activeOpacity={0.84}
+                disabled={submitting}
+                onPress={goBack}
+                style={s.backBtn}>
+                <Text style={s.backBtnText}>Back</Text>
+              </TouchableOpacity>
             ) : null}
 
-            {success ? (
-              <View style={s.successBox}>
-                <Text style={s.successText}>{success}</Text>
-              </View>
-            ) : null}
-
-            <Field
-              label="First Name"
-              placeholder="Juan"
-              value={firstName}
-              onChangeText={v => { clearError(); setFirstName(v); }}
-              autoCapitalize="words"
-              textContentType="givenName"
-            />
-
-            <Field
-              label="Last Name"
-              placeholder="Dela Cruz"
-              value={lastName}
-              onChangeText={v => { clearError(); setLastName(v); }}
-              autoCapitalize="words"
-              textContentType="familyName"
-            />
-
-            <Field
-              label="Phone Number"
-              placeholder="+63 963 645 6543"
-              value={contact}
-              onChangeText={v => { clearError(); setContact(v.replace(/[^0-9+\s-]/g, '')); }}
-              keyboardType="phone-pad"
-              textContentType="telephoneNumber"
-            />
-
-            <Field
-              label="Landline Number (Optional)"
-              placeholder="(02) 8123-4567"
-              value={landline}
-              onChangeText={v => { clearError(); setLandline(v.replace(/[^0-9()+\-\s]/g, '')); }}
-              keyboardType="phone-pad"
-              textContentType="telephoneNumber"
-            />
-
-            <Field
-              label="Address"
-              placeholder="Pasig City, Metro Manila"
-              value={address}
-              onChangeText={v => { clearError(); setAddress(v); }}
-              autoCapitalize="words"
-              textContentType="streetAddressLine1"
-            />
-
-            <Field
-              label="Email"
-              placeholder="name@email.com"
-              value={email}
-              onChangeText={v => { clearError(); setEmail(v); }}
-              keyboardType="email-address"
-              textContentType="emailAddress"
-            />
-
-            <Field
-              label="Password"
-              placeholder="••••••••••"
-              value={password}
-              onChangeText={v => { clearError(); setPassword(v); }}
-              secureTextEntry={!showPw}
-              textContentType="newPassword"
-              showToggle={showPw}
-              onToggle={() => setShowPw(p => !p)}
-            />
-
-            <Field
-              label="Confirm Password"
-              placeholder="••••••••••"
-              value={confirmPw}
-              onChangeText={v => { clearError(); setConfirmPw(v); }}
-              secureTextEntry={!showConfirm}
-              textContentType="newPassword"
-              showToggle={showConfirm}
-              onToggle={() => setShowConfirm(p => !p)}
-            />
-
-            {/* Create Account button */}
-            <TouchableOpacity
-              activeOpacity={0.9}
-              disabled={!canSubmit || submitting}
-              onPress={handleRegister}
-              style={[s.btn, (!canSubmit || submitting) && s.btnOff]}>
-              {submitting ? (
-                <View style={s.btnRow}>
-                  <ActivityIndicator size="small" color={C.buttonText} />
-                  <Text style={s.btnText}>Creating...</Text>
-                </View>
-              ) : (
-                <Text style={s.btnText}>Create Account</Text>
-              )}
-            </TouchableOpacity>
+            {step < 2 ? (
+              <TouchableOpacity
+                activeOpacity={0.88}
+                onPress={goNext}
+                style={[s.nextBtn, step === 0 && s.fullWidthBtn]}>
+                <Text style={s.nextBtnText}>Next</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                activeOpacity={0.88}
+                disabled={submitting}
+                onPress={handleRegister}
+                style={[s.nextBtn, submitting && s.btnDisabled]}>
+                {submitting ? (
+                  <ActivityIndicator color={solmateColors.text} />
+                ) : (
+                  <Text style={s.nextBtnText}>Create Account</Text>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
 
-          {/* ── Footer ── */}
           <TouchableOpacity
-            activeOpacity={0.8}
+            activeOpacity={0.75}
             onPress={() => navigation?.navigate?.('Login')}
-            style={s.footer}>
-            <Text style={s.footerText}>
-              {'Have an account? '}
-              <Text style={s.footerLink}>Login Here</Text>
+            style={s.bottomLink}>
+            <Text style={s.bottomLinkText}>
+              Have an account? <Text style={s.bottomLinkBold}>Login Here</Text>
             </Text>
           </TouchableOpacity>
+        </View>
+      </ScrollView>
 
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </View>
+      <LocationPickerModal
+        emptyText="No province found."
+        items={provinces}
+        loading={locationsLoading}
+        onClose={() => setPickerMode(null)}
+        onSelect={selectProvince}
+        title="Province / NCR"
+        visible={pickerMode === 'province'}
+      />
+      <LocationPickerModal
+        emptyText="No city or municipality found."
+        items={cities}
+        loading={citiesLoading}
+        onClose={() => setPickerMode(null)}
+        onSelect={selectCity}
+        title="City / Municipality"
+        visible={pickerMode === 'city'}
+      />
+    </KeyboardAvoidingView>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: C.bgMid,
-  },
-  gradTop: {
-    top: 0,
-    bottom: '55%',
-    backgroundColor: C.bgTop,
-    opacity: 0.6,
-  },
-  gradBot: {
-    top: '55%',
-    bottom: 0,
-    backgroundColor: C.bgBot,
-    opacity: 0.5,
-  },
-  kav: {
-    flex: 1,
+    backgroundColor: solmateColors.background,
   },
   scroll: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 32,
+    paddingHorizontal: 22,
+    paddingVertical: 30,
   },
-
-  // Header
-  header: {
-    marginBottom: 20,
-    alignItems: 'center',
-  },
-  brand: {
-    fontSize: 22,
-    fontWeight: '800',
-    marginBottom: 4,
+  brandRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 6,
   },
   brandSol: {
-    color: C.solText,
-    fontStyle: 'italic',
+    color: solmateColors.navy,
+    fontSize: 28,
+    fontWeight: '800',
   },
   brandMate: {
-    color: C.mateText,
-    fontStyle: 'italic',
+    color: solmateColors.primary,
+    fontSize: 28,
+    fontWeight: '800',
   },
   pageTitle: {
-    fontSize: 32,
+    color: solmateColors.text,
+    fontSize: 30,
     fontWeight: '800',
-    color: C.title,
-    marginBottom: 2,
+    textAlign: 'center',
+    marginBottom: 18,
   },
-  pageSubtitle: {
-    fontSize: 14,
-    color: C.subtitle,
-    fontWeight: '500',
-  },
-
-  // Card
   card: {
-    backgroundColor: C.card,
-    borderRadius: 20,
-    padding: 20,
-    paddingBottom: 22,
-    shadowColor: '#8898BE',
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
+    width: '100%',
+    maxWidth: 430,
+    alignSelf: 'center',
+    backgroundColor: solmateColors.white,
+    borderRadius: 22,
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    shadowColor: solmateColors.shadow,
     shadowOffset: {width: 0, height: 8},
-    elevation: 8,
+    shadowOpacity: 0.14,
+    shadowRadius: 16,
+    elevation: 7,
+  },
+  stepHeader: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 10,
     marginBottom: 16,
   },
-
-  // Error / success
-  errorBox: {
-    backgroundColor: C.dangerBg,
+  stepDot: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: solmateColors.backgroundSoft,
     borderWidth: 1,
-    borderColor: C.dangerBdr,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    marginBottom: 12,
+    borderColor: solmateColors.border,
+  },
+  stepDotActive: {
+    backgroundColor: '#FFF4B8',
+    borderColor: solmateColors.primary,
+  },
+  stepDotCurrent: {
+    backgroundColor: solmateColors.primary,
+  },
+  stepDotText: {
+    color: solmateColors.muted,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  stepDotTextActive: {
+    color: solmateColors.text,
+  },
+  stepTitle: {
+    color: solmateColors.text,
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  field: {
+    marginBottom: 14,
+  },
+  label: {
+    color: solmateColors.navy,
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  input: {
+    minHeight: 52,
+    borderWidth: 1,
+    borderColor: solmateColors.border,
+    borderRadius: 14,
+    backgroundColor: solmateColors.backgroundSoft,
+    color: solmateColors.text,
+    fontSize: 15,
+    paddingHorizontal: 15,
+  },
+  inputDisabled: {
+    opacity: 0.65,
+  },
+  passwordRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  passwordInput: {
+    flex: 1,
+  },
+  passwordToggle: {
+    width: 74,
+    minHeight: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: solmateColors.border,
+    backgroundColor: solmateColors.backgroundSoft,
+  },
+  passwordToggleText: {
+    color: solmateColors.navy,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  selectBtn: {
+    minHeight: 52,
+    borderWidth: 1,
+    borderColor: solmateColors.border,
+    borderRadius: 14,
+    backgroundColor: solmateColors.backgroundSoft,
+    paddingHorizontal: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  selectText: {
+    flex: 1,
+    color: solmateColors.text,
+    fontSize: 15,
+  },
+  selectPlaceholder: {
+    color: solmateColors.mutedSoft,
+  },
+  selectChevron: {
+    color: solmateColors.muted,
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  passwordChecks: {
+    gap: 8,
+    marginTop: -4,
+    marginBottom: 16,
+  },
+  passwordCheckRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+  },
+  checkMark: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: solmateColors.borderStrong,
+    color: solmateColors.white,
+    textAlign: 'center',
+    lineHeight: 18,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  checkMarkMet: {
+    backgroundColor: '#0C8D4A',
+    borderColor: '#0C8D4A',
+  },
+  checkText: {
+    color: solmateColors.muted,
+    fontSize: 13,
+  },
+  checkTextMet: {
+    color: '#0C6B3A',
+    fontWeight: '700',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 4,
+  },
+  backBtn: {
+    flex: 1,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: solmateColors.white,
+    borderWidth: 1.5,
+    borderColor: solmateColors.borderStrong,
+  },
+  backBtnText: {
+    color: solmateColors.navy,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  nextBtn: {
+    flex: 1.4,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: solmateColors.primary,
+  },
+  fullWidthBtn: {
+    flex: 1,
+  },
+  nextBtnText: {
+    color: solmateColors.text,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  btnDisabled: {
+    opacity: 0.65,
+  },
+  bottomLink: {
+    marginTop: 18,
+    alignItems: 'center',
+  },
+  bottomLinkText: {
+    color: solmateColors.accentStrong,
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  bottomLinkBold: {
+    color: solmateColors.text,
+    fontWeight: '800',
+  },
+  errorBox: {
+    borderWidth: 1,
+    borderColor: solmateColors.danger,
+    backgroundColor: solmateColors.dangerSoft,
+    borderRadius: 14,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+    marginBottom: 14,
   },
   errorText: {
-    color: C.danger,
+    color: '#8F2D2D',
     fontSize: 13,
     lineHeight: 18,
   },
   successBox: {
-    backgroundColor: C.successBg,
     borderWidth: 1,
-    borderColor: C.successBdr,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    marginBottom: 12,
-  },
-  successText: {
-    color: C.success,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-
-  // Field
-  field: {
+    borderColor: solmateColors.accentSky,
+    backgroundColor: solmateColors.navy,
+    borderRadius: 14,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
     marginBottom: 14,
   },
-  fieldLabel: {
-    color: C.label,
-    fontSize: 12,
-    fontWeight: '500',
-    marginBottom: 5,
+  successText: {
+    color: solmateColors.white,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '700',
   },
-  fieldRow: {
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(15, 28, 52, 0.35)',
+  },
+  modalCard: {
+    maxHeight: '78%',
+    backgroundColor: solmateColors.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 26,
+  },
+  modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: C.inputBg,
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  modalTitle: {
+    color: solmateColors.text,
+    fontSize: 19,
+    fontWeight: '800',
+  },
+  modalCloseBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  modalCloseText: {
+    color: solmateColors.accentStrong,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  searchInput: {
+    height: 48,
     borderWidth: 1,
-    borderColor: C.inputBorder,
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    minHeight: 46,
-  },
-  fieldInput: {
-    flex: 1,
-    color: C.inputText,
+    borderColor: solmateColors.border,
+    borderRadius: 14,
+    backgroundColor: solmateColors.backgroundSoft,
+    color: solmateColors.text,
     fontSize: 15,
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 12,
   },
-  eyeBtn: {
-    padding: 4,
-    marginLeft: 8,
+  modalList: {
+    maxHeight: 420,
   },
-
-  // Button
-  btn: {
-    minHeight: 50,
-    borderRadius: 999,
-    backgroundColor: C.button,
+  modalState: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 4,
-    shadowColor: C.button,
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    shadowOffset: {width: 0, height: 4},
-    elevation: 4,
-  },
-  btnOff: {
-    opacity: 0.6,
-  },
-  btnText: {
-    color: C.buttonText,
-    fontSize: 17,
-    fontWeight: '800',
-    fontStyle: 'italic',
-  },
-  btnRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    paddingVertical: 28,
     gap: 10,
   },
-
-  // Footer
-  footer: {
-    alignItems: 'center',
+  modalStateText: {
+    color: solmateColors.muted,
+    fontSize: 14,
   },
-  footerText: {
-    color: C.footerText,
-    fontSize: 13,
+  optionRow: {
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: solmateColors.border,
   },
-  footerLink: {
-    color: C.footerLink,
-    fontWeight: '700',
+  optionRowPressed: {
+    opacity: 0.75,
+  },
+  optionText: {
+    color: solmateColors.text,
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

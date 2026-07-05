@@ -42,7 +42,7 @@ class AuthController extends Controller
             'last_name' => $lastName,
             'email' => trim($validated['email']),
             'password' => Hash::make($validated['password']),
-            'role' => $request->role ?? 'customer',
+            'role' => User::ROLE_CUSTOMER,
             'address' => trim($validated['address']),
             'contact_number' => trim($validated['contact_number']),
             'landline_number' => filled($validated['landline_number'] ?? null)
@@ -118,7 +118,7 @@ class AuthController extends Controller
 
         Log::info('LOGIN ATTEMPT START', [
             'email' => $request->email,
-            'user_found' => !! $user,
+            'user_found' => (bool) $user,
             'verified' => $user ? $user->hasVerifiedEmail() : null,
         ]);
 
