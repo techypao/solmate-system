@@ -94,6 +94,69 @@
             margin: 0;
         }
 
+        .rating-native-select {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .rating-star-shell {
+            display: grid;
+            gap: 8px;
+        }
+
+        .rating-star-control {
+            display: inline-flex;
+            width: fit-content;
+            max-width: 100%;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 12px;
+            border: 1px solid #DDE7EE;
+            border-radius: 12px;
+            background: #F8FAFC;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+        }
+
+        .rating-star-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border: 0;
+            border-radius: 999px;
+            background: transparent;
+            color: #CBD5E1;
+            font-size: 25px;
+            line-height: 1;
+            cursor: pointer;
+            transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+        }
+
+        .rating-star-button:hover,
+        .rating-star-button:focus-visible {
+            background: #FFF7CC;
+            color: #E6C200;
+            outline: none;
+            transform: translateY(-1px);
+        }
+
+        .rating-star-button.is-active {
+            color: #F4D000;
+            text-shadow: 0 2px 8px rgba(244, 208, 0, 0.22);
+        }
+
+        .rating-value-text {
+            color: #5E7288;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
         .selected-image-section {
             margin-top: 12px;
         }
@@ -213,12 +276,20 @@
                 <div class="form-grid two-columns">
                     <div>
                         <label for="rating">Rating</label>
-                        <select id="rating" name="rating" required>
-                            <option value="">Select rating</option>
-                            @for ($rating = 1; $rating <= 5; $rating++)
-                                <option value="{{ $rating }}">{{ $rating }}</option>
-                            @endfor
-                        </select>
+                        <div class="rating-star-shell">
+                            <select id="rating" name="rating" class="rating-native-select">
+                                <option value="">Select rating</option>
+                                @for ($rating = 1; $rating <= 5; $rating++)
+                                    <option value="{{ $rating }}">{{ $rating }}</option>
+                                @endfor
+                            </select>
+                            <div id="rating-star-control" class="rating-star-control" role="radiogroup" aria-label="Rating">
+                                @for ($rating = 1; $rating <= 5; $rating++)
+                                    <button type="button" class="rating-star-button" data-rating-value="{{ $rating }}" role="radio" aria-checked="false" aria-label="{{ $rating }} out of 5 stars">&#9733;</button>
+                                @endfor
+                            </div>
+                            <div id="rating-value-text" class="rating-value-text">Choose a rating</div>
+                        </div>
                         <div class="field-error" data-error-for="rating"></div>
                     </div>
 
@@ -294,6 +365,9 @@
         const serviceSelect = document.getElementById('service_request_id');
         const inspectionSelect = document.getElementById('inspection_request_id');
         const ratingSelect = document.getElementById('rating');
+        const ratingStarControl = document.getElementById('rating-star-control');
+        const ratingValueText = document.getElementById('rating-value-text');
+        const ratingStarButtons = Array.from(document.querySelectorAll('[data-rating-value]'));
         const titleInput = document.getElementById('title');
         const messageInput = document.getElementById('message');
         const imagesInput = document.getElementById('images');
@@ -478,6 +552,28 @@
 
         function getRatingLabel(rating) {
             return `${Number(rating || 0)}/5`;
+        }
+
+        function renderRatingStars() {
+            const selectedRating = Number(ratingSelect.value || 0);
+
+            ratingStarButtons.forEach((button) => {
+                const ratingValue = Number(button.dataset.ratingValue || 0);
+                const isActive = ratingValue <= selectedRating;
+
+                button.classList.toggle('is-active', isActive);
+                button.setAttribute('aria-checked', String(ratingValue === selectedRating));
+            });
+
+            ratingValueText.textContent = selectedRating > 0
+                ? `${selectedRating} out of 5`
+                : 'Choose a rating';
+        }
+
+        function setRatingValue(value) {
+            ratingSelect.value = String(value);
+            renderRatingStars();
+            clearFieldErrors();
         }
 
         function getImageCountLabel(images) {
@@ -707,6 +803,7 @@
             clearSelectedImages();
             form.reset();
             clearFieldErrors();
+            renderRatingStars();
             renderRequestSelectors();
             renderFormMode();
         }
@@ -724,6 +821,7 @@
             titleInput.value = testimony.title || '';
             messageInput.value = testimony.message || '';
             clearSelectedImages();
+            renderRatingStars();
             renderRequestSelectors();
             renderFormMode();
             form.scrollIntoView({
@@ -999,6 +1097,40 @@
             }
         });
 
+        ratingStarControl.addEventListener('click', (event) => {
+            const button = event.target.closest('button[data-rating-value]');
+
+            if (!button) {
+                return;
+            }
+
+            setRatingValue(Number(button.dataset.ratingValue || 0));
+        });
+
+        ratingStarControl.addEventListener('keydown', (event) => {
+            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
+                return;
+            }
+
+            event.preventDefault();
+
+            const currentRating = Number(ratingSelect.value || 0);
+            let nextRating = currentRating || 1;
+
+            if (event.key === 'ArrowLeft') {
+                nextRating = Math.max(1, nextRating - 1);
+            } else if (event.key === 'ArrowRight') {
+                nextRating = Math.min(5, nextRating + 1);
+            } else if (event.key === 'Home') {
+                nextRating = 1;
+            } else if (event.key === 'End') {
+                nextRating = 5;
+            }
+
+            setRatingValue(nextRating);
+            ratingStarButtons[nextRating - 1]?.focus();
+        });
+
         existingImagesList.addEventListener('change', (event) => {
             const checkbox = event.target.closest('input[data-remove-image-id]');
 
@@ -1105,6 +1237,7 @@
         cancelEditButton.addEventListener('click', resetForm);
         refreshButton.addEventListener('click', loadPageData);
 
+        renderRatingStars();
         loadPageData();
     </script>
 @endpush
