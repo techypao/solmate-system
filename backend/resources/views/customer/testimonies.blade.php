@@ -94,6 +94,58 @@
             margin: 0;
         }
 
+        .selected-image-section {
+            margin-top: 12px;
+        }
+
+        .selected-image-list {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        }
+
+        .selected-image-card {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #DDE7EE;
+            border-radius: 12px;
+            background: #ffffff;
+        }
+
+        .selected-image-card img {
+            display: block;
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+            background: #EAF9FD;
+        }
+
+        .selected-image-meta {
+            padding: 10px 12px;
+            color: #334e68;
+            font-size: 13px;
+            word-break: break-word;
+        }
+
+        .selected-image-remove {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border: 1px solid rgba(255, 255, 255, 0.82);
+            border-radius: 999px;
+            background: rgba(15, 47, 74, 0.88);
+            color: #ffffff;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
         .badge-danger {
             background: #fde8e8;
             color: #8a1c1c;
@@ -187,6 +239,10 @@
                     <label for="images">Upload images</label>
                     <input id="images" name="images" type="file" accept="image/*" multiple>
                     <div class="muted" style="margin-top: 8px;">You can upload multiple images. Existing images remain unless you choose to remove them while editing.</div>
+                    <div id="selected-images-section" class="selected-image-section" style="display: none;">
+                        <label style="margin-bottom: 12px;">Selected new images</label>
+                        <div id="selected-images-list" class="selected-image-list"></div>
+                    </div>
                     <div class="field-error" data-error-for="images"></div>
                 </div>
 
@@ -241,8 +297,11 @@
         const titleInput = document.getElementById('title');
         const messageInput = document.getElementById('message');
         const imagesInput = document.getElementById('images');
+        const selectedImagesSection = document.getElementById('selected-images-section');
+        const selectedImagesList = document.getElementById('selected-images-list');
         const existingImagesSection = document.getElementById('existing-images-section');
         const existingImagesList = document.getElementById('existing-images-list');
+        const maxTestimonyImages = 3;
 
         const state = {
             testimonies: [],
@@ -250,6 +309,7 @@
             inspectionRequests: [],
             editingId: null,
             removeImageIds: [],
+            newImages: [],
         };
 
         function setVisible(element, visible, displayValue = 'block') {
@@ -429,6 +489,108 @@
             return state.testimonies.find((testimony) => testimony.id === state.editingId) || null;
         }
 
+        function getActiveExistingImageCount() {
+            const editingTestimony = getEditingTestimony();
+            const existingImages = Array.isArray(editingTestimony?.images) ? editingTestimony.images : [];
+
+            return existingImages.filter((image) => !state.removeImageIds.includes(image.id)).length;
+        }
+
+        function getRemainingImageSlots() {
+            return Math.max(0, maxTestimonyImages - getActiveExistingImageCount() - state.newImages.length);
+        }
+
+        function revokeSelectedImagePreviews() {
+            state.newImages.forEach((image) => {
+                if (image.previewUrl) {
+                    URL.revokeObjectURL(image.previewUrl);
+                }
+            });
+        }
+
+        function renderSelectedImages() {
+            if (state.newImages.length === 0) {
+                selectedImagesList.innerHTML = '';
+                setVisible(selectedImagesSection, false);
+                return;
+            }
+
+            selectedImagesList.innerHTML = state.newImages.map((image, index) => `
+                <div class="selected-image-card">
+                    <img src="${escapeHtml(image.previewUrl)}" alt="Selected testimony image ${index + 1}">
+                    <button type="button" class="selected-image-remove" data-remove-selected-image="${escapeHtml(image.id)}" aria-label="Remove selected image ${index + 1}">&times;</button>
+                    <div class="selected-image-meta">Image ${index + 1}${image.file.name ? ` - ${escapeHtml(image.file.name)}` : ''}</div>
+                </div>
+            `).join('');
+
+            setVisible(selectedImagesSection, true);
+        }
+
+        function clearSelectedImages() {
+            revokeSelectedImagePreviews();
+            state.newImages = [];
+            imagesInput.value = '';
+            renderSelectedImages();
+        }
+
+        function trimSelectedImagesToFitLimit() {
+            const allowedNewImageCount = Math.max(0, maxTestimonyImages - getActiveExistingImageCount());
+
+            if (state.newImages.length <= allowedNewImageCount) {
+                return;
+            }
+
+            state.newImages.slice(allowedNewImageCount).forEach((image) => {
+                if (image.previewUrl) {
+                    URL.revokeObjectURL(image.previewUrl);
+                }
+            });
+            state.newImages = state.newImages.slice(0, allowedNewImageCount);
+            showError(`A testimony can only have up to ${maxTestimonyImages} images.`);
+        }
+
+        function refreshSelectedImages() {
+            trimSelectedImagesToFitLimit();
+            renderSelectedImages();
+        }
+
+        function addSelectedImages(files) {
+            clearMessages();
+            const remainingSlots = getRemainingImageSlots();
+
+            if (remainingSlots <= 0) {
+                showError(`A testimony can only have up to ${maxTestimonyImages} images.`);
+                imagesInput.value = '';
+                return;
+            }
+
+            const existingKeys = new Set(state.newImages.map((image) => image.key));
+            const nextImages = [];
+
+            Array.from(files || []).slice(0, remainingSlots).forEach((file, index) => {
+                const key = `${file.name}-${file.size}-${file.lastModified}`;
+
+                if (existingKeys.has(key)) {
+                    return;
+                }
+
+                existingKeys.add(key);
+                nextImages.push({
+                    id: `${key}-${Date.now()}-${index}`,
+                    key,
+                    file,
+                    previewUrl: URL.createObjectURL(file),
+                });
+            });
+
+            if (nextImages.length > 0) {
+                state.newImages = [...state.newImages, ...nextImages];
+                refreshSelectedImages();
+            }
+
+            imagesInput.value = '';
+        }
+
         function getCompletedServiceRequests() {
             const completedRequests = state.serviceRequests.filter((request) => String(request.status || '').toLowerCase() === 'completed');
             const editingTestimony = getEditingTestimony();
@@ -542,6 +704,7 @@
         function resetForm() {
             state.editingId = null;
             state.removeImageIds = [];
+            clearSelectedImages();
             form.reset();
             clearFieldErrors();
             renderRequestSelectors();
@@ -560,7 +723,7 @@
             ratingSelect.value = String(testimony.rating || '');
             titleInput.value = testimony.title || '';
             messageInput.value = testimony.message || '';
-            imagesInput.value = '';
+            clearSelectedImages();
             renderRequestSelectors();
             renderFormMode();
             form.scrollIntoView({
@@ -781,8 +944,8 @@
             formData.append('title', titleInput.value || '');
             formData.append('message', messageInput.value || '');
 
-            Array.from(imagesInput.files || []).forEach((file) => {
-                formData.append('images[]', file);
+            state.newImages.forEach((image) => {
+                formData.append('images[]', image.file);
             });
 
             state.removeImageIds.forEach((imageId) => {
@@ -854,6 +1017,30 @@
             } else {
                 state.removeImageIds = state.removeImageIds.filter((currentId) => currentId !== imageId);
             }
+
+            refreshSelectedImages();
+        });
+
+        selectedImagesList.addEventListener('click', (event) => {
+            const button = event.target.closest('button[data-remove-selected-image]');
+
+            if (!button) {
+                return;
+            }
+
+            const imageId = button.dataset.removeSelectedImage;
+            const selectedImage = state.newImages.find((image) => image.id === imageId);
+
+            if (selectedImage?.previewUrl) {
+                URL.revokeObjectURL(selectedImage.previewUrl);
+            }
+
+            state.newImages = state.newImages.filter((image) => image.id !== imageId);
+            renderSelectedImages();
+        });
+
+        imagesInput.addEventListener('change', () => {
+            addSelectedImages(imagesInput.files);
         });
 
         listContainer.addEventListener('click', (event) => {

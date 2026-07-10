@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import { Asset, launchImageLibrary } from 'react-native-image-picker';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { ApiError } from '../services/api';
 import {
@@ -42,7 +43,7 @@ const CARD = '#ffffff';
 const DIVIDER = '#DDE7EE';
 const MAX_TESTIMONY_IMAGES = 3;
 const TESTIMONY_IMAGE_MAX_DIMENSION = 1280;
-const TESTIMONY_IMAGE_QUALITY = 0.72;
+const TESTIMONY_IMAGE_QUALITY = 0.7;
 
 /* \u2500\u2500 types \u2500\u2500 */
 
@@ -56,6 +57,7 @@ type FieldErrors = {
 };
 
 type LocalImageAsset = {
+  localId: string;
   uri: string;
   type?: string | null;
   name?: string | null;
@@ -81,7 +83,16 @@ function getFriendlyErrorMessage(error: unknown) {
 function normalizePickedAssets(assets?: Asset[]): LocalImageAsset[] {
   return (assets || [])
     .filter(asset => !!asset.uri)
-    .map(asset => ({
+    .map((asset, index) => ({
+      localId: [
+        asset.uri,
+        asset.fileName,
+        asset.fileSize,
+        Date.now(),
+        index,
+      ]
+        .filter(value => value !== undefined && value !== null)
+        .join('-'),
       uri: asset.uri as string,
       type: asset.type || 'image/jpeg',
       name: asset.fileName || null,
@@ -239,6 +250,7 @@ export default function TestimonyForm({
     0,
     MAX_TESTIMONY_IMAGES - activeExistingImageCount - newImages.length,
   );
+  const selectedImageCount = activeExistingImageCount + newImages.length;
 
   /* \u2500\u2500 helpers (preserved) \u2500\u2500 */
   const clearError = (key?: keyof FieldErrors) => {
@@ -250,16 +262,28 @@ export default function TestimonyForm({
 
   const toggleExistingImageRemoval = (imageId: number) => {
     clearError();
-    setRemovedImageIds(cur =>
-      cur.includes(imageId)
+    setRemovedImageIds(cur => {
+      const nextRemovedImageIds = cur.includes(imageId)
         ? cur.filter(id => id !== imageId)
-        : [...cur, imageId],
-    );
+        : [...cur, imageId];
+      const nextActiveExistingCount = getExistingImageCount(
+        existingImages,
+        nextRemovedImageIds,
+      );
+      const allowedNewImageCount = Math.max(
+        0,
+        MAX_TESTIMONY_IMAGES - nextActiveExistingCount,
+      );
+
+      setNewImages(images => images.slice(0, allowedNewImageCount));
+
+      return nextRemovedImageIds;
+    });
   };
 
-  const removeNewImage = (uri: string) => {
+  const removeNewImage = (localId: string) => {
     clearError();
-    setNewImages(cur => cur.filter(img => img.uri !== uri));
+    setNewImages(cur => cur.filter(img => img.localId !== localId));
   };
 
   const handlePickImages = async () => {
@@ -287,7 +311,19 @@ export default function TestimonyForm({
     }
     const picked = normalizePickedAssets(result.assets);
     if (picked.length === 0) return;
-    setNewImages(cur => [...cur, ...picked]);
+    setNewImages(cur => {
+      const uniquePicked = picked.filter(
+        img =>
+          !cur.some(
+            current => current.uri === img.uri && current.name === img.name,
+          ),
+      );
+
+      return [...cur, ...uniquePicked].slice(
+        0,
+        MAX_TESTIMONY_IMAGES - activeExistingImageCount,
+      );
+    });
   };
 
   /* \u2500\u2500 validation (preserved) \u2500\u2500 */
@@ -305,6 +341,10 @@ export default function TestimonyForm({
     }
     if (activeExistingImageCount + newImages.length < 1) {
       nextErrors.images = 'Please add at least one testimony image.';
+    }
+    if (activeExistingImageCount + newImages.length > MAX_TESTIMONY_IMAGES) {
+      nextErrors.images =
+        'A testimony may only have up to ' + MAX_TESTIMONY_IMAGES + ' images.';
     }
     setFieldErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
@@ -680,6 +720,9 @@ export default function TestimonyForm({
                 Add photos that support your testimony. Existing images stay
                 unless you remove them.
               </Text>
+              <Text style={st.imageCountText}>
+                {selectedImageCount}/{MAX_TESTIMONY_IMAGES} images selected
+              </Text>
               {fieldErrors.images ? (
                 <Text style={st.fieldError}>{fieldErrors.images}</Text>
               ) : null}
@@ -749,23 +792,28 @@ export default function TestimonyForm({
               {/* new images */}
               {newImages.length > 0 ? (
                 <View style={st.imgSection}>
-                  <Text style={st.imgSectionTitle}>New images</Text>
+                  <Text style={st.imgSectionTitle}>Selected new images</Text>
                   <View style={st.imgGrid}>
-                    {newImages.map(img => (
-                      <View key={img.uri} style={st.imgCard}>
+                    {newImages.map((img, index) => (
+                      <View key={img.localId} style={st.imgCard}>
                         <Image
                           source={{ uri: img.uri }}
                           style={st.imgPreview}
                         />
                         <Pressable
-                          onPress={() => removeNewImage(img.uri)}
+                          accessibilityLabel={`Remove selected image ${index + 1}`}
+                          hitSlop={8}
+                          onPress={() => removeNewImage(img.localId)}
                           style={({ pressed }) => [
-                            st.imgActionBtn,
+                            st.imgRemoveIconBtn,
                             pressed && st.pressed,
                           ]}
                         >
-                          <Text style={st.imgActionBtnText}>Remove</Text>
+                          <Icon name="close" size={16} color="#ffffff" />
                         </Pressable>
+                        <View style={st.imgIndexBadge}>
+                          <Text style={st.imgIndexBadgeText}>{index + 1}</Text>
+                        </View>
                       </View>
                     ))}
                   </View>
@@ -1008,6 +1056,12 @@ const st = StyleSheet.create({
   outlineBtnTextDisabled: { color: MUTED },
 
   /* images */
+  imageCountText: {
+    marginTop: 8,
+    fontSize: 12,
+    fontWeight: '800',
+    color: NAVY,
+  },
   imgSection: { marginTop: 14 },
   imgSectionTitle: {
     fontSize: 14,
@@ -1016,26 +1070,33 @@ const st = StyleSheet.create({
     marginBottom: 10,
   },
   imgGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  imgCard: { width: '47%' },
+  imgCard: {
+    position: 'relative',
+    width: '30.6%',
+    minWidth: 92,
+  },
   imgCardMuted: { opacity: 0.45 },
   imgPreview: {
     width: '100%',
-    height: 120,
-    borderRadius: 16,
+    aspectRatio: 1,
+    borderRadius: 14,
     backgroundColor: '#d6dff0',
-    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: DIVIDER,
   },
   imgPlaceholder: {
     width: '100%',
-    height: 120,
-    borderRadius: 16,
+    aspectRatio: 1,
+    borderRadius: 14,
     backgroundColor: '#d6dff0',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: DIVIDER,
   },
   imgPlaceholderText: { color: MUTED, fontSize: 13, fontWeight: '700' },
   imgActionBtn: {
+    marginTop: 8,
     backgroundColor: CARD,
     borderWidth: 1,
     borderColor: DIVIDER,
@@ -1044,6 +1105,32 @@ const st = StyleSheet.create({
     alignItems: 'center',
   },
   imgActionBtnText: { fontSize: 13, fontWeight: '700', color: NAVY },
+  imgRemoveIconBtn: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(15, 47, 74, 0.88)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.84)',
+  },
+  imgIndexBadge: {
+    position: 'absolute',
+    left: 6,
+    bottom: 6,
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    paddingHorizontal: 7,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imgIndexBadgeText: { fontSize: 11, fontWeight: '900', color: NAVY },
 
   /* gold submit */
   goldBtn: {
