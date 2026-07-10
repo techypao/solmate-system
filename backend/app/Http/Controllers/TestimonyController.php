@@ -9,6 +9,7 @@ use App\Models\InspectionRequest;
 use App\Models\ServiceRequest;
 use App\Models\Testimony;
 use App\Services\InAppNotificationService;
+use App\Services\TestimonyContentModerationService;
 use App\Services\TestimonyImageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,7 @@ class TestimonyController extends Controller
 {
     public function __construct(
         private TestimonyImageService $testimonyImageService,
+        private TestimonyContentModerationService $contentModerationService,
         private InAppNotificationService $notificationService
     ) {}
 
@@ -60,7 +62,12 @@ class TestimonyController extends Controller
             return $eligibilityError;
         }
 
-        $testimony = DB::transaction(function () use ($request, $validated) {
+        $moderationNote = $this->contentModerationService->rejectionNote(
+            $validated['title'] ?? null,
+            $validated['message']
+        );
+
+        $testimony = DB::transaction(function () use ($request, $validated, $moderationNote) {
             $testimony = Testimony::query()->create([
                 'user_id' => $request->user()->id,
                 'service_request_id' => $validated['service_request_id'] ?? null,
@@ -68,8 +75,8 @@ class TestimonyController extends Controller
                 'rating' => $validated['rating'],
                 'title' => $validated['title'] ?? null,
                 'message' => $validated['message'],
-                'status' => Testimony::STATUS_PENDING,
-                'admin_note' => null,
+                'status' => $moderationNote ? Testimony::STATUS_REJECTED : Testimony::STATUS_PENDING,
+                'admin_note' => $moderationNote,
             ]);
 
             $this->testimonyImageService->syncForStore(
@@ -81,10 +88,15 @@ class TestimonyController extends Controller
         });
 
         $testimony->load($this->relationships());
-        $this->notificationService->notifyAdminsOfNewTestimony($testimony, $request->user()->id);
+
+        if (! $moderationNote) {
+            $this->notificationService->notifyAdminsOfNewTestimony($testimony, $request->user()->id);
+        }
 
         return response()->json([
-            'message' => 'Testimony submitted successfully.',
+            'message' => $moderationNote
+                ? 'Testimony submitted and automatically rejected by content moderation.'
+                : 'Testimony submitted successfully.',
             'data' => $testimony,
         ], 201);
     }
@@ -117,9 +129,13 @@ class TestimonyController extends Controller
             return $eligibilityError;
         }
 
-        $wasApproved = $testimony->status === Testimony::STATUS_APPROVED;
+        $previousStatus = $testimony->status;
+        $moderationNote = $this->contentModerationService->rejectionNote(
+            $validated['title'] ?? $testimony->title,
+            $validated['message']
+        );
 
-        DB::transaction(function () use ($request, $validated, $testimony, $serviceRequestId, $inspectionRequestId, $wasApproved): void {
+        DB::transaction(function () use ($request, $validated, $testimony, $serviceRequestId, $inspectionRequestId, $previousStatus, $moderationNote): void {
             $testimony->rating = $validated['rating'];
             $testimony->message = $validated['message'];
             $testimony->service_request_id = $serviceRequestId;
@@ -129,7 +145,10 @@ class TestimonyController extends Controller
                 $testimony->title = $validated['title'];
             }
 
-            if ($wasApproved) {
+            if ($moderationNote) {
+                $testimony->status = Testimony::STATUS_REJECTED;
+                $testimony->admin_note = $moderationNote;
+            } elseif ($previousStatus !== Testimony::STATUS_PENDING) {
                 $testimony->status = Testimony::STATUS_PENDING;
                 $testimony->admin_note = null;
             }
@@ -146,9 +165,11 @@ class TestimonyController extends Controller
         $testimony->load($this->relationships());
 
         return response()->json([
-            'message' => $wasApproved
+            'message' => $moderationNote
+                ? 'Testimony updated and automatically rejected by content moderation.'
+                : ($previousStatus !== Testimony::STATUS_PENDING
                 ? 'Testimony updated successfully and sent back for review.'
-                : 'Testimony updated successfully.',
+                : 'Testimony updated successfully.'),
             'data' => $testimony,
         ], 200);
     }

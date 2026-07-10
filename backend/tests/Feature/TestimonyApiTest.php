@@ -7,6 +7,7 @@ use App\Models\ServiceRequest;
 use App\Models\Testimony;
 use App\Models\TestimonyImage;
 use App\Models\User;
+use App\Services\TestimonyContentModerationService;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -370,6 +371,148 @@ class TestimonyApiTest extends TestCase
         $this->assertDatabaseMissing('testimonies', [
             'id' => $testimony->id,
         ]);
+    }
+
+    public function test_testimony_with_english_or_tagalog_profanity_is_auto_rejected_and_hidden(): void
+    {
+        Storage::fake(TestimonyImage::PUBLIC_DISK);
+
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_testimony_profanity@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $customer = $this->createVerifiedUser([
+            'name' => 'Customer User',
+            'email' => 'customer_testimony_profanity@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        $serviceRequest = ServiceRequest::query()->create([
+            'user_id' => $customer->id,
+            'request_type' => 'Maintenance',
+            'details' => 'Completed maintenance',
+            'status' => 'completed',
+        ]);
+
+        $createResponse = $this->actingAs($customer)
+            ->post('/api/testimonies', [
+                'service_request_id' => $serviceRequest->id,
+                'rating' => 1,
+                'title' => 'Tangina service',
+                'message' => 'The job was bad.',
+                'images' => [
+                    UploadedFile::fake()->image('proof.jpg'),
+                ],
+            ], ['Accept' => 'application/json'])
+            ->assertCreated()
+            ->assertJsonPath('data.status', Testimony::STATUS_REJECTED)
+            ->assertJsonPath('data.admin_note', TestimonyContentModerationService::PROFANITY_NOTE);
+
+        $this->assertCount(0, $admin->fresh()->notifications);
+
+        $this->getJson('/api/public/testimonies')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/testimonies')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $createResponse->json('data.id'))
+            ->assertJsonPath('data.0.admin_note', TestimonyContentModerationService::PROFANITY_NOTE);
+    }
+
+    public function test_testimony_with_gibberish_is_auto_rejected_and_hidden(): void
+    {
+        Storage::fake(TestimonyImage::PUBLIC_DISK);
+
+        $customer = $this->createVerifiedUser([
+            'name' => 'Customer User',
+            'email' => 'customer_testimony_gibberish@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        $serviceRequest = ServiceRequest::query()->create([
+            'user_id' => $customer->id,
+            'request_type' => 'Maintenance',
+            'details' => 'Completed maintenance',
+            'status' => 'completed',
+        ]);
+
+        $this->actingAs($customer)
+            ->post('/api/testimonies', [
+                'service_request_id' => $serviceRequest->id,
+                'rating' => 3,
+                'title' => 'asdfasdf',
+                'message' => 'qwrtypsdfgh jklmnpqrst',
+                'images' => [
+                    UploadedFile::fake()->image('proof.jpg'),
+                ],
+            ], ['Accept' => 'application/json'])
+            ->assertCreated()
+            ->assertJsonPath('data.status', Testimony::STATUS_REJECTED)
+            ->assertJsonPath('data.admin_note', TestimonyContentModerationService::GIBBERISH_NOTE);
+
+        $this->getJson('/api/public/testimonies')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+    }
+
+    public function test_customer_edit_with_flagged_content_auto_rejects_and_clean_revisions_return_to_pending(): void
+    {
+        Storage::fake(TestimonyImage::PUBLIC_DISK);
+
+        $customer = $this->createVerifiedUser([
+            'name' => 'Customer User',
+            'email' => 'customer_testimony_flagged_update@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        $serviceRequest = ServiceRequest::query()->create([
+            'user_id' => $customer->id,
+            'request_type' => 'Installation',
+            'details' => 'Completed installation',
+            'status' => 'completed',
+        ]);
+
+        $testimony = Testimony::query()->create([
+            'user_id' => $customer->id,
+            'service_request_id' => $serviceRequest->id,
+            'rating' => 5,
+            'title' => 'Originally approved',
+            'message' => 'Original approved testimony.',
+            'status' => Testimony::STATUS_APPROVED,
+        ]);
+        $testimony->images()->create([
+            'image_path' => "testimonies/{$testimony->id}/existing.jpg",
+        ]);
+
+        $this->actingAs($customer)
+            ->putJson("/api/testimonies/{$testimony->id}", [
+                'service_request_id' => $serviceRequest->id,
+                'rating' => 1,
+                'title' => 'Bad update',
+                'message' => 'This was f.u.c.k.i.n.g bad.',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.status', Testimony::STATUS_REJECTED)
+            ->assertJsonPath('data.admin_note', TestimonyContentModerationService::PROFANITY_NOTE);
+
+        $this->actingAs($customer)
+            ->putJson("/api/testimonies/{$testimony->id}", [
+                'service_request_id' => $serviceRequest->id,
+                'rating' => 4,
+                'title' => 'Revised testimony',
+                'message' => 'The team came back and handled the concern professionally.',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.status', Testimony::STATUS_PENDING)
+            ->assertJsonPath('data.admin_note', null);
     }
 
     public function test_customer_can_create_and_update_testimony_images_and_public_and_admin_responses_include_them(): void
