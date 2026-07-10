@@ -224,28 +224,11 @@
         }
     </style>
 
-    <div class="card">
-        <div class="section-header">
-            <div>
-                <h1 class="page-title">My Testimonies</h1>
-                <p class="page-copy">Create, update, and track your own testimonies from the customer website dashboard.</p>
-            </div>
-            <div class="actions" style="margin-top: 0;">
-                <a href="{{ route('home') }}" class="secondary" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:1.5px solid #DDE7EE;border-radius:8px;font-size:14px;font-weight:600;color:#5E7288;text-decoration:none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-                    Back
-                </a>
-                <button id="add-testimony-button" type="button">Add Testimony</button>
-                <button id="refresh-testimonies-button" type="button" class="secondary">Refresh</button>
-            </div>
-        </div>
-
+    <div class="testimony-shell">
         <div id="testimonies-loading" class="info-box">Loading your testimonies...</div>
         <div id="testimonies-success" class="status" style="display: none;"></div>
         <div id="testimonies-error" class="error-box" style="display: none;"></div>
-    </div>
 
-    <div class="testimony-shell">
         <div class="card">
             <div class="section-header">
                 <div>
@@ -353,8 +336,6 @@
         const loadingBox = document.getElementById('testimonies-loading');
         const successBox = document.getElementById('testimonies-success');
         const errorBox = document.getElementById('testimonies-error');
-        const addButton = document.getElementById('add-testimony-button');
-        const refreshButton = document.getElementById('refresh-testimonies-button');
         const form = document.getElementById('testimony-form');
         const formHeading = document.getElementById('form-heading');
         const formCopy = document.getElementById('form-copy');
@@ -1226,16 +1207,7 @@
             }
         });
 
-        addButton.addEventListener('click', () => {
-            resetForm();
-            form.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start',
-            });
-        });
-
         cancelEditButton.addEventListener('click', resetForm);
-        refreshButton.addEventListener('click', loadPageData);
 
         renderRatingStars();
         loadPageData();
