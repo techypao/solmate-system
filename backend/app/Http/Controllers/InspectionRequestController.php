@@ -295,6 +295,12 @@ class InspectionRequestController extends Controller
         $previousStatus = $inspectionRequest->status;
         $nextStatus = $request->status;
 
+        if ($inspectionRequest->cancellation_note !== null && $nextStatus !== 'cancelled') {
+            return response()->json([
+                'message' => 'This inspection has a customer cancellation request and can only be marked as cancelled.',
+            ], 422);
+        }
+
         if ($nextStatus === 'completed') {
             $completionReport = $inspectionRequest->completionReport;
 

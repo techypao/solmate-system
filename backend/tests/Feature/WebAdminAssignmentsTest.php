@@ -63,6 +63,43 @@ class WebAdminAssignmentsTest extends TestCase
             ->assertSee('0917-333-2000');
     }
 
+    public function test_cancel_requested_inspection_only_shows_cancelled_status_option(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_cancel_requested_inspection_page@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $customer = User::query()->create([
+            'name' => 'Customer User',
+            'email' => 'customer_cancel_requested_inspection_page@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        InspectionRequest::query()->create([
+            'user_id' => $customer->id,
+            'details' => 'Inspect rooftop setup',
+            'contact_number' => '0917-333-2100',
+            'status' => 'pending',
+            'cancellation_note' => 'Customer requested cancellation from the app.',
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/admin/request-assignments')
+            ->assertOk()
+            ->assertSee('Cancellation Reason')
+            ->assertSee('value="cancelled"', false)
+            ->assertDontSee('value="pending"', false)
+            ->assertDontSee('value="approved"', false)
+            ->assertDontSee('value="scheduled"', false)
+            ->assertDontSee('value="assigned"', false)
+            ->assertDontSee('value="in_progress"', false)
+            ->assertDontSee('value="completed"', false);
+    }
+
     public function test_admin_can_open_walkin_page_for_manual_inspection_requests(): void
     {
         $admin = User::query()->create([

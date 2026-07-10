@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\PromotionPageController;
 use App\Http\Controllers\Admin\QuotationSettingsPageController;
 use App\Http\Controllers\Admin\ReportsPageController;
 use App\Http\Controllers\Admin\RequestAssignmentPageController;
+use App\Http\Controllers\Admin\ServiceRequestOptionPageController;
 use App\Http\Controllers\Admin\TechnicianRegistrationController;
 use App\Http\Controllers\Admin\TestimonyModerationPageController;
 use App\Http\Controllers\Admin\VisualHighlightPageController;
@@ -173,6 +174,9 @@ Route::middleware(['auth', 'verified.email'])->group(function () {
 
         Route::get('/admin/promotions', [PromotionPageController::class, 'show'])
             ->name('admin.promotions');
+
+        Route::get('/admin/service-request-options', [ServiceRequestOptionPageController::class, 'show'])
+            ->name('admin.service-request-options');
 
         Route::get('/admin/profile', [ProfilePageController::class, 'show'])
             ->name('admin.profile.show');

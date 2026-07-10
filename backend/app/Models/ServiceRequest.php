@@ -18,6 +18,8 @@ class ServiceRequest extends Model
         'customer_email',
         'technician_id',
         'request_type',
+        'service_request_option_id',
+        'service_request_option_label',
         'details',
         'cancellation_note',
         'contact_number',
@@ -51,6 +53,11 @@ class ServiceRequest extends Model
     public function technician()
     {
         return $this->belongsTo(User::class, 'technician_id');
+    }
+
+    public function serviceRequestOption()
+    {
+        return $this->belongsTo(ServiceRequestOption::class);
     }
 
     public function testimonies(): HasMany

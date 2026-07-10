@@ -101,6 +101,14 @@ function getFriendlyErrorMessage(error: unknown) {
 }
 
 function getInstallationType(serviceRequest: ServiceRequest) {
+  if (serviceRequest.service_request_option_label) {
+    return serviceRequest.service_request_option_label;
+  }
+
+  if (serviceRequest.service_request_option?.label) {
+    return serviceRequest.service_request_option.label;
+  }
+
   const details = formatDisplayValue(serviceRequest.details, '');
   const match = details.match(/Installation Type:\s*(.+)/i);
   if (match?.[1]) {
@@ -111,6 +119,14 @@ function getInstallationType(serviceRequest: ServiceRequest) {
 }
 
 function getMaintenanceConcern(serviceRequest: ServiceRequest) {
+  if (serviceRequest.service_request_option_label) {
+    return serviceRequest.service_request_option_label;
+  }
+
+  if (serviceRequest.service_request_option?.label) {
+    return serviceRequest.service_request_option.label;
+  }
+
   const details = formatDisplayValue(serviceRequest.details, '');
   const match = details.match(/Maintenance Concern:\s*(.+)/i);
   if (match?.[1]) {

@@ -1233,6 +1233,58 @@
     var mapSearchInFlight = false;
     var reverseInFlight = false;
 
+    function optionTag(index) {
+        return String.fromCharCode(65 + index);
+    }
+
+    function attachMaintenanceChoiceHandlers() {
+        qsa('.mnt-choice').forEach(function (choice) {
+            var radio = qs('input[type="radio"]', choice);
+            choice.addEventListener('click', function () {
+                if (radio) radio.checked = true;
+                qsa('.mnt-choice').forEach(function (item) {
+                    item.classList.remove('is-selected');
+                });
+                choice.classList.add('is-selected');
+                var err = qs('#mnt-type-error');
+                if (err) {
+                    err.textContent = '';
+                    err.classList.remove('show');
+                }
+            });
+        });
+    }
+
+    function renderMaintenanceOptions(options) {
+        var grid = qs('#mnt-type-grid');
+        if (!grid || !Array.isArray(options) || options.length === 0) return false;
+
+        grid.innerHTML = options.map(function (option, index) {
+            return [
+                '<label class="mnt-choice">',
+                '<input type="radio" name="maintenance_type" value="' + escHtml(option.label) + '" data-option-id="' + escHtml(option.id) + '">',
+                '<span class="mnt-choice-tag">' + escHtml(optionTag(index)) + '</span>',
+                '<p class="mnt-choice-title">' + escHtml(option.label) + '</p>',
+                '<p class="mnt-choice-desc">' + escHtml(option.description || 'Select this maintenance concern.') + '</p>',
+                '</label>'
+            ].join('');
+        }).join('');
+
+        attachMaintenanceChoiceHandlers();
+        return true;
+    }
+
+    async function loadMaintenanceOptions() {
+        try {
+            var payload = await apiRequest('/api/service-request-options?category=maintenance_concern', { method: 'GET' });
+            if (!renderMaintenanceOptions(payload.data || [])) {
+                attachMaintenanceChoiceHandlers();
+            }
+        } catch (error) {
+            attachMaintenanceChoiceHandlers();
+        }
+    }
+
     function parseCoordinate(value) {
         var parsed = parseFloat(value);
         return Number.isFinite(parsed) ? parsed : null;
@@ -1513,21 +1565,7 @@
         }
     }
 
-    qsa('.mnt-choice').forEach(function (choice) {
-        var radio = qs('input[type="radio"]', choice);
-        choice.addEventListener('click', function () {
-            if (radio) radio.checked = true;
-            qsa('.mnt-choice').forEach(function (item) {
-                item.classList.remove('is-selected');
-            });
-            choice.classList.add('is-selected');
-            var err = qs('#mnt-type-error');
-            if (err) {
-                err.textContent = '';
-                err.classList.remove('show');
-            }
-        });
-    });
+    loadMaintenanceOptions();
 
     if (mapOpenBtn && mapModal && mapConfirmBtn && mapCancelBtn && mapCloseBtn && useLocationBtn) {
         mapOpenBtn.addEventListener('click', function () {
@@ -1589,6 +1627,7 @@
 
         var selectedTypeInput = qs('input[name="maintenance_type"]:checked');
         var selectedType = selectedTypeInput ? selectedTypeInput.value : '';
+        var selectedOptionId = selectedTypeInput ? selectedTypeInput.getAttribute('data-option-id') : '';
         var description = qs('#mnt-description').value.trim();
         var extraConcern = qs('#mnt-extra-concern').value.trim();
         var contact = qs('#mnt-contact').value.trim();
@@ -1642,6 +1681,7 @@
                 method: 'POST',
                 body: {
                     request_type: 'maintenance',
+                    service_request_option_id: selectedOptionId ? Number(selectedOptionId) : null,
                     contact_number: contact,
                     date_needed: dateNeeded,
                     details: detailLines.join('\n'),

@@ -22,6 +22,9 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
 
-        $this->call(PricingCatalogSeeder::class);
+        $this->call([
+            PricingCatalogSeeder::class,
+            ServiceRequestOptionSeeder::class,
+        ]);
     }
 }

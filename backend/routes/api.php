@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\NewsArticleController as AdminNewsArticleControll
 use App\Http\Controllers\Admin\PricingItemController;
 use App\Http\Controllers\Admin\PromotionController as AdminPromotionController;
 use App\Http\Controllers\Admin\QuotationSettingsController;
+use App\Http\Controllers\Admin\ServiceRequestOptionController as AdminServiceRequestOptionController;
 use App\Http\Controllers\Admin\VisualHighlightController as AdminVisualHighlightController;
 use App\Http\Controllers\Api\AdminChatConversationController;
 use App\Http\Controllers\Api\AuthController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\QuotationLineItemController;
 use App\Http\Controllers\ServiceRequestController;
+use App\Http\Controllers\ServiceRequestOptionController;
 use App\Http\Controllers\TestimonyController;
 use App\Http\Controllers\VisualHighlightController;
 use Illuminate\Http\Request;
@@ -65,6 +67,7 @@ Route::middleware(['auth:sanctum', 'active.user', 'verified.email'])->group(func
     Route::put('/quotations/{id}', [QuotationController::class, 'update']);
     Route::match(['put', 'patch'], '/quotations/{quotation}/line-items', [QuotationLineItemController::class, 'replace']);
     Route::get('/preferred-date-availability', PreferredDateAvailabilityController::class);
+    Route::get('/service-request-options', [ServiceRequestOptionController::class, 'index']);
 });
 
 // ADMIN ROUTES
@@ -89,6 +92,10 @@ Route::middleware(['auth:sanctum', 'verified.email', 'role:admin'])->group(funct
     Route::post('/admin/pricing-items', [PricingItemController::class, 'store']);
     Route::match(['put', 'patch'], '/admin/pricing-items/{pricingItem}', [PricingItemController::class, 'update']);
     Route::delete('/admin/pricing-items/{pricingItem}', [PricingItemController::class, 'destroy']);
+    Route::get('/admin/service-request-options', [AdminServiceRequestOptionController::class, 'index']);
+    Route::post('/admin/service-request-options', [AdminServiceRequestOptionController::class, 'store']);
+    Route::match(['put', 'patch'], '/admin/service-request-options/{serviceRequestOption}', [AdminServiceRequestOptionController::class, 'update']);
+    Route::delete('/admin/service-request-options/{serviceRequestOption}', [AdminServiceRequestOptionController::class, 'destroy']);
     Route::get('/admin/news-articles', [AdminNewsArticleController::class, 'index']);
     Route::post('/admin/news-articles', [AdminNewsArticleController::class, 'store']);
     Route::patch('/admin/news-articles/{newsArticle}/toggle', [AdminNewsArticleController::class, 'toggle']);

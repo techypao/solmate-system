@@ -733,6 +733,73 @@ class RequestWorkflowTest extends TestCase
             ->assertJsonPath('0.date_needed', '2026-04-26');
     }
 
+    public function test_admin_can_only_mark_cancel_requested_inspection_as_cancelled(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Customer User',
+            'email' => 'customer_inspection_cancel_review@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+            'address' => '77 Solar Avenue, Makati City',
+        ]);
+        $customer->forceFill(['email_verified_at' => now()])->save();
+
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_inspection_cancel_review@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+        $admin->forceFill(['email_verified_at' => now()])->save();
+
+        $inspectionRequestId = $this->actingAs($customer)
+            ->postJson('/api/inspection-requests', [
+                'details' => 'Inspect rooftop setup before installation.',
+                'contact_number' => '0917-777-2000',
+                'address' => '77 Solar Avenue, Makati City',
+                'date_needed' => '2026-04-27',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.status', 'pending')
+            ->json('data.id');
+
+        $cancellationNote = 'Schedule changed. Please cancel this inspection request.';
+
+        $this->actingAs($customer)
+            ->putJson("/api/inspection-requests/{$inspectionRequestId}/cancel", [
+                'cancellation_note' => $cancellationNote,
+            ])
+            ->assertOk()
+            ->assertJsonPath('inspection_request.status', 'pending')
+            ->assertJsonPath('inspection_request.cancellation_note', $cancellationNote);
+
+        $this->actingAs($admin)
+            ->putJson("/api/admin/inspection-requests/{$inspectionRequestId}/status", [
+                'status' => 'approved',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'This inspection has a customer cancellation request and can only be marked as cancelled.');
+
+        $this->assertDatabaseHas('inspection_requests', [
+            'id' => $inspectionRequestId,
+            'status' => 'pending',
+            'cancellation_note' => $cancellationNote,
+        ]);
+
+        $this->actingAs($admin)
+            ->putJson("/api/admin/inspection-requests/{$inspectionRequestId}/status", [
+                'status' => 'cancelled',
+            ])
+            ->assertOk()
+            ->assertJsonPath('inspection_request.status', 'cancelled');
+
+        $this->assertDatabaseHas('inspection_requests', [
+            'id' => $inspectionRequestId,
+            'status' => 'cancelled',
+            'cancellation_note' => $cancellationNote,
+        ]);
+    }
+
     public function test_contact_number_is_required_for_request_creation(): void
     {
         $customer = User::query()->create([

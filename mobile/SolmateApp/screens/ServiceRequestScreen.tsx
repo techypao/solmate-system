@@ -18,7 +18,11 @@ import { AuthContext } from '../src/context/AuthContext';
 import { ApiError } from '../src/services/api';
 import { getCustomerRequestBlockMessage } from '../src/services/customerRequestEligibility';
 import { getUnavailablePreferredDates } from '../src/services/preferredDateAvailabilityApi';
-import { createServiceRequest } from '../src/services/serviceRequestApi';
+import {
+  createServiceRequest,
+  getServiceRequestOptions,
+  ServiceRequestOption,
+} from '../src/services/serviceRequestApi';
 import { getDefaultContactNumber } from '../src/utils/contactNumber';
 
 /* ── design tokens ── */
@@ -40,6 +44,9 @@ const REQUEST_TYPE_OPTIONS = [
   'General system check',
   'Other custom concern',
 ];
+
+type MaintenanceOption = Pick<ServiceRequestOption, 'label'> &
+  Partial<Pick<ServiceRequestOption, 'id' | 'description'>>;
 
 type FieldErrors = {
   requestType?: string;
@@ -102,6 +109,13 @@ export default function ServiceRequestScreen({ navigation }: any) {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [dateNeeded, setDateNeeded] = useState('');
+  const [maintenanceOptions, setMaintenanceOptions] = useState<
+    MaintenanceOption[]
+  >(
+    REQUEST_TYPE_OPTIONS.map(label => ({
+      label,
+    })),
+  );
   const [unavailableDates, setUnavailableDates] = useState<string[]>([]);
   const [availabilityMessage, setAvailabilityMessage] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -150,6 +164,21 @@ export default function ServiceRequestScreen({ navigation }: any) {
     }
   }, []);
 
+  const loadMaintenanceOptions = useCallback(async () => {
+    try {
+      const options = await getServiceRequestOptions('maintenance_concern');
+      if (options.length > 0) {
+        setMaintenanceOptions(options);
+      }
+    } catch {
+      setMaintenanceOptions(
+        REQUEST_TYPE_OPTIONS.map(label => ({
+          label,
+        })),
+      );
+    }
+  }, []);
+
   const refreshRequestEligibility = useCallback(async () => {
     try {
       setCheckingEligibility(true);
@@ -168,9 +197,10 @@ export default function ServiceRequestScreen({ navigation }: any) {
 
   useFocusEffect(
     useCallback(() => {
+      loadMaintenanceOptions();
       loadUnavailableDates();
       refreshRequestEligibility();
-    }, [loadUnavailableDates, refreshRequestEligibility]),
+    }, [loadMaintenanceOptions, loadUnavailableDates, refreshRequestEligibility]),
   );
 
   useEffect(() => {
@@ -305,9 +335,13 @@ export default function ServiceRequestScreen({ navigation }: any) {
       const trimmedContactNumber = contactNumber.trim();
       const trimmedAddress = address.trim();
       const trimmedAddressDetails = addressDetails.trim();
+      const selectedMaintenanceOption = maintenanceOptions.find(
+        option => option.label === trimmedRequestType,
+      );
 
       const response = await createServiceRequest({
         request_type: 'maintenance',
+        service_request_option_id: selectedMaintenanceOption?.id ?? null,
         details: buildMaintenanceDetails(trimmedRequestType, trimmedDetails),
         ...(trimmedContactNumber
           ? { contact_number: trimmedContactNumber }
@@ -499,12 +533,12 @@ export default function ServiceRequestScreen({ navigation }: any) {
               </View>
 
               <View style={s.chipGroup}>
-                {REQUEST_TYPE_OPTIONS.map(option => {
-                  const isSelected = selectedRequestType === option;
+                {maintenanceOptions.map(option => {
+                  const isSelected = selectedRequestType === option.label;
                   return (
                     <Pressable
-                      key={option}
-                      onPress={() => handleRequestTypeChange(option)}
+                      key={`${option.id ?? 'fallback'}-${option.label}`}
+                      onPress={() => handleRequestTypeChange(option.label)}
                       style={({ pressed }) => [
                         s.chip,
                         isSelected && s.chipSelected,
@@ -514,7 +548,7 @@ export default function ServiceRequestScreen({ navigation }: any) {
                       <Text
                         style={[s.chipText, isSelected && s.chipTextSelected]}
                       >
-                        {option}
+                        {option.label}
                       </Text>
                     </Pressable>
                   );

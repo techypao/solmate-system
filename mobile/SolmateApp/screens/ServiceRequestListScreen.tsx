@@ -100,6 +100,14 @@ function normalizeServiceRequest(item: ServiceRequest): ServiceRequest {
 }
 
 function getInstallationType(item: ServiceRequest) {
+  if (item.service_request_option_label) {
+    return item.service_request_option_label;
+  }
+
+  if (item.service_request_option?.label) {
+    return item.service_request_option.label;
+  }
+
   const details = item.details || '';
   const match = details.match(/Installation Type:\s*(.+)/i);
   if (match?.[1]) {
@@ -110,6 +118,14 @@ function getInstallationType(item: ServiceRequest) {
 }
 
 function getMaintenanceConcern(item: ServiceRequest) {
+  if (item.service_request_option_label) {
+    return item.service_request_option_label;
+  }
+
+  if (item.service_request_option?.label) {
+    return item.service_request_option.label;
+  }
+
   const details = item.details || '';
   const match = details.match(/Maintenance Concern:\s*(.+)/i);
   if (match?.[1]) {

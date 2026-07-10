@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CompletionReport;
 use App\Models\InspectionRequest;
 use App\Models\ServiceRequest;
+use App\Models\ServiceRequestOption;
 use App\Models\User;
 use App\Services\CustomerRequestEligibilityService;
 use App\Services\InAppNotificationService;
@@ -12,6 +13,7 @@ use App\Services\PreferredDateLockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ServiceRequestController extends Controller
 {
@@ -24,7 +26,7 @@ class ServiceRequestController extends Controller
     public function index(Request $request)
     {
         $serviceRequests = ServiceRequest::query()
-            ->with(['technician', 'completionReport.technician', 'completionReport.approver'])
+            ->with(['technician', 'serviceRequestOption', 'completionReport.technician', 'completionReport.approver'])
             ->where('user_id', $request->user()->id)
             ->latest()
             ->get();
@@ -36,6 +38,7 @@ class ServiceRequestController extends Controller
     {
         $validated = $request->validate([
             'request_type' => 'required|string|max:255',
+            'service_request_option_id' => 'nullable|integer|exists:service_request_options,id',
             'details' => 'required|string',
             'contact_number' => 'required|string|max:30',
             'address' => [
@@ -58,11 +61,17 @@ class ServiceRequestController extends Controller
         $providedAddress = trim((string) ($validated['address'] ?? ''));
         $resolvedAddress = $providedAddress !== '' ? $providedAddress : ($userAddress !== '' ? $userAddress : null);
         $resolvedAddressDetails = trim((string) ($validated['address_details'] ?? ''));
+        $serviceRequestOption = $this->resolveServiceRequestOption($validated);
+        $serviceRequestOptionLabel = $serviceRequestOption?->label
+            ?: $this->extractOptionLabelFromDetails(
+                $validated['details'],
+                strtolower((string) ($validated['request_type'] ?? ''))
+            );
 
         $serviceRequest = $this->preferredDateLockService->withLockedDates(
             [$validated['date_needed'] ?? null],
-            function () use ($request, $validated, $resolvedAddress, $resolvedAddressDetails) {
-                return DB::transaction(function () use ($request, $validated, $resolvedAddress, $resolvedAddressDetails) {
+            function () use ($request, $validated, $resolvedAddress, $resolvedAddressDetails, $serviceRequestOption, $serviceRequestOptionLabel) {
+                return DB::transaction(function () use ($request, $validated, $resolvedAddress, $resolvedAddressDetails, $serviceRequestOption, $serviceRequestOptionLabel) {
                     $this->customerRequestEligibilityService->ensureCustomerCanCreateRequest($request->user()->id);
 
                     $this->preferredDateLockService->ensureDateIsAvailable(
@@ -75,6 +84,8 @@ class ServiceRequestController extends Controller
                     return ServiceRequest::query()->create([
                         'user_id' => $request->user()->id,
                         'request_type' => $validated['request_type'],
+                        'service_request_option_id' => $serviceRequestOption?->id,
+                        'service_request_option_label' => $serviceRequestOptionLabel,
                         'details' => $validated['details'],
                         'contact_number' => trim($validated['contact_number']),
                         'address' => $resolvedAddress,
@@ -88,7 +99,7 @@ class ServiceRequestController extends Controller
             }
         );
 
-        $serviceRequest->load('customer');
+        $serviceRequest->load(['customer', 'serviceRequestOption']);
         $this->notificationService->notifyAdminsOfNewServiceRequest($serviceRequest, $request->user());
 
         return response()->json([
@@ -166,7 +177,7 @@ class ServiceRequestController extends Controller
         $serviceRequest->status = 'assigned';
         $serviceRequest->save();
 
-        $serviceRequest->load(['customer', 'technician']);
+        $serviceRequest->load(['customer', 'technician', 'serviceRequestOption']);
 
         if ($previousTechnicianId !== $technician->id) {
             $this->notificationService->notifyTechnicianOfServiceRequestAssignment(
@@ -211,7 +222,7 @@ class ServiceRequestController extends Controller
             function () use ($id, $validated, $bypassReservedDateLock, $recordRequestType) {
                 return DB::transaction(function () use ($id, $validated, $bypassReservedDateLock, $recordRequestType) {
                     $serviceRequest = ServiceRequest::query()
-                        ->with(['customer', 'technician'])
+                        ->with(['customer', 'technician', 'serviceRequestOption'])
                         ->lockForUpdate()
                         ->findOrFail($id);
 
@@ -229,7 +240,7 @@ class ServiceRequestController extends Controller
                     $serviceRequest->save();
 
                     return [
-                        'service_request' => $serviceRequest->fresh(['customer', 'technician']),
+                        'service_request' => $serviceRequest->fresh(['customer', 'technician', 'serviceRequestOption']),
                         'previous_date' => $previousDate,
                     ];
                 });
@@ -258,7 +269,7 @@ class ServiceRequestController extends Controller
         $technician = $request->user();
 
         $serviceRequests = ServiceRequest::query()
-            ->with(['customer', 'technician', 'completionReport.technician', 'completionReport.approver'])
+            ->with(['customer', 'technician', 'serviceRequestOption', 'completionReport.technician', 'completionReport.approver'])
             ->where('technician_id', $technician->id)
             ->latest()
             ->get();
@@ -284,7 +295,7 @@ class ServiceRequestController extends Controller
         }
 
         $serviceRequest = ServiceRequest::query()
-            ->with(['customer', 'technician'])
+            ->with(['customer', 'technician', 'serviceRequestOption'])
             ->findOrFail($id);
 
         if ($serviceRequest->technician_id !== $technician->id) {
@@ -339,7 +350,7 @@ class ServiceRequestController extends Controller
         ]);
 
         $serviceRequest = ServiceRequest::query()
-            ->with(['customer', 'technician', 'completionReport.technician', 'completionReport.approver'])
+            ->with(['customer', 'technician', 'serviceRequestOption', 'completionReport.technician', 'completionReport.approver'])
             ->findOrFail($id);
 
         if ((int) $serviceRequest->user_id !== (int) $request->user()->id) {
@@ -388,7 +399,7 @@ class ServiceRequestController extends Controller
         ]);
 
         $serviceRequest = ServiceRequest::query()
-            ->with(['customer', 'technician', 'completionReport.technician', 'completionReport.approver'])
+            ->with(['customer', 'technician', 'serviceRequestOption', 'completionReport.technician', 'completionReport.approver'])
             ->findOrFail($id);
         $previousStatus = $serviceRequest->status;
         $nextStatus = $request->status;
@@ -424,5 +435,49 @@ class ServiceRequestController extends Controller
             'message' => 'Official service request status updated successfully.',
             'data' => $serviceRequest,
         ], 200);
+    }
+
+    private function resolveServiceRequestOption(array $validated): ?ServiceRequestOption
+    {
+        $optionId = $validated['service_request_option_id'] ?? null;
+        if (! $optionId) {
+            return null;
+        }
+
+        $requestType = strtolower((string) ($validated['request_type'] ?? ''));
+        $expectedCategory = match ($requestType) {
+            'installation' => ServiceRequestOption::CATEGORY_INSTALLATION_TYPE,
+            'maintenance' => ServiceRequestOption::CATEGORY_MAINTENANCE_CONCERN,
+            default => null,
+        };
+
+        $option = ServiceRequestOption::query()->find($optionId);
+
+        if (! $option || ! $option->is_active || ($expectedCategory && $option->category !== $expectedCategory)) {
+            throw ValidationException::withMessages([
+                'service_request_option_id' => ['The selected service request option is not available for this request type.'],
+            ]);
+        }
+
+        return $option;
+    }
+
+    private function extractOptionLabelFromDetails(string $details, string $requestType): ?string
+    {
+        $label = match ($requestType) {
+            'installation' => 'Installation Type',
+            'maintenance' => 'Maintenance Concern',
+            default => null,
+        };
+
+        if ($label === null) {
+            return null;
+        }
+
+        if (preg_match('/^' . preg_quote($label, '/') . ':\s*(.+)$/mi', $details, $matches)) {
+            return trim($matches[1]);
+        }
+
+        return null;
     }
 }

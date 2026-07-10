@@ -1243,6 +1243,58 @@
     var mapSearchInFlight = false;
     var reverseInFlight = false;
 
+    function optionTag(index) {
+        return String.fromCharCode(65 + index);
+    }
+
+    function attachInstallationChoiceHandlers() {
+        qsa('.inst-choice').forEach(function (choice) {
+            var radio = qs('input[type="radio"]', choice);
+            choice.addEventListener('click', function () {
+                if (radio) radio.checked = true;
+                qsa('.inst-choice').forEach(function (item) {
+                    item.classList.remove('is-selected');
+                });
+                choice.classList.add('is-selected');
+                var err = qs('#inst-type-error');
+                if (err) {
+                    err.textContent = '';
+                    err.classList.remove('show');
+                }
+            });
+        });
+    }
+
+    function renderInstallationOptions(options) {
+        var grid = qs('#inst-type-grid');
+        if (!grid || !Array.isArray(options) || options.length === 0) return false;
+
+        grid.innerHTML = options.map(function (option, index) {
+            return [
+                '<label class="inst-choice">',
+                '<input type="radio" name="installation_type" value="' + escHtml(option.label) + '" data-option-id="' + escHtml(option.id) + '">',
+                '<span class="inst-choice-tag">' + escHtml(optionTag(index)) + '</span>',
+                '<p class="inst-choice-title">' + escHtml(option.label) + '</p>',
+                '<p class="inst-choice-desc">' + escHtml(option.description || 'Select this installation service option.') + '</p>',
+                '</label>'
+            ].join('');
+        }).join('');
+
+        attachInstallationChoiceHandlers();
+        return true;
+    }
+
+    async function loadInstallationOptions() {
+        try {
+            var payload = await apiRequest('/api/service-request-options?category=installation_type', { method: 'GET' });
+            if (!renderInstallationOptions(payload.data || [])) {
+                attachInstallationChoiceHandlers();
+            }
+        } catch (error) {
+            attachInstallationChoiceHandlers();
+        }
+    }
+
     function parseCoordinate(value) {
         var parsed = parseFloat(value);
         return Number.isFinite(parsed) ? parsed : null;
@@ -1523,21 +1575,7 @@
         }
     }
 
-    qsa('.inst-choice').forEach(function (choice) {
-        var radio = qs('input[type="radio"]', choice);
-        choice.addEventListener('click', function () {
-            if (radio) radio.checked = true;
-            qsa('.inst-choice').forEach(function (item) {
-                item.classList.remove('is-selected');
-            });
-            choice.classList.add('is-selected');
-            var err = qs('#inst-type-error');
-            if (err) {
-                err.textContent = '';
-                err.classList.remove('show');
-            }
-        });
-    });
+    loadInstallationOptions();
 
     if (mapOpenBtn && mapModal && mapConfirmBtn && mapCancelBtn && mapCloseBtn && useLocationBtn) {
         mapOpenBtn.addEventListener('click', function () {
@@ -1599,6 +1637,7 @@
 
         var selectedTypeInput = qs('input[name="installation_type"]:checked');
         var selectedType = selectedTypeInput ? selectedTypeInput.value : '';
+        var selectedOptionId = selectedTypeInput ? selectedTypeInput.getAttribute('data-option-id') : '';
         var basis = 'Installation coordination request';
         var contact = qs('#inst-contact').value.trim();
         await datePicker.refreshAvailability();
@@ -1651,6 +1690,7 @@
                 method: 'POST',
                 body: {
                     request_type: 'installation',
+                    service_request_option_id: selectedOptionId ? Number(selectedOptionId) : null,
                     contact_number: contact,
                     date_needed: dateNeeded,
                     details: detailLines.join('\n'),

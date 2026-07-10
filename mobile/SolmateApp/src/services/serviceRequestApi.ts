@@ -16,6 +16,9 @@ export type ServiceRequest = {
   technician_id?: number | null;
   quotation_id?: number | null;
   request_type: string;
+  service_request_option_id?: number | null;
+  service_request_option_label?: string | null;
+  service_request_option?: ServiceRequestOption | null;
   details: string;
   cancellation_note?: string | null;
   contact_number?: string | null;
@@ -33,8 +36,22 @@ export type ServiceRequest = {
   technician?: UserSummary | null;
 };
 
+export type ServiceRequestOptionCategory =
+  | 'installation_type'
+  | 'maintenance_concern';
+
+export type ServiceRequestOption = {
+  id: number;
+  category: ServiceRequestOptionCategory;
+  label: string;
+  description?: string | null;
+  sort_order?: number | null;
+  is_active?: boolean;
+};
+
 export type CreateServiceRequestPayload = {
   request_type: string;
+  service_request_option_id?: number | null;
   details: string;
   contact_number?: string;
   address?: string;
@@ -60,6 +77,17 @@ type TechnicianServiceRequestResponse = {
 
 export function getServiceRequests() {
   return apiGet<ServiceRequest[]>('/service-requests');
+}
+
+export async function getServiceRequestOptions(
+  category: ServiceRequestOptionCategory,
+) {
+  const response = await apiGet<{
+    message?: string;
+    data?: ServiceRequestOption[];
+  }>(`/service-request-options?category=${encodeURIComponent(category)}`);
+
+  return Array.isArray(response?.data) ? response.data : [];
 }
 
 export async function getTechnicianServiceRequests() {

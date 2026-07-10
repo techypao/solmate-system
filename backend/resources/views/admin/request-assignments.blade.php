@@ -1090,6 +1090,9 @@
                                 $completionMessage = 'Assign a technician first, then keep the official inspection status updated here.';
                             }
 
+                            $inspectionStatusOptions = $inspectionRequest->cancellation_note !== null
+                                ? ['cancelled' => 'Cancelled']
+                                : $serviceStatusOptions;
                             $inspectionDetailCards = $parseRequestDetailCards($inspectionRequest->details);
                         @endphp
 
@@ -1357,7 +1360,7 @@
                                                     name="status"
                                                     required
                                                 >
-                                                    @foreach ($serviceStatusOptions as $value => $label)
+                                                    @foreach ($inspectionStatusOptions as $value => $label)
                                                         <option value="{{ $value }}" @selected($inspectionRequest->status === $value)>{{ $label }}</option>
                                                     @endforeach
                                                 </select>
@@ -1800,6 +1803,10 @@
                                             <span class="detail-label">Request Type</span>
                                             <strong>{{ $serviceRequest->request_type ?: 'Not specified' }}</strong>
                                         </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Selected Option</span>
+                                            <strong>{{ $serviceRequest->service_request_option_label ?: ($serviceRequest->serviceRequestOption?->label ?: 'Not specified') }}</strong>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -2136,6 +2143,10 @@
                                         <div class="detail-item">
                                             <span class="detail-label">Request Type</span>
                                             <strong>{{ $serviceRequest->request_type ?: 'Not specified' }}</strong>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Selected Option</span>
+                                            <strong>{{ $serviceRequest->service_request_option_label ?: ($serviceRequest->serviceRequestOption?->label ?: 'Not specified') }}</strong>
                                         </div>
                                     </div>
                                 </div>

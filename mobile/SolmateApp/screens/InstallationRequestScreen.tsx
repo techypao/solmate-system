@@ -19,7 +19,11 @@ import { ApiError } from '../src/services/api';
 import { getCustomerRequestBlockMessage } from '../src/services/customerRequestEligibility';
 import { getUnavailablePreferredDates } from '../src/services/preferredDateAvailabilityApi';
 import { getDefaultContactNumber } from '../src/utils/contactNumber';
-import { createServiceRequest } from '../src/services/serviceRequestApi';
+import {
+  createServiceRequest,
+  getServiceRequestOptions,
+  ServiceRequestOption,
+} from '../src/services/serviceRequestApi';
 
 const NAVY = '#1A2B55';
 const GOLD = '#F5C000';
@@ -34,6 +38,9 @@ const INSTALLATION_TYPE_OPTIONS = [
   'System expansion or additional panels',
   'Installation schedule coordination',
 ];
+
+type InstallationOption = Pick<ServiceRequestOption, 'label'> &
+  Partial<Pick<ServiceRequestOption, 'id' | 'description'>>;
 
 type FieldErrors = {
   installationType?: string;
@@ -116,6 +123,13 @@ export default function InstallationRequestScreen({ navigation }: any) {
   const [longitude, setLongitude] = useState<number | null>(null);
   const [preferredDate, setPreferredDate] = useState('');
   const [extraNotes, setExtraNotes] = useState('');
+  const [installationTypeOptions, setInstallationTypeOptions] = useState<
+    InstallationOption[]
+  >(
+    INSTALLATION_TYPE_OPTIONS.map(label => ({
+      label,
+    })),
+  );
   const [unavailableDates, setUnavailableDates] = useState<string[]>([]);
   const [availabilityMessage, setAvailabilityMessage] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -163,6 +177,21 @@ export default function InstallationRequestScreen({ navigation }: any) {
     }
   }, []);
 
+  const loadInstallationTypeOptions = useCallback(async () => {
+    try {
+      const options = await getServiceRequestOptions('installation_type');
+      if (options.length > 0) {
+        setInstallationTypeOptions(options);
+      }
+    } catch {
+      setInstallationTypeOptions(
+        INSTALLATION_TYPE_OPTIONS.map(label => ({
+          label,
+        })),
+      );
+    }
+  }, []);
+
   const refreshRequestEligibility = useCallback(async () => {
     try {
       setCheckingEligibility(true);
@@ -181,9 +210,14 @@ export default function InstallationRequestScreen({ navigation }: any) {
 
   useFocusEffect(
     useCallback(() => {
+      loadInstallationTypeOptions();
       loadUnavailableDates();
       refreshRequestEligibility();
-    }, [loadUnavailableDates, refreshRequestEligibility]),
+    }, [
+      loadInstallationTypeOptions,
+      loadUnavailableDates,
+      refreshRequestEligibility,
+    ]),
   );
 
   useEffect(() => {
@@ -270,6 +304,9 @@ export default function InstallationRequestScreen({ navigation }: any) {
     const trimmedAddressDetails = addressDetails.trim();
     const trimmedPreferredDate = preferredDate.trim();
     const trimmedExtraNotes = extraNotes.trim();
+    const selectedInstallationOption = installationTypeOptions.find(
+      option => option.label === installationType.trim(),
+    );
 
     if (
       trimmedPreferredDate &&
@@ -298,6 +335,7 @@ export default function InstallationRequestScreen({ navigation }: any) {
 
       const response = await createServiceRequest({
         request_type: 'installation',
+        service_request_option_id: selectedInstallationOption?.id ?? null,
         details: detailLines.join('\n'),
         contact_number: trimmedContactNumber,
         address: trimmedAddress,
@@ -490,16 +528,16 @@ export default function InstallationRequestScreen({ navigation }: any) {
               instructions.
             </Text>
             <View style={styles.choiceList}>
-              {INSTALLATION_TYPE_OPTIONS.map(option => (
+              {installationTypeOptions.map(option => (
                 <ChoiceChip
-                  key={option}
-                  label={option}
+                  key={`${option.id ?? 'fallback'}-${option.label}`}
+                  label={option.label}
                   onPress={() => {
-                    setInstallationType(option);
+                    setInstallationType(option.label);
                     clearStatusMessages();
                     clearFieldError('installationType');
                   }}
-                  selected={installationType === option}
+                  selected={installationType === option.label}
                 />
               ))}
             </View>
