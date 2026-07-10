@@ -63,6 +63,17 @@ class TestimonyContentModerationService
 
     public function rejectionNote(?string $title, string $message): ?string
     {
+        try {
+            return $this->detectRejectionNote($title, $message);
+        } catch (\Throwable $throwable) {
+            report($throwable);
+
+            return null;
+        }
+    }
+
+    private function detectRejectionNote(?string $title, string $message): ?string
+    {
         $text = trim(implode(' ', array_filter([
             $title,
             $message,
