@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\CustomerActivityLogger;
 use App\Support\PasswordValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -46,6 +47,17 @@ class CustomerAccountController extends Controller
         }
 
         $user->save();
+
+        app(CustomerActivityLogger::class)->record(
+            customer: $user,
+            eventType: $emailChanged ? 'customer_email_changed' : 'customer_profile_updated',
+            title: $emailChanged ? 'Email address changed' : 'Profile updated',
+            description: $emailChanged
+                ? 'Customer changed their email address and must verify it again.'
+                : 'Customer updated account contact information.',
+            actor: $user,
+            subject: $user,
+        );
 
         if ($emailChanged) {
             $this->sendNewEmailVerification($user);
@@ -123,6 +135,15 @@ class CustomerAccountController extends Controller
 
         $user->password = $validated['new_password'];
         $user->save();
+
+        app(CustomerActivityLogger::class)->record(
+            customer: $user,
+            eventType: 'customer_password_updated',
+            title: 'Password changed',
+            description: 'Customer changed their account password.',
+            actor: $user,
+            subject: $user,
+        );
 
         return response()->json([
             'message' => 'Password updated successfully.',

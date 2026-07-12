@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\CustomerActivityLogger;
 use App\Support\NameValidation;
 use App\Support\PasswordValidation;
 use Illuminate\Http\Request;
@@ -148,6 +149,17 @@ class AuthController extends Controller
         }
 
         $user->markLoginRecorded();
+
+        if ($user->role === User::ROLE_CUSTOMER) {
+            app(CustomerActivityLogger::class)->record(
+                customer: $user,
+                eventType: 'customer_login',
+                title: 'Customer signed in',
+                description: 'Customer signed in through the mobile app.',
+                actor: $user,
+                subject: $user,
+            );
+        }
 
         $token = $user->createToken('authToken')->plainTextToken;
 

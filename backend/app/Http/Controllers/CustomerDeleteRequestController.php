@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\CustomerActivityLogger;
 use App\Services\InAppNotificationService;
 use Illuminate\Http\Request;
 
@@ -76,6 +77,15 @@ class CustomerDeleteRequestController extends Controller
             'delete_requested_at' => now(),
             'delete_request_reason' => $reason !== '' ? $reason : null,
         ])->save();
+
+        app(CustomerActivityLogger::class)->record(
+            customer: $customer,
+            eventType: 'customer_delete_requested',
+            title: 'Account deletion requested',
+            description: $reason !== '' ? $reason : 'No reason provided.',
+            actor: $customer,
+            subject: $customer,
+        );
 
         $notificationService->notifyAdminsOfCustomerDeleteRequest($customer);
     }

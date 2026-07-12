@@ -7,6 +7,7 @@ use App\Models\InspectionRequest;
 use App\Models\ServiceRequest;
 use App\Models\ServiceRequestOption;
 use App\Models\User;
+use App\Services\CustomerActivityLogger;
 use App\Services\CustomerRequestEligibilityService;
 use App\Services\InAppNotificationService;
 use App\Services\PreferredDateLockService;
@@ -101,6 +102,20 @@ class ServiceRequestController extends Controller
 
         $serviceRequest->load(['customer', 'serviceRequestOption']);
         $this->notificationService->notifyAdminsOfNewServiceRequest($serviceRequest, $request->user());
+
+        app(CustomerActivityLogger::class)->record(
+            customer: $request->user(),
+            eventType: 'service_request_created',
+            title: 'Service request submitted',
+            description: 'Customer submitted a '.$serviceRequest->request_type.' request.',
+            actor: $request->user(),
+            subject: $serviceRequest,
+            metadata: [
+                'status' => $serviceRequest->status,
+                'request_type' => $serviceRequest->request_type,
+                'date_needed' => $serviceRequest->date_needed,
+            ],
+        );
 
         return response()->json([
             'message' => 'Service request submitted successfully.',
@@ -382,6 +397,19 @@ class ServiceRequestController extends Controller
             $serviceRequest,
             $serviceRequest->cancellation_note,
             $user->id
+        );
+
+        app(CustomerActivityLogger::class)->record(
+            customer: $user,
+            eventType: 'service_cancellation_requested',
+            title: 'Service cancellation requested',
+            description: $serviceRequest->cancellation_note,
+            actor: $user,
+            subject: $serviceRequest,
+            metadata: [
+                'cancellation_count' => $newCount,
+                'request_type' => $serviceRequest->request_type,
+            ],
         );
 
         return response()->json([

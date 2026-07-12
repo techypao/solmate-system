@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\CustomerActivityLogger;
 use App\Support\NameValidation;
 use App\Support\PasswordValidation;
 use Illuminate\Http\Request;
@@ -114,6 +115,17 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
         $request->user()?->markLoginRecorded();
+
+        if ($request->user()?->role === User::ROLE_CUSTOMER) {
+            app(CustomerActivityLogger::class)->record(
+                customer: $request->user(),
+                eventType: 'customer_login',
+                title: 'Customer signed in',
+                description: 'Customer signed in through the website.',
+                actor: $request->user(),
+                subject: $request->user(),
+            );
+        }
 
         return redirect($this->redirectPath($request->user()))
             ->with('login_success', 'Logged in successfully.');

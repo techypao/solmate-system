@@ -49,7 +49,11 @@
                 @foreach ($customers as $customer)
                     <div class="list-row" id="customer-{{ $customer->id }}">
                         <div style="flex: 1; min-width: 0;">
-                            <strong>{{ $customer->name }}</strong>
+                            <strong>
+                                <a href="{{ route('admin.customers.show', $customer) }}" style="color:inherit; text-decoration:none;">
+                                    {{ $customer->name }}
+                                </a>
+                            </strong>
                             <div class="muted">{{ $customer->email }}</div>
                             @if ($customer->delete_requested_at)
                                 <div style="margin-top:8px; padding:10px 12px; border-radius:10px; background:#fff1f2; border:1px solid #fecaca; color:#991b1b; font-size:13px; line-height:1.55;">
@@ -73,6 +77,10 @@
                         @endif
                         <span class="badge badge-neutral">Customer</span>
                         <div style="display:flex; gap:8px; flex-shrink:0;">
+                            <a href="{{ route('admin.customers.show', $customer) }}"
+                               class="button-link secondary"
+                               style="padding: 6px 14px; font-size: 13px;">View</a>
+
                             <a href="{{ route('admin.customers.edit', $customer) }}"
                                class="button-link secondary"
                                style="padding: 6px 14px; font-size: 13px;">Edit</a>

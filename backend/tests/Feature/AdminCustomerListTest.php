@@ -2,8 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\InspectionRequest;
+use App\Models\Quotation;
+use App\Models\ServiceRequest;
+use App\Models\Testimony;
 use App\Models\User;
 use App\Notifications\AdminCustomerDeleteRequestedNotification;
+use App\Services\CustomerActivityLogger;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -146,6 +151,97 @@ class AdminCustomerListTest extends TestCase
             'user_id' => $customer->id,
             'action' => 'restored',
         ]);
+    }
+
+    public function test_admin_can_open_active_customer_details_with_history(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_customer_details@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $customer = User::query()->create([
+            'name' => 'History Customer',
+            'email' => 'history_customer@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+            'contact_number' => '09171234567',
+            'address' => 'Sample Address',
+        ]);
+
+        Quotation::query()->create([
+            'user_id' => $customer->id,
+            'quotation_type' => 'initial',
+            'monthly_electric_bill' => 3500,
+            'project_cost' => 120000,
+            'status' => 'pending',
+        ]);
+
+        InspectionRequest::query()->create([
+            'user_id' => $customer->id,
+            'details' => 'Inspect my roof.',
+            'status' => 'pending',
+        ]);
+
+        ServiceRequest::query()->create([
+            'user_id' => $customer->id,
+            'request_type' => 'maintenance',
+            'details' => 'Check my inverter.',
+            'status' => 'pending',
+        ]);
+
+        Testimony::query()->create([
+            'user_id' => $customer->id,
+            'rating' => 5,
+            'message' => 'Great service.',
+            'status' => Testimony::STATUS_PENDING,
+        ]);
+
+        app(CustomerActivityLogger::class)->record(
+            customer: $customer,
+            eventType: 'test_event',
+            title: 'Tracked future action',
+            description: 'This came from the activity log.',
+            actor: $customer,
+            subject: $customer,
+        );
+
+        $this->actingAs($admin)
+            ->get(route('admin.customers.show', $customer))
+            ->assertOk()
+            ->assertSee('History Customer')
+            ->assertSee('Customer Profile')
+            ->assertSee('Activity Timeline')
+            ->assertSee('Quotations')
+            ->assertSee('Inspection Requests')
+            ->assertSee('Service Requests')
+            ->assertSee('Feedback')
+            ->assertSee('Tracked future action');
+    }
+
+    public function test_archived_customer_details_are_not_viewable(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_archived_details@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $customer = User::query()->create([
+            'name' => 'Archived Details Customer',
+            'email' => 'archived_details_customer@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+            'is_archived' => true,
+            'archived_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.customers.show', $customer))
+            ->assertNotFound();
     }
 
     public function test_customer_can_request_account_deletion_from_website(): void

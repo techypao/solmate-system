@@ -136,6 +136,9 @@ Route::middleware(['auth', 'verified.email'])->group(function () {
         Route::get('/admin/customers', [AdminCustomerController::class, 'index'])
             ->name('admin.customers');
 
+        Route::get('/admin/customers/{customer}', [AdminCustomerController::class, 'show'])
+            ->name('admin.customers.show');
+
         Route::get('/admin/customers/{customer}/edit', [AdminCustomerController::class, 'edit'])
             ->name('admin.customers.edit');
 

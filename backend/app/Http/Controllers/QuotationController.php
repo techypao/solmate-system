@@ -14,6 +14,7 @@ use Illuminate\Validation\Rule;
 use App\Models\ServiceRequest;
 use App\Models\InspectionRequest;
 use App\Services\QuotationComputationService;
+use App\Services\CustomerActivityLogger;
 use App\Services\InAppNotificationService;
 use App\Services\PreInspectionQuotationOptionService;
 use App\Services\PromotionDiscountService;
@@ -152,6 +153,19 @@ class QuotationController extends Controller
                 (float) $monthlyElectricBill
             );
 
+            app(CustomerActivityLogger::class)->record(
+                customer: $request->user(),
+                eventType: 'quotation_created',
+                title: 'Initial quotation created',
+                description: 'Customer generated a pre-inspection estimate.',
+                actor: $request->user(),
+                subject: $quotation,
+                metadata: [
+                    'quotation_type' => $quotation->quotation_type,
+                    'project_cost' => $quotation->project_cost,
+                ],
+            );
+
             return response()->json([
                 'message' => 'Quotation created successfully',
                 'data' => $quotation,
@@ -206,6 +220,17 @@ class QuotationController extends Controller
         }
 
         $quotation->delete();
+
+        app(CustomerActivityLogger::class)->record(
+            customer: $user,
+            eventType: 'quotation_deleted',
+            title: 'Initial quotation deleted',
+            description: 'Customer deleted a pre-inspection estimate.',
+            actor: $user,
+            metadata: [
+                'quotation_id' => $quotation->id,
+            ],
+        );
 
         return response()->json([
             'message' => 'Pre-inspection estimate deleted successfully.',
@@ -565,6 +590,18 @@ public function requestCustomerDiscount(Request $request, int $inspectionRequest
 
     $this->notificationService->notifyAdminsOfQuotationDiscountRequest($quotation, $customer->id);
 
+    app(CustomerActivityLogger::class)->record(
+        customer: $customer,
+        eventType: 'quotation_discount_requested',
+        title: 'Discount requested',
+        description: $validated['message'] ?? 'Customer requested a discount for a final quotation.',
+        actor: $customer,
+        subject: $quotation,
+        metadata: [
+            'inspection_request_id' => $inspectionRequestId,
+        ],
+    );
+
     return response()->json([
         'message' => 'Discount request sent to admin successfully.',
         'data' => $quotation,
@@ -625,6 +662,20 @@ public function applyAdminDiscount(Request $request, Quotation $quotation)
 
     $this->notificationService->notifyCustomerOfQuotationDiscountUpdate($quotation, 'applied', $request->user()->id);
 
+    if ($quotation->customer) {
+        app(CustomerActivityLogger::class)->record(
+            customer: $quotation->customer,
+            eventType: 'quotation_discount_applied',
+            title: 'Discount approved',
+            description: $validated['admin_discount_reason'] ?? 'Admin applied a discount to the final quotation.',
+            actor: $request->user(),
+            subject: $quotation,
+            metadata: [
+                'admin_discount_amount' => $discountAmount,
+            ],
+        );
+    }
+
     return response()->json([
         'message' => 'Admin discount applied successfully.',
         'data' => $quotation,
@@ -661,6 +712,17 @@ public function rejectDiscountRequest(Request $request, Quotation $quotation)
     $quotation = $quotation->fresh(['customer', 'inspectionRequest.technician', 'lineItems.pricingItem', 'appliedPromo', 'adminDiscountAppliedBy']);
 
     $this->notificationService->notifyCustomerOfQuotationDiscountUpdate($quotation, 'rejected', $request->user()->id);
+
+    if ($quotation->customer) {
+        app(CustomerActivityLogger::class)->record(
+            customer: $quotation->customer,
+            eventType: 'quotation_discount_rejected',
+            title: 'Discount rejected',
+            description: $validated['admin_discount_reason'] ?? 'Admin rejected the discount request.',
+            actor: $request->user(),
+            subject: $quotation,
+        );
+    }
 
     return response()->json([
         'message' => 'Discount request rejected.',

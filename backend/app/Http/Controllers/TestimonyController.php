@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateTestimonyRequest;
 use App\Models\InspectionRequest;
 use App\Models\ServiceRequest;
 use App\Models\Testimony;
+use App\Services\CustomerActivityLogger;
 use App\Services\InAppNotificationService;
 use App\Services\TestimonyContentModerationService;
 use App\Services\TestimonyImageService;
@@ -93,6 +94,19 @@ class TestimonyController extends Controller
             $this->notificationService->notifyAdminsOfNewTestimony($testimony, $request->user()->id);
         }
 
+        app(CustomerActivityLogger::class)->record(
+            customer: $request->user(),
+            eventType: 'testimony_created',
+            title: 'Feedback submitted',
+            description: 'Customer submitted feedback with a '.$testimony->rating.'/5 rating.',
+            actor: $request->user(),
+            subject: $testimony,
+            metadata: [
+                'status' => $testimony->status,
+                'rating' => $testimony->rating,
+            ],
+        );
+
         return response()->json([
             'message' => $moderationNote
                 ? 'Testimony submitted and automatically rejected by content moderation.'
@@ -164,6 +178,19 @@ class TestimonyController extends Controller
 
         $testimony->load($this->relationships());
 
+        app(CustomerActivityLogger::class)->record(
+            customer: $request->user(),
+            eventType: 'testimony_updated',
+            title: 'Feedback updated',
+            description: 'Customer updated feedback.',
+            actor: $request->user(),
+            subject: $testimony,
+            metadata: [
+                'status' => $testimony->status,
+                'rating' => $testimony->rating,
+            ],
+        );
+
         return response()->json([
             'message' => $moderationNote
                 ? 'Testimony updated and automatically rejected by content moderation.'
@@ -183,6 +210,18 @@ class TestimonyController extends Controller
                 'message' => 'Testimony not found.',
             ], 404);
         }
+
+        app(CustomerActivityLogger::class)->record(
+            customer: $request->user(),
+            eventType: 'testimony_deleted',
+            title: 'Feedback deleted',
+            description: 'Customer deleted feedback.',
+            actor: $request->user(),
+            subject: $testimony,
+            metadata: [
+                'testimony_id' => $testimony->id,
+            ],
+        );
 
         $testimony->delete();
 

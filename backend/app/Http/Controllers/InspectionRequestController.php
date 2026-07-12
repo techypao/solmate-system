@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CompletionReport;
 use App\Models\InspectionRequest;
 use App\Models\User;
+use App\Services\CustomerActivityLogger;
 use App\Services\CustomerRequestEligibilityService;
 use App\Services\InAppNotificationService;
 use App\Services\PreferredDateLockService;
@@ -75,6 +76,19 @@ class InspectionRequestController extends Controller
 
         $inspectionRequest->load('customer');
         $this->notificationService->notifyAdminsOfNewInspectionRequest($inspectionRequest, $request->user());
+
+        app(CustomerActivityLogger::class)->record(
+            customer: $request->user(),
+            eventType: 'inspection_request_created',
+            title: 'Inspection request submitted',
+            description: 'Customer submitted a site assessment request.',
+            actor: $request->user(),
+            subject: $inspectionRequest,
+            metadata: [
+                'status' => $inspectionRequest->status,
+                'date_needed' => $inspectionRequest->date_needed,
+            ],
+        );
 
         return response()->json([
             'message' => 'Inspection request submitted successfully.',
@@ -373,6 +387,18 @@ class InspectionRequestController extends Controller
             $inspectionRequest,
             $validated['cancellation_note'],
             $user->id
+        );
+
+        app(CustomerActivityLogger::class)->record(
+            customer: $user,
+            eventType: 'inspection_cancellation_requested',
+            title: 'Inspection cancellation requested',
+            description: $validated['cancellation_note'],
+            actor: $user,
+            subject: $inspectionRequest,
+            metadata: [
+                'cancellation_count' => $newCount,
+            ],
         );
 
         return response()->json([
