@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\PricingItem;
+use App\Models\PricingItemHistory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -61,7 +62,9 @@ class AdminPricingItemApiTest extends TestCase
             ->assertJsonPath('data.category', 'panel')
             ->assertJsonPath('data.unit', 'pc')
             ->assertJsonPath('data.default_unit_price', '10000.00')
-            ->assertJsonPath('data.is_active', true);
+            ->assertJsonPath('data.is_active', true)
+            ->assertJsonPath('data.histories.0.action', 'created')
+            ->assertJsonPath('data.histories.0.performed_by.id', $admin->id);
 
         $this->assertDatabaseHas('pricing_items', [
             'name' => 'Canadian Mono 585W Bifacial',
@@ -71,6 +74,12 @@ class AdminPricingItemApiTest extends TestCase
             'brand' => 'Canadian',
             'model' => '585W',
             'is_active' => true,
+        ]);
+
+        $this->assertDatabaseHas('pricing_item_histories', [
+            'pricing_item_id' => $response->json('data.id'),
+            'performed_by_id' => $admin->id,
+            'action' => 'created',
         ]);
     }
 
@@ -102,13 +111,54 @@ class AdminPricingItemApiTest extends TestCase
             ->assertJsonPath('data.category', 'grounding')
             ->assertJsonPath('data.default_unit_price', '650.00')
             ->assertJsonPath('data.specification', 'Copper grounding rod')
-            ->assertJsonPath('data.is_active', false);
+            ->assertJsonPath('data.is_active', false)
+            ->assertJsonPath('data.histories.0.action', 'updated')
+            ->assertJsonPath('data.histories.0.old_values.default_unit_price', '500.00')
+            ->assertJsonPath('data.histories.0.new_values.default_unit_price', '650.00');
 
         $this->assertDatabaseHas('pricing_items', [
             'id' => $pricingItem->id,
             'default_unit_price' => 650.00,
             'specification' => 'Copper grounding rod',
             'is_active' => false,
+        ]);
+
+        $history = PricingItemHistory::query()
+            ->where('pricing_item_id', $pricingItem->id)
+            ->latest()
+            ->first();
+
+        $this->assertSame('updated', $history->action);
+        $this->assertSame($admin->id, $history->performed_by_id);
+        $this->assertSame('500.00', $history->old_values['default_unit_price']);
+        $this->assertSame('650.00', $history->new_values['default_unit_price']);
+    }
+
+    public function test_admin_status_toggle_is_recorded_as_activation_history(): void
+    {
+        $admin = $this->createUserWithRole(User::ROLE_ADMIN);
+
+        $pricingItem = PricingItem::query()->create([
+            'name' => 'Inactive Cable',
+            'category' => 'wiring',
+            'unit' => 'm',
+            'default_unit_price' => 120,
+            'is_active' => false,
+        ]);
+
+        Sanctum::actingAs($admin);
+
+        $this->patchJson("/api/admin/pricing-items/{$pricingItem->id}", [
+            'is_active' => true,
+        ])->assertOk()
+            ->assertJsonPath('data.histories.0.action', 'activated')
+            ->assertJsonPath('data.histories.0.old_values.is_active', false)
+            ->assertJsonPath('data.histories.0.new_values.is_active', true);
+
+        $this->assertDatabaseHas('pricing_item_histories', [
+            'pricing_item_id' => $pricingItem->id,
+            'performed_by_id' => $admin->id,
+            'action' => 'activated',
         ]);
     }
 

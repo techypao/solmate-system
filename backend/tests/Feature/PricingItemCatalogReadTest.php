@@ -58,11 +58,15 @@ class PricingItemCatalogReadTest extends TestCase
 
     private function createUser(string $role, string $prefix): User
     {
-        return User::query()->create([
+        $user = User::query()->create([
             'name' => ucfirst($role) . ' User',
             'email' => $prefix . '_' . uniqid() . '@example.com',
             'password' => Hash::make('password'),
             'role' => $role,
         ]);
+
+        $user->forceFill(['email_verified_at' => now()])->save();
+
+        return $user;
     }
 }

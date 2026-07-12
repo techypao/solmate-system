@@ -18,15 +18,20 @@ class WebAdminPricingCatalogTest extends TestCase
             'password' => 'password123',
             'role' => User::ROLE_ADMIN,
         ]);
+        $admin->forceFill(['email_verified_at' => now()])->save();
 
         $this->actingAs($admin)
             ->get('/admin/pricing-catalog')
             ->assertOk()
             ->assertSee('Admin Pricing Catalog')
-            ->assertSee('Create or Edit Item')
+            ->assertSee('Admin Pricing Management')
+            ->assertSee('Add Item')
+            ->assertSee('Item History')
+            ->assertSee('History')
+            ->assertSee('Search')
             ->assertSee('panel')
-            ->assertSee('Other Materials / BOS')
-            ->assertSee('Pricing Items');
+            ->assertSee('All categories')
+            ->assertSee('All statuses');
     }
 
     public function test_non_admin_cannot_open_pricing_catalog_page(): void
@@ -37,6 +42,7 @@ class WebAdminPricingCatalogTest extends TestCase
             'password' => 'password123',
             'role' => User::ROLE_CUSTOMER,
         ]);
+        $customer->forceFill(['email_verified_at' => now()])->save();
 
         $this->actingAs($customer)
             ->get('/admin/pricing-catalog')

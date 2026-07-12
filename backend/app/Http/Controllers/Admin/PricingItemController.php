@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PricingItem;
+use App\Models\PricingItemHistory;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -32,6 +33,7 @@ class PricingItemController extends Controller
     public function index()
     {
         $pricingItems = PricingItem::query()
+            ->with(['histories.performedBy:id,name,email'])
             ->latest()
             ->get();
 
@@ -46,27 +48,39 @@ class PricingItemController extends Controller
         $validated = $request->validate($this->storeRules(), $this->messages());
 
         $pricingItem = PricingItem::query()->create($validated);
+        $this->recordHistory($pricingItem, $request, 'created', null, $this->snapshot($pricingItem));
 
         return response()->json([
             'message' => 'Pricing item created successfully.',
-            'data' => $pricingItem,
+            'data' => $pricingItem->fresh(['histories.performedBy:id,name,email']),
         ], 201);
     }
 
     public function update(Request $request, PricingItem $pricingItem)
     {
         $validated = $request->validate($this->updateRules(), $this->messages());
+        $oldValues = $this->snapshot($pricingItem);
 
         $pricingItem->update($validated);
+        $freshPricingItem = $pricingItem->fresh();
+        $this->recordHistory(
+            $freshPricingItem,
+            $request,
+            $this->resolveUpdateAction($validated, $oldValues, $this->snapshot($freshPricingItem)),
+            $oldValues,
+            $this->snapshot($freshPricingItem)
+        );
 
         return response()->json([
             'message' => 'Pricing item updated successfully.',
-            'data' => $pricingItem->fresh(),
+            'data' => $freshPricingItem->load(['histories.performedBy:id,name,email']),
         ]);
     }
 
     public function destroy(Request $request, PricingItem $pricingItem)
     {
+        $this->recordHistory($pricingItem, $request, 'deleted', $this->snapshot($pricingItem), null);
+
         $pricingItem->delete();
 
         return response()->json([
@@ -124,5 +138,44 @@ class PricingItemController extends Controller
             'specification.string' => 'Specification must be a valid string.',
             'is_active.boolean' => 'Active status must be true or false.',
         ];
+    }
+
+    private function snapshot(PricingItem $pricingItem): array
+    {
+        return [
+            'name' => $pricingItem->name,
+            'category' => $pricingItem->category,
+            'unit' => $pricingItem->unit,
+            'default_unit_price' => $pricingItem->default_unit_price,
+            'brand' => $pricingItem->brand,
+            'model' => $pricingItem->model,
+            'specification' => $pricingItem->specification,
+            'is_active' => $pricingItem->is_active,
+        ];
+    }
+
+    private function recordHistory(
+        PricingItem $pricingItem,
+        Request $request,
+        string $action,
+        ?array $oldValues,
+        ?array $newValues
+    ): void {
+        PricingItemHistory::query()->create([
+            'pricing_item_id' => $pricingItem->id,
+            'performed_by_id' => $request->user()?->id,
+            'action' => $action,
+            'old_values' => $oldValues,
+            'new_values' => $newValues,
+        ]);
+    }
+
+    private function resolveUpdateAction(array $validated, array $oldValues, array $newValues): string
+    {
+        if (array_keys($validated) === ['is_active'] && $oldValues['is_active'] !== $newValues['is_active']) {
+            return $newValues['is_active'] ? 'activated' : 'deactivated';
+        }
+
+        return 'updated';
     }
 }

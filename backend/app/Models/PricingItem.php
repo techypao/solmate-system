@@ -44,4 +44,9 @@ class PricingItem extends Model
     {
         return $this->hasMany(QuotationLineItem::class);
     }
+
+    public function histories(): HasMany
+    {
+        return $this->hasMany(PricingItemHistory::class)->latest();
+    }
 }
