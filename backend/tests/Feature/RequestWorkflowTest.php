@@ -800,6 +800,63 @@ class RequestWorkflowTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_only_mark_cancel_requested_service_as_cancelled(): void
+    {
+        $customer = User::query()->create([
+            'name' => 'Customer User',
+            'email' => 'customer_service_cancel_review@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_service_cancel_review@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+        $admin->forceFill(['email_verified_at' => now()])->save();
+
+        $cancellationNote = 'Schedule changed. Please cancel this service request.';
+
+        $serviceRequest = ServiceRequest::query()->create([
+            'user_id' => $customer->id,
+            'request_type' => 'Solar Installation',
+            'details' => 'Install rooftop solar panels.',
+            'contact_number' => '0917-777-3000',
+            'address' => '88 Solar Avenue, Makati City',
+            'date_needed' => '2026-04-28',
+            'status' => 'pending',
+            'cancellation_note' => $cancellationNote,
+        ]);
+
+        $this->actingAs($admin)
+            ->putJson("/api/admin/service-requests/{$serviceRequest->id}/status", [
+                'status' => 'approved',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'This service has a customer cancellation request and can only be marked as cancelled.');
+
+        $this->assertDatabaseHas('service_requests', [
+            'id' => $serviceRequest->id,
+            'status' => 'pending',
+            'cancellation_note' => $cancellationNote,
+        ]);
+
+        $this->actingAs($admin)
+            ->putJson("/api/admin/service-requests/{$serviceRequest->id}/status", [
+                'status' => 'cancelled',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'cancelled');
+
+        $this->assertDatabaseHas('service_requests', [
+            'id' => $serviceRequest->id,
+            'status' => 'cancelled',
+            'cancellation_note' => $cancellationNote,
+        ]);
+    }
+
     public function test_contact_number_is_required_for_request_creation(): void
     {
         $customer = User::query()->create([

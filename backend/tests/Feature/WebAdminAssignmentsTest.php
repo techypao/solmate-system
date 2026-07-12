@@ -60,7 +60,11 @@ class WebAdminAssignmentsTest extends TestCase
             ->assertSee('Inspection')
             ->assertSee($technician->email)
             ->assertSee('0917-222-1000')
-            ->assertSee('0917-333-2000');
+            ->assertSee('0917-333-2000')
+            ->assertSee('value="approved" >Approve</option>', false)
+            ->assertSee('value="completed" >Complete</option>', false)
+            ->assertDontSee('value="approved">Approved</option>', false)
+            ->assertDontSee('value="completed">Completed</option>', false);
     }
 
     public function test_cancel_requested_inspection_only_shows_cancelled_status_option(): void
@@ -92,6 +96,60 @@ class WebAdminAssignmentsTest extends TestCase
             ->assertOk()
             ->assertSee('Cancellation Reason')
             ->assertSee('value="cancelled"', false)
+            ->assertSee('value="cancelled" >Cancel</option>', false)
+            ->assertDontSee('value="cancelled">Cancelled</option>', false)
+            ->assertDontSee('value="pending"', false)
+            ->assertDontSee('value="approved"', false)
+            ->assertDontSee('value="scheduled"', false)
+            ->assertDontSee('value="assigned"', false)
+            ->assertDontSee('value="in_progress"', false)
+            ->assertDontSee('value="completed"', false);
+    }
+
+    public function test_cancel_requested_services_only_show_cancelled_status_option(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Admin User',
+            'email' => 'admin_cancel_requested_services_page@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+
+        $customer = User::query()->create([
+            'name' => 'Customer User',
+            'email' => 'customer_cancel_requested_services_page@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        ServiceRequest::query()->create([
+            'user_id' => $customer->id,
+            'request_type' => 'Solar Installation',
+            'details' => 'Install rooftop solar panels.',
+            'contact_number' => '0917-333-3100',
+            'status' => 'pending',
+            'cancellation_note' => 'Customer requested installation cancellation from the app.',
+        ]);
+
+        ServiceRequest::query()->create([
+            'user_id' => $customer->id,
+            'request_type' => 'Maintenance',
+            'details' => 'Inspect inverter output.',
+            'contact_number' => '0917-333-3200',
+            'status' => 'pending',
+            'cancellation_note' => 'Customer requested maintenance cancellation from the app.',
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/admin/request-assignments')
+            ->assertOk()
+            ->assertSee('Installation')
+            ->assertSee('Maintenance')
+            ->assertSee('Customer requested installation cancellation from the app.')
+            ->assertSee('Customer requested maintenance cancellation from the app.')
+            ->assertSee('value="cancelled"', false)
+            ->assertSee('value="cancelled" >Cancel</option>', false)
+            ->assertDontSee('value="cancelled">Cancelled</option>', false)
             ->assertDontSee('value="pending"', false)
             ->assertDontSee('value="approved"', false)
             ->assertDontSee('value="scheduled"', false)

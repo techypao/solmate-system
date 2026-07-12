@@ -432,6 +432,12 @@ class ServiceRequestController extends Controller
         $previousStatus = $serviceRequest->status;
         $nextStatus = $request->status;
 
+        if ($serviceRequest->cancellation_note !== null && $nextStatus !== 'cancelled') {
+            return response()->json([
+                'message' => 'This service has a customer cancellation request and can only be marked as cancelled.',
+            ], 422);
+        }
+
         if ($nextStatus === 'completed') {
             $completionReport = $serviceRequest->completionReport;
 

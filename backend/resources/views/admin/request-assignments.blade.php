@@ -59,13 +59,13 @@
     ];
 
     $serviceStatusOptions = [
-        'pending' => 'Pending',
-        'approved' => 'Approved',
-        'scheduled' => 'Scheduled',
-        'assigned' => 'Assigned',
-        'in_progress' => 'In Progress',
-        'cancelled' => 'Cancelled',
-        'completed' => 'Completed',
+        'pending' => 'Keep Pending',
+        'approved' => 'Approve',
+        'scheduled' => 'Schedule',
+        'assigned' => 'Assign',
+        'in_progress' => 'Start',
+        'cancelled' => 'Cancel',
+        'completed' => 'Complete',
     ];
 
     $serviceRequestRecords = $sortedServiceRequests
@@ -1091,7 +1091,7 @@
                             }
 
                             $inspectionStatusOptions = $inspectionRequest->cancellation_note !== null
-                                ? ['cancelled' => 'Cancelled']
+                                ? ['cancelled' => 'Cancel']
                                 : $serviceStatusOptions;
                             $inspectionDetailCards = $parseRequestDetailCards($inspectionRequest->details);
                         @endphp
@@ -1424,6 +1424,9 @@
                             } else {
                                 $completionMessage = 'No technician completion notes have been submitted yet.';
                             }
+                            $serviceStatusOptionsForRequest = $serviceRequest->cancellation_note !== null
+                                ? ['cancelled' => 'Cancel']
+                                : $serviceStatusOptions;
                         @endphp
 
                         <div
@@ -1628,7 +1631,7 @@
                                                     name="status"
                                                     required
                                                 >
-                                                    @foreach ($serviceStatusOptions as $value => $label)
+                                                    @foreach ($serviceStatusOptionsForRequest as $value => $label)
                                                         <option value="{{ $value }}" @selected($serviceRequest->status === $value)>{{ $label }}</option>
                                                     @endforeach
                                                 </select>
@@ -1709,6 +1712,9 @@
                                 $completionMessage = 'No technician completion notes have been submitted yet.';
                             }
 
+                            $serviceStatusOptionsForRequest = $serviceRequest->cancellation_note !== null
+                                ? ['cancelled' => 'Cancel']
+                                : $serviceStatusOptions;
                             $serviceDetailCards = $parseRequestDetailCards($serviceRequest->details);
                         @endphp
 
@@ -1966,10 +1972,10 @@
                                                     name="status"
                                                     required
                                                 >
-                                                    @if (($serviceRequest->status ?? null) === 'declined')
+                                                    @if (($serviceRequest->status ?? null) === 'declined' && $serviceRequest->cancellation_note === null)
                                                         <option value="declined" selected disabled>Declined (legacy)</option>
                                                     @endif
-                                                    @foreach ($serviceStatusOptions as $value => $label)
+                                                    @foreach ($serviceStatusOptionsForRequest as $value => $label)
                                                         <option value="{{ $value }}" @selected($serviceRequest->status === $value)>{{ $label }}</option>
                                                     @endforeach
                                                 </select>
@@ -2050,6 +2056,9 @@
                                 $completionMessage = 'No technician completion notes have been submitted yet.';
                             }
 
+                            $serviceStatusOptionsForRequest = $serviceRequest->cancellation_note !== null
+                                ? ['cancelled' => 'Cancel']
+                                : $serviceStatusOptions;
                             $serviceDetailCards = $parseRequestDetailCards($serviceRequest->details);
                         @endphp
 
@@ -2307,10 +2316,10 @@
                                                     name="status"
                                                     required
                                                 >
-                                                    @if (($serviceRequest->status ?? null) === 'declined')
+                                                    @if (($serviceRequest->status ?? null) === 'declined' && $serviceRequest->cancellation_note === null)
                                                         <option value="declined" selected disabled>Declined (legacy)</option>
                                                     @endif
-                                                    @foreach ($serviceStatusOptions as $value => $label)
+                                                    @foreach ($serviceStatusOptionsForRequest as $value => $label)
                                                         <option value="{{ $value }}" @selected($serviceRequest->status === $value)>{{ $label }}</option>
                                                     @endforeach
                                                 </select>
