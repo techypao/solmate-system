@@ -1,6 +1,10 @@
 @extends('layouts.app', ['title' => 'Customer Details'])
 
 @section('content')
+@php
+    $canManageCustomers = auth()->user()?->hasAdminPermission(\App\Models\User::PERMISSION_MANAGE_CUSTOMERS) ?? false;
+    $canManageRequests = auth()->user()?->hasAdminPermission(\App\Models\User::PERMISSION_MANAGE_REQUESTS) ?? false;
+@endphp
 <div class="admin-page-stack">
 
     <div class="card admin-hero-card">
@@ -12,8 +16,12 @@
             </div>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
                 <a class="button-link secondary" href="{{ route('admin.customers') }}">Back to Customers</a>
-                <a class="button-link secondary" href="{{ route('admin.customers.edit', $customer) }}">Edit Customer</a>
-                <a class="button-link secondary" href="{{ route('admin.request-assignments') }}">Open Requests</a>
+                @if ($canManageCustomers)
+                    <a class="button-link secondary" href="{{ route('admin.customers.edit', $customer) }}">Edit Customer</a>
+                @endif
+                @if ($canManageRequests)
+                    <a class="button-link secondary" href="{{ route('admin.request-assignments') }}">Open Requests</a>
+                @endif
             </div>
         </div>
 
@@ -80,27 +88,31 @@
             </div>
         @endif
 
-        <div class="actions" style="margin-top:18px; display:flex; gap:8px; flex-wrap:wrap;">
-            <form method="POST"
-                  action="{{ route('admin.customers.archive', $customer) }}"
-                  onsubmit="return confirm('Archive customer {{ addslashes($customer->name) }}? They will lose website and app access, but their records will be kept.')">
-                @csrf
-                @method('PATCH')
-                <button type="submit" class="button-link secondary" style="border-color:#facc15; color:#a16207;">
-                    Archive Customer
-                </button>
-            </form>
+        @if ($canManageCustomers)
+            <div class="actions" style="margin-top:18px; display:flex; gap:8px; flex-wrap:wrap;">
+                <form method="POST"
+                      action="{{ route('admin.customers.archive', $customer) }}"
+                      onsubmit="return confirm('Archive customer {{ addslashes($customer->name) }}? They will lose website and app access, but their records will be kept.')">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit" class="button-link secondary" style="border-color:#facc15; color:#a16207;">
+                        Archive Customer
+                    </button>
+                </form>
 
-            <form method="POST"
-                  action="{{ route('admin.customers.destroy', $customer) }}"
-                  onsubmit="return confirm('Delete customer {{ addslashes($customer->name) }}? This will permanently remove their account and cascade-delete their records.')">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="button-link" style="background:#fee2e2; color:#dc2626; border:1.5px solid #fca5a5; border-radius:8px; cursor:pointer; font-weight:600;">
-                    Delete Customer
-                </button>
-            </form>
-        </div>
+                <form method="POST"
+                      action="{{ route('admin.customers.destroy', $customer) }}"
+                      onsubmit="return confirm('Delete customer {{ addslashes($customer->name) }}? This will permanently remove their account and cascade-delete their records.')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="button-link" style="background:#fee2e2; color:#dc2626; border:1.5px solid #fca5a5; border-radius:8px; cursor:pointer; font-weight:600;">
+                        Delete Customer
+                    </button>
+                </form>
+            </div>
+        @else
+            <div class="info-box" style="margin-top:18px; margin-bottom:0;">View-only access</div>
+        @endif
     </div>
 
     <div class="card admin-section-surface">

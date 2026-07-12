@@ -4,6 +4,20 @@
     $isAdminShell = $authUser && in_array($authUser->role, [\App\Models\User::ROLE_ADMIN, \App\Models\User::ROLE_TECHNICIAN], true);
     $isAdminUser = $authUser && $authUser->role === \App\Models\User::ROLE_ADMIN;
     $isTechnicianUser = $authUser && $authUser->role === \App\Models\User::ROLE_TECHNICIAN;
+    $canManageStaff = $isAdminUser && $authUser->hasAdminPermission(\App\Models\User::PERMISSION_MANAGE_STAFF);
+    $canManageTechnicians = $isAdminUser && $authUser->hasAdminPermission(\App\Models\User::PERMISSION_MANAGE_TECHNICIANS);
+    $canManageRequests = $isAdminUser && $authUser->hasAdminPermission(\App\Models\User::PERMISSION_MANAGE_REQUESTS);
+    $canManageWalkins = $isAdminUser && $authUser->hasAdminPermission(\App\Models\User::PERMISSION_MANAGE_WALKINS);
+    $canUseItemBuilder = $isAdminUser && $authUser->hasAdminPermission(\App\Models\User::PERMISSION_USE_ITEM_BUILDER);
+    $canManagePricing = $isAdminUser && $authUser->hasAdminPermission(\App\Models\User::PERMISSION_MANAGE_PRICING);
+    $canViewCustomers = $isAdminUser && $authUser->hasAdminPermission(\App\Models\User::PERMISSION_VIEW_CUSTOMERS);
+    $canManageContent = $isAdminUser && $authUser->hasAdminPermission(\App\Models\User::PERMISSION_MANAGE_CONTENT);
+    $canViewNotifications = $isAdminUser && $authUser->hasAdminPermission(\App\Models\User::PERMISSION_VIEW_NOTIFICATIONS);
+    $canManageSupportChat = $isAdminUser && $authUser->hasAdminPermission(\App\Models\User::PERMISSION_MANAGE_SUPPORT_CHAT);
+    $canViewReports = $isAdminUser && $authUser->hasAdminPermission(\App\Models\User::PERMISSION_VIEW_REPORTS);
+    $canManageContactMessages = $isAdminUser && $authUser->hasAdminPermission(\App\Models\User::PERMISSION_MANAGE_CONTACT_MESSAGES);
+    $canManageSettings = $isAdminUser && $authUser->hasAdminPermission(\App\Models\User::PERMISSION_MANAGE_SETTINGS);
+    $adminRoleLabel = $isAdminUser ? $authUser->adminRoleLabel() : null;
 @endphp
 
 <!DOCTYPE html>
@@ -1857,7 +1871,7 @@
                 <img src="{{ asset('images/rdy-logo-transparent.png') }}" alt="RDY logo" class="solmate-logo solmate-logo--sidebar">
             </a>
             @auth
-                <span class="admin-sidebar-kicker">{{ $isAdminUser ? 'Admin Workspace' : 'Technician Workspace' }}</span>
+                <span class="admin-sidebar-kicker">{{ $isAdminUser ? $adminRoleLabel : 'Technician Workspace' }}</span>
             @endauth
         </div>
 
@@ -1875,198 +1889,240 @@
                 Dashboard
             </a>
 
-            @if (auth()->user()->role === \App\Models\User::ROLE_ADMIN)
+            @if ($isAdminUser)
 
-                <div class="admin-sidebar-divider"></div>
-                <span class="admin-sidebar-nav-section">People</span>
+                @if ($canManageStaff || $canViewCustomers || $canManageTechnicians)
+                    <div class="admin-sidebar-divider"></div>
+                    <span class="admin-sidebar-nav-section">People</span>
+                @endif
 
                 {{-- Admins --}}
-                <a href="{{ route('admin.admins') }}"
-                   class="admin-sidebar-link {{ request()->routeIs('admin.admins*') ? 'active' : '' }}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
-                        <path d="M9 12l2 2 4-4"/>
-                    </svg>
-                    Admins
-                </a>
+                @if ($canManageStaff)
+                    <a href="{{ route('admin.admins') }}"
+                       class="admin-sidebar-link {{ request()->routeIs('admin.admins*') ? 'active' : '' }}">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
+                            <path d="M9 12l2 2 4-4"/>
+                        </svg>
+                        Staff Accounts
+                    </a>
+                @endif
 
                 {{-- Customers --}}
-                <a href="{{ route('admin.customers') }}"
-                   class="admin-sidebar-link {{ request()->routeIs('admin.customers*') ? 'active' : '' }}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                    </svg>
-                    Customers
-                </a>
+                @if ($canViewCustomers)
+                    <a href="{{ route('admin.customers') }}"
+                       class="admin-sidebar-link {{ request()->routeIs('admin.customers*') ? 'active' : '' }}">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        Customers
+                    </a>
+                @endif
 
                 {{-- Technician --}}
-                <a href="{{ route('admin.technicians.create') }}"
-                   class="admin-sidebar-link {{ request()->routeIs('admin.technicians.create') ? 'active' : '' }}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/>
-                        <line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
-                    </svg>
-                    Technician
-                </a>
+                @if ($canManageTechnicians)
+                    <a href="{{ route('admin.technicians.create') }}"
+                       class="admin-sidebar-link {{ request()->routeIs('admin.technicians.*') ? 'active' : '' }}">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/>
+                            <line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
+                        </svg>
+                        Technicians
+                    </a>
+                @endif
 
-                <div class="admin-sidebar-divider"></div>
-                <span class="admin-sidebar-nav-section">Operations</span>
+                @if ($canManageRequests || $canManageWalkins || $canUseItemBuilder || $canManagePricing)
+                    <div class="admin-sidebar-divider"></div>
+                    <span class="admin-sidebar-nav-section">Operations</span>
+                @endif
 
                 {{-- Services --}}
-                     <a href="{{ route('admin.request-assignments') }}"
-                   class="admin-sidebar-link {{ request()->routeIs('admin.request-assignments') ? 'active' : '' }}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <circle cx="12" cy="12" r="3"/>
-                        <path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/>
-                    </svg>
-                    Services
-                </a>
+                @if ($canManageRequests)
+                    <a href="{{ route('admin.request-assignments') }}"
+                       class="admin-sidebar-link {{ request()->routeIs('admin.request-assignments') ? 'active' : '' }}">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/>
+                        </svg>
+                        Services
+                    </a>
+                @endif
 
                 {{-- Walkin --}}
-                <a href="{{ route('admin.walkin') }}"
-                   class="admin-sidebar-link {{ request()->routeIs('admin.walkin') ? 'active' : '' }}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M9 18V5l12-2v13"/>
-                        <path d="M9 9h12"/>
-                        <path d="M3 21h18"/>
-                        <path d="M6 21v-7a3 3 0 0 1 3-3"/>
-                    </svg>
-                    Walkin
-                </a>
+                @if ($canManageWalkins)
+                    <a href="{{ route('admin.walkin') }}"
+                       class="admin-sidebar-link {{ request()->routeIs('admin.walkin') ? 'active' : '' }}">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M9 18V5l12-2v13"/>
+                            <path d="M9 9h12"/>
+                            <path d="M3 21h18"/>
+                            <path d="M6 21v-7a3 3 0 0 1 3-3"/>
+                        </svg>
+                        Walkin
+                    </a>
+                @endif
 
                 {{-- Quotations --}}
-                <a href="{{ route('quotations.item-builder') }}"
-                   class="admin-sidebar-link {{ request()->routeIs('quotations.item-builder') ? 'active' : '' }}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                        <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-                    </svg>
-                    Quotations
-                </a>
+                @if ($canUseItemBuilder)
+                    <a href="{{ route('quotations.item-builder') }}"
+                       class="admin-sidebar-link {{ request()->routeIs('quotations.item-builder') ? 'active' : '' }}">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                        Quotations
+                    </a>
+                @endif
 
                 {{-- Pricing Management --}}
-                <a href="{{ route('admin.pricing-catalog') }}"
-                   class="admin-sidebar-link {{ request()->routeIs('admin.pricing-catalog') ? 'active' : '' }}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <line x1="8" y1="6" x2="21" y2="6"/>
-                        <line x1="8" y1="12" x2="21" y2="12"/>
-                        <line x1="8" y1="18" x2="21" y2="18"/>
-                        <line x1="3" y1="6" x2="3.01" y2="6"/>
-                        <line x1="3" y1="12" x2="3.01" y2="12"/>
-                        <line x1="3" y1="18" x2="3.01" y2="18"/>
-                    </svg>
-                    Pricing Management
-                </a>
+                @if ($canManagePricing)
+                    <a href="{{ route('admin.pricing-catalog') }}"
+                       class="admin-sidebar-link {{ request()->routeIs('admin.pricing-catalog') ? 'active' : '' }}">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="8" y1="6" x2="21" y2="6"/>
+                            <line x1="8" y1="12" x2="21" y2="12"/>
+                            <line x1="8" y1="18" x2="21" y2="18"/>
+                            <line x1="3" y1="6" x2="3.01" y2="6"/>
+                            <line x1="3" y1="12" x2="3.01" y2="12"/>
+                            <line x1="3" y1="18" x2="3.01" y2="18"/>
+                        </svg>
+                        Pricing Management
+                    </a>
+                @endif
 
                 {{-- Service Request Options --}}
-                <a href="{{ route('admin.service-request-options') }}"
-                   class="admin-sidebar-link {{ request()->routeIs('admin.service-request-options') ? 'active' : '' }}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M9 11l3 3L22 4"/>
-                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                    </svg>
-                    Service Options
-                </a>
+                @if ($canManageSettings)
+                    <a href="{{ route('admin.service-request-options') }}"
+                       class="admin-sidebar-link {{ request()->routeIs('admin.service-request-options') ? 'active' : '' }}">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M9 11l3 3L22 4"/>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                        </svg>
+                        Service Options
+                    </a>
+                @endif
 
-                <div class="admin-sidebar-divider"></div>
-                <span class="admin-sidebar-nav-section">Engagement</span>
+                @if ($canManageContent || $canViewNotifications || $canManageSupportChat || $canViewReports)
+                    <div class="admin-sidebar-divider"></div>
+                    <span class="admin-sidebar-nav-section">Engagement</span>
+                @endif
 
                 {{-- Testimonies --}}
-                <a href="{{ route('admin.testimonies') }}"
-                   class="admin-sidebar-link {{ request()->routeIs('admin.testimonies') ? 'active' : '' }}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                    </svg>
-                    Testimonies
-                </a>
+                @if ($canManageContent)
+                    <a href="{{ route('admin.testimonies') }}"
+                       class="admin-sidebar-link {{ request()->routeIs('admin.testimonies') ? 'active' : '' }}">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        Testimonies
+                    </a>
+                @endif
 
                 {{-- Notifications with badge --}}
-                <a href="{{ route('admin.notifications') }}"
-                   class="admin-sidebar-link {{ request()->routeIs('admin.notifications') ? 'active' : '' }}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                    </svg>
-                    Notifications
-                    <span id="admin-notification-badge" class="admin-sidebar-link-badge" style="display:none;">0</span>
-                </a>
+                @if ($canViewNotifications)
+                    <a href="{{ route('admin.notifications') }}"
+                       class="admin-sidebar-link {{ request()->routeIs('admin.notifications') ? 'active' : '' }}">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                        Notifications
+                        <span id="admin-notification-badge" class="admin-sidebar-link-badge" style="display:none;">0</span>
+                    </a>
+                @endif
 
-                <a href="{{ route('admin.chat') }}"
-                   class="admin-sidebar-link {{ request()->routeIs('admin.chat') ? 'active' : '' }}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                    </svg>
-                    Support Chat
-                </a>
+                @if ($canManageSupportChat)
+                    <a href="{{ route('admin.chat') }}"
+                       class="admin-sidebar-link {{ request()->routeIs('admin.chat') ? 'active' : '' }}">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        Support Chat
+                    </a>
+                @endif
 
                 {{-- Reports --}}
-                <a href="{{ route('admin.reports') }}"
-                   class="admin-sidebar-link {{ request()->routeIs('admin.reports') ? 'active' : '' }}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
-                    </svg>
-                    Reports
-                </a>
+                @if ($canViewReports)
+                    <a href="{{ route('admin.reports') }}"
+                       class="admin-sidebar-link {{ request()->routeIs('admin.reports') ? 'active' : '' }}">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
+                        </svg>
+                        Reports
+                    </a>
+                @endif
 
-                <div class="admin-sidebar-divider"></div>
-                <span class="admin-sidebar-nav-section">Content</span>
+                @if ($canManageContent)
+                    <div class="admin-sidebar-divider"></div>
+                    <span class="admin-sidebar-nav-section">Content</span>
+                @endif
 
                 {{-- Visual Highlights --}}
-                <a href="{{ route('admin.visual-highlights') }}"
-                   class="admin-sidebar-link {{ request()->routeIs('admin.visual-highlights') ? 'active' : '' }}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <rect x="3" y="3" width="18" height="18" rx="2"/>
-                        <circle cx="8.5" cy="8.5" r="1.5"/>
-                        <path d="M21 15l-5-5L5 21"/>
-                    </svg>
-                    Visual Highlights
-                </a>
+                @if ($canManageContent)
+                    <a href="{{ route('admin.visual-highlights') }}"
+                       class="admin-sidebar-link {{ request()->routeIs('admin.visual-highlights') ? 'active' : '' }}">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <path d="M21 15l-5-5L5 21"/>
+                        </svg>
+                        Visual Highlights
+                    </a>
+                @endif
 
                 {{-- Manage News --}}
-                <a href="{{ route('admin.news-articles') }}"
-                   class="admin-sidebar-link {{ request()->routeIs('admin.news-articles') ? 'active' : '' }}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                        <path d="M8 7h8"/>
-                        <path d="M8 11h8"/>
-                        <path d="M8 15h5"/>
-                    </svg>
-                    Manage News
-                </a>
+                @if ($canManageContent)
+                    <a href="{{ route('admin.news-articles') }}"
+                       class="admin-sidebar-link {{ request()->routeIs('admin.news-articles') ? 'active' : '' }}">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                            <path d="M8 7h8"/>
+                            <path d="M8 11h8"/>
+                            <path d="M8 15h5"/>
+                        </svg>
+                        Manage News
+                    </a>
+                @endif
 
                 {{-- Homepage Promotions --}}
-                <a href="{{ route('admin.promotions') }}"
-                   class="admin-sidebar-link {{ request()->routeIs('admin.promotions') ? 'active' : '' }}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                    Promotions
-                </a>
+                @if ($canManageContent)
+                    <a href="{{ route('admin.promotions') }}"
+                       class="admin-sidebar-link {{ request()->routeIs('admin.promotions') ? 'active' : '' }}">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        Promotions
+                    </a>
+                @endif
 
                 <div class="admin-sidebar-divider"></div>
                 <span class="admin-sidebar-nav-section">System</span>
 
                 {{-- Contact Messages --}}
-                <a href="{{ route('admin.contact-messages') }}"
-                   class="admin-sidebar-link {{ request()->routeIs('admin.contact-messages') ? 'active' : '' }}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                        <polyline points="22,6 12,13 2,6"/>
-                    </svg>
-                    Contact Messages
-                </a>
+                @if ($canManageContactMessages)
+                    <a href="{{ route('admin.contact-messages') }}"
+                       class="admin-sidebar-link {{ request()->routeIs('admin.contact-messages') ? 'active' : '' }}">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                        Contact Messages
+                    </a>
+                @endif
 
                 {{-- Quotation Settings --}}
-                <a href="{{ route('admin.quotation-settings') }}"
-                   class="admin-sidebar-link {{ request()->routeIs('admin.quotation-settings') ? 'active' : '' }}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                    </svg>
-                    Quotation Settings
-                </a>
+                @if ($canManageSettings)
+                    <a href="{{ route('admin.quotation-settings') }}"
+                       class="admin-sidebar-link {{ request()->routeIs('admin.quotation-settings') ? 'active' : '' }}">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                        </svg>
+                        Quotation Settings
+                    </a>
+                @endif
 
                 {{-- Settings → Profile --}}
                 <a href="{{ route('admin.profile.show') }}"
@@ -2089,15 +2145,6 @@
                         <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
                     </svg>
                     Item Builder
-                </a>
-
-                <a href="{{ route('admin.request-assignments') }}"
-                   class="admin-sidebar-link {{ request()->routeIs('admin.request-assignments') ? 'active' : '' }}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <polyline points="9 11 12 14 22 4"/>
-                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                    </svg>
-                    Assignments
                 </a>
 
             @endif
@@ -2515,7 +2562,7 @@
     @endauth
 
     @auth
-        @if ($isAdminUser)
+        @if ($canViewNotifications)
             <script>
                 (function () {
                     const badge = document.getElementById('admin-notification-badge');

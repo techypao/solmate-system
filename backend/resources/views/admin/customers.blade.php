@@ -1,6 +1,10 @@
 @extends('layouts.app', ['title' => 'Customer List'])
 
 @section('content')
+@php
+    $canManageCustomers = auth()->user()?->hasAdminPermission(\App\Models\User::PERMISSION_MANAGE_CUSTOMERS) ?? false;
+    $canManageRequests = auth()->user()?->hasAdminPermission(\App\Models\User::PERMISSION_MANAGE_REQUESTS) ?? false;
+@endphp
 <div class="admin-page-stack">
 
     <div class="card admin-hero-card">
@@ -10,7 +14,9 @@
                 <h1 class="page-title">Customers</h1>
                 <p class="page-copy">All registered customer accounts in SolMate are listed below. Use this page to get an overview of your customer base.</p>
             </div>
-            <a class="button-link secondary" href="{{ route('admin.request-assignments') }}">Open Request Assignments</a>
+            @if ($canManageRequests)
+                <a class="button-link secondary" href="{{ route('admin.request-assignments') }}">Open Request Assignments</a>
+            @endif
         </div>
 
         <div class="summary-grid">
@@ -81,33 +87,35 @@
                                class="button-link secondary"
                                style="padding: 6px 14px; font-size: 13px;">View</a>
 
-                            <a href="{{ route('admin.customers.edit', $customer) }}"
-                               class="button-link secondary"
-                               style="padding: 6px 14px; font-size: 13px;">Edit</a>
+                            @if ($canManageCustomers)
+                                <a href="{{ route('admin.customers.edit', $customer) }}"
+                                   class="button-link secondary"
+                                   style="padding: 6px 14px; font-size: 13px;">Edit</a>
 
-                            <form method="POST"
-                                  action="{{ route('admin.customers.archive', $customer) }}"
-                                  onsubmit="return confirm('Archive customer {{ addslashes($customer->name) }}? They will lose website and app access, but their records will be kept.')">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit"
-                                        class="button-link secondary"
-                                        style="padding:6px 14px; font-size:13px; border-color:#facc15; color:#a16207;">
-                                    Archive
-                                </button>
-                            </form>
+                                <form method="POST"
+                                      action="{{ route('admin.customers.archive', $customer) }}"
+                                      onsubmit="return confirm('Archive customer {{ addslashes($customer->name) }}? They will lose website and app access, but their records will be kept.')">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit"
+                                            class="button-link secondary"
+                                            style="padding:6px 14px; font-size:13px; border-color:#facc15; color:#a16207;">
+                                        Archive
+                                    </button>
+                                </form>
 
-                            <form method="POST"
-                                  action="{{ route('admin.customers.destroy', $customer) }}"
-                                  onsubmit="return confirm('Delete customer {{ addslashes($customer->name) }}? This will permanently remove their account and cascade-delete their quotations, requests, inspections, and testimonies.')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                        class="button-link"
-                                        style="padding:6px 14px; font-size:13px; background:#fee2e2; color:#dc2626; border:1.5px solid #fca5a5; border-radius:8px; cursor:pointer; font-weight:600; text-decoration:none; display:inline-flex; align-items:center;">
-                                    Delete
-                                </button>
-                            </form>
+                                <form method="POST"
+                                      action="{{ route('admin.customers.destroy', $customer) }}"
+                                      onsubmit="return confirm('Delete customer {{ addslashes($customer->name) }}? This will permanently remove their account and cascade-delete their quotations, requests, inspections, and testimonies.')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                            class="button-link"
+                                            style="padding:6px 14px; font-size:13px; background:#fee2e2; color:#dc2626; border:1.5px solid #fca5a5; border-radius:8px; cursor:pointer; font-weight:600; text-decoration:none; display:inline-flex; align-items:center;">
+                                        Delete
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     </div>
                 @endforeach
@@ -143,31 +151,33 @@
                             </span>
                         @endif
                         <span class="badge" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;">Archived</span>
-                        <div style="display:flex; gap:8px; flex-shrink:0;">
-                            <form method="POST"
-                                  action="{{ route('admin.customers.restore', $customer) }}"
-                                  onsubmit="return confirm('Restore customer {{ addslashes($customer->name) }}? Their login access will be re-enabled.')">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit"
-                                        class="button-link secondary"
-                                        style="padding:6px 14px; font-size:13px; border-color:#86efac; color:#166534;">
-                                    Restore
-                                </button>
-                            </form>
+                        @if ($canManageCustomers)
+                            <div style="display:flex; gap:8px; flex-shrink:0;">
+                                <form method="POST"
+                                      action="{{ route('admin.customers.restore', $customer) }}"
+                                      onsubmit="return confirm('Restore customer {{ addslashes($customer->name) }}? Their login access will be re-enabled.')">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit"
+                                            class="button-link secondary"
+                                            style="padding:6px 14px; font-size:13px; border-color:#86efac; color:#166534;">
+                                        Restore
+                                    </button>
+                                </form>
 
-                            <form method="POST"
-                                  action="{{ route('admin.customers.destroy', $customer) }}"
-                                  onsubmit="return confirm('Delete archived customer {{ addslashes($customer->name) }} permanently? This action cannot be undone.')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                        class="button-link"
-                                        style="padding:6px 14px; font-size:13px; background:#fee2e2; color:#dc2626; border:1.5px solid #fca5a5; border-radius:8px; cursor:pointer; font-weight:600; text-decoration:none; display:inline-flex; align-items:center;">
-                                    Delete
-                                </button>
-                            </form>
-                        </div>
+                                <form method="POST"
+                                      action="{{ route('admin.customers.destroy', $customer) }}"
+                                      onsubmit="return confirm('Delete archived customer {{ addslashes($customer->name) }} permanently? This action cannot be undone.')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                            class="button-link"
+                                            style="padding:6px 14px; font-size:13px; background:#fee2e2; color:#dc2626; border:1.5px solid #fca5a5; border-radius:8px; cursor:pointer; font-weight:600; text-decoration:none; display:inline-flex; align-items:center;">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
                     </div>
                 @endforeach
             </div>

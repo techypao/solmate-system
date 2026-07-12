@@ -52,7 +52,7 @@ Route::get('/', function () {
     }
 
     if (Auth::user()->role === User::ROLE_ADMIN) {
-        return redirect()->route('admin.quotation-settings');
+        return redirect()->route('dashboard');
     }
 
     return response(view('customer.home'), 200, $headers);
@@ -94,100 +94,132 @@ Route::middleware(['auth', 'verified.email'])->group(function () {
         ->name('quotations.item-builder');
 
     Route::get('/admin/quotation-settings', [QuotationSettingsPageController::class, 'show'])
+        ->middleware('admin.permission:'.User::PERMISSION_MANAGE_SETTINGS)
         ->name('admin.quotation-settings');
 
     Route::get('/admin/pricing-catalog', [PricingCatalogPageController::class, 'show'])
+        ->middleware('admin.permission:'.User::PERMISSION_MANAGE_PRICING)
         ->name('admin.pricing-catalog');
 
     Route::get('/admin/technicians/create', [TechnicianRegistrationController::class, 'create'])
+        ->middleware('admin.permission:'.User::PERMISSION_MANAGE_TECHNICIANS)
         ->name('admin.technicians.create');
 
     Route::post('/admin/technicians', [TechnicianRegistrationController::class, 'store'])
+        ->middleware('admin.permission:'.User::PERMISSION_MANAGE_TECHNICIANS)
         ->name('admin.technicians.store');
 
     Route::get('/admin/technicians/{technician}/edit', [TechnicianRegistrationController::class, 'edit'])
+        ->middleware('admin.permission:'.User::PERMISSION_MANAGE_TECHNICIANS)
         ->name('admin.technicians.edit');
 
     Route::put('/admin/technicians/{technician}', [TechnicianRegistrationController::class, 'update'])
+        ->middleware('admin.permission:'.User::PERMISSION_MANAGE_TECHNICIANS)
         ->name('admin.technicians.update');
 
     Route::delete('/admin/technicians/{technician}', [TechnicianRegistrationController::class, 'destroy'])
+        ->middleware('admin.permission:'.User::PERMISSION_MANAGE_TECHNICIANS)
         ->name('admin.technicians.destroy');
 
     Route::get('/admin/request-assignments', [RequestAssignmentPageController::class, 'show'])
+        ->middleware('admin.permission:'.User::PERMISSION_MANAGE_REQUESTS)
         ->name('admin.request-assignments');
 
     Route::middleware('role:admin')->group(function () {
         Route::get('/admin/walkin', [RequestAssignmentPageController::class, 'walkin'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_WALKINS)
             ->name('admin.walkin');
 
         Route::post('/admin/request-assignments/service-popup', [RequestAssignmentPageController::class, 'flashServicePopup'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_REQUESTS)
             ->name('admin.request-assignments.service-popup');
 
         Route::get('/admin/admins', [AdminAccountController::class, 'index'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_STAFF)
             ->name('admin.admins');
 
         Route::post('/admin/admins', [AdminAccountController::class, 'store'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_STAFF)
             ->name('admin.admins.store');
 
         Route::delete('/admin/admins/{admin}', [AdminAccountController::class, 'destroy'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_STAFF)
             ->name('admin.admins.destroy');
 
         Route::get('/admin/customers', [AdminCustomerController::class, 'index'])
+            ->middleware('admin.permission:'.User::PERMISSION_VIEW_CUSTOMERS)
             ->name('admin.customers');
 
         Route::get('/admin/customers/{customer}', [AdminCustomerController::class, 'show'])
+            ->middleware('admin.permission:'.User::PERMISSION_VIEW_CUSTOMERS)
             ->name('admin.customers.show');
 
         Route::get('/admin/customers/{customer}/edit', [AdminCustomerController::class, 'edit'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_CUSTOMERS)
             ->name('admin.customers.edit');
 
         Route::put('/admin/customers/{customer}', [AdminCustomerController::class, 'update'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_CUSTOMERS)
             ->name('admin.customers.update');
 
         Route::patch('/admin/customers/{customer}/archive', [AdminCustomerController::class, 'archive'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_CUSTOMERS)
             ->name('admin.customers.archive');
 
         Route::patch('/admin/customers/{customer}/restore', [AdminCustomerController::class, 'restore'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_CUSTOMERS)
             ->name('admin.customers.restore');
 
         Route::delete('/admin/customers/{customer}', [AdminCustomerController::class, 'destroy'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_CUSTOMERS)
             ->name('admin.customers.destroy');
 
         Route::get('/admin/testimonies', [TestimonyModerationPageController::class, 'show'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_CONTENT)
             ->name('admin.testimonies');
 
         Route::get('/admin/notifications', [NotificationPageController::class, 'show'])
+            ->middleware('admin.permission:'.User::PERMISSION_VIEW_NOTIFICATIONS)
             ->name('admin.notifications');
 
         Route::get('/admin/chat', [ChatConversationPageController::class, 'show'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_SUPPORT_CHAT)
             ->name('admin.chat');
 
         Route::get('/admin/reports', [ReportsPageController::class, 'show'])
+            ->middleware('admin.permission:'.User::PERMISSION_VIEW_REPORTS)
             ->name('admin.reports');
 
         Route::get('/admin/visual-highlights', [VisualHighlightPageController::class, 'show'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_CONTENT)
             ->name('admin.visual-highlights');
 
         Route::get('/admin/contact-messages', [ContactMessagePageController::class, 'show'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_CONTACT_MESSAGES)
             ->name('admin.contact-messages');
 
         Route::get('/admin/news-articles', [NewsArticlePageController::class, 'show'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_CONTENT)
             ->name('admin.news-articles');
 
         Route::get('/admin/promotions', [PromotionPageController::class, 'show'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_CONTENT)
             ->name('admin.promotions');
 
         Route::get('/admin/service-request-options', [ServiceRequestOptionPageController::class, 'show'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_SETTINGS)
             ->name('admin.service-request-options');
 
         Route::get('/admin/profile', [ProfilePageController::class, 'show'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_OWN_PROFILE)
             ->name('admin.profile.show');
 
         Route::put('/admin/profile', [ProfilePageController::class, 'updateProfile'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_OWN_PROFILE)
             ->name('admin.profile.update');
 
         Route::put('/admin/profile/password', [ProfilePageController::class, 'updatePassword'])
+            ->middleware('admin.permission:'.User::PERMISSION_MANAGE_OWN_PROFILE)
             ->name('admin.profile.password.update');
     });
 

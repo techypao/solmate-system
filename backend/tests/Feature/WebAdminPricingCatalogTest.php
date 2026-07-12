@@ -17,6 +17,7 @@ class WebAdminPricingCatalogTest extends TestCase
             'email' => 'admin_pricing@example.com',
             'password' => 'password123',
             'role' => User::ROLE_ADMIN,
+            'admin_role' => User::ADMIN_ROLE_SUPER_ADMIN,
         ]);
         $admin->forceFill(['email_verified_at' => now()])->save();
 
@@ -46,6 +47,40 @@ class WebAdminPricingCatalogTest extends TestCase
 
         $this->actingAs($customer)
             ->get('/admin/pricing-catalog')
-            ->assertForbidden();
+            ->assertRedirect(route('dashboard'));
+    }
+
+    public function test_operations_staff_can_open_pricing_catalog_page(): void
+    {
+        $staff = User::query()->create([
+            'name' => 'Operations Staff',
+            'email' => 'operations_pricing@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+            'admin_role' => User::ADMIN_ROLE_OPERATIONS,
+        ]);
+        $staff->forceFill(['email_verified_at' => now()])->save();
+
+        $this->actingAs($staff)
+            ->get('/admin/pricing-catalog')
+            ->assertOk()
+            ->assertSee('Admin Pricing Catalog');
+    }
+
+    public function test_content_staff_cannot_open_pricing_catalog_page(): void
+    {
+        $staff = User::query()->create([
+            'name' => 'Content Staff',
+            'email' => 'content_pricing@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+            'admin_role' => User::ADMIN_ROLE_CONTENT,
+        ]);
+        $staff->forceFill(['email_verified_at' => now()])->save();
+
+        $this->actingAs($staff)
+            ->get('/admin/pricing-catalog')
+            ->assertRedirect(route('dashboard'))
+            ->assertSessionHas('status', 'You do not have permission to access that admin area.');
     }
 }

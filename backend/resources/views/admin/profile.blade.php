@@ -102,7 +102,7 @@
                 <h1 class="page-title">Admin Profile</h1>
                 <p class="page-copy">Manage your admin account details and keep your website login credentials up to date.</p>
             </div>
-            <a class="button-link secondary" href="{{ route('admin.quotation-settings') }}">Back to Admin Tools</a>
+            <a class="button-link secondary" href="{{ route('dashboard') }}">Back to Dashboard</a>
         </div>
 
         <div class="summary-grid">

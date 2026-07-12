@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\CheckSessionTimeout;
+use App\Http\Middleware\AdminPermissionMiddleware;
 use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Middleware\EnsureFrontendApiRequestsAreStateful;
 use App\Http\Middleware\EnsureUserIsNotArchived;
@@ -39,6 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role' => RoleMiddleware::class,
+            'admin.permission' => AdminPermissionMiddleware::class,
             'active.user' => EnsureUserIsNotArchived::class,
             'verified.email' => EnsureEmailIsVerified::class,
         ]);

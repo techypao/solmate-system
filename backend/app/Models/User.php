@@ -21,6 +21,74 @@ class User extends Authenticatable implements MustVerifyEmail
 
     const ROLE_TECHNICIAN = 'technician';
 
+    const ADMIN_ROLE_SUPER_ADMIN = 'super_admin';
+
+    const ADMIN_ROLE_OPERATIONS = 'operations_staff';
+
+    const ADMIN_ROLE_SUPPORT = 'customer_support_staff';
+
+    const ADMIN_ROLE_CONTENT = 'content_staff';
+
+    const PERMISSION_MANAGE_STAFF = 'manage_staff';
+
+    const PERMISSION_MANAGE_TECHNICIANS = 'manage_technicians';
+
+    const PERMISSION_MANAGE_REQUESTS = 'manage_requests';
+
+    const PERMISSION_MANAGE_WALKINS = 'manage_walkins';
+
+    const PERMISSION_USE_ITEM_BUILDER = 'use_item_builder';
+
+    const PERMISSION_MANAGE_PRICING = 'manage_pricing';
+
+    const PERMISSION_VIEW_CUSTOMERS = 'view_customers';
+
+    const PERMISSION_MANAGE_CUSTOMERS = 'manage_customers';
+
+    const PERMISSION_MANAGE_SUPPORT_CHAT = 'manage_support_chat';
+
+    const PERMISSION_MANAGE_CONTACT_MESSAGES = 'manage_contact_messages';
+
+    const PERMISSION_MANAGE_CONTENT = 'manage_content';
+
+    const PERMISSION_VIEW_REPORTS = 'view_reports';
+
+    const PERMISSION_MANAGE_SETTINGS = 'manage_settings';
+
+    const PERMISSION_VIEW_NOTIFICATIONS = 'view_notifications';
+
+    const PERMISSION_MANAGE_OWN_PROFILE = 'manage_own_profile';
+
+    const ADMIN_ROLE_LABELS = [
+        self::ADMIN_ROLE_SUPER_ADMIN => 'Super Admin',
+        self::ADMIN_ROLE_OPERATIONS => 'Operations Staff',
+        self::ADMIN_ROLE_SUPPORT => 'Customer Support Staff',
+        self::ADMIN_ROLE_CONTENT => 'Content Staff',
+    ];
+
+    const ADMIN_ROLE_PERMISSIONS = [
+        self::ADMIN_ROLE_OPERATIONS => [
+            self::PERMISSION_MANAGE_TECHNICIANS,
+            self::PERMISSION_MANAGE_REQUESTS,
+            self::PERMISSION_MANAGE_WALKINS,
+            self::PERMISSION_USE_ITEM_BUILDER,
+            self::PERMISSION_MANAGE_PRICING,
+            self::PERMISSION_VIEW_NOTIFICATIONS,
+            self::PERMISSION_MANAGE_OWN_PROFILE,
+        ],
+        self::ADMIN_ROLE_SUPPORT => [
+            self::PERMISSION_VIEW_CUSTOMERS,
+            self::PERMISSION_MANAGE_SUPPORT_CHAT,
+            self::PERMISSION_MANAGE_CONTACT_MESSAGES,
+            self::PERMISSION_VIEW_NOTIFICATIONS,
+            self::PERMISSION_MANAGE_OWN_PROFILE,
+        ],
+        self::ADMIN_ROLE_CONTENT => [
+            self::PERMISSION_MANAGE_CONTENT,
+            self::PERMISSION_MANAGE_OWN_PROFILE,
+        ],
+    ];
+
     const DEFAULT_ARCHIVED_ACCOUNT_MESSAGE = 'Your account has been archived due to inactivity. Please contact support to reactivate.';
 
     /**
@@ -35,6 +103,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'role',
+        'admin_role',
         'fcm_token',
         'archived_at',
         'is_archived',
@@ -122,6 +191,59 @@ class User extends Authenticatable implements MustVerifyEmail
     public function hasRole(string $role): bool
     {
         return $this->role === $role;
+    }
+
+    public function isAdminUser(): bool
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->isAdminUser() && $this->adminRole() === self::ADMIN_ROLE_SUPER_ADMIN;
+    }
+
+    public function adminRole(): ?string
+    {
+        if (! $this->isAdminUser()) {
+            return null;
+        }
+
+        return $this->admin_role ?: self::ADMIN_ROLE_SUPER_ADMIN;
+    }
+
+    public function adminRoleLabel(): string
+    {
+        return self::ADMIN_ROLE_LABELS[$this->adminRole()] ?? 'Admin Staff';
+    }
+
+    public static function adminRoleOptions(): array
+    {
+        return self::ADMIN_ROLE_LABELS;
+    }
+
+    public function hasAdminPermission(string $permission): bool
+    {
+        if (! $this->isAdminUser()) {
+            return false;
+        }
+
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return in_array($permission, self::ADMIN_ROLE_PERMISSIONS[$this->adminRole()] ?? [], true);
+    }
+
+    public function hasAnyAdminPermission(array $permissions): bool
+    {
+        foreach ($permissions as $permission) {
+            if ($this->hasAdminPermission($permission)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function isArchivedCustomer(): bool

@@ -1,4 +1,4 @@
-@extends('layouts.app', ['title' => 'Manage Admins'])
+@extends('layouts.app', ['title' => 'Staff Accounts'])
 
 @section('content')
 <div class="admin-page-stack">
@@ -8,18 +8,18 @@
         <div class="section-header">
             <div>
                 <p class="admin-page-eyebrow">Admin Team Management</p>
-                <h1 class="page-title">Manage Admins</h1>
-                <p class="page-copy">Create admin accounts and remove other admin accounts when access is no longer needed.</p>
+                <h1 class="page-title">Staff Accounts</h1>
+                <p class="page-copy">Create Super Admin and staff accounts with role-based access to the admin workspace.</p>
             </div>
         </div>
         <div class="summary-grid">
             <div class="summary-card">
-                <div class="summary-label">Total admins</div>
+                <div class="summary-label">Total accounts</div>
                 <div class="summary-value">{{ $admins->count() }}</div>
             </div>
             <div class="summary-card">
-                <div class="summary-label">Access</div>
-                <div class="muted">Admin-only page</div>
+                <div class="summary-label">Super admins</div>
+                <div class="summary-value">{{ $admins->filter->isSuperAdmin()->count() }}</div>
             </div>
         </div>
     </div>
@@ -32,8 +32,8 @@
     <div class="card admin-section-surface">
         <div class="section-header">
             <div>
-                <h2 class="admin-section-title">Add New Admin</h2>
-                <p class="admin-section-copy">Admin accounts are active immediately and do not require email verification.</p>
+                <h2 class="admin-section-title">Add Staff Account</h2>
+                <p class="admin-section-copy">Staff accounts are active immediately and use the same login page as admins.</p>
             </div>
         </div>
 
@@ -74,6 +74,17 @@
                     <div class="muted" style="font-size: 12px; margin-top: 6px; line-height: 1.5;">Password must be at least 8 characters, include 1 uppercase letter, and 1 special character.</div>
                     <div class="field-error">@error('password') {{ $message }} @enderror</div>
                 </div>
+                <div>
+                    <label for="admin_role">Staff Role</label>
+                    <select id="admin_role" name="admin_role" required>
+                        @foreach ($adminRoleOptions as $roleValue => $roleLabel)
+                            <option value="{{ $roleValue }}" @selected(old('admin_role', \App\Models\User::ADMIN_ROLE_OPERATIONS) === $roleValue)>
+                                {{ $roleLabel }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <div class="field-error">@error('admin_role') {{ $message }} @enderror</div>
+                </div>
             </div>
 
             <div class="form-grid">
@@ -85,7 +96,7 @@
             </div>
 
             <div class="actions">
-                <button type="submit">Add Admin</button>
+                <button type="submit">Add Staff Account</button>
             </div>
         </form>
     </div>
@@ -94,20 +105,28 @@
     <div class="card admin-section-surface">
         <div class="section-header">
             <div>
-                <h2 class="admin-section-title">Existing Admins</h2>
-                <p class="page-copy" style="margin-bottom:0;">Remove access for other admin accounts from this list.</p>
+                <h2 class="admin-section-title">Existing Staff Accounts</h2>
+                <p class="page-copy" style="margin-bottom:0;">Review staff roles and remove access when it is no longer needed.</p>
             </div>
             <span class="badge badge-neutral">{{ $admins->count() }} total</span>
         </div>
 
         @if ($admins->isEmpty())
-            <div class="info-box" style="margin-bottom:0;">No admin accounts found.</div>
+            <div class="info-box" style="margin-bottom:0;">No staff accounts found.</div>
         @else
             <div class="stack">
                 @foreach ($admins as $admin)
                     @php
                         $adminDisplayName = trim(implode(' ', array_filter([$admin->first_name, $admin->last_name]))) ?: $admin->name;
                         $isCurrentAdmin = auth()->id() === $admin->id;
+                        $adminRoleLabel = $admin->adminRoleLabel();
+                        $adminRoleColor = match ($admin->adminRole()) {
+                            \App\Models\User::ADMIN_ROLE_SUPER_ADMIN => ['#e0f2fe', '#075985', '#7dd3fc'],
+                            \App\Models\User::ADMIN_ROLE_OPERATIONS => ['#dcfce7', '#166534', '#86efac'],
+                            \App\Models\User::ADMIN_ROLE_SUPPORT => ['#fef9c3', '#854d0e', '#fde047'],
+                            \App\Models\User::ADMIN_ROLE_CONTENT => ['#f3e8ff', '#6b21a8', '#d8b4fe'],
+                            default => ['#f3f4f6', '#374151', '#d1d5db'],
+                        };
                     @endphp
                     <div class="list-row">
                         <div style="flex:1; min-width:0;">
@@ -116,7 +135,12 @@
                             <div class="muted" style="font-size:12px;">Contact {{ $admin->contact_number ?: 'Not provided' }}</div>
                             <div class="muted" style="font-size:12px;">Joined {{ $admin->created_at->format('M d, Y') }}</div>
                         </div>
-                        <span class="badge badge-neutral" style="white-space:nowrap;">{{ $isCurrentAdmin ? 'You' : 'Admin' }}</span>
+                        <span class="badge" style="white-space:nowrap; background:{{ $adminRoleColor[0] }}; color:{{ $adminRoleColor[1] }}; border:1px solid {{ $adminRoleColor[2] }};">
+                            {{ $adminRoleLabel }}
+                        </span>
+                        @if ($isCurrentAdmin)
+                            <span class="badge badge-neutral" style="white-space:nowrap;">You</span>
+                        @endif
                         <div style="display:flex; gap:8px; flex-shrink:0;">
                             @if ($isCurrentAdmin)
                                 <button type="button"
@@ -128,7 +152,7 @@
                             @else
                                 <form method="POST"
                                       action="{{ route('admin.admins.destroy', $admin) }}"
-                                      onsubmit="return confirm('Delete admin {{ addslashes($adminDisplayName) }}? This will permanently remove their login access.')">
+                                      onsubmit="return confirm('Delete staff account {{ addslashes($adminDisplayName) }}? This will permanently remove their login access.')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit"

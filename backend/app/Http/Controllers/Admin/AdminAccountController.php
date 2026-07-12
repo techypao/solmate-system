@@ -17,6 +17,7 @@ class AdminAccountController extends Controller
 
         return view('admin.admins', [
             'admins' => $this->adminList(),
+            'adminRoleOptions' => User::adminRoleOptions(),
         ]);
     }
 
@@ -37,6 +38,7 @@ class AdminAccountController extends Controller
             'contact_number' => trim($validated['contact_number']),
             'password' => $validated['password'],
             'role' => User::ROLE_ADMIN,
+            'admin_role' => $validated['admin_role'],
         ]);
 
         $admin->email_verified_at = now();
@@ -44,7 +46,7 @@ class AdminAccountController extends Controller
 
         return redirect()
             ->route('admin.admins')
-            ->with('status', 'Admin account created successfully.');
+            ->with('status', 'Staff account created successfully.');
     }
 
     public function destroy(Request $request, User $admin)
@@ -55,13 +57,19 @@ class AdminAccountController extends Controller
         if ($request->user()->is($admin)) {
             return redirect()
                 ->route('admin.admins')
-                ->withErrors(['admin' => 'You cannot delete your own admin account.']);
+                ->withErrors(['admin' => 'You cannot delete your own staff account.']);
         }
 
-        if (User::query()->where('role', User::ROLE_ADMIN)->count() <= 1) {
+        if ($admin->isSuperAdmin() && User::query()
+            ->where('role', User::ROLE_ADMIN)
+            ->where(function ($query): void {
+                $query->where('admin_role', User::ADMIN_ROLE_SUPER_ADMIN)
+                    ->orWhereNull('admin_role');
+            })
+            ->count() <= 1) {
             return redirect()
                 ->route('admin.admins')
-                ->withErrors(['admin' => 'At least one admin account must remain.']);
+                ->withErrors(['admin' => 'At least one Super Admin account must remain.']);
         }
 
         $adminName = $admin->name;
@@ -69,7 +77,7 @@ class AdminAccountController extends Controller
 
         return redirect()
             ->route('admin.admins')
-            ->with('status', "Admin \"{$adminName}\" was deleted successfully.");
+            ->with('status', "Staff account \"{$adminName}\" was deleted successfully.");
     }
 
     private function adminList()
@@ -87,6 +95,7 @@ class AdminAccountController extends Controller
             'last_name' => NameValidation::rules(),
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
             'contact_number' => ['required', 'regex:/^[0-9]{11}$/'],
+            'admin_role' => ['required', Rule::in(array_keys(User::adminRoleOptions()))],
             'password' => PasswordValidation::required(),
         ];
     }
@@ -96,6 +105,8 @@ class AdminAccountController extends Controller
         return array_merge([
             'email.unique' => 'A user with this email already exists.',
             'contact_number.regex' => 'Contact number must be exactly 11 digits.',
+            'admin_role.required' => 'Choose a staff role.',
+            'admin_role.in' => 'Choose a valid staff role.',
         ], NameValidation::messages(), PasswordValidation::messages());
     }
 }

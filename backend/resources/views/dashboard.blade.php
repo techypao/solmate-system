@@ -1206,12 +1206,21 @@
     }
 </style>
 
+@php
+    $dashCanViewCustomers = $user->hasAdminPermission(\App\Models\User::PERMISSION_VIEW_CUSTOMERS);
+    $dashCanManageTechnicians = $user->hasAdminPermission(\App\Models\User::PERMISSION_MANAGE_TECHNICIANS);
+    $dashCanManageRequests = $user->hasAdminPermission(\App\Models\User::PERMISSION_MANAGE_REQUESTS);
+    $dashCanUseItemBuilder = $user->hasAdminPermission(\App\Models\User::PERMISSION_USE_ITEM_BUILDER);
+    $dashCanViewReports = $user->hasAdminPermission(\App\Models\User::PERMISSION_VIEW_REPORTS);
+    $dashCanManageSettings = $user->hasAdminPermission(\App\Models\User::PERMISSION_MANAGE_SETTINGS);
+@endphp
+
 <div class="adm2-wrap">
 
     {{-- HERO --}}
     <section class="adm2-hero" aria-label="Admin Dashboard">
-        <h1 class="adm2-hero-title">Admin Dashboard</h1>
-        <p class="adm2-hero-copy">Manage quotations, pricing data, testimonies, technician accounts, and request operations from one unified SolMate admin workspace.</p>
+        <h1 class="adm2-hero-title">{{ $user->adminRoleLabel() }} Dashboard</h1>
+        <p class="adm2-hero-copy">Your SolMate admin workspace is tailored to the tools and records available to your staff role.</p>
     </section>
 
     {{-- STAT CARDS --}}
@@ -1219,22 +1228,30 @@
         <div class="adm2-stat-card">
             <div class="adm2-stat-label">Total Customers</div>
             <div class="adm2-stat-value">{{ $adm_totalCustomers }}</div>
-            <a href="{{ route('admin.customers') }}" class="adm2-stat-link">View Customers</a>
+            @if ($dashCanViewCustomers)
+                <a href="{{ route('admin.customers') }}" class="adm2-stat-link">View Customers</a>
+            @endif
         </div>
         <div class="adm2-stat-card">
             <div class="adm2-stat-label">Total Technicians</div>
             <div class="adm2-stat-value">{{ $adm_totalTechnicians }}</div>
-            <a href="{{ route('admin.technicians.create') }}" class="adm2-stat-link">View Technicians</a>
+            @if ($dashCanManageTechnicians)
+                <a href="{{ route('admin.technicians.create') }}" class="adm2-stat-link">View Technicians</a>
+            @endif
         </div>
         <div class="adm2-stat-card">
             <div class="adm2-stat-label">Pending Quotation Requests</div>
             <div class="adm2-stat-value">{{ $adm_pendingInspCount }}</div>
-            <a href="{{ route('admin.request-assignments') }}" class="adm2-stat-link">View Requests</a>
+            @if ($dashCanManageRequests)
+                <a href="{{ route('admin.request-assignments') }}" class="adm2-stat-link">View Requests</a>
+            @endif
         </div>
         <div class="adm2-stat-card">
             <div class="adm2-stat-label">Pending Service Requests</div>
             <div class="adm2-stat-value">{{ $adm_pendingServiceCount }}</div>
-            <a href="{{ route('admin.request-assignments') }}" class="adm2-stat-link">View Requests</a>
+            @if ($dashCanManageRequests)
+                <a href="{{ route('admin.request-assignments') }}" class="adm2-stat-link">View Requests</a>
+            @endif
         </div>
         <div class="adm2-stat-card">
             <div class="adm2-stat-label">Quotations Generated</div>
@@ -1248,10 +1265,13 @@
                     <div class="adm2-stat-pair-value">{{ $adm_finalQuotations }}</div>
                 </div>
             </div>
-            <a href="{{ route('quotations.item-builder') }}" class="adm2-stat-link">View Quotations</a>
+            @if ($dashCanUseItemBuilder)
+                <a href="{{ route('quotations.item-builder') }}" class="adm2-stat-link">View Quotations</a>
+            @endif
         </div>
     </div>
 
+    @if ($dashCanViewReports)
     <section class="adm2-panel adm2-monthly-card" aria-label="Monthly Report Summary">
         <div class="adm2-monthly-head">
             <div>
@@ -1280,22 +1300,31 @@
             <a href="{{ route('admin.reports', ['range' => 'this_month']) }}" class="adm2-view-all">View Full Report</a>
         </div>
     </section>
+    @endif
 
     {{-- ROW: Quick Actions + Pending Inspection Request --}}
+    @if ($dashCanManageRequests || $dashCanViewReports || $dashCanManageSettings)
     <div class="adm2-row">
 
         {{-- Quick Actions panel --}}
         <div class="adm2-panel">
             <h2 class="adm2-panel-title">Quick Actions</h2>
-            <a href="{{ route('admin.request-assignments') }}" class="adm2-action-btn">Assign Technician</a>
-            <a href="{{ route('admin.request-assignments') }}" class="adm2-action-btn">Approve Inspection Request</a>
-            <a href="{{ route('admin.request-assignments') }}" class="adm2-action-btn">Approve Service Request</a>
-            <a href="{{ route('admin.reports', ['range' => 'this_month']) }}" class="adm2-action-btn">View Reports</a>
-            <a href="{{ route('admin.quotation-settings') }}" class="adm2-action-btn">Rule Configuration</a>
-            <a href="{{ route('admin.quotation-settings') }}" class="adm2-cta-btn">Go to Rule Configurations</a>
+            @if ($dashCanManageRequests)
+                <a href="{{ route('admin.request-assignments') }}" class="adm2-action-btn">Assign Technician</a>
+                <a href="{{ route('admin.request-assignments') }}" class="adm2-action-btn">Approve Inspection Request</a>
+                <a href="{{ route('admin.request-assignments') }}" class="adm2-action-btn">Approve Service Request</a>
+            @endif
+            @if ($dashCanViewReports)
+                <a href="{{ route('admin.reports', ['range' => 'this_month']) }}" class="adm2-action-btn">View Reports</a>
+            @endif
+            @if ($dashCanManageSettings)
+                <a href="{{ route('admin.quotation-settings') }}" class="adm2-action-btn">Rule Configuration</a>
+                <a href="{{ route('admin.quotation-settings') }}" class="adm2-cta-btn">Go to Rule Configurations</a>
+            @endif
         </div>
 
         {{-- Pending Inspection Request panel --}}
+        @if ($dashCanManageRequests)
         <div class="adm2-panel">
             <h2 class="adm2-panel-title">Pending Inspection Request</h2>
             <div class="adm2-table-wrap">
@@ -1336,13 +1365,17 @@
                 <a href="{{ route('admin.request-assignments') }}" class="adm2-view-all">View All Inspection</a>
             </div>
         </div>
+        @endif
 
     </div>{{-- /.adm2-row --}}
+    @endif
 
     {{-- ROW: Pending Service Request + Recent Quotations --}}
+    @if ($dashCanManageRequests || $dashCanUseItemBuilder)
     <div class="adm2-row-equal">
 
         {{-- Pending Service Request panel --}}
+        @if ($dashCanManageRequests)
         <div class="adm2-panel">
             <h2 class="adm2-panel-title">Pending Service Request</h2>
             <div class="adm2-table-wrap">
@@ -1380,8 +1413,10 @@
                 </table>
             </div>
         </div>
+        @endif
 
         {{-- Recent Quotations panel --}}
+        @if ($dashCanUseItemBuilder)
         <div class="adm2-panel">
             <h2 class="adm2-panel-title">Recent Quotations</h2>
             <div class="adm2-table-wrap">
@@ -1429,8 +1464,10 @@
                 </table>
             </div>
         </div>
+        @endif
 
     </div>{{-- /.adm2-row-equal --}}
+    @endif
 
 </div>{{-- /.adm2-wrap --}}
 

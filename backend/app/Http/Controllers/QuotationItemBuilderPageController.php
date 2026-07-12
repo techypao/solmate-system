@@ -11,8 +11,11 @@ class QuotationItemBuilderPageController extends Controller
 {
     public function show(Request $request)
     {
+        $user = $request->user();
+
         abort_unless(
-            in_array($request->user()?->role, [User::ROLE_ADMIN, User::ROLE_TECHNICIAN], true),
+            $user?->role === User::ROLE_TECHNICIAN
+                || ($user?->role === User::ROLE_ADMIN && $user->hasAdminPermission(User::PERMISSION_USE_ITEM_BUILDER)),
             403
         );
 

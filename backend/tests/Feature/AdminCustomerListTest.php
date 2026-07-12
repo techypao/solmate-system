@@ -77,6 +77,35 @@ class AdminCustomerListTest extends TestCase
         ], $customers->pluck('name')->all());
     }
 
+    public function test_customer_support_staff_can_view_customers_but_cannot_edit_them(): void
+    {
+        $support = User::query()->create([
+            'name' => 'Support Staff',
+            'email' => 'support_customers@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+            'admin_role' => User::ADMIN_ROLE_SUPPORT,
+            'email_verified_at' => now(),
+        ]);
+
+        $customer = User::query()->create([
+            'name' => 'Readonly Customer',
+            'email' => 'readonly_customer@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_CUSTOMER,
+        ]);
+
+        $this->actingAs($support)
+            ->get(route('admin.customers'))
+            ->assertOk()
+            ->assertSee('Readonly Customer')
+            ->assertDontSee(route('admin.customers.edit', $customer));
+
+        $this->actingAs($support)
+            ->get(route('admin.customers.edit', $customer))
+            ->assertRedirect(route('dashboard'));
+    }
+
     public function test_admin_can_archive_customer_and_archived_customer_moves_to_archived_list(): void
     {
         $admin = User::query()->create([
