@@ -1976,7 +1976,7 @@
                     </a>
                 @endif
 
-                {{-- Pricing Management --}}
+                {{-- Item Management --}}
                 @if ($canManagePricing)
                     <a href="{{ route('admin.pricing-catalog') }}"
                        class="admin-sidebar-link {{ request()->routeIs('admin.pricing-catalog') ? 'active' : '' }}">
@@ -1988,7 +1988,7 @@
                             <line x1="3" y1="12" x2="3.01" y2="12"/>
                             <line x1="3" y1="18" x2="3.01" y2="18"/>
                         </svg>
-                        Pricing Management
+                        Item Management
                     </a>
                 @endif
 

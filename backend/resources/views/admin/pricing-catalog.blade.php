@@ -1,10 +1,10 @@
-@extends('layouts.app', ['title' => 'Admin Pricing Management'])
+@extends('layouts.app', ['title' => 'Admin Item Management'])
 
 @section('content')
     <div class="admin-page-stack">
         <div class="card admin-hero-card">
-            <p class="admin-page-eyebrow">Admin Pricing Catalog</p>
-            <h1 class="page-title">Admin Pricing Management</h1>
+            <p class="admin-page-eyebrow">Admin Item Catalog</p>
+            <h1 class="page-title">Admin Item Management</h1>
             <p class="page-copy">Manage the item catalog used by inspection-based quotations.</p>
         </div>
 
@@ -271,7 +271,7 @@
         </style>
 
         <div class="card admin-section-surface">
-            <div id="catalog-loading" class="info-box">Loading pricing management data...</div>
+            <div id="catalog-loading" class="info-box">Loading item management data...</div>
             <div id="catalog-success" class="status" style="display: none;"></div>
             <div id="catalog-error" class="error-box" style="display: none;"></div>
 
@@ -455,6 +455,12 @@
             grounding: 'Grounding',
             misc: 'Misc',
         };
+        const adminRoleLabels = {
+            super_admin: 'Super Admin',
+            operations_staff: 'Operations Staff',
+            customer_support_staff: 'Customer Support Staff',
+            content_staff: 'Content Staff',
+        };
         const historyFieldLabels = {
             name: 'Name',
             category: 'Category',
@@ -606,6 +612,22 @@
             return humanizeLabel(action || 'updated');
         }
 
+        function historyPerformerName(history) {
+            return history.performed_by_snapshot?.name || history.performed_by?.name || 'System';
+        }
+
+        function historyPerformerRole(history) {
+            if (history.performed_by_snapshot?.admin_role_label) {
+                return history.performed_by_snapshot.admin_role_label;
+            }
+
+            if (history.performed_by?.admin_role) {
+                return adminRoleLabels[history.performed_by.admin_role] || 'Admin Staff';
+            }
+
+            return 'Admin Staff';
+        }
+
         function formatCountLabel(count) {
             return `${count} ${count === 1 ? 'item' : 'items'}`;
         }
@@ -694,14 +716,15 @@
                     <div class="pricing-history-list">
                         ${histories.map((history) => {
                             const fields = changedHistoryFields(history);
-                            const performer = history.performed_by?.name || history.performed_by?.email || 'System';
+                            const performerName = historyPerformerName(history);
+                            const performerRole = historyPerformerRole(history);
 
                             return `
                                 <article class="pricing-history-item">
                                     <div class="pricing-history-meta">
                                         <div>
                                             <div class="pricing-history-action">${escapeHtml(formatActionLabel(history.action))}</div>
-                                            <div class="muted" style="margin-top:4px;">By ${escapeHtml(performer)}</div>
+                                            <div class="muted" style="margin-top:4px;">Changed by: ${escapeHtml(performerName)} | ${escapeHtml(performerRole)}</div>
                                         </div>
                                         <div class="muted">${escapeHtml(formatDateTime(history.created_at))}</div>
                                     </div>

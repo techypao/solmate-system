@@ -222,7 +222,7 @@
 
                 <div class="quotation-settings-links">
                     <a class="button-link secondary" href="{{ route('quotations.item-builder') }}">Open Item Builder</a>
-                    <a class="button-link secondary" href="{{ route('admin.pricing-catalog') }}">Pricing Management</a>
+                    <a class="button-link secondary" href="{{ route('admin.pricing-catalog') }}">Item Management</a>
                 </div>
             </div>
 

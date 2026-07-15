@@ -33,7 +33,7 @@ class PricingItemController extends Controller
     public function index()
     {
         $pricingItems = PricingItem::query()
-            ->with(['histories.performedBy:id,name,email'])
+            ->with(['histories.performedBy:id,name,admin_role'])
             ->latest()
             ->get();
 
@@ -52,7 +52,7 @@ class PricingItemController extends Controller
 
         return response()->json([
             'message' => 'Pricing item created successfully.',
-            'data' => $pricingItem->fresh(['histories.performedBy:id,name,email']),
+            'data' => $pricingItem->fresh(['histories.performedBy:id,name,admin_role']),
         ], 201);
     }
 
@@ -73,7 +73,7 @@ class PricingItemController extends Controller
 
         return response()->json([
             'message' => 'Pricing item updated successfully.',
-            'data' => $freshPricingItem->load(['histories.performedBy:id,name,email']),
+            'data' => $freshPricingItem->load(['histories.performedBy:id,name,admin_role']),
         ]);
     }
 
@@ -164,10 +164,24 @@ class PricingItemController extends Controller
         PricingItemHistory::query()->create([
             'pricing_item_id' => $pricingItem->id,
             'performed_by_id' => $request->user()?->id,
+            'performed_by_snapshot' => $this->performedBySnapshot($request->user()),
             'action' => $action,
             'old_values' => $oldValues,
             'new_values' => $newValues,
         ]);
+    }
+
+    private function performedBySnapshot(?User $user): ?array
+    {
+        if (! $user) {
+            return null;
+        }
+
+        return [
+            'name' => $user->name,
+            'admin_role' => $user->adminRole(),
+            'admin_role_label' => $user->adminRoleLabel(),
+        ];
     }
 
     private function resolveUpdateAction(array $validated, array $oldValues, array $newValues): string

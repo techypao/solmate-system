@@ -13,6 +13,7 @@ class PricingItemHistory extends Model
     protected $fillable = [
         'pricing_item_id',
         'performed_by_id',
+        'performed_by_snapshot',
         'action',
         'old_values',
         'new_values',
@@ -21,6 +22,7 @@ class PricingItemHistory extends Model
     protected function casts(): array
     {
         return [
+            'performed_by_snapshot' => 'array',
             'old_values' => 'array',
             'new_values' => 'array',
         ];

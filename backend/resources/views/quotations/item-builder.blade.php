@@ -1041,7 +1041,7 @@
             const responseBody = await response.json();
 
             if (!response.ok) {
-                throw new Error(responseBody.message || 'Could not load pricing management data.');
+                throw new Error(responseBody.message || 'Could not load item management data.');
             }
 
             pricingCatalog = responseBody.data || [];

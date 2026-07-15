@@ -24,8 +24,8 @@ class WebAdminPricingCatalogTest extends TestCase
         $this->actingAs($admin)
             ->get('/admin/pricing-catalog')
             ->assertOk()
-            ->assertSee('Admin Pricing Catalog')
-            ->assertSee('Admin Pricing Management')
+            ->assertSee('Admin Item Catalog')
+            ->assertSee('Admin Item Management')
             ->assertSee('Add Item')
             ->assertSee('Item History')
             ->assertSee('History')
@@ -64,7 +64,7 @@ class WebAdminPricingCatalogTest extends TestCase
         $this->actingAs($staff)
             ->get('/admin/pricing-catalog')
             ->assertOk()
-            ->assertSee('Admin Pricing Catalog');
+            ->assertSee('Admin Item Catalog');
     }
 
     public function test_content_staff_cannot_open_pricing_catalog_page(): void

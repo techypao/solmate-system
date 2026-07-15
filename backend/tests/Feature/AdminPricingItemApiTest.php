@@ -64,7 +64,9 @@ class AdminPricingItemApiTest extends TestCase
             ->assertJsonPath('data.default_unit_price', '10000.00')
             ->assertJsonPath('data.is_active', true)
             ->assertJsonPath('data.histories.0.action', 'created')
-            ->assertJsonPath('data.histories.0.performed_by.id', $admin->id);
+            ->assertJsonPath('data.histories.0.performed_by.id', $admin->id)
+            ->assertJsonPath('data.histories.0.performed_by_snapshot.name', $admin->name)
+            ->assertJsonPath('data.histories.0.performed_by_snapshot.admin_role_label', 'Super Admin');
 
         $this->assertDatabaseHas('pricing_items', [
             'name' => 'Canadian Mono 585W Bifacial',
@@ -81,6 +83,11 @@ class AdminPricingItemApiTest extends TestCase
             'performed_by_id' => $admin->id,
             'action' => 'created',
         ]);
+
+        $this->assertSame(
+            'Super Admin',
+            PricingItemHistory::query()->first()->performed_by_snapshot['admin_role_label']
+        );
     }
 
     public function test_admin_can_update_pricing_item_and_toggle_activation(): void
