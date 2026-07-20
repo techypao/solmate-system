@@ -74,27 +74,6 @@
             </button>
         </form>
 
-        <hr style="border:0; border-top:1px solid #e5e7eb; margin: 20px 0;">
-
-        <div class="section-header">
-            <div>
-                <h2 class="admin-section-title">Delete Customer</h2>
-                <p class="admin-section-copy">This permanently removes <strong>{{ $customer->name }}</strong> and cascade-deletes their quotations, requests, inspections, and testimonies.</p>
-            </div>
-        </div>
-
-        <form method="POST"
-              action="{{ route('admin.customers.destroy', $customer) }}"
-              onsubmit="return confirm('Delete customer {{ addslashes($customer->name) }}? This action cannot be undone.')">
-            @csrf
-            @method('DELETE')
-
-            <button type="submit"
-                    class="button-link"
-                    style="background:#fee2e2; color:#dc2626; border:1.5px solid #fca5a5; border-radius:8px; cursor:pointer; font-weight:600;">
-                Delete Customer
-            </button>
-        </form>
     </div>
 
     {{-- INFO BOX --}}

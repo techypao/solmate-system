@@ -104,17 +104,6 @@
                                     </button>
                                 </form>
 
-                                <form method="POST"
-                                      action="{{ route('admin.customers.destroy', $customer) }}"
-                                      onsubmit="return confirm('Delete customer {{ addslashes($customer->name) }}? This will permanently remove their account and cascade-delete their quotations, requests, inspections, and testimonies.')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                            class="button-link"
-                                            style="padding:6px 14px; font-size:13px; background:#fee2e2; color:#dc2626; border:1.5px solid #fca5a5; border-radius:8px; cursor:pointer; font-weight:600; text-decoration:none; display:inline-flex; align-items:center;">
-                                        Delete
-                                    </button>
-                                </form>
                             @endif
                         </div>
                     </div>
@@ -165,17 +154,6 @@
                                     </button>
                                 </form>
 
-                                <form method="POST"
-                                      action="{{ route('admin.customers.destroy', $customer) }}"
-                                      onsubmit="return confirm('Delete archived customer {{ addslashes($customer->name) }} permanently? This action cannot be undone.')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                            class="button-link"
-                                            style="padding:6px 14px; font-size:13px; background:#fee2e2; color:#dc2626; border:1.5px solid #fca5a5; border-radius:8px; cursor:pointer; font-weight:600; text-decoration:none; display:inline-flex; align-items:center;">
-                                        Delete
-                                    </button>
-                                </form>
                             </div>
                         @endif
                     </div>

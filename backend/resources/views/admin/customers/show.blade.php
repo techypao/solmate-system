@@ -100,15 +100,6 @@
                     </button>
                 </form>
 
-                <form method="POST"
-                      action="{{ route('admin.customers.destroy', $customer) }}"
-                      onsubmit="return confirm('Delete customer {{ addslashes($customer->name) }}? This will permanently remove their account and cascade-delete their records.')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="button-link" style="background:#fee2e2; color:#dc2626; border:1.5px solid #fca5a5; border-radius:8px; cursor:pointer; font-weight:600;">
-                        Delete Customer
-                    </button>
-                </form>
             </div>
         @else
             <div class="info-box" style="margin-top:18px; margin-bottom:0;">View-only access</div>
