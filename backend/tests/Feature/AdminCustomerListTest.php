@@ -99,11 +99,106 @@ class AdminCustomerListTest extends TestCase
             ->get(route('admin.customers'))
             ->assertOk()
             ->assertSee('Readonly Customer')
-            ->assertDontSee(route('admin.customers.edit', $customer));
+            ->assertDontSee(route('admin.customers.edit', $customer))
+            ->assertDontSee('Remove customer Readonly Customer');
 
         $this->actingAs($support)
             ->get(route('admin.customers.edit', $customer))
             ->assertRedirect(route('dashboard'));
+
+        $this->actingAs($support)
+            ->delete(route('admin.customers.destroy', $customer))
+            ->assertRedirect(route('dashboard'));
+
+        $this->assertDatabaseHas('users', ['id' => $customer->id]);
+    }
+
+    public function test_admin_can_remove_customer_with_existing_records(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $customer = User::factory()->create([
+            'role' => User::ROLE_CUSTOMER,
+            'name' => 'Remove Me Customer',
+        ]);
+        $otherCustomer = User::factory()->create(['role' => User::ROLE_CUSTOMER]);
+
+        $quotation = Quotation::query()->create([
+            'user_id' => $customer->id,
+            'quotation_type' => 'initial',
+            'status' => 'pending',
+        ]);
+        $inspection = InspectionRequest::query()->create([
+            'user_id' => $customer->id,
+            'details' => 'Inspect my roof.',
+            'status' => 'pending',
+        ]);
+        $service = ServiceRequest::query()->create([
+            'user_id' => $customer->id,
+            'request_type' => 'maintenance',
+            'details' => 'Check my inverter.',
+            'status' => 'pending',
+        ]);
+        $testimony = Testimony::query()->create([
+            'user_id' => $customer->id,
+            'rating' => 5,
+            'message' => 'Great service.',
+            'status' => Testimony::STATUS_PENDING,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.customers'))
+            ->assertOk()
+            ->assertSeeInOrder([
+                route('admin.customers.edit', $customer),
+                'action="'.route('admin.customers.destroy', $customer).'"',
+                'Remove customer Remove Me Customer',
+                route('admin.customers.archive', $customer),
+            ], false);
+
+        $this->delete(route('admin.customers.destroy', $customer))
+            ->assertRedirect(route('admin.customers'))
+            ->assertSessionHas('status', 'Customer "Remove Me Customer" was deleted successfully.');
+
+        $this->assertModelMissing($customer);
+        $this->assertModelMissing($quotation);
+        $this->assertModelMissing($inspection);
+        $this->assertModelExists($service);
+        $this->assertNull($service->fresh()->user_id);
+        $this->assertModelMissing($testimony);
+        $this->assertModelExists($otherCustomer);
+        $this->assertModelExists($admin);
+
+        $this->get(route('admin.customers'))
+            ->assertOk()
+            ->assertDontSee('id="customer-'.$customer->id.'"', false);
+    }
+
+    public function test_remove_customer_endpoint_cannot_delete_staff_accounts(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $technician = User::factory()->create(['role' => User::ROLE_TECHNICIAN]);
+
+        foreach ([$admin, $technician] as $staff) {
+            $this->actingAs($admin)
+                ->delete(route('admin.customers.destroy', $staff))
+                ->assertNotFound();
+
+            $this->assertModelExists($staff);
+        }
+    }
+
+    public function test_guests_and_customers_cannot_remove_customers(): void
+    {
+        $customer = User::factory()->create(['role' => User::ROLE_CUSTOMER]);
+
+        $this->delete(route('admin.customers.destroy', $customer))
+            ->assertRedirect(route('login'));
+
+        $this->actingAs($customer)
+            ->delete(route('admin.customers.destroy', $customer))
+            ->assertRedirect(route('home'));
+
+        $this->assertModelExists($customer);
     }
 
     public function test_admin_can_archive_customer_and_archived_customer_moves_to_archived_list(): void

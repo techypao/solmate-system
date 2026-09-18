@@ -82,7 +82,7 @@
                             </span>
                         @endif
                         <span class="badge badge-neutral">Customer</span>
-                        <div style="display:flex; gap:8px; flex-shrink:0;">
+                        <div style="display:flex; gap:8px; flex-shrink:0; flex-wrap:wrap;">
                             <a href="{{ route('admin.customers.show', $customer) }}"
                                class="button-link secondary"
                                style="padding: 6px 14px; font-size: 13px;">View</a>
@@ -91,6 +91,20 @@
                                 <a href="{{ route('admin.customers.edit', $customer) }}"
                                    class="button-link secondary"
                                    style="padding: 6px 14px; font-size: 13px;">Edit</a>
+
+                                <form method="POST"
+                                      action="{{ route('admin.customers.destroy', $customer) }}"
+                                      data-confirm-message="Remove customer {{ $customer->name }}? This permanently deletes their account and associated quotations, inspections, and feedback. This cannot be undone."
+                                      onsubmit="return confirm(this.dataset.confirmMessage)">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                            class="button-link secondary"
+                                            aria-label="Remove customer {{ $customer->name }}"
+                                            style="padding:6px 14px; font-size:13px; border-color:#fca5a5; color:#dc2626;">
+                                        Remove
+                                    </button>
+                                </form>
 
                                 <form method="POST"
                                       action="{{ route('admin.customers.archive', $customer) }}"
