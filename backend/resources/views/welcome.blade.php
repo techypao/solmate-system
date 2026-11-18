@@ -76,7 +76,7 @@
         /* APP DOWNLOAD */
         .gst-app { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); padding: 80px 32px; }
         .gst-app-inner { max-width: 1200px; margin: 0 auto; }
-        .gst-app-shell { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; align-items: stretch; }
+        .gst-app-shell { max-width: 480px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; align-items: stretch; }
         .gst-app-card,
         .gst-app-panel { background: #ffffff; border: 1px solid #DDE7EE; border-radius: 22px; box-shadow: 0 14px 36px rgba(15,23,42,0.07); }
         .gst-app-card {
@@ -810,21 +810,12 @@
             <p class="gst-section-sub">Install the app using one of the methods below:</p>
         </div>
         <div class="gst-app-shell">
-            <article class="gst-app-card">
-                <span class="gst-app-badge">Method 1</span>
-                <h3 class="gst-app-title">QR Code</h3>
-                <p class="gst-app-copy">Scan this QR code using your phone to download the app.</p>
-                <div class="gst-app-qr-frame">
-                    <img src="{{ asset('images/app-qr.png') }}" alt="QR code to download the SolMate mobile app APK">
-                </div>
-            </article>
             <aside class="gst-app-panel">
                 <span class="gst-app-panel-tag">Method 2</span>
                 <h3 class="gst-app-panel-title">Direct Download</h3>
                 <p class="gst-app-panel-copy">Use this option if you are already browsing on your Android phone.</p>
                 <div class="gst-app-panel-note">After downloading, open the APK file on your phone to install the SolMate app.</div>
                 <div class="gst-hero-actions">
-                    <a href="https://drive.google.com/file/d/1GJZ8vnPeRArP8Z-NIpB74woOYsEq3qA6/view?usp=sharing" class="gst-cta-primary" target="_blank" rel="noopener">Download APK</a>
                     <a href="{{ asset('downloads/solmate-1.0.apk') }}" class="gst-cta-secondary" download>Download for Android</a>
                 </div>
             </aside>
