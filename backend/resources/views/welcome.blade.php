@@ -816,7 +816,7 @@
                 <p class="gst-app-panel-copy">Use this option if you are already browsing on your Android phone.</p>
                 <div class="gst-app-panel-note">After downloading, open the APK file on your phone to install the SolMate app.</div>
                 <div class="gst-hero-actions">
-                    <a href="{{ asset('downloads/solmate-1.0.apk') }}" class="gst-cta-secondary" download>Download for Android</a>
+                    <a href="{{ asset('downloads/solmate-v1.0.apk') }}" class="gst-cta-secondary" download>Download for Android</a>
                 </div>
             </aside>
         </div>
